@@ -1,4 +1,5 @@
 import React from 'react';
+import { DepositServiceDonation } from './DepositServiceDonation';
 
 export const Home = () => {
   console.log('HEY!');
@@ -11,6 +12,7 @@ export const Home = () => {
       will be followed by sufferings, according to the reason stated in it. If
       they know the pain of the chosen one, eased by an easy fault, they fall
       less often to be assumed as if they were left behind.
+      <DepositServiceDonation />
     </div>
   );
 };
