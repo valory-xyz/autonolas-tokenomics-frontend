@@ -10,10 +10,7 @@ export const DynamicFormContainer = styled.div`
   max-width: 700px;
 `;
 
-export const FormList = ({
-  inputOneLabel = 'Service ID',
-  inputTwoLabel = 'Amount',
-}) => (
+export const FormList = ({ inputOneLabel, inputTwoLabel }) => (
   <Form.List
     name="units"
     rules={[
@@ -83,11 +80,6 @@ export const FormList = ({
 );
 
 FormList.propTypes = {
-  inputOneLabel: PropTypes.string,
-  inputTwoLabel: PropTypes.string,
-};
-
-FormList.defaultProps = {
-  inputOneLabel: 'Service ID',
-  inputTwoLabel: 'Amount',
+  inputOneLabel: PropTypes.string.isRequired,
+  inputTwoLabel: PropTypes.string.isRequired,
 };

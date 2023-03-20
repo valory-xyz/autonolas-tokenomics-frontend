@@ -33,13 +33,13 @@ export const HeaderContainer = styled.div`
 `;
 
 export const Logo = styled.div`
-  max-width: 260px;
+  max-width: 248px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: left;
   margin-left: 0.5rem;
-  margin-right: 3.5rem;
+  margin-right: 1.5rem;
   font-size: 34px;
   color: ${COLOR.PRIMARY};
   span {

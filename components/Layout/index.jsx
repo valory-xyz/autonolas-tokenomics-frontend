@@ -44,13 +44,13 @@ const NavigationBar = ({ children }) => {
           selectedKeys={[selectedMenu]}
           items={[
             {
-              key: 'navOne',
-              label: 'One',
+              key: 'deposit-service-donation',
+              label: 'Deposit Service Donation',
               onClick: handleMenuItemClick,
             },
             {
-              key: 'navTwo',
-              label: 'Two',
+              key: 'owner-incentive',
+              label: 'Owner Incentives',
               onClick: handleMenuItemClick,
             },
           ]}

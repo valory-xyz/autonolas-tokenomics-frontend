@@ -3,7 +3,7 @@ import { Typography } from 'antd/lib';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import { parseToWei } from 'common-util/functions';
 // import { getDepositoryContractRequest } from './contractUtils';
-import { useHelpers } from './useHelpers';
+import { useHelpers } from './hooks/useHelpers';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -35,7 +35,11 @@ export const DepositServiceDonation = () => {
         </a>
       </Paragraph>
 
-      <DynamicFieldsForm onSubmit={onDepositServiceDonationSubmit} />
+      <DynamicFieldsForm
+        inputOneLabel="Service ID"
+        inputTwoLabel="Amount"
+        onSubmit={onDepositServiceDonationSubmit}
+      />
     </div>
   );
 };

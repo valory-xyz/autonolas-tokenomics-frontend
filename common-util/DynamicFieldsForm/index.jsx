@@ -8,7 +8,11 @@ export const DynamicFormContainer = styled.div`
   max-width: 700px;
 `;
 
-export const DynamicFieldsForm = ({ onSubmit }) => {
+export const DynamicFieldsForm = ({
+  inputOneLabel,
+  inputTwoLabel,
+  onSubmit,
+}) => {
   const [form] = Form.useForm();
   const onFinish = (values) => {
     window?.console.log('Received values of form:', values);
@@ -26,7 +30,7 @@ export const DynamicFieldsForm = ({ onSubmit }) => {
         onFinish={onFinish}
         autoComplete="off"
       >
-        <FormList />
+        <FormList inputOneLabel={inputOneLabel} inputTwoLabel={inputTwoLabel} />
 
         <Form.Item>
           <Button type="primary" htmlType="submit">
@@ -40,7 +44,11 @@ export const DynamicFieldsForm = ({ onSubmit }) => {
 
 DynamicFieldsForm.propTypes = {
   onSubmit: PropTypes.func.isRequired,
+  inputOneLabel: PropTypes.string,
+  inputTwoLabel: PropTypes.string,
 };
 
-// DynamicFieldsForm.defaultProps = {
-// };
+DynamicFieldsForm.defaultProps = {
+  inputOneLabel: 'Unit ID',
+  inputTwoLabel: 'Unit Type',
+};
