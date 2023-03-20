@@ -1,2 +1,3 @@
-export * from './buOlasContractGoerli';
-export * from './buOlasContractMainnet';
+export * from './depositoryMainnet';
+export * from './dispenserMainnet';
+export * from './treasuryMainnet';
