@@ -5,10 +5,15 @@ import {
   QuestionCircleOutlined,
 } from '@ant-design/icons';
 import {
-  Button, Form, InputNumber, Space,
+  Button, Form, InputNumber, Space, Radio,
 } from 'antd/lib';
 
-export const FormList = ({ inputOneLabel, inputTwoLabel, buttonText }) => (
+export const FormList = ({
+  inputOneLabel,
+  inputTwoLabel,
+  buttonText,
+  isUnitTypeInput,
+}) => (
   <Form.List
     name="units"
     rules={[
@@ -52,7 +57,14 @@ export const FormList = ({ inputOneLabel, inputTwoLabel, buttonText }) => (
                 { required: true, message: `Please add ${inputTwoLabel}` },
               ]}
             >
-              <InputNumber />
+              {isUnitTypeInput ? (
+                <Radio.Group>
+                  <Radio value="0">Agent</Radio>
+                  <Radio value="1">Component</Radio>
+                </Radio.Group>
+              ) : (
+                <InputNumber />
+              )}
             </Form.Item>
 
             <MinusCircleOutlined onClick={() => remove(field.name)} />
@@ -91,4 +103,5 @@ FormList.propTypes = {
   inputOneLabel: PropTypes.string.isRequired,
   inputTwoLabel: PropTypes.string.isRequired,
   buttonText: PropTypes.string.isRequired,
+  isUnitTypeInput: PropTypes.bool.isRequired,
 };

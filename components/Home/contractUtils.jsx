@@ -1,6 +1,6 @@
 // import { ethers } from 'ethers';
 import { sendTransaction } from '@autonolas/frontend-library';
-// import { MAX_AMOUNT, parseEther } from 'common-util/functions';
+// import { parseEther } from 'common-util/functions';
 import {
   // getDepositoryContract,
   getDispenserContract,
@@ -8,9 +8,10 @@ import {
   getTreasuryContract,
 } from 'common-util/Contracts';
 
-/**
- * Tokenomics contract
- */
+// ***************************************************
+//                 Tokenomics contract
+//  **************************************************
+
 export const getOwnerIncentivesRequest = ({
   account,
   chainId,
@@ -22,19 +23,16 @@ export const getOwnerIncentivesRequest = ({
   contract.methods
     .getOwnerIncentives(account, unitTypes, unitIds)
     .call()
-    .then((response) => {
-      window.console.log('response', response);
-      resolve(response?.transactionHash);
-    })
+    .then((response) => resolve(response))
     .catch((e) => {
       window.console.log('Error occured on fetching owner incentives');
       reject(e);
     });
 });
 
-/**
- * Dispenser contract
- */
+// ***************************************************
+//                 Dispenser contract
+//  **************************************************
 export const claimOwnerIncentivesRequest = ({
   account,
   chainId,
@@ -58,9 +56,9 @@ export const claimOwnerIncentivesRequest = ({
     });
 });
 
-/**
- * Treasory contract
- */
+// ***************************************************
+//                 Treasory contract
+//  **************************************************
 export const getDepositoryContractRequest = ({
   account,
   chainId,
@@ -82,8 +80,12 @@ export const getDepositoryContractRequest = ({
     });
 });
 
+// ***************************************************
+//                 Depository contract
+//  **************************************************
+
 /**
- * Bonding functionalities - depository contract
+ * Bonding functionalities
  */
 export const depositRequest = ({
   account, chainId, productId, tokenAmount,

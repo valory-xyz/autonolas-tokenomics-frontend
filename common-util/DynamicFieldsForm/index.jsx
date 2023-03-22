@@ -4,6 +4,7 @@ import { FormList } from './FormList';
 import { DynamicFormContainer } from './styles';
 
 export const DynamicFieldsForm = ({
+  isUnitTypeInput,
   inputOneLabel,
   inputTwoLabel,
   buttonText,
@@ -30,6 +31,7 @@ export const DynamicFieldsForm = ({
         autoComplete="off"
       >
         <FormList
+          isUnitTypeInput={isUnitTypeInput}
           inputOneLabel={inputOneLabel}
           inputTwoLabel={inputTwoLabel}
           buttonText={buttonText}
@@ -51,6 +53,7 @@ DynamicFieldsForm.propTypes = {
   inputTwoLabel: PropTypes.string,
   buttonText: PropTypes.string,
   isLoading: PropTypes.bool,
+  isUnitTypeInput: PropTypes.bool,
 };
 
 DynamicFieldsForm.defaultProps = {
@@ -58,4 +61,5 @@ DynamicFieldsForm.defaultProps = {
   inputTwoLabel: 'Unit Type',
   buttonText: 'Add Unit',
   isLoading: false,
+  isUnitTypeInput: true,
 };

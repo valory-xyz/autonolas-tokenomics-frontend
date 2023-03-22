@@ -1,26 +1,9 @@
 import { ethers } from 'ethers';
 import dayjs from 'dayjs';
 import { notification } from 'antd/lib';
-import { isNil, isString } from 'lodash';
+import { isNil, isObject, isString } from 'lodash';
 import { COLOR } from '@autonolas/frontend-library';
 import { NA } from 'common-util/constants';
-
-/**
- * https://docs.ethers.org/v5/api/utils/constants/#constants-MaxUint256
- */
-export const MAX_AMOUNT = ethers.constants.MaxUint256;
-
-export const getBalance = (account, p) => new Promise((resolve, reject) => {
-  p.eth
-    .getBalance(account)
-    .then((balance) => {
-      const balanceInEth = ethers.utils.formatEther(balance);
-      resolve(balanceInEth);
-    })
-    .catch((e) => {
-      reject(e);
-    });
-});
 
 /**
  *
@@ -66,6 +49,26 @@ export const notifySuccess = (message = 'Successfull', description = null) => no
   style: { border: `1px solid ${COLOR.PRIMARY}` },
 });
 
+// create a function to specific error message based on error code
+const getErrorMessage = (error) => {
+  if (isObject(error)) {
+    if ((error?.message || '').includes('OwnerOnly')) {
+      return 'You are not the owner of the component/agent';
+    }
+
+    if ((error?.message || '').includes('WrongUnitId')) {
+      return 'Unit ID is not valid';
+    }
+  }
+
+  return 'Some error occured';
+};
+
+export const notifySpecificError = (error) => {
+  const message = getErrorMessage(error);
+  notifyError(message);
+};
+
 /**
  * Converts a number to a compact format
  * @param {Number} x
@@ -94,24 +97,6 @@ export const getCommaSeparatedNumber = (x) => {
   return new Intl.NumberFormat('en', {
     maximumFractionDigits: 2,
   }).format(x);
-};
-
-/**
- * converts to percentage and returns a string with 2 decimal places
- */
-export const getTotalVotesPercentage = (votes, totalSupply) => {
-  if (votes && totalSupply) {
-    const votesInEth = Number(parseToEth(votes));
-    const totalSupplyInEth = Number(parseToEth(totalSupply));
-    const votingPowerInPercentage = (
-      (votesInEth / totalSupplyInEth)
-      * 100
-    ).toFixed(2);
-
-    return getFormattedNumber(votingPowerInPercentage);
-  }
-
-  return null;
 };
 
 /**

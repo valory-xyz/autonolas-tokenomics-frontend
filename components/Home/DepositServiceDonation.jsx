@@ -47,6 +47,7 @@ export const DepositServiceDonation = () => {
       </Paragraph>
 
       <DynamicFieldsForm
+        isUnitTypeInput={false}
         inputOneLabel="Service ID"
         inputTwoLabel="Amount"
         buttonText="Add Service"
