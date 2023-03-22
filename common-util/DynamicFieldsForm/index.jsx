@@ -1,25 +1,24 @@
-import React from 'react';
 import PropTypes from 'prop-types';
 import { Button, Form } from 'antd/lib';
-import styled from 'styled-components';
 import { FormList } from './FormList';
-
-export const DynamicFormContainer = styled.div`
-  max-width: 700px;
-`;
+import { DynamicFormContainer } from './styles';
 
 export const DynamicFieldsForm = ({
   inputOneLabel,
   inputTwoLabel,
+  buttonText,
+  isLoading,
   onSubmit,
 }) => {
   const [form] = Form.useForm();
-  const onFinish = (values) => {
+  const onFinish = async (values) => {
     window?.console.log('Received values of form:', values);
-    onSubmit({
-      unitIds: values.units.map((unit) => unit.unitId),
-      unitTypes: values.units.map((unit) => unit.unitType),
-    });
+    if (onSubmit) {
+      await onSubmit({
+        unitIds: values.units.map((unit) => unit.unitId),
+        unitTypes: values.units.map((unit) => unit.unitType),
+      });
+    }
   };
 
   return (
@@ -30,10 +29,14 @@ export const DynamicFieldsForm = ({
         onFinish={onFinish}
         autoComplete="off"
       >
-        <FormList inputOneLabel={inputOneLabel} inputTwoLabel={inputTwoLabel} />
+        <FormList
+          inputOneLabel={inputOneLabel}
+          inputTwoLabel={inputTwoLabel}
+          buttonText={buttonText}
+        />
 
         <Form.Item>
-          <Button type="primary" htmlType="submit">
+          <Button type="primary" htmlType="submit" loading={isLoading}>
             Submit
           </Button>
         </Form.Item>
@@ -46,9 +49,13 @@ DynamicFieldsForm.propTypes = {
   onSubmit: PropTypes.func.isRequired,
   inputOneLabel: PropTypes.string,
   inputTwoLabel: PropTypes.string,
+  buttonText: PropTypes.string,
+  isLoading: PropTypes.bool,
 };
 
 DynamicFieldsForm.defaultProps = {
   inputOneLabel: 'Unit ID',
   inputTwoLabel: 'Unit Type',
+  buttonText: 'Add Unit',
+  isLoading: false,
 };

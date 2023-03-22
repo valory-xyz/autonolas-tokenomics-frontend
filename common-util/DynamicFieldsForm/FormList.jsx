@@ -1,16 +1,14 @@
-import React from 'react';
 import PropTypes from 'prop-types';
-import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import {
-  Button, Form, Input, InputNumber, Space,
+  MinusCircleOutlined,
+  PlusOutlined,
+  QuestionCircleOutlined,
+} from '@ant-design/icons';
+import {
+  Button, Form, InputNumber, Space,
 } from 'antd/lib';
-import styled from 'styled-components';
 
-export const DynamicFormContainer = styled.div`
-  max-width: 700px;
-`;
-
-export const FormList = ({ inputOneLabel, inputTwoLabel }) => (
+export const FormList = ({ inputOneLabel, inputTwoLabel, buttonText }) => (
   <Form.List
     name="units"
     rules={[
@@ -41,7 +39,7 @@ export const FormList = ({ inputOneLabel, inputTwoLabel }) => (
                     { required: true, message: `Please add ${inputOneLabel}` },
                   ]}
                 >
-                  <InputNumber style={{ width: 200, marginRight: 32 }} />
+                  <InputNumber className="mr-32" />
                 </Form.Item>
               )}
             </Form.Item>
@@ -54,7 +52,7 @@ export const FormList = ({ inputOneLabel, inputTwoLabel }) => (
                 { required: true, message: `Please add ${inputTwoLabel}` },
               ]}
             >
-              <Input />
+              <InputNumber />
             </Form.Item>
 
             <MinusCircleOutlined onClick={() => remove(field.name)} />
@@ -64,14 +62,24 @@ export const FormList = ({ inputOneLabel, inputTwoLabel }) => (
         {/* show error above the "Add Unit" button */}
         <Form.ErrorList errors={errors} />
 
-        <Form.Item>
+        <Form.Item
+          extra={(
+            <>
+              {/* antd icon for question mark */}
+              <QuestionCircleOutlined />
+              &nbsp;
+              {inputOneLabel}
+              &nbsp;should be in ascending order
+            </>
+          )}
+        >
           <Button
             type="dashed"
             onClick={() => add()}
             block
             icon={<PlusOutlined />}
           >
-            Add Unit
+            {buttonText}
           </Button>
         </Form.Item>
       </>
@@ -82,4 +90,5 @@ export const FormList = ({ inputOneLabel, inputTwoLabel }) => (
 FormList.propTypes = {
   inputOneLabel: PropTypes.string.isRequired,
   inputTwoLabel: PropTypes.string.isRequired,
+  buttonText: PropTypes.string.isRequired,
 };

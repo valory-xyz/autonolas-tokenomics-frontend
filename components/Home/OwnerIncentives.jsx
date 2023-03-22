@@ -1,8 +1,8 @@
 import React from 'react';
 import { Typography, Divider } from 'antd/lib';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
-// import { getOwnerIncentivesRequest, claimOwnerIncentivesRequest } from './contractUtils';
 import { notifySuccess } from 'common-util/functions';
+import { getOwnerIncentivesRequest, claimOwnerIncentivesRequest } from './contractUtils';
 import { useHelpers } from './hooks/useHelpers';
 
 const { Title, Paragraph, Text } = Typography;
@@ -18,10 +18,9 @@ export const OwnerIncentives = () => {
       unitTypes: values.unitTypes.map((e) => `${e}`),
     };
 
-    window.console.log(params); // TODO remove
-
     try {
-      // await getOwnerIncentivesRequest(params);
+      window.console.log(params); // TODO remove
+      await getOwnerIncentivesRequest(params);
     } catch (error) {
       window.console.error(error);
     }
@@ -38,7 +37,7 @@ export const OwnerIncentives = () => {
     window.console.log(params); // TODO remove
 
     try {
-      // await claimOwnerIncentivesRequest(params);
+      await claimOwnerIncentivesRequest(params);
       notifySuccess('Claimed owner incentives successfully');
     } catch (error) {
       window.console.error(error);

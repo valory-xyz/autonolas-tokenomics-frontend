@@ -1,25 +1,36 @@
-import React from 'react';
+import { useState } from 'react';
 import { Typography } from 'antd/lib';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
-import { parseToWei } from 'common-util/functions';
-// import { getDepositoryContractRequest } from './contractUtils';
+import { notifyError, notifySuccess, parseToWei } from 'common-util/functions';
+import { getDepositoryContractRequest } from './contractUtils';
 import { useHelpers } from './hooks/useHelpers';
 
 const { Title, Paragraph, Text } = Typography;
 
 export const DepositServiceDonation = () => {
   const { account, chainId } = useHelpers();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const onDepositServiceDonationSubmit = (values) => {
-    const params = {
-      account,
-      chainId,
-      serviceIds: values.unitIds.map((e) => `${e}`),
-      amounts: values.unitTypes.map((e) => parseToWei(e)),
-    };
+  const onDepositServiceDonationSubmit = async (values) => {
+    try {
+      setIsLoading(true);
+      const params = {
+        account,
+        chainId,
+        serviceIds: values.unitIds.map((e) => `${e}`),
+        amounts: values.unitTypes.map((e) => parseToWei(e)),
+        totalAmount: parseToWei(values.unitTypes.reduce((a, b) => a + b, 0)),
+      };
 
-    window.console.log(params);
-    // getDepositoryContractRequest(params);
+      await getDepositoryContractRequest(params);
+      notifySuccess('Deposited service donation successfully');
+      setIsLoading(false);
+    } catch (error) {
+      window.console.error(error);
+      notifyError();
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -38,6 +49,8 @@ export const DepositServiceDonation = () => {
       <DynamicFieldsForm
         inputOneLabel="Service ID"
         inputTwoLabel="Amount"
+        buttonText="Add Service"
+        isLoading={isLoading}
         onSubmit={onDepositServiceDonationSubmit}
       />
     </div>
