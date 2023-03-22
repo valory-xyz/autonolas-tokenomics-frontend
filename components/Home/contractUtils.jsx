@@ -2,7 +2,7 @@
 import { sendTransaction } from '@autonolas/frontend-library';
 // import { parseEther } from 'common-util/functions';
 import {
-  // getDepositoryContract,
+  getDepositoryContract,
   getDispenserContract,
   getTokenomicsContract,
   getTreasuryContract,
@@ -84,44 +84,82 @@ export const getDepositoryContractRequest = ({
 //                 Depository contract
 //  **************************************************
 
+export const getProductsRequest = ({ chainId, isActive }) => new Promise((resolve, reject) => {
+  const contract = getDepositoryContract(window.MODAL_PROVIDER, chainId);
+
+  contract.methods
+    .getProducts(isActive ?? true)
+    .call()
+    .then((response) => resolve(response))
+    .catch((e) => {
+      window.console.log('Error on fetching products');
+      reject(e);
+    });
+});
+
+export const getProductDetailsFromIdsRequest = ({
+  chainId,
+  productIdList = [],
+}) => new Promise((resolve, reject) => {
+  const contract = getDepositoryContract(window.MODAL_PROVIDER, chainId);
+
+  try {
+    const allListPromise = [];
+
+    for (let i = 0; i < productIdList.length; i += 1) {
+      const id = productIdList[i];
+      const result = contract.methods.mapBondProducts(id).call();
+      allListPromise.push(result);
+    }
+
+    Promise.all(allListPromise)
+      .then((componentsList) => resolve(componentsList))
+      .catch((e) => reject(e));
+  } catch (error) {
+    window.console.log('Error on fetching products');
+    reject(error);
+  }
+});
+
 /**
  * Bonding functionalities
  */
-export const depositRequest = ({
-  account, chainId, productId, tokenAmount,
-}) => new Promise((resolve, reject) => {
-  const contract = getDepositoryContractRequest(
-    window.MODAL_PROVIDER,
-    chainId,
-  );
+// export const depositRequest = ({
+//   account, chainId, productId, tokenAmount,
+// }) => new Promise((resolve, reject) => {
+//   const contract = getDepositoryContract(
+//     window.MODAL_PROVIDER,
+//     chainId,
+//   );
 
-  const fn = contract.methods
-    .depositServiceDonationsETH(productId, tokenAmount)
-    .send({ from: account });
+//   const fn = contract.methods
+//     .depositServiceDonationsETH(productId, tokenAmount)
+//     .send({ from: account });
 
-  sendTransaction(fn, account)
-    .then((response) => resolve(response?.transactionHash))
-    .catch((e) => {
-      window.console.log('Error occured on depositing');
-      reject(e);
-    });
-});
+//   sendTransaction(fn, account)
+//     .then((response) => resolve(response?.transactionHash))
+//     .catch((e) => {
+//       window.console.log('Error occured on depositing');
+//       reject(e);
+//     });
+// });
 
-export const redeemRequest = ({ account, chainId, bondIds }) => new Promise((resolve, reject) => {
-  const contract = getDepositoryContractRequest(
-    window.MODAL_PROVIDER,
-    chainId,
-  );
+// export const redeemRequest = ({ account, chainId, bondIds }) =>
+// new Promise((resolve, reject) => {
+//   const contract = getDepositoryContract(
+//     window.MODAL_PROVIDER,
+//     chainId,
+//   );
 
-  const fn = contract.methods.redeem(bondIds).send({ from: account });
+//   const fn = contract.methods.redeem(bondIds).send({ from: account });
 
-  sendTransaction(fn, account)
-    .then((response) => resolve(response?.transactionHash))
-    .catch((e) => {
-      window.console.log('Error occured on depositing');
-      reject(e);
-    });
-});
+//   sendTransaction(fn, account)
+//     .then((response) => resolve(response?.transactionHash))
+//     .catch((e) => {
+//       window.console.log('Error occured on depositing');
+//       reject(e);
+//     });
+// });
 
 /**
  *

@@ -42,16 +42,19 @@ const NavigationBar = ({ children }) => {
           theme="light"
           mode="horizontal"
           selectedKeys={[selectedMenu]}
+          onClick={handleMenuItemClick}
           items={[
             {
               key: 'deposit-service-donation',
-              label: 'Deposit Service Donation',
-              onClick: handleMenuItemClick,
+              label: 'Deposit Service',
             },
             {
               key: 'owner-incentive',
               label: 'Owner Incentives',
-              onClick: handleMenuItemClick,
+            },
+            {
+              key: 'products',
+              label: 'Products',
             },
           ]}
         />
