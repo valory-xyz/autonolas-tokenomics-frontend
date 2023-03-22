@@ -124,22 +124,21 @@ export const redeemRequest = ({ account, chainId, bondIds }) => new Promise((res
 });
 
 /**
- * bonding functionalities (depository and tokenomics contract)
  *
- * - to get the agentIds and componentIds
- * getUnitIdsOfService(IRegistry.UnitType unitType, uint256 serviceId) - ServiceRegistry
- *
- * - Add a button and a input as SERVICE ID and
- * ouput as AGENT IDs and COMPONENT IDs
- *
+ * DONATE Page
  * Donate to service
  * - Make sure the exists before deposit - check it using `exists` method
  *
+ * INCENTIVES Page
+ * - Add a button, take "SERVICE ID" as input & ouput "AGENT IDs" and "COMPONENT IDs"
+ * - Get the agentIds and componentIds of the service using
+ * getUnitIdsOfService(IRegistry.UnitType unitType, uint256 serviceId) - ServiceRegistry
+ *
+ *
+ * bonding functionalities (depository and tokenomics contract)
  *
  * claim
  * - Make sure the user is the owner of the unit Id before checking/fetching the incentives
- *
- * use radio-button / dropdown for unit type
  *
  * DEPOSIT function
  * - `getProducts` (input: true): output only active products

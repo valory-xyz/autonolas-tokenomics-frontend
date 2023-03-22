@@ -27,22 +27,27 @@ const columns = [
 
 export const OwnerIncentives = () => {
   const { account, chainId } = useHelpers();
+
+  // fetch incentives state
   const [isGetOwnerIncentivesLoading, setIsGetOwnerIncentivesLoading] = useState(false);
   const [rewardAndTopUp, setRewardAndTopUp] = useState([]);
 
+  // claim incentives state
+  const [isClaimOwnerIncentivesLoading, setIsClaimOwnerIncentivesLoading] = useState(false);
+
   /**
-   * get incentives
+   * fetch incentives
    */
   const onOwnerIncentivesSubmit = async (values) => {
-    setIsGetOwnerIncentivesLoading(true);
-    const params = {
-      account,
-      chainId,
-      unitIds: values.unitIds.map((e) => `${e}`),
-      unitTypes: values.unitTypes.map((e) => `${e}`),
-    };
-
     try {
+      setIsGetOwnerIncentivesLoading(true);
+
+      const params = {
+        account,
+        chainId,
+        unitIds: values.unitIds.map((e) => `${e}`),
+        unitTypes: values.unitTypes.map((e) => `${e}`),
+      };
       const response = await getOwnerIncentivesRequest(params);
 
       // set reward and top up
@@ -69,20 +74,24 @@ export const OwnerIncentives = () => {
    * claim incentives
    */
   const onClaimOwnerIncentivesSubmit = async (values) => {
-    const params = {
-      account,
-      chainId,
-      unitIds: values.unitIds.map((e) => `${e}`),
-      unitTypes: values.unitTypes.map((e) => `${e}`),
-    };
-
-    window.console.log(params); // TODO remove
-
     try {
+      setIsClaimOwnerIncentivesLoading(true);
+
+      const params = {
+        account,
+        chainId,
+        unitIds: values.unitIds.map((e) => `${e}`),
+        unitTypes: values.unitTypes.map((e) => `${e}`),
+      };
       await claimOwnerIncentivesRequest(params);
+
       notifySuccess('Claimed owner incentives successfully');
+      setIsClaimOwnerIncentivesLoading(false);
     } catch (error) {
+      notifySpecificError(error);
       window.console.error(error);
+    } finally {
+      setIsClaimOwnerIncentivesLoading(false);
     }
   };
 
@@ -126,7 +135,10 @@ export const OwnerIncentives = () => {
 
       {/* Claim incentives */}
       <Divider orientation="left">Claim Owner Incentives</Divider>
-      <DynamicFieldsForm onSubmit={onClaimOwnerIncentivesSubmit} />
+      <DynamicFieldsForm
+        isLoading={isClaimOwnerIncentivesLoading}
+        onSubmit={onClaimOwnerIncentivesSubmit}
+      />
     </div>
   );
 };

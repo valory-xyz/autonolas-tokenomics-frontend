@@ -59,6 +59,10 @@ const getErrorMessage = (error) => {
     if ((error?.message || '').includes('WrongUnitId')) {
       return 'Unit ID is not valid';
     }
+
+    if ((error?.message || '').includes('ClaimIncentivesFailed')) {
+      return 'You do not have any incentives to claim';
+    }
   }
 
   return 'Some error occured';
