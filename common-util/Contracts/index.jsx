@@ -23,6 +23,9 @@ import {
   TOKENOMICS_ABI_MAINNET as TOKENOMICS_ABI_GOERLI, // TODO: change to goerli abi
   TOKENOMICS_ADDRESS_MAINNET,
   TOKENOMICS_ABI_MAINNET,
+
+  // uniswap
+  UNISWAP_V2_PAIR_ABI_MAINNET,
 } from 'common-util/AbiAndAddresses';
 import { LOCAL_CHAIN_ID } from 'util/constants';
 
@@ -111,6 +114,15 @@ export const getTokenomicsContract = (p, chainId) => {
   const contract = new web3.eth.Contract(
     chainId === 1 ? TOKENOMICS_ABI_MAINNET : TOKENOMICS_ABI_GOERLI,
     getContractAddress('tokenomics', chainId),
+  );
+  return contract;
+};
+
+export const getUniswapV2PairContract = (p, address) => {
+  const web3 = new Web3(p);
+  const contract = new web3.eth.Contract(
+    UNISWAP_V2_PAIR_ABI_MAINNET,
+    address,
   );
   return contract;
 };

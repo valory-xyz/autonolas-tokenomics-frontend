@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Typography } from 'antd/lib';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import { notifyError, notifySuccess, parseToWei } from 'common-util/functions';
+import { useHelpers } from 'common-util/hooks/useHelpers';
 import { getDepositoryContractRequest } from './contractUtils';
-import { useHelpers } from './hooks/useHelpers';
 
 const { Title, Paragraph, Text } = Typography;
 

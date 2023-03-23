@@ -1,11 +1,13 @@
-// import { ethers } from 'ethers';
+import { ethers } from 'ethers';
 import { sendTransaction } from '@autonolas/frontend-library';
-// import { parseEther } from 'common-util/functions';
+import { MAX_AMOUNT } from 'common-util/functions';
 import {
+  // getContractAddress,
   getDepositoryContract,
   getDispenserContract,
   getTokenomicsContract,
   getTreasuryContract,
+  getUniswapV2PairContract,
 } from 'common-util/Contracts';
 
 // ***************************************************
@@ -87,10 +89,15 @@ export const getDepositoryContractRequest = ({
 export const getProductsRequest = ({ chainId, isActive }) => new Promise((resolve, reject) => {
   const contract = getDepositoryContract(window.MODAL_PROVIDER, chainId);
 
+  console.log({ isActive });
+
   contract.methods
-    .getProducts(isActive ?? true)
+    .getProducts(isActive)
     .call()
-    .then((response) => resolve(response))
+    .then((response) => {
+      console.log({ response });
+      resolve(response);
+    })
     .catch((e) => {
       window.console.log('Error on fetching products');
       reject(e);
@@ -121,29 +128,77 @@ export const getProductDetailsFromIdsRequest = ({
   }
 });
 
+export const depositRequest = ({
+  account, chainId, productId, tokenAmount,
+}) => new Promise((resolve, reject) => {
+  const contract = getDepositoryContract(window.MODAL_PROVIDER, chainId);
+
+  const fn = contract.methods
+    .deposit(productId, tokenAmount)
+    .send({ from: account });
+
+  sendTransaction(fn, account)
+    .then((response) => {
+      console.log(response);
+      resolve(response?.transactionHash);
+    })
+    .catch((e) => {
+      window.console.log('Error occured on depositing');
+      reject(e);
+    });
+});
+
+export const hasSufficientTokenRequest = ({
+  account,
+  // chainId,
+  token: productToken,
+}) => new Promise((resolve, reject) => {
+  const contract = getUniswapV2PairContract(
+    window.MODAL_PROVIDER,
+    productToken,
+  );
+
+  // TODO: change it based on chain id
+  const LOCAL_TREASURY_ADDRESS = '0x36C02dA8a0983159322a80FFE9F24b1acfF8B570';
+  // const treasuryAddress = getContractAddress('treasury', chainId);
+
+  contract.methods
+    .allowance(account, LOCAL_TREASURY_ADDRESS)
+    .call()
+    .then((response) => {
+      console.log({ allowance: response });
+      // check if the allowance is equal to MAX_AMOUNT
+      resolve(ethers.BigNumber.from(response).eq(MAX_AMOUNT));
+    })
+    .catch((e) => {
+      window.console.log('Error occured on calling `allowance` method');
+      reject(e);
+    });
+});
+
+export const approveOlasByOwner = ({ account, token }) => new Promise((resolve, reject) => {
+  const contract = getUniswapV2PairContract(window.MODAL_PROVIDER, token);
+
+  // TODO: change it based on chain id
+  const LOCAL_TREASURY_ADDRESS = '0x36C02dA8a0983159322a80FFE9F24b1acfF8B570';
+
+  const fn = contract.methods
+    .approve(LOCAL_TREASURY_ADDRESS, MAX_AMOUNT)
+    .send({ from: account });
+
+  sendTransaction(fn, account)
+    .then((response) => {
+      resolve(response);
+    })
+    .catch((e) => {
+      window.console.log('Error occured on approving OLAS by owner');
+      reject(e);
+    });
+});
+
 /**
  * Bonding functionalities
  */
-// export const depositRequest = ({
-//   account, chainId, productId, tokenAmount,
-// }) => new Promise((resolve, reject) => {
-//   const contract = getDepositoryContract(
-//     window.MODAL_PROVIDER,
-//     chainId,
-//   );
-
-//   const fn = contract.methods
-//     .depositServiceDonationsETH(productId, tokenAmount)
-//     .send({ from: account });
-
-//   sendTransaction(fn, account)
-//     .then((response) => resolve(response?.transactionHash))
-//     .catch((e) => {
-//       window.console.log('Error occured on depositing');
-//       reject(e);
-//     });
-// });
-
 // export const redeemRequest = ({ account, chainId, bondIds }) =>
 // new Promise((resolve, reject) => {
 //   const contract = getDepositoryContract(
@@ -179,9 +234,6 @@ export const getProductDetailsFromIdsRequest = ({
  * - Make sure the user is the owner of the unit Id before checking/fetching the incentives
  *
  * DEPOSIT function
- * - `getProducts` (input: true): output only active products
- * op: array of productIds which are currently active
- * - list the products in the UI & the token for each product using "mapBondProducts(productId)"
  *
  * - check if there is allowance of the LP token (from product) in treasury contract
  * and if not, then call the approve function + deposit function
@@ -192,6 +244,4 @@ export const getProductDetailsFromIdsRequest = ({
  * call the approve function & deposit function)
  * - show "Deposit" button if there is allowance (on click, call the deposit function)
  *
- *
- *- get the full list of product (getProducts from depository contract)
  */

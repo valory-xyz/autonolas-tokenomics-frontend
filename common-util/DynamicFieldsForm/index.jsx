@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import { Button, Form } from 'antd/lib';
+import { useHelpers } from '../hooks/useHelpers';
 import { FormList } from './FormList';
 import { DynamicFormContainer } from './styles';
 
@@ -11,6 +12,8 @@ export const DynamicFieldsForm = ({
   isLoading,
   onSubmit,
 }) => {
+  const { account } = useHelpers();
+
   const [form] = Form.useForm();
   const onFinish = async (values) => {
     window?.console.log('Received values of form:', values);
@@ -38,7 +41,12 @@ export const DynamicFieldsForm = ({
         />
 
         <Form.Item>
-          <Button type="primary" htmlType="submit" loading={isLoading}>
+          <Button
+            type="primary"
+            htmlType="submit"
+            loading={isLoading}
+            disabled={!account}
+          >
             Submit
           </Button>
         </Form.Item>

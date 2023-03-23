@@ -6,6 +6,11 @@ import { COLOR } from '@autonolas/frontend-library';
 import { NA } from 'common-util/constants';
 
 /**
+ * https://docs.ethers.org/v5/api/utils/constants/#constants-MaxUint256
+ */
+export const MAX_AMOUNT = ethers.constants.MaxUint256;
+
+/**
  *
  * @param {BigNumebr} value value to be converted to Eth
  * @param {Number} dv Default value to be returned
@@ -62,6 +67,10 @@ const getErrorMessage = (error) => {
 
     if ((error?.message || '').includes('ClaimIncentivesFailed')) {
       return 'You do not have any incentives to claim';
+    }
+
+    if ((error?.message || '').includes('TransferFailed')) {
+      return 'Transfer failed';
     }
   }
 

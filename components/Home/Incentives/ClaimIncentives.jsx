@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Divider } from 'antd/lib';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import { notifySuccess, notifySpecificError } from 'common-util/functions';
+import { useHelpers } from 'common-util/hooks/useHelpers';
 import { claimOwnerIncentivesRequest } from '../contractUtils';
-import { useHelpers } from '../hooks/useHelpers';
 
 export const ClaimIncentives = () => {
   const { account, chainId } = useHelpers();

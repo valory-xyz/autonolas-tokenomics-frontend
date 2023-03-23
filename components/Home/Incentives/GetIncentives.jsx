@@ -4,8 +4,8 @@ import {
 } from 'antd/lib';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import { notifySpecificError } from 'common-util/functions';
+import { useHelpers } from 'common-util/hooks/useHelpers';
 import { getOwnerIncentivesRequest } from '../contractUtils';
-import { useHelpers } from '../hooks/useHelpers';
 
 const columns = [
   {
