@@ -1,11 +1,41 @@
 import { ethers } from 'ethers';
 import { sendTransaction } from '@autonolas/frontend-library';
-import { MAX_AMOUNT, ADDRESS_ZERO } from 'common-util/functions';
+import { MAX_AMOUNT, ADDRESS_ZERO, ONE_ETH } from 'common-util/functions';
 import {
   getContractAddress,
   getDepositoryContract,
   getUniswapV2PairContract,
+  getTokenomicsContract,
 } from 'common-util/Contracts';
+
+/**
+ * fetches the IDF (discount factor) for the product
+ *
+ */
+const getLastIDFRequest = ({ chainId }) => new Promise((resolve, reject) => {
+  const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
+
+  contract.methods
+    .getLastIDF()
+    .call()
+    .then((lastIdfResponse) => {
+      /**
+         * 1 ETH = 1e18
+         * discount = (1 ETH - lastIDF) / 1 ETH
+         */
+      const discount = ethers.BigNumber.from(ONE_ETH)
+        .sub(lastIdfResponse)
+        .div(ONE_ETH)
+        .mul(100) // to convert it to percentage
+        .toString();
+
+      resolve(discount);
+    })
+    .catch((e) => {
+      window.console.log('Error occured on getting last IDF');
+      reject(e);
+    });
+});
 
 const getProductsRequest = ({ chainId, isActive }) => new Promise((resolve, reject) => {
   const contract = getDepositoryContract(window.MODAL_PROVIDER, chainId);
@@ -57,7 +87,7 @@ export const getAllTheProductsNotRemoved = async ({ chainId }) => new Promise((r
   contract.methods
     .productCounter()
     .call()
-    .then((productsList) => {
+    .then(async (productsList) => {
       const allListPromise = [];
 
       for (let i = 0; i < productsList; i += 1) {
@@ -66,12 +96,23 @@ export const getAllTheProductsNotRemoved = async ({ chainId }) => new Promise((r
         allListPromise.push(result);
       }
 
+      // discount factor is same for all the products
+      const discount = await getLastIDFRequest({ chainId });
+
       Promise.all(allListPromise)
         .then((response) => {
+          // add id & discount to the product
+          const productWithIds = response.map((product, index) => ({
+            ...product,
+            discount,
+            id: index,
+          }));
+
           // filter out the products that are removed
-          const filteredList = response.filter(
+          const filteredList = productWithIds.filter(
             (product) => product.token !== ADDRESS_ZERO,
           );
+
           resolve(filteredList);
         })
         .catch((e) => reject(e));
@@ -80,14 +121,6 @@ export const getAllTheProductsNotRemoved = async ({ chainId }) => new Promise((r
       window.console.log('Error on fetching products');
       reject(e);
     });
-
-  // const numAllProducts = await depository.productCounter();
-  // for (let i = 0; i < numAllProducts) {
-  //     const product = await depository.mapBondProducts(i);
-  //     if (product.token != AddressZero) {
-  //          output the product info
-  //     }
-  // }
 });
 
 export const getProductListRequest = async ({ account, chainId, isActive }) => {
@@ -103,9 +136,13 @@ export const getProductListRequest = async ({ account, chainId, isActive }) => {
       chainId,
     });
 
+    // discount factor is same for all the products
+    const discount = await getLastIDFRequest({ chainId });
+
     const productList = response.map((product, index) => ({
       id: productIdList[index],
       key: productIdList[index],
+      discount,
       ...product,
     }));
 
@@ -181,21 +218,15 @@ export const approveRequest = ({ account, chainId, token }) => new Promise((reso
 });
 
 /**
- * Bonding functionalities
+ * - Add a button similar to https://app.olympusdao.finance/?_gl=1*1hlr8kb*_ga*Njc2NTQ5OTI5LjE2NDY2NTI2OTQ.*_ga_QV7HNEEHV9*MTY3MjY3MDc5MS43LjAuMTY3MjY3MDc5MS4wLjAuMA..#/bonds/inverse
+ *
+ * - Token.approve() of
+ * 1st arg - treasury address
+ * 2nd arg - MAX_UINT256
+ *
+ *
+ * getLastIDF calculation
+ * const lastIDF = await tokenomics.getLastIDF(); // IN ETH and should be >= 1
+ * const discount = (lastIDF - 1e18) / 10^16 // 1e18 is 1 ETH Value
+ * // right now last IDF in 1 so answer is 0
  */
-// export const redeemRequest = ({ account, chainId, bondIds }) =>
-// new Promise((resolve, reject) => {
-//   const contract = getDepositoryContract(
-//     window.MODAL_PROVIDER,
-//     chainId,
-//   );
-
-//   const fn = contract.methods.redeem(bondIds).send({ from: account });
-
-//   sendTransaction(fn, account)
-//     .then((response) => resolve(response?.transactionHash))
-//     .catch((e) => {
-//       window.console.log('Error occured on depositing');
-//       reject(e);
-//     });
-// });

@@ -3,7 +3,7 @@ import { Typography } from 'antd/lib';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import { notifyError, notifySuccess, parseToWei } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
-import { getDepositoryContractRequest } from './contractUtils';
+import { getDepositoryContractRequest } from './requests';
 
 const { Title, Paragraph, Text } = Typography;
 

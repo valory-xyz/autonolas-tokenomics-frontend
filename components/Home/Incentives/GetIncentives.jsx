@@ -5,7 +5,7 @@ import {
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import { notifySpecificError } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
-import { getOwnerIncentivesRequest } from '../contractUtils';
+import { getOwnerIncentivesRequest } from '../requests';
 
 const columns = [
   {

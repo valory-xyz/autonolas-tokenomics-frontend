@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { Button, Table } from 'antd/lib';
+import { Button, Table, Tag } from 'antd/lib';
+import { COLOR } from '@autonolas/frontend-library';
 import {
   notifyError,
   getFormattedDate,
@@ -30,8 +31,11 @@ const getColumns = (showNoSupply) => [
     title: 'Discount',
     dataIndex: 'discount',
     key: 'discount',
-    // TODO: blank for now
-    // render: (x) => parseToEth(x),
+    render: (x) => (
+      <Tag color={COLOR.PRIMARY} key={x}>
+        {`${x}%`}
+      </Tag>
+    ),
   },
   {
     title: 'Supply',
@@ -45,7 +49,6 @@ const getColumns = (showNoSupply) => [
     key: 'expiry',
     render: (seconds) => getFormattedDate(seconds * 1000),
   },
-
   {
     title: 'Bond',
     dataIndex: 'bondForOlas',
@@ -117,17 +120,3 @@ ProductList.propTypes = {
 ProductList.defaultProps = {
   productType: 'active',
 };
-
-/**
- * - Add a button similar to https://app.olympusdao.finance/?_gl=1*1hlr8kb*_ga*Njc2NTQ5OTI5LjE2NDY2NTI2OTQ.*_ga_QV7HNEEHV9*MTY3MjY3MDc5MS43LjAuMTY3MjY3MDc5MS4wLjAuMA..#/bonds/inverse
- *
- * - Token.approve() of
- * 1st arg - treasury address
- * 2nd arg - MAX_UINT256
- *
- *
- * getLastIDF calculation
- * const lastIDF = await tokenomics.getLastIDF(); // IN ETH and should be >= 1
- * const discount = (lastIDF - 1e18) / 10^16 // 1e18 is 1 ETH Value
- * // right now last IDF in 1 so answer is 0
- */

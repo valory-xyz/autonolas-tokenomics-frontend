@@ -12,6 +12,8 @@ export const MAX_AMOUNT = ethers.constants.MaxUint256;
 
 export const ADDRESS_ZERO = ethers.constants.AddressZero;
 
+export const ONE_ETH = ethers.constants.WeiPerEther;
+
 /**
  *
  * @param {BigNumebr} value value to be converted to Eth
