@@ -1,28 +1,48 @@
 import { useState } from 'react';
-import { Typography, Switch } from 'antd/lib';
+import styled from 'styled-components';
+import { Typography, Radio } from 'antd/lib';
+import { COLOR } from '@autonolas/frontend-library';
 import { ProductList } from './Products/ProductList';
 import { Deposit } from './Products/Deposit';
 
 const { Title } = Typography;
 
+const ProductContainer = styled.div`
+  .ant-typography {
+    display: flex;
+    align-items: center;
+    .ant-radio {
+      display: inline-block;
+      top: 2px;
+    }
+    .ant-radio-group {
+      margin-left: 2rem;
+      border: 1px solid ${COLOR.BORDER_GREY};
+      padding: 2px 16px;
+    }
+  }
+`;
+
 export const Products = () => {
-  const [isActiveProducts, setIsActiveProducts] = useState(true);
+  const [productType, setProductType] = useState('active');
+
+  const onChange = (e) => {
+    setProductType(e.target.value);
+  };
 
   return (
-    <div>
+    <ProductContainer>
       <Title level={2}>
         Products
-        <Switch
-          checked={isActiveProducts}
-          checkedChildren="Active"
-          unCheckedChildren="Inactive"
-          onChange={(checked) => setIsActiveProducts(checked)}
-          className="ml-16"
-        />
+        <Radio.Group onChange={onChange} value={productType}>
+          <Radio value="allProduct">All</Radio>
+          <Radio value="active">Active</Radio>
+          <Radio value="inactive">Inactive</Radio>
+        </Radio.Group>
       </Title>
 
-      <ProductList isActiveProducts={isActiveProducts} />
+      <ProductList productType={productType} />
       <Deposit />
-    </div>
+    </ProductContainer>
   );
 };

@@ -5,8 +5,8 @@ import { useHelpers } from 'common-util/hooks/useHelpers';
 import {
   depositRequest,
   hasSufficientTokenRequest,
-  approveOlasByOwner,
-} from '../contractUtils';
+  approveRequest,
+} from './requests';
 
 const Container = styled.div`
   width: 500px;
@@ -25,9 +25,14 @@ export const Deposit = () => {
       token: '0x073240f818dd606032956F709110656764008f58',
     });
 
+    // TODO: check for the allowance of the token,
+    // if allownace in lower than the amount to be deposited,
+    // then open the approve function
+    // eg. If user is depositing 1000 OLAS and the allowance is 500, then open the approve function
+
     if (!hasSufficientAllowance) {
       // open approve modal
-      await approveOlasByOwner({
+      await approveRequest({
         account,
         chainId,
         token: '0x073240f818dd606032956F709110656764008f58',

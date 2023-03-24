@@ -7,12 +7,9 @@ import {
   parseToEth,
 } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
-import {
-  getProductsRequest,
-  getProductDetailsFromIdsRequest,
-} from '../contractUtils';
+import { getProductListRequest, getAllTheProductsNotRemoved } from './requests';
 
-const columns = [
+const getColumns = (showNoSupply) => [
   {
     title: 'Product ID',
     dataIndex: 'id',
@@ -53,35 +50,40 @@ const columns = [
     title: 'Bond',
     dataIndex: 'bondForOlas',
     key: 'bondForOlas',
-    render: () => <Button type="primary">Bond</Button>,
+    render: () => (
+      <Button type="primary" disabled={showNoSupply}>
+        Bond
+      </Button>
+    ),
   },
 ];
 
-export const ProductList = ({ isActiveProducts }) => {
+export const ProductList = ({ productType }) => {
   const { account, chainId } = useHelpers();
   const [isLoading, setIsLoading] = useState(false);
   const [products, setProducts] = useState([]);
+  const showNoSupply = productType === 'allProduct';
 
   useEffect(() => {
     const getProducts = async () => {
       try {
         setIsLoading(true);
 
-        const productIdList = await getProductsRequest({
-          account,
-          chainId,
-          isActive: isActiveProducts,
-        });
-        const response = await getProductDetailsFromIdsRequest({
-          productIdList,
-          chainId,
-        });
-        const productList = response.map((product, index) => ({
-          id: productIdList[index],
-          key: productIdList[index],
-          ...product,
-        }));
-        setProducts(productList);
+        // If productType is allProduct, we will get all the products
+        // that are not removed
+
+        if (showNoSupply) {
+          const productList = await getAllTheProductsNotRemoved({ chainId });
+          setProducts(productList);
+        } else {
+          const productList = await getProductListRequest({
+            account,
+            chainId,
+            isActive: productType === 'active',
+          });
+          setProducts(productList);
+        }
+
         setIsLoading(false);
       } catch (error) {
         window.console.error(error);
@@ -94,11 +96,11 @@ export const ProductList = ({ isActiveProducts }) => {
     if (account && chainId) {
       getProducts();
     }
-  }, [account, chainId, isActiveProducts]);
+  }, [account, chainId, productType]);
 
   return (
     <Table
-      columns={columns}
+      columns={getColumns(showNoSupply)}
       dataSource={products}
       bordered
       loading={isLoading}
@@ -109,11 +111,11 @@ export const ProductList = ({ isActiveProducts }) => {
 };
 
 ProductList.propTypes = {
-  isActiveProducts: PropTypes.bool,
+  productType: PropTypes.string,
 };
 
 ProductList.defaultProps = {
-  isActiveProducts: false,
+  productType: 'active',
 };
 
 /**
@@ -123,5 +125,9 @@ ProductList.defaultProps = {
  * 1st arg - treasury address
  * 2nd arg - MAX_UINT256
  *
- * - Token.allowance() of
+ *
+ * getLastIDF calculation
+ * const lastIDF = await tokenomics.getLastIDF(); // IN ETH and should be >= 1
+ * const discount = (lastIDF - 1e18) / 10^16 // 1e18 is 1 ETH Value
+ * // right now last IDF in 1 so answer is 0
  */
