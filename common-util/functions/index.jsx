@@ -10,6 +10,8 @@ import { NA } from 'common-util/constants';
  */
 export const MAX_AMOUNT = ethers.constants.MaxUint256;
 
+export const ADDRESS_ZERO = ethers.constants.AddressZero;
+
 /**
  *
  * @param {BigNumebr} value value to be converted to Eth

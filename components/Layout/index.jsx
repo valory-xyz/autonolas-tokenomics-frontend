@@ -56,6 +56,10 @@ const NavigationBar = ({ children }) => {
               key: 'products',
               label: 'Products',
             },
+            {
+              key: 'bonds',
+              label: 'Bonds',
+            },
           ]}
         />
         <Login />
