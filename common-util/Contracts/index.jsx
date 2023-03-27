@@ -1,26 +1,26 @@
 import Web3 from 'web3';
 import {
   // depository
-  DEPOSITORY_ADDRESS_MAINNET as DEPOSITORY_ADDRESS_GOERLI, // TODO: change to goerli address
-  DEPOSITORY_ABI_MAINNET as DEPOSITORY_ABI_GOERLI, // TODO: change to goerli abi
+  DEPOSITORY_ADDRESS_GOERLI,
+  DEPOSITORY_ABI_MAINNET as DEPOSITORY_ABI_GOERLI, // TODO: change to goerli abi?
   DEPOSITORY_ADDRESS_MAINNET,
   DEPOSITORY_ABI_MAINNET,
 
   // dispensers
-  DISPENSER_ADDRESS_MAINNET as DISPENSER_ADDRESS_GOERLI, // TODO: change to goerli address
-  DISPENSER_ABI_MAINNET as DISPENSER_ABI_GOERLI, // TODO: change to goerli abi
+  DISPENSER_ADDRESS_GOERLI,
+  DISPENSER_ABI_MAINNET as DISPENSER_ABI_GOERLI, // TODO: change to goerli abi?
   DISPENSER_ADDRESS_MAINNET,
   DISPENSER_ABI_MAINNET,
 
   // treasury
-  TREASURY_ADDRESS_MAINNET as TREASURY_ADDRESS_GOERLI, // TODO: change to goerli address
-  TREASURY_ABI_MAINNET as TREASURY_ABI_GOERLI, // TODO: change to goerli abi
+  TREASURY_ADDRESS_GOERLI,
+  TREASURY_ABI_MAINNET as TREASURY_ABI_GOERLI, // TODO: change to goerli abi?
   TREASURY_ADDRESS_MAINNET,
   TREASURY_ABI_MAINNET,
 
   // tokenomics
-  TOKENOMICS_ADDRESS_MAINNET as TOKENOMICS_ADDRESS_GOERLI, // TODO: change to goerli address
-  TOKENOMICS_ABI_MAINNET as TOKENOMICS_ABI_GOERLI, // TODO: change to goerli abi
+  TOKENOMICS_ADDRESS_GOERLI,
+  TOKENOMICS_ABI_MAINNET as TOKENOMICS_ABI_GOERLI, // TODO: change to goerli abi?
   TOKENOMICS_ADDRESS_MAINNET,
   TOKENOMICS_ABI_MAINNET,
 
@@ -120,9 +120,6 @@ export const getTokenomicsContract = (p, chainId) => {
 
 export const getUniswapV2PairContract = (p, address) => {
   const web3 = new Web3(p);
-  const contract = new web3.eth.Contract(
-    UNISWAP_V2_PAIR_ABI_MAINNET,
-    address,
-  );
+  const contract = new web3.eth.Contract(UNISWAP_V2_PAIR_ABI_MAINNET, address);
   return contract;
 };

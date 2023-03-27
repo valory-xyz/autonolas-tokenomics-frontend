@@ -1,5 +1,3 @@
-export const UNISWAP_V2_PAIR_ADDRESS_MAINNET = '';
-
 export const UNISWAP_V2_PAIR_ABI_MAINNET = [
   {
     inputs: [],

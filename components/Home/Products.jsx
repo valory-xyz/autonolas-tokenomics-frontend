@@ -3,7 +3,6 @@ import styled from 'styled-components';
 import { Typography, Radio } from 'antd/lib';
 import { COLOR } from '@autonolas/frontend-library';
 import { ProductList } from './Products/ProductList';
-import { Deposit } from './Products/Deposit';
 
 const { Title } = Typography;
 
@@ -42,7 +41,6 @@ export const Products = () => {
       </Title>
 
       <ProductList productType={productType} />
-      <Deposit />
     </ProductContainer>
   );
 };

@@ -106,6 +106,7 @@ export const getAllTheProductsNotRemoved = async ({ chainId }) => new Promise((r
             ...product,
             discount,
             id: index,
+            key: index,
           }));
 
           // filter out the products that are removed
