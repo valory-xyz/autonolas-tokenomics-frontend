@@ -1,3 +1,3 @@
-import { DepositServiceDonation } from 'components/Home/DepositServiceDonation';
+const Index = () => <>Hello!</>;
 
-export default DepositServiceDonation;
+export default Index;
