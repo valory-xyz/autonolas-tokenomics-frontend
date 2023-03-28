@@ -3,6 +3,7 @@ import {
   getDispenserContract,
   getTokenomicsContract,
   getTreasuryContract,
+  getDepositoryContract,
 } from 'common-util/Contracts';
 
 // ***************************************************
@@ -84,6 +85,27 @@ export const getDepositoryContractRequest = ({
 /**
  * Bonding functionalities
  */
+export const getBondsRequest = ({
+  account,
+  chainId,
+  isActive: isBondMatured,
+}) => new Promise((resolve, reject) => {
+  const contract = getDepositoryContract(window.MODAL_PROVIDER, chainId);
+
+  contract.methods
+    .getBonds(account, isBondMatured)
+    .call()
+    .then((response) => {
+      const { bondIds } = response;
+      window.console.log('response', bondIds);
+      resolve([]);
+    })
+    .catch((e) => {
+      window.console.log('Error on fetching bonds');
+      reject(e);
+    });
+});
+
 // export const redeemRequest = ({ account, chainId, bondIds }) =>
 // new Promise((resolve, reject) => {
 //   const contract = getDepositoryContract(
@@ -117,16 +139,5 @@ export const getDepositoryContractRequest = ({
  *
  * claim
  * - Make sure the user is the owner of the unit Id before checking/fetching the incentives
- *
- * DEPOSIT function
- *
- * - check if there is allowance of the LP token (from product) in treasury contract
- * and if not, then call the approve function + deposit function
- * else call only the deposit function
- *
- * ALTERNATIVE
- * - show "Enable" button if there is no allowance (on click,
- * call the approve function & deposit function)
- * - show "Deposit" button if there is allowance (on click, call the deposit function)
  *
  */

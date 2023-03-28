@@ -10,7 +10,6 @@ import {
 
 /**
  * fetches the IDF (discount factor) for the product
- *
  */
 const getLastIDFRequest = ({ chainId }) => new Promise((resolve, reject) => {
   const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
@@ -124,6 +123,9 @@ export const getAllTheProductsNotRemoved = async ({ chainId }) => new Promise((r
     });
 });
 
+/**
+ * fetches product list based on the active/inactive status
+ */
 export const getProductListRequest = async ({ account, chainId, isActive }) => {
   try {
     const productIdList = await getProductsRequest({
@@ -185,6 +187,9 @@ export const hasSufficientTokenRequest = ({
     });
 });
 
+/**
+ * Approves the treasury contract to spend the token
+ */
 export const approveRequest = ({ account, chainId, token }) => new Promise((resolve, reject) => {
   const contract = getUniswapV2PairContract(window.MODAL_PROVIDER, token);
 
@@ -204,6 +209,9 @@ export const approveRequest = ({ account, chainId, token }) => new Promise((reso
     });
 });
 
+/**
+ * Deposits the token
+ */
 export const depositRequest = ({
   account, chainId, productId, tokenAmount,
 }) => new Promise((resolve, reject) => {
@@ -222,17 +230,3 @@ export const depositRequest = ({
       reject(e);
     });
 });
-
-/**
- * - Add a button similar to https://app.olympusdao.finance/?_gl=1*1hlr8kb*_ga*Njc2NTQ5OTI5LjE2NDY2NTI2OTQ.*_ga_QV7HNEEHV9*MTY3MjY3MDc5MS43LjAuMTY3MjY3MDc5MS4wLjAuMA..#/bonds/inverse
- *
- * - Token.approve() of
- * 1st arg - treasury address
- * 2nd arg - MAX_UINT256
- *
- *
- * getLastIDF calculation
- * const lastIDF = await tokenomics.getLastIDF(); // IN ETH and should be >= 1
- * const discount = (lastIDF - 1e18) / 10^16 // 1e18 is 1 ETH Value
- * // right now last IDF in 1 so answer is 0
- */
