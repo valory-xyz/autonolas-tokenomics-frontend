@@ -98,7 +98,14 @@ export const getBondsRequest = ({
     .then((response) => {
       const { bondIds } = response;
       window.console.log('response', bondIds);
-      resolve([]);
+      resolve([
+        {
+          bondId: bondIds[0] || 1,
+          payout: '100',
+          matured: true,
+          key: bondIds[0] || 1,
+        },
+      ]);
     })
     .catch((e) => {
       window.console.log('Error on fetching bonds');
