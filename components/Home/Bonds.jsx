@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react';
-import { Typography, Switch, Table } from 'antd/lib';
+import {
+  Typography, Switch, Table, Button,
+} from 'antd/lib';
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { COLOR } from '@autonolas/frontend-library';
 import { useHelpers } from 'common-util/hooks/useHelpers';
-import { parseToEth } from 'common-util/functions';
-import { getBondsRequest } from './requests';
+import { notifyError, parseToEth } from 'common-util/functions';
+import { getBondsRequest, redeemRequest } from './requests';
 
 const { Title } = Typography;
 
-const bondsColumns = [
+const getBondsColumns = (onClick) => [
   {
     title: 'Bond ID',
     dataIndex: 'bondId',
@@ -29,6 +31,16 @@ const bondsColumns = [
     ) : (
       <CloseOutlined style={{ color: COLOR.RED, fontSize: 24 }} />
     )),
+  },
+  {
+    title: 'Redeem',
+    dataIndex: 'redeem',
+    key: 'redeem',
+    render: (_, row) => (
+      <Button disabled={!row.matured} onClick={() => onClick(row.bondId)}>
+        Redeem
+      </Button>
+    ),
   },
 ];
 
@@ -61,6 +73,19 @@ export const Bonds = () => {
     }
   }, [account, chainId, isBondMatured]);
 
+  const onRedeemClick = async (bondId) => {
+    try {
+      await redeemRequest({
+        account,
+        chainId,
+        bondIds: [bondId],
+      });
+    } catch (error) {
+      window.console.error(error);
+      notifyError();
+    }
+  };
+
   return (
     <div>
       <Title level={2}>
@@ -75,7 +100,7 @@ export const Bonds = () => {
       </Title>
 
       <Table
-        columns={bondsColumns}
+        columns={getBondsColumns(onRedeemClick)}
         dataSource={bondsList}
         bordered
         loading={isLoading}

@@ -124,22 +124,18 @@ export const getBondsRequest = ({
     });
 });
 
-// export const redeemRequest = ({ account, chainId, bondIds }) =>
-// new Promise((resolve, reject) => {
-//   const contract = getDepositoryContract(
-//     window.MODAL_PROVIDER,
-//     chainId,
-//   );
+export const redeemRequest = ({ account, chainId, bondIds }) => new Promise((resolve, reject) => {
+  const contract = getDepositoryContract(window.MODAL_PROVIDER, chainId);
 
-//   const fn = contract.methods.redeem(bondIds).send({ from: account });
+  const fn = contract.methods.redeem(bondIds).send({ from: account });
 
-//   sendTransaction(fn, account)
-//     .then((response) => resolve(response?.transactionHash))
-//     .catch((e) => {
-//       window.console.log('Error occured on depositing');
-//       reject(e);
-//     });
-// });
+  sendTransaction(fn, account)
+    .then((response) => resolve(response?.transactionHash))
+    .catch((e) => {
+      window.console.log('Error occured on redeeming bonds: ', bondIds);
+      reject(e);
+    });
+});
 
 /**
  *
