@@ -111,11 +111,3 @@ export const Bonds = () => {
     </div>
   );
 };
-
-/**
- * Show a table
- * 1. Product ID
- * 2. Payout in OLAS
- * 3. Maturity
- *
- */

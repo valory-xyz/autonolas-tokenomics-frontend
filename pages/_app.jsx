@@ -32,8 +32,8 @@ class MyApp extends App {
       <>
         <GlobalStyle />
         <Head>
-          <title>Autonolas Investors</title>
-          <meta name="title" content="Manage your veOLAS and buOLAS" />
+          <title>Autonolas Tokenomics</title>
+          <meta name="title" content="Autonolas Tokenomics" />
         </Head>
         <Web3DataProvider>
           <Web3ReactProvider getLibrary={getLibrary}>

@@ -22,7 +22,6 @@ export const ClaimIncentives = () => {
       await claimOwnerIncentivesRequest(params);
 
       notifySuccess('Claimed owner incentives successfully');
-      setIsLoading(false);
     } catch (error) {
       notifySpecificError(error);
       window.console.error(error);

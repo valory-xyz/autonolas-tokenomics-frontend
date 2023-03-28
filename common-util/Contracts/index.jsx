@@ -31,7 +31,7 @@ import { LOCAL_CHAIN_ID } from 'util/constants';
 
 /**
  * Addresses fetched when backend connected locally
- * to hardhat from initDeploy.json
+ * (initDeploy.json in backend repository)
  */
 export const LOCAL_ADDRESSES = {
   DEPOSITORY_ADDRESS_LOCAL: '0x4c5859f0F772848b2D91F1D83E2Fe57935348029',

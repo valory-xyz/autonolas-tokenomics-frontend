@@ -14,6 +14,7 @@ export const DepositServiceDonation = () => {
   const onDepositServiceDonationSubmit = async (values) => {
     try {
       setIsLoading(true);
+
       const params = {
         account,
         chainId,
@@ -21,10 +22,9 @@ export const DepositServiceDonation = () => {
         amounts: values.unitTypes.map((e) => parseToWei(e)),
         totalAmount: parseToWei(values.unitTypes.reduce((a, b) => a + b, 0)),
       };
-
       await getDepositoryContractRequest(params);
+
       notifySuccess('Deposited service donation successfully');
-      setIsLoading(false);
     } catch (error) {
       window.console.error(error);
       notifyError();

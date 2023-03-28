@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 import dayjs from 'dayjs';
 import { notification } from 'antd/lib';
-import { isNil, isObject, isString } from 'lodash';
+import { isNil, isObject } from 'lodash';
 import { COLOR } from '@autonolas/frontend-library';
 import { NA } from 'common-util/constants';
 
@@ -41,11 +41,6 @@ export const parseToWei = (amount) => ethers.utils.parseUnits(`${amount}`, 18).t
  * example 1 => 1000000000000000000
  */
 export const parseEther = (n) => ethers.utils.parseEther(`${n}`);
-
-export const getBlockTimestamp = async (block = 'latest') => {
-  const temp = await window?.WEB3_PROVIDER.eth.getBlock(block);
-  return temp.timestamp * 1;
-};
 
 export const notifyError = (message = 'Some error occured') => notification.error({
   message,
@@ -132,9 +127,4 @@ export const getFormattedDate = (ms) => {
 export const getFullFormattedDate = (ms) => {
   if (!ms) return NA;
   return dayjs(ms).format("MMM DD 'YYYY, HH:mm");
-};
-
-export const getString = (x) => {
-  if (isNil(x)) return NA;
-  return isString(x) ? x : `${x}`;
 };

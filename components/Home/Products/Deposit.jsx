@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import {
   Form, Input, Modal, Alert, Button,
 } from 'antd/lib';
-import styled from 'styled-components';
 import { parseToWei, notifySuccess, notifyError } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import {
@@ -11,11 +10,6 @@ import {
   hasSufficientTokenRequest,
   approveRequest,
 } from './requests';
-
-const Container = styled.div`
-  /* width: 500px; */
-  /* margin-top: 2rem; */
-`;
 
 export const Deposit = ({
   productId,
@@ -29,23 +23,30 @@ export const Deposit = ({
   const [isApproveModalVisible, setIsApproveModalVisible] = useState(false);
 
   const depositHelper = async () => {
-    setIsLoading(true);
-    // deposit if LP token is present for the product ID
-    const txHash = await depositRequest({
-      account,
-      chainId,
-      productId: form.getFieldValue('productId'),
-      tokenAmount: parseToWei(form.getFieldValue('tokenAmount')),
-    });
-    notifySuccess('Deposited successfully!', `Transaction Hash: ${txHash}`);
+    try {
+      setIsLoading(true);
 
-    // fetch the products details again
-    getProducts();
+      // deposit if LP token is present for the product ID
+      const txHash = await depositRequest({
+        account,
+        chainId,
+        productId: form.getFieldValue('productId'),
+        tokenAmount: parseToWei(form.getFieldValue('tokenAmount')),
+      });
+      notifySuccess('Deposited successfully!', `Transaction Hash: ${txHash}`);
 
-    // close the modal after successful deposit & loading state
-    setIsLoading(false);
-    closeModal();
-    form.resetFields();
+      // fetch the products details again
+      getProducts();
+
+      // close the modal after successful deposit
+      closeModal();
+      form.resetFields();
+    } catch (error) {
+      notifyError('Error while depositing');
+      window.console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const onCreate = () => {
@@ -69,7 +70,7 @@ export const Deposit = ({
         }
       })
       .catch((info) => {
-        window?.console.log('Validation Failed:', info);
+        window.console.log('Validation Failed:', info);
       })
       .finally(() => {
         setIsLoading(false);
@@ -87,34 +88,32 @@ export const Deposit = ({
         onOk={onCreate}
         confirmLoading={isLoading}
       >
-        <Container>
-          <Form
-            form={form}
-            name="deposit_form"
-            autoComplete="off"
-            labelCol={{ span: 8 }}
-            wrapperCol={{ span: 16 }}
-            initialValues={{
-              productId: productId || undefined,
-            }}
+        <Form
+          form={form}
+          name="deposit_form"
+          autoComplete="off"
+          labelCol={{ span: 8 }}
+          wrapperCol={{ span: 16 }}
+          initialValues={{
+            productId: productId || undefined,
+          }}
+        >
+          <Form.Item
+            label="Product ID"
+            name="productId"
+            rules={[{ required: true, message: 'Please input product ID' }]}
           >
-            <Form.Item
-              label="Product ID"
-              name="productId"
-              rules={[{ required: true, message: 'Please input product ID' }]}
-            >
-              <Input disabled />
-            </Form.Item>
+            <Input disabled />
+          </Form.Item>
 
-            <Form.Item
-              label="Token Amount"
-              name="tokenAmount"
-              rules={[{ required: true, message: 'Please input token' }]}
-            >
-              <Input />
-            </Form.Item>
-          </Form>
-        </Container>
+          <Form.Item
+            label="Token Amount"
+            name="tokenAmount"
+            rules={[{ required: true, message: 'Please input token' }]}
+          >
+            <Input />
+          </Form.Item>
+        </Form>
       </Modal>
 
       {isApproveModalVisible && (

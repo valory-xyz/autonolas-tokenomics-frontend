@@ -39,8 +39,7 @@ export const GetIncentives = () => {
       };
       const response = await getOwnerIncentivesRequest(params);
 
-      // set reward and top up
-      setIsLoading(false);
+      // set reward and top up for table
       setRewardAndTopUp([
         {
           key: '1',

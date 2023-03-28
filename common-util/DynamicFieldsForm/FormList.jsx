@@ -85,12 +85,7 @@ export const FormList = ({
             </>
           )}
         >
-          <Button
-            type="dashed"
-            onClick={() => add()}
-            block
-            icon={<PlusOutlined />}
-          >
+          <Button onClick={() => add()} block icon={<PlusOutlined />}>
             {buttonText}
           </Button>
         </Form.Item>

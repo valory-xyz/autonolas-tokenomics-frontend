@@ -26,7 +26,7 @@ const getColumns = (showNoSupply, onClick) => [
     title: 'Price LP',
     dataIndex: 'priceLP',
     key: 'priceLP',
-    render: (x) => parseToEth(x),
+    render: (x) => `${parseToEth(x)} ETH`,
   },
   {
     title: 'Discount',
@@ -42,7 +42,7 @@ const getColumns = (showNoSupply, onClick) => [
     title: 'Supply',
     dataIndex: 'supply',
     key: 'supply',
-    render: (x) => parseToEth(x),
+    render: (x) => `${parseToEth(x)} ETH`,
   },
   {
     title: 'Expiry',
@@ -92,8 +92,6 @@ export const ProductList = ({ productType }) => {
         });
         setProducts(productList);
       }
-
-      setIsLoading(false);
     } catch (error) {
       window.console.error(error);
       notifyError();

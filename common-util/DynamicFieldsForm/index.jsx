@@ -13,8 +13,8 @@ export const DynamicFieldsForm = ({
   onSubmit,
 }) => {
   const { account } = useHelpers();
-
   const [form] = Form.useForm();
+
   const onFinish = async (values) => {
     if (onSubmit) {
       await onSubmit({

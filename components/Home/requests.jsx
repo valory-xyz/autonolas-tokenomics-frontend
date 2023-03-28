@@ -148,10 +148,7 @@ export const redeemRequest = ({ account, chainId, bondIds }) => new Promise((res
  * - Get the agentIds and componentIds of the service using
  * getUnitIdsOfService(IRegistry.UnitType unitType, uint256 serviceId) - ServiceRegistry
  *
- *
- * bonding functionalities (depository and tokenomics contract)
- *
- * claim
+ * CLAIM
  * - Make sure the user is the owner of the unit Id before checking/fetching the incentives
  *
  */
