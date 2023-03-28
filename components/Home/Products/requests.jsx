@@ -153,30 +153,11 @@ export const getProductListRequest = async ({ account, chainId, isActive }) => {
   }
 };
 
-export const depositRequest = ({
-  account, chainId, productId, tokenAmount,
-}) => new Promise((resolve, reject) => {
-  const contract = getDepositoryContract(window.MODAL_PROVIDER, chainId);
-
-  const fn = contract.methods
-    .deposit(productId, tokenAmount)
-    .send({ from: account });
-
-  sendTransaction(fn, account)
-    .then((response) => {
-      console.log(response);
-      resolve(response?.transactionHash);
-    })
-    .catch((e) => {
-      window.console.log('Error occured on depositing');
-      reject(e);
-    });
-});
-
 export const hasSufficientTokenRequest = ({
   account,
   chainId,
   token: productToken,
+  tokenAmount,
 }) => new Promise((resolve, reject) => {
   const contract = getUniswapV2PairContract(
     window.MODAL_PROVIDER,
@@ -189,12 +170,17 @@ export const hasSufficientTokenRequest = ({
     .allowance(account, treasuryAddress)
     .call()
     .then((response) => {
-      console.log({ allowance: response });
-      // check if the allowance is equal to MAX_AMOUNT
-      resolve(ethers.BigNumber.from(response).eq(MAX_AMOUNT));
+      // if allowance is greater than or equal to token amount
+      // then user has sufficient token
+      const hasEnoughAllowance = ethers.BigNumber.from(response).gte(
+        ethers.BigNumber.from(tokenAmount),
+      );
+      resolve(hasEnoughAllowance);
     })
     .catch((e) => {
-      window.console.log('Error occured on calling `allowance` method');
+      window.console.log(
+        `Error occured on fetching allowance for the product token ${productToken}`,
+      );
       reject(e);
     });
 });
@@ -213,7 +199,26 @@ export const approveRequest = ({ account, chainId, token }) => new Promise((reso
       resolve(response);
     })
     .catch((e) => {
-      window.console.log('Error occured on approving OLAS by owner');
+      window.console.log('Error occured on approving OLAS');
+      reject(e);
+    });
+});
+
+export const depositRequest = ({
+  account, chainId, productId, tokenAmount,
+}) => new Promise((resolve, reject) => {
+  const contract = getDepositoryContract(window.MODAL_PROVIDER, chainId);
+
+  const fn = contract.methods
+    .deposit(productId, tokenAmount)
+    .send({ from: account });
+
+  sendTransaction(fn, account)
+    .then((response) => {
+      resolve(response?.transactionHash);
+    })
+    .catch((e) => {
+      window.console.log('Error occured on depositing');
       reject(e);
     });
 });

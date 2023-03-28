@@ -1,6 +1,10 @@
-import { Button, Form, Input } from 'antd/lib';
+import { useState } from 'react';
+import PropTypes from 'prop-types';
+import {
+  Form, Input, Modal, Alert, Button,
+} from 'antd/lib';
 import styled from 'styled-components';
-import { parseToWei } from 'common-util/functions';
+import { parseToWei, notifySuccess, notifyError } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import {
   depositRequest,
@@ -9,76 +13,167 @@ import {
 } from './requests';
 
 const Container = styled.div`
-  width: 500px;
-  margin-top: 2rem;
+  /* width: 500px; */
+  /* margin-top: 2rem; */
 `;
 
-export const Deposit = () => {
+export const Deposit = ({
+  productId,
+  productToken,
+  getProducts,
+  closeModal,
+}) => {
   const { account, chainId } = useHelpers();
+  const [form] = Form.useForm();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isApproveModalVisible, setIsApproveModalVisible] = useState(false);
 
-  const onFinish = async (values) => {
-    // check allowance of the product ID and open approve modal if not approved
-
-    const hasSufficientAllowance = await hasSufficientTokenRequest({
-      account,
-      chainId,
-      token: '0x073240f818dd606032956F709110656764008f58',
-    });
-
-    // TODO: check for the allowance of the token,
-    // if allownace in lower than the amount to be deposited,
-    // then open the approve function
-    // eg. If user is depositing 1000 OLAS and the allowance is 500, then open the approve function
-
-    if (!hasSufficientAllowance) {
-      // open approve modal
-      await approveRequest({
-        account,
-        chainId,
-        token: '0x073240f818dd606032956F709110656764008f58',
-      });
-    }
-
+  const depositHelper = async () => {
+    setIsLoading(true);
     // deposit if LP token is present for the product ID
-    await depositRequest({
+    const txHash = await depositRequest({
       account,
       chainId,
-      productId: values.productId,
-      tokenAmount: parseToWei(values.tokenAmount),
+      productId: form.getFieldValue('productId'),
+      tokenAmount: parseToWei(form.getFieldValue('tokenAmount')),
     });
+    notifySuccess('Deposited successfully!', `Transaction Hash: ${txHash}`);
+
+    // fetch the products details again
+    getProducts();
+
+    // close the modal after successful deposit & loading state
+    setIsLoading(false);
+    closeModal();
+    form.resetFields();
+  };
+
+  const onCreate = () => {
+    form
+      .validateFields()
+      .then(async (values) => {
+        // check allowance of the product ID and open approve modal if not approved
+        const hasSufficientAllowance = await hasSufficientTokenRequest({
+          account,
+          chainId,
+          token: productToken,
+          tokenAmount: parseToWei(values.tokenAmount),
+        });
+
+        // if allowance in lower than the amount to be deposited, then needs approval
+        // eg. If user is depositing 10 OLAS and the allowance is 5, then open the approve modal
+        if (hasSufficientAllowance) {
+          await depositHelper();
+        } else {
+          setIsApproveModalVisible(true);
+        }
+      })
+      .catch((info) => {
+        window?.console.log('Validation Failed:', info);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   return (
-    <Container>
-      <Form
-        name="basic"
-        onFinish={onFinish}
-        autoComplete="off"
-        labelCol={{ span: 8 }}
-        wrapperCol={{ span: 16 }}
+    <>
+      <Modal
+        visible
+        title="Deposit"
+        okText="Deposit"
+        cancelText="Cancel"
+        onCancel={closeModal}
+        onOk={onCreate}
+        confirmLoading={isLoading}
       >
-        <Form.Item
-          label="Product ID"
-          name="productId"
-          rules={[{ required: true, message: 'Please input product ID' }]}
-        >
-          <Input />
-        </Form.Item>
+        <Container>
+          <Form
+            form={form}
+            name="deposit_form"
+            autoComplete="off"
+            labelCol={{ span: 8 }}
+            wrapperCol={{ span: 16 }}
+            initialValues={{
+              productId: productId || undefined,
+            }}
+          >
+            <Form.Item
+              label="Product ID"
+              name="productId"
+              rules={[{ required: true, message: 'Please input product ID' }]}
+            >
+              <Input disabled />
+            </Form.Item>
 
-        <Form.Item
-          label="Token Amount"
-          name="tokenAmount"
-          rules={[{ required: true, message: 'Please input token' }]}
-        >
-          <Input />
-        </Form.Item>
+            <Form.Item
+              label="Token Amount"
+              name="tokenAmount"
+              rules={[{ required: true, message: 'Please input token' }]}
+            >
+              <Input />
+            </Form.Item>
+          </Form>
+        </Container>
+      </Modal>
 
-        <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
-          <Button type="primary" htmlType="submit" disabled={!account}>
-            Submit
+      {isApproveModalVisible && (
+        <Modal
+          title="Approve OLAS"
+          visible={isApproveModalVisible}
+          footer={null}
+          onCancel={() => setIsApproveModalVisible(false)}
+        >
+          <Alert
+            message="Before depositing an approval for OLAS is required, please approve to proceed"
+            type="warning"
+          />
+
+          <br />
+          <Button
+            type="primary"
+            htmlType="submit"
+            style={{ right: 'calc(-100% + 100px)', position: 'relative' }}
+            loading={isLoading}
+            onClick={async () => {
+              try {
+                setIsLoading(true);
+                await approveRequest({
+                  account,
+                  chainId,
+                  token: productToken,
+                });
+
+                // once approved, close the modal and call deposit helper
+                setIsApproveModalVisible(false);
+                await depositHelper();
+              } catch (error) {
+                window.console.error(error);
+                setIsApproveModalVisible(false);
+                notifyError();
+              } finally {
+                setIsLoading(false);
+              }
+            }}
+          >
+            Approve
           </Button>
-        </Form.Item>
-      </Form>
-    </Container>
+        </Modal>
+      )}
+    </>
   );
+};
+
+Deposit.propTypes = {
+  productId: PropTypes.string,
+  productToken: PropTypes.string,
+  closeModal: PropTypes.func,
+  getProducts: PropTypes.func,
+};
+
+Deposit.defaultProps = {
+  productId: undefined,
+  productToken: null,
+  closeModal: () => {},
+  getProducts: () => {},
 };

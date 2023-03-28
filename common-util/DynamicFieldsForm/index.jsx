@@ -16,7 +16,6 @@ export const DynamicFieldsForm = ({
 
   const [form] = Form.useForm();
   const onFinish = async (values) => {
-    window?.console.log('Received values of form:', values);
     if (onSubmit) {
       await onSubmit({
         unitIds: values.units.map((unit) => unit.unitId),
