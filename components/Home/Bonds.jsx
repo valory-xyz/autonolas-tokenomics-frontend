@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Typography, Switch, Table } from 'antd/lib';
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
-// import styled from 'styled-components';
-import { useHelpers } from 'common-util/hooks/useHelpers';
 import { COLOR } from '@autonolas/frontend-library';
+import { useHelpers } from 'common-util/hooks/useHelpers';
+import { parseToEth } from 'common-util/functions';
 import { getBondsRequest } from './requests';
 
 const { Title } = Typography;
@@ -18,6 +18,7 @@ const bondsColumns = [
     title: 'Payout in OLAS',
     dataIndex: 'payout',
     key: 'payout',
+    render: (value) => `${parseToEth(value)} ETH`,
   },
   {
     title: 'Matured?',

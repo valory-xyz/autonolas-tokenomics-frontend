@@ -45,7 +45,6 @@ export const claimOwnerIncentivesRequest = ({
 
   sendTransaction(fn, account)
     .then((response) => {
-      window.console.log('response', response);
       resolve(response?.transactionHash);
     })
     .catch((e) => {
@@ -95,17 +94,29 @@ export const getBondsRequest = ({
   contract.methods
     .getBonds(account, isBondMatured)
     .call()
-    .then((response) => {
+    .then(async (response) => {
       const { bondIds } = response;
-      window.console.log('response', bondIds);
-      resolve([
-        {
-          bondId: bondIds[0] || 1,
-          payout: '100',
-          matured: true,
-          key: bondIds[0] || 1,
-        },
-      ]);
+      const allListPromise = [];
+      const idsList = [];
+
+      for (let i = 0; i < bondIds.length; i += 1) {
+        const id = `${bondIds[i]}`;
+        const result = contract.methods.getBondStatus(id).call();
+        allListPromise.push(result);
+        idsList.push(id);
+      }
+
+      Promise.all(allListPromise)
+        .then((allListResponse) => {
+          const bondsListWithDetails = allListResponse.map((bond, index) => ({
+            ...bond,
+            bondId: idsList[index],
+            key: idsList[index],
+          }));
+
+          resolve(bondsListWithDetails);
+        })
+        .catch((e) => reject(e));
     })
     .catch((e) => {
       window.console.log('Error on fetching bonds');
