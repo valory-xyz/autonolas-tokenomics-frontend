@@ -7,6 +7,46 @@ import {
 } from 'common-util/Contracts';
 
 // ***************************************************
+//                 Treasory contract
+//  **************************************************
+export const getDepositoryContractRequest = ({
+  account,
+  chainId,
+  serviceIds,
+  amounts,
+  totalAmount,
+}) => new Promise((resolve, reject) => {
+  const contract = getTreasuryContract(window.MODAL_PROVIDER, chainId);
+
+  const fn = contract.methods
+    .depositServiceDonationsETH(serviceIds, amounts)
+    .send({ from: account, value: totalAmount });
+
+  sendTransaction(fn, account)
+    .then((response) => resolve(response?.transactionHash))
+    .catch((e) => {
+      window.console.log('Error occured on depositing service donation');
+      reject(e);
+    });
+});
+
+export const getETHFromServicesRequest = ({ chainId }) => new Promise((resolve, reject) => {
+  const contract = getTreasuryContract(window.MODAL_PROVIDER, chainId);
+
+  contract.methods
+    .ETHFromServices()
+    .call()
+    .then((response) => {
+      console.log('getETHFromServicesRequest', response);
+      resolve(response?.transactionHash);
+    })
+    .catch((e) => {
+      window.console.log('Error occured on depositing service donation');
+      reject(e);
+    });
+});
+
+// ***************************************************
 //                 Tokenomics contract
 //  **************************************************
 
@@ -17,11 +57,22 @@ export const getOwnerIncentivesRequest = ({
   unitIds,
 }) => new Promise((resolve, reject) => {
   const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
+  // ETHFromServices
+  console.log({
+    account,
+    unitTypes,
+    unitIds,
+  });
 
   contract.methods
     .getOwnerIncentives(account, unitTypes, unitIds)
     .call()
-    .then((response) => resolve(response))
+    .then(async (response) => {
+      console.log('response', response);
+
+      await getETHFromServicesRequest({ chainId });
+      resolve(response);
+    })
     .catch((e) => {
       window.console.log('Error occured on fetching owner incentives');
       reject(e);
@@ -49,30 +100,6 @@ export const claimOwnerIncentivesRequest = ({
     })
     .catch((e) => {
       window.console.log('Error occured on claiming owner incentives');
-      reject(e);
-    });
-});
-
-// ***************************************************
-//                 Treasory contract
-//  **************************************************
-export const getDepositoryContractRequest = ({
-  account,
-  chainId,
-  serviceIds,
-  amounts,
-  totalAmount,
-}) => new Promise((resolve, reject) => {
-  const contract = getTreasuryContract(window.MODAL_PROVIDER, chainId);
-
-  const fn = contract.methods
-    .depositServiceDonationsETH(serviceIds, amounts)
-    .send({ from: account, value: totalAmount });
-
-  sendTransaction(fn, account)
-    .then((response) => resolve(response?.transactionHash))
-    .catch((e) => {
-      window.console.log('Error occured on depositing service donation');
       reject(e);
     });
 });
