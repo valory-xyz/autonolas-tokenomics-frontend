@@ -20,7 +20,7 @@ const getBondsColumns = (onClick) => [
     title: 'Payout in OLAS',
     dataIndex: 'payout',
     key: 'payout',
-    render: (value) => `${parseToEth(value)} ETH`,
+    render: (value) => `${parseToEth(value)} OLAS`,
   },
   {
     title: 'Matured?',
@@ -37,7 +37,11 @@ const getBondsColumns = (onClick) => [
     dataIndex: 'redeem',
     key: 'redeem',
     render: (_, row) => (
-      <Button disabled={!row.matured} onClick={() => onClick(row.bondId)}>
+      <Button
+        disabled={!row.matured}
+        type="primary"
+        onClick={() => onClick(row.bondId)}
+      >
         Redeem
       </Button>
     ),
@@ -50,24 +54,24 @@ export const Bonds = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [bondsList, setBondsList] = useState([]);
 
+  const getBondsHelper = async () => {
+    try {
+      setIsLoading(true);
+
+      const bonds = await getBondsRequest({
+        account,
+        chainId,
+        isActive: isBondMatured,
+      });
+      setBondsList(bonds);
+    } catch (error) {
+      window.console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const getBondsHelper = async () => {
-      try {
-        setIsLoading(true);
-
-        const bonds = await getBondsRequest({
-          account,
-          chainId,
-          isActive: isBondMatured,
-        });
-        setBondsList(bonds);
-      } catch (error) {
-        window.console.error(error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     if (account && chainId) {
       getBondsHelper();
     }
@@ -80,6 +84,9 @@ export const Bonds = () => {
         chainId,
         bondIds: [bondId],
       });
+
+      // once the bond is redeemed, we need to update the list
+      getBondsHelper();
     } catch (error) {
       window.console.error(error);
       notifyError();
@@ -111,3 +118,7 @@ export const Bonds = () => {
     </div>
   );
 };
+
+// After the bond redeem function,
+// show a notification showing the amount of bond redeemed
+// Example: "You have redeemed 10 OLAS" (this is payout in OLAS)

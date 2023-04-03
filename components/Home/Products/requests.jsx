@@ -67,7 +67,10 @@ const getProductDetailsFromIds = ({ chainId, productIdList }) => new Promise((re
     }
 
     Promise.all(allListPromise)
-      .then((componentsList) => resolve(componentsList))
+      .then((list) => {
+        console.log('list', list);
+        resolve(list);
+      })
       .catch((e) => reject(e));
   } catch (error) {
     window.console.log('Error on fetching products details');
@@ -230,3 +233,23 @@ export const depositRequest = ({
       reject(e);
     });
 });
+
+/**
+ * In product add one more column - "Vesting"
+ *
+ * const abc = get the blockTimeStamp of the current product created
+ *             (eg if 5th product is created then get the blockTimeStamp of 5th product)
+ * const vesting = expiry - abc
+ *
+ */
+
+// Send video to Mariapia
+/**
+ * 1. restart the docker
+ * 2. move_time to next day (1 day)
+ * 3. create a bond
+ * 4. go before one day product expiers - move_time
+ * 5. create a bond
+ * 6. one day later - If both bond can be redeemed?
+ * 7. If not - move_time untill both bond can be redeemed & trace the time I went on
+ */

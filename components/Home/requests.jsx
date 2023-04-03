@@ -50,6 +50,22 @@ export const getETHFromServicesRequest = ({ chainId }) => new Promise((resolve, 
 //                 Tokenomics contract
 //  **************************************************
 
+export const checkpointRequest = ({ chainId }) => new Promise((resolve, reject) => {
+  const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
+
+  contract.methods
+    .checkpoint()
+    .call()
+    .then(async (response) => {
+      console.log('checkpoint response', response);
+      resolve(response);
+    })
+    .catch((e) => {
+      window.console.log('Error occured on fetching owner incentives');
+      reject(e);
+    });
+});
+
 export const getOwnerIncentivesRequest = ({
   account,
   chainId,
@@ -178,4 +194,11 @@ export const redeemRequest = ({ account, chainId, bondIds }) => new Promise((res
  * CLAIM
  * - Make sure the user is the owner of the unit Id before checking/fetching the incentives
  *
+ */
+
+// discussion with Mariapia
+/**
+ * - How to fetch from proxy contract
+ * - getOwnerIncentivesRequest
+ * - getLastIDF
  */

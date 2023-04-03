@@ -5,7 +5,7 @@ import {
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import { notifySpecificError } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
-import { getOwnerIncentivesRequest } from '../requests';
+import { getOwnerIncentivesRequest, checkpointRequest } from '../requests';
 
 const columns = [
   {
@@ -30,6 +30,9 @@ export const GetIncentives = () => {
   const getIncentives = async (values) => {
     try {
       setIsLoading(true);
+
+      await checkpointRequest({ chainId });
+      // console.log('checkpointRes', checkpointRes);
 
       const params = {
         account,
