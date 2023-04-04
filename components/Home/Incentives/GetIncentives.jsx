@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import {
-  Row, Col, Divider, Table,
+  Row, Col, Table, Typography,
 } from 'antd/lib';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import { notifySpecificError } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { getOwnerIncentivesRequest } from '../requests';
+
+const { Title } = Typography;
 
 const columns = [
   {
@@ -60,10 +62,15 @@ export const GetIncentives = () => {
 
   return (
     <>
-      <Divider orientation="left">Fetch Owner Incentives</Divider>
+      <Title level={3}>Check Incentives</Title>
+
       <Row>
         <Col lg={14} xs={24}>
-          <DynamicFieldsForm isLoading={isLoading} onSubmit={getIncentives} />
+          <DynamicFieldsForm
+            isLoading={isLoading}
+            onSubmit={getIncentives}
+            submitButtonText="Check"
+          />
         </Col>
 
         <Col lg={10} xs={24}>

@@ -5,7 +5,7 @@ import { notifyError, notifySuccess, parseToWei } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { getDepositoryContractRequest } from './requests';
 
-const { Title, Paragraph, Text } = Typography;
+const { Title, Paragraph } = Typography;
 
 export const DepositServiceDonation = () => {
   const { account, chainId } = useHelpers();
@@ -35,22 +35,19 @@ export const DepositServiceDonation = () => {
 
   return (
     <div>
-      <Title level={2}>Deposit Service donation</Title>
+      <Title level={2}>Donate</Title>
       <Paragraph style={{ maxWidth: 550 }}>
-        Valory built the core technology behind Autonolas. The team is a
-        VC-backed group of engineers, researchers and commercial thinkers.&nbsp;
-        <a href="https://autonolas.network/" target="_blank" rel="noreferrer">
-          <Text type="secondary" underline>
-            Learn more
-          </Text>
-        </a>
+        Show appreciation for the value of an autonomous service by making a
+        donation. The protocol will reward devs who have contributed code for
+        that service.
       </Paragraph>
 
       <DynamicFieldsForm
         isUnitTypeInput={false}
         inputOneLabel="Service ID"
         inputTwoLabel="Amount"
-        buttonText="Add Service"
+        buttonText="Add row"
+        submitButtonText="Donate"
         isLoading={isLoading}
         onSubmit={onDepositServiceDonationSubmit}
       />

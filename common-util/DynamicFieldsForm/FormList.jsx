@@ -16,6 +16,7 @@ export const FormList = ({
 }) => (
   <Form.List
     name="units"
+    initialValue={[{ unitId: undefined, unitType: undefined }]}
     rules={[
       {
         validator: async (_, units) => {
@@ -44,7 +45,7 @@ export const FormList = ({
                     { required: true, message: `Please add ${inputOneLabel}` },
                   ]}
                 >
-                  <InputNumber className="mr-32" />
+                  <InputNumber className="mr-32" placeholder="Eg. 1" />
                 </Form.Item>
               )}
             </Form.Item>
@@ -63,7 +64,7 @@ export const FormList = ({
                   <Radio value="1">Component</Radio>
                 </Radio.Group>
               ) : (
-                <InputNumber />
+                <InputNumber placeholder="Eg. 5" />
               )}
             </Form.Item>
 

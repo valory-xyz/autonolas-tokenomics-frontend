@@ -10,6 +10,7 @@ export const DynamicFieldsForm = ({
   inputTwoLabel,
   buttonText,
   isLoading,
+  submitButtonText,
   onSubmit,
 }) => {
   const { account } = useHelpers();
@@ -46,7 +47,7 @@ export const DynamicFieldsForm = ({
             loading={isLoading}
             disabled={!account}
           >
-            Submit
+            {submitButtonText || 'Submit'}
           </Button>
         </Form.Item>
       </Form>
@@ -59,6 +60,7 @@ DynamicFieldsForm.propTypes = {
   inputOneLabel: PropTypes.string,
   inputTwoLabel: PropTypes.string,
   buttonText: PropTypes.string,
+  submitButtonText: PropTypes.string,
   isLoading: PropTypes.bool,
   isUnitTypeInput: PropTypes.bool,
 };
@@ -66,7 +68,8 @@ DynamicFieldsForm.propTypes = {
 DynamicFieldsForm.defaultProps = {
   inputOneLabel: 'Unit ID',
   inputTwoLabel: 'Unit Type',
-  buttonText: 'Add Unit',
+  buttonText: 'Add Row',
+  submitButtonText: null,
   isLoading: false,
   isUnitTypeInput: true,
 };
