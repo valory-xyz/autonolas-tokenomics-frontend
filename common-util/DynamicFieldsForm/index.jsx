@@ -1,8 +1,10 @@
 import PropTypes from 'prop-types';
-import { Button, Form } from 'antd/lib';
+import { Button, Form, Typography } from 'antd/lib';
 import { useHelpers } from '../hooks/useHelpers';
 import { FormList } from './FormList';
 import { DynamicFormContainer } from './styles';
+
+const { Text } = Typography;
 
 export const DynamicFieldsForm = ({
   isUnitTypeInput,
@@ -10,7 +12,7 @@ export const DynamicFieldsForm = ({
   inputTwoLabel,
   buttonText,
   isLoading,
-  submitButtonText,
+  submitButtonText = 'Submit',
   onSubmit,
 }) => {
   const { account } = useHelpers();
@@ -47,8 +49,14 @@ export const DynamicFieldsForm = ({
             loading={isLoading}
             disabled={!account}
           >
-            {submitButtonText || 'Submit'}
+            {submitButtonText}
           </Button>
+
+          {!account && (
+            <Text className="ml-8" type="secondary">
+              {`To ${(submitButtonText || '').toLowerCase()}, connect a wallet`}
+            </Text>
+          )}
         </Form.Item>
       </Form>
     </DynamicFormContainer>
@@ -68,7 +76,7 @@ DynamicFieldsForm.propTypes = {
 DynamicFieldsForm.defaultProps = {
   inputOneLabel: 'Unit ID',
   inputTwoLabel: 'Unit Type',
-  buttonText: 'Add Row',
+  buttonText: 'Add row',
   submitButtonText: null,
   isLoading: false,
   isUnitTypeInput: true,
