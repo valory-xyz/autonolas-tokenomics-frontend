@@ -5,6 +5,7 @@ import {
   getTreasuryContract,
   getDepositoryContract,
 } from 'common-util/Contracts';
+import { getBlockTimestamp } from 'common-util/functions';
 
 // ***************************************************
 //                 Treasory contract
@@ -50,18 +51,18 @@ export const getETHFromServicesRequest = ({ chainId }) => new Promise((resolve, 
 //                 Tokenomics contract
 //  **************************************************
 
-export const checkpointRequest = ({ chainId }) => new Promise((resolve, reject) => {
+export const checkpointRequest = ({ account, chainId }) => new Promise((resolve, reject) => {
   const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
 
   contract.methods
     .checkpoint()
-    .call()
-    .then(async (response) => {
+    .send({ from: account })
+    .then((response) => {
       console.log('checkpoint response', response);
       resolve(response);
     })
     .catch((e) => {
-      window.console.log('Error occured on fetching owner incentives');
+      window.console.log('Error occured on checkpoint');
       reject(e);
     });
 });
@@ -87,7 +88,21 @@ export const getOwnerIncentivesRequest = ({
       console.log('response', response);
 
       await getETHFromServicesRequest({ chainId });
+
+      const epochCounter = await contract.methods.epochCounter().call();
+      console.log({ epochCounter });
+
+      const epochLen = await contract.methods.epochLen().call();
+      console.log({ epochLen });
       resolve(response);
+
+      const blockTime = await getBlockTimestamp();
+      console.log({ blockTime });
+
+      const mapEpochTokenomics = await contract.methods
+        .mapEpochTokenomics(1)
+        .call();
+      console.log({ mapEpochTokenomics });
     })
     .catch((e) => {
       window.console.log('Error occured on fetching owner incentives');
@@ -201,4 +216,29 @@ export const redeemRequest = ({ account, chainId, bondIds }) => new Promise((res
  * - How to fetch from proxy contract
  * - getOwnerIncentivesRequest
  * - getLastIDF
+ */
+
+/**
+ * 1686760850
+ * 1686760850
+ *
+ *
+ * console.log("tokenomics address", tokenomics.address);
+    console.log(await tokenomics.epochCounter());
+    await helpers.time.increase(epochLen);
+    await tokenomics.checkpoint();
+    console.log(await tokenomics.epochCounter());
+
+    result before checkpoint [
+  BigNumber { value: "0" },
+  BigNumber { value: "0" },
+  reward: BigNumber { value: "0" },
+  topUp: BigNumber { value: "0" }
+]
+results after checkpoint [
+  BigNumber { value: "2000000000000000000000" },
+  BigNumber { value: "0" },
+  reward: BigNumber { value: "2000000000000000000000" },
+  topUp: BigNumber { value: "0" }
+]
  */

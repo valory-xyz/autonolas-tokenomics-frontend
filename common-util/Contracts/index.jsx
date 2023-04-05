@@ -37,7 +37,7 @@ export const LOCAL_ADDRESSES = {
   DEPOSITORY_ADDRESS_LOCAL: '0x4c5859f0F772848b2D91F1D83E2Fe57935348029',
   DISPENSER_ADDRESS_LOCAL: '0x1291Be112d480055DaFd8a610b7d1e203891C274',
   TREASURY_ADDRESS_LOCAL: '0x36C02dA8a0983159322a80FFE9F24b1acfF8B570',
-  TOKENOMICS_ADDRESS_LOCAL: '0x5eb3Bc0a489C5A8288765d2336659EbCA68FCd00',
+  TOKENOMICS_ADDRESS_LOCAL: '0x5eb3Bc0a489C5A8288765d2336659EbCA68FCd00', // tokenomics proxy address
 };
 
 /**
@@ -111,10 +111,12 @@ export const getTreasuryContract = (p, chainId) => {
 
 export const getTokenomicsContract = (p, chainId) => {
   const web3 = new Web3(p);
+  const add = chainId === 1 ? TOKENOMICS_ABI_MAINNET : TOKENOMICS_ABI_GOERLI;
   const contract = new web3.eth.Contract(
-    chainId === 1 ? TOKENOMICS_ABI_MAINNET : TOKENOMICS_ABI_GOERLI,
+    add,
     getContractAddress('tokenomics', chainId),
   );
+  console.log({ address: getContractAddress('tokenomics', chainId) });
   return contract;
 };
 

@@ -33,7 +33,7 @@ export const GetIncentives = () => {
     try {
       setIsLoading(true);
 
-      await checkpointRequest({ chainId });
+      await checkpointRequest({ account, chainId });
       // console.log('checkpointRes', checkpointRes);
 
       const params = {

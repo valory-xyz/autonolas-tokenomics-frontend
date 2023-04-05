@@ -18,6 +18,7 @@ const getLastIDFRequest = ({ chainId }) => new Promise((resolve, reject) => {
     .getLastIDF()
     .call()
     .then((lastIdfResponse) => {
+      console.log('lastIdfResponse', lastIdfResponse);
       /**
          * 1 ETH = 1e18
          * discount = (1 ETH - lastIDF) / 1 ETH
@@ -27,6 +28,11 @@ const getLastIDFRequest = ({ chainId }) => new Promise((resolve, reject) => {
         .div(ONE_ETH)
         .mul(100) // to convert it to percentage
         .toString();
+
+      // console.log({
+      //   discount,
+      //   a: ethers.BigNumber.from(ONE_ETH),
+      // });
 
       resolve(discount);
     })
