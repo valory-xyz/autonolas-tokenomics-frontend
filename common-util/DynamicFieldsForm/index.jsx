@@ -12,7 +12,7 @@ export const DynamicFieldsForm = ({
   inputTwoLabel,
   buttonText,
   isLoading,
-  submitButtonText = 'Submit',
+  submitButtonText,
   onSubmit,
 }) => {
   const { account } = useHelpers();
@@ -77,7 +77,7 @@ DynamicFieldsForm.defaultProps = {
   inputOneLabel: 'Unit ID',
   inputTwoLabel: 'Unit Type',
   buttonText: 'Add row',
-  submitButtonText: null,
+  submitButtonText: 'Submit',
   isLoading: false,
   isUnitTypeInput: true,
 };

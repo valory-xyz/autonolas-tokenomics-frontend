@@ -1,12 +1,14 @@
 import PropTypes from 'prop-types';
 import {
+  Button, Form, InputNumber, Space, Radio, Typography,
+} from 'antd/lib';
+import {
   MinusCircleOutlined,
   PlusOutlined,
   QuestionCircleOutlined,
 } from '@ant-design/icons';
-import {
-  Button, Form, InputNumber, Space, Radio,
-} from 'antd/lib';
+
+const { Text } = Typography;
 
 export const FormList = ({
   inputOneLabel,
@@ -45,7 +47,7 @@ export const FormList = ({
                     { required: true, message: `Please add ${inputOneLabel}` },
                   ]}
                 >
-                  <InputNumber className="mr-32" placeholder="Eg. 1" />
+                  <InputNumber min={0} className="mr-32" placeholder="Eg. 1" />
                 </Form.Item>
               )}
             </Form.Item>
@@ -64,28 +66,28 @@ export const FormList = ({
                   <Radio value="1">Component</Radio>
                 </Radio.Group>
               ) : (
-                <InputNumber placeholder="Eg. 5" />
+                <InputNumber min={0} placeholder="Eg. 5" />
               )}
             </Form.Item>
 
-            <MinusCircleOutlined onClick={() => remove(field.name)} />
+            {fields.length > 1 && (
+              <MinusCircleOutlined onClick={() => remove(field.name)} />
+            )}
           </Space>
         ))}
 
-        {/* show error above the "Add Unit" button */}
         <Form.ErrorList errors={errors} />
 
-        <Form.Item
-          extra={(
-            <>
-              {/* antd icon for question mark */}
-              <QuestionCircleOutlined />
-              &nbsp;
-              {inputOneLabel}
-              &nbsp;should be in ascending order
-            </>
-          )}
-        >
+        <div>
+          <Text type="secondary">
+            <QuestionCircleOutlined />
+            &nbsp;
+            {inputOneLabel}
+            &nbsp;should be in ascending order
+          </Text>
+        </div>
+
+        <Form.Item wrapperCol={{ span: 6 }}>
           <Button onClick={() => add()} block icon={<PlusOutlined />}>
             {buttonText}
           </Button>

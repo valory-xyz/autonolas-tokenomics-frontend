@@ -38,6 +38,7 @@ export const ClaimIncentives = () => {
       <DynamicFieldsForm
         isLoading={isLoading}
         onSubmit={onClaimIncentivesSubmit}
+        submitButtonText="Claim"
       />
     </>
   );
