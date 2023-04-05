@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { Divider } from 'antd/lib';
+import { Typography } from 'antd/lib';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import { notifySuccess, notifySpecificError } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { claimOwnerIncentivesRequest } from '../requests';
+
+const { Title } = Typography;
 
 export const ClaimIncentives = () => {
   const { account, chainId } = useHelpers();
@@ -32,10 +34,11 @@ export const ClaimIncentives = () => {
 
   return (
     <>
-      <Divider orientation="left">Claim Owner Incentives</Divider>
+      <Title level={3}>Claim Incentives</Title>
       <DynamicFieldsForm
         isLoading={isLoading}
         onSubmit={onClaimIncentivesSubmit}
+        submitButtonText="Claim"
       />
     </>
   );

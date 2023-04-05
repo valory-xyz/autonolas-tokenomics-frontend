@@ -81,8 +81,8 @@ export const Deposit = ({
     <>
       <Modal
         visible
-        title="Deposit"
-        okText="Deposit"
+        title="Create Bond"
+        okText="Create Bond"
         cancelText="Cancel"
         onCancel={closeModal}
         onOk={onCreate}
@@ -90,18 +90,18 @@ export const Deposit = ({
       >
         <Form
           form={form}
-          name="deposit_form"
+          name="create_bond_form"
           autoComplete="off"
-          labelCol={{ span: 8 }}
-          wrapperCol={{ span: 16 }}
+          labelCol={{ span: 10 }}
+          wrapperCol={{ span: 14 }}
           initialValues={{
             productId: productId || undefined,
           }}
         >
           <Form.Item
-            label="Product ID"
+            label="Bonding Program ID"
             name="productId"
-            rules={[{ required: true, message: 'Please input product ID' }]}
+            rules={[{ required: true, message: 'Please input Bonding Program ID' }]}
           >
             <Input disabled />
           </Form.Item>

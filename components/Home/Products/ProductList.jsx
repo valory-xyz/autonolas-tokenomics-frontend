@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
-import { Button, Table, Tag } from 'antd/lib';
+import {
+  Button, Table, Tag, Tooltip,
+} from 'antd/lib';
 import { COLOR } from '@autonolas/frontend-library';
 import {
   notifyError,
@@ -13,17 +15,28 @@ import { getProductListRequest, getAllTheProductsNotRemoved } from './requests';
 
 const getColumns = (showNoSupply, onClick) => [
   {
-    title: 'Product ID',
+    title: 'Bonding Program ID',
     dataIndex: 'id',
     key: 'id',
   },
   {
-    title: 'Token',
+    title: (
+      <Tooltip title="Uniswap v2 LP token address enabled by the Treasury">
+        <span>Token</span>
+      </Tooltip>
+    ),
     dataIndex: 'token',
     key: 'token',
   },
   {
-    title: 'Price LP',
+    title: (
+      <Tooltip
+        title="LP token price with 18 decimals and non-zero at which an LP
+      share is priced during the bonding program"
+      >
+        <span>Price LP</span>
+      </Tooltip>
+    ),
     dataIndex: 'priceLP',
     key: 'priceLP',
     render: (x) => `${parseToEth(x)} OLAS`,
@@ -39,13 +52,28 @@ const getColumns = (showNoSupply, onClick) => [
     ),
   },
   {
-    title: 'Supply',
+    title: (
+      <Tooltip
+        title="OLAS supply (non-zero and beyond the limit fixed by the
+          tokenomics to fund bonding programs and not overflowing the contract
+          limit) that will be reserved to fund OLAS for this bonding program"
+      >
+        <span>Supply</span>
+      </Tooltip>
+    ),
     dataIndex: 'supply',
     key: 'supply',
     render: (x) => `${parseToEth(x)} OLAS`,
   },
   {
-    title: 'Expiry',
+    title: (
+      <Tooltip
+        title="the vesting time (bigger or equal to the minimal vesting value) in
+      seconds that a bonder has to wait before being able to withdraw OLAS"
+      >
+        <span>Expiry</span>
+      </Tooltip>
+    ),
     dataIndex: 'expiry',
     key: 'expiry',
     render: (seconds) => getFormattedDate(seconds * 1000),
@@ -60,7 +88,7 @@ const getColumns = (showNoSupply, onClick) => [
         disabled={showNoSupply}
         onClick={() => onClick(row.token)}
       >
-        Bond
+        Create Bond
       </Button>
     ),
   },
@@ -120,6 +148,20 @@ export const ProductList = ({ productType }) => {
         loading={isLoading}
         pagination={false}
         scroll={{ x: 400 }}
+        // components={{
+        //   header: {
+        //     cell: ({ children, ...rest }) => {
+        //       console.log('children', children);
+        //       return (
+        //         <Tooltip title="das">
+        //           <th {...rest} style={{ backgroundColor: COLOR.PRIMARY }}>
+        //             {children}
+        //           </th>
+        //         </Tooltip>
+        //       );
+        //     },
+        //   },
+        // }}
       />
 
       {!!productToken && (
