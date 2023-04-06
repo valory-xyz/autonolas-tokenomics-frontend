@@ -16,7 +16,7 @@ const getBondsColumns = (onClick) => {
       title: 'Payout in OLAS',
       dataIndex: 'payout',
       key: 'payout',
-      render: (value) => `${parseToEth(value)} ETH`,
+      render: (value) => `${parseToEth(value)} OLAS`,
     },
     {
       title: 'Matured?',

@@ -41,7 +41,7 @@ const getColumns = (showNoSupply, onClick, isActive) => {
       ),
       dataIndex: 'priceLP',
       key: 'priceLP',
-      render: (x) => `${parseToEth(x)} ETH`,
+      render: (x) => `${parseToEth(x)} OLAS`,
     },
     {
       title: 'Discount',
@@ -65,7 +65,7 @@ const getColumns = (showNoSupply, onClick, isActive) => {
       ),
       dataIndex: 'supply',
       key: 'supply',
-      render: (x) => `${parseToEth(x)} ETH`,
+      render: (x) => `${parseToEth(x)} OLAS`,
     },
     {
       title: (
