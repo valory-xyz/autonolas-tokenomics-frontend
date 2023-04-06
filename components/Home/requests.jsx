@@ -52,7 +52,7 @@ export const redeemRequest = ({ account, chainId, bondIds }) => new Promise((res
   sendTransaction(fn, account)
     .then((response) => resolve(response?.transactionHash))
     .catch((e) => {
-      window.console.log('Error occured on redeeming bonds: ', bondIds);
+      window.console.log(`Error occured on redeeming bonds: ${bondIds}`);
       reject(e);
     });
 });

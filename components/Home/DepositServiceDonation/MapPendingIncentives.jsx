@@ -43,7 +43,7 @@ export const MapIncentives = () => {
       const response = await getMapUnitIncentivesRequest({
         chainId,
         unitType: values.unitType,
-        codeId: `${values.codeId}`,
+        unitId: `${values.unitId}`,
       });
       setPendingIncentives([
         {
@@ -85,9 +85,9 @@ export const MapIncentives = () => {
             </Form.Item>
 
             <Form.Item
-              label="Code ID"
-              name="codeId"
-              rules={[{ required: true, message: 'Please add codeId' }]}
+              label="Unit ID"
+              name="unitId"
+              rules={[{ required: true, message: 'Please add unit Id' }]}
             >
               <InputNumber min={0} className="mr-32" placeholder="Eg. 1" />
             </Form.Item>

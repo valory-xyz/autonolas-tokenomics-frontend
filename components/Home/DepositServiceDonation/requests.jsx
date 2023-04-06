@@ -29,12 +29,12 @@ export const getMapUnitIncentivesRequest = ({
   // account,
   chainId,
   unitType,
-  codeId,
+  unitId,
 }) => new Promise((resolve, reject) => {
   const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
 
   contract.methods
-    .mapUnitIncentives(unitType, codeId)
+    .mapUnitIncentives(unitType, unitId)
     .call()
     .then((response) => {
       resolve(response);

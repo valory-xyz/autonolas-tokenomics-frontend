@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import styled from 'styled-components';
 import { Typography, Radio } from 'antd/lib';
-import { ProductList } from './Products/ProductList';
+import { BondingList } from './Bonding/BondingList';
 
 const { Title } = Typography;
 
@@ -30,7 +30,7 @@ export const Products = () => {
         </Radio.Group>
       </Title>
 
-      <ProductList productType={productType} />
+      <BondingList productType={productType} />
     </ProductContainer>
   );
 };

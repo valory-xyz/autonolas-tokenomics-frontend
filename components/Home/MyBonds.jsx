@@ -1,69 +1,78 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   Typography, Radio, Table, Button, Tooltip,
 } from 'antd/lib';
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { COLOR } from '@autonolas/frontend-library';
 import { useHelpers } from 'common-util/hooks/useHelpers';
-import { notifyError, parseToEth } from 'common-util/functions';
+import { notifyError, notifySuccess, parseToEth } from 'common-util/functions';
 import { getBondsRequest, redeemRequest } from './requests';
 
 const { Title } = Typography;
 
-const getBondsColumns = (onClick) => [
-  {
-    title: 'Payout in OLAS',
-    dataIndex: 'payout',
-    key: 'payout',
-    render: (value) => `${parseToEth(value)} ETH`,
-  },
-  {
-    title: 'Matured?',
-    dataIndex: 'matured',
-    key: 'matured',
-    render: (value) => (value ? (
-      <CheckOutlined style={{ color: COLOR.PRIMARY, fontSize: 24 }} />
-    ) : (
-      <CloseOutlined style={{ color: COLOR.RED, fontSize: 24 }} />
-    )),
-  },
-  {
-    title: 'Redeem',
-    dataIndex: 'redeem',
-    key: 'redeem',
-    render: (_, row) => {
-      const redeemButton = (
-        <Button disabled={!row.matured} onClick={() => onClick(row.bondId)}>
-          Redeem
-        </Button>
-      );
-
-      return row.matured ? (
-        redeemButton
-      ) : (
-        <Tooltip title="To redeem, wait until bond matures">
-          {redeemButton}
-        </Tooltip>
-      );
+const getBondsColumns = (onClick) => {
+  const columns = [
+    {
+      title: 'Payout in OLAS',
+      dataIndex: 'payout',
+      key: 'payout',
+      render: (value) => `${parseToEth(value)} ETH`,
     },
-  },
-];
+    {
+      title: 'Matured?',
+      dataIndex: 'matured',
+      key: 'matured',
+      render: (value) => (value ? (
+        <CheckOutlined style={{ color: COLOR.PRIMARY, fontSize: 24 }} />
+      ) : (
+        <CloseOutlined style={{ color: COLOR.RED, fontSize: 24 }} />
+      )),
+    },
+    {
+      title: 'Redeem',
+      dataIndex: 'redeem',
+      key: 'redeem',
+      render: (_, row) => {
+        const redeemButton = (
+          <Button
+            disabled={!row.matured}
+            type="primary"
+            onClick={() => onClick(row.bondId)}
+          >
+            Redeem
+          </Button>
+        );
 
-export const Bonds = () => {
+        return row.matured ? (
+          redeemButton
+        ) : (
+          <Tooltip title="To redeem, wait until bond matures">
+            {redeemButton}
+          </Tooltip>
+        );
+      },
+    },
+  ];
+
+  return columns;
+};
+
+export const MyBonds = () => {
   const { account, chainId } = useHelpers();
   const [maturityType, setMaturityType] = useState('matured');
   const [isLoading, setIsLoading] = useState(false);
   const [bondsList, setBondsList] = useState([]);
+  const isActive = maturityType === 'matured';
 
-  useEffect(() => {
-    const getBondsHelper = async () => {
+  const getBondsListHelper = useCallback(
+    async () => {
       try {
         setIsLoading(true);
 
         const bonds = await getBondsRequest({
           account,
           chainId,
-          isActive: maturityType === 'matured',
+          isActive,
         });
         setBondsList(bonds);
       } catch (error) {
@@ -71,10 +80,13 @@ export const Bonds = () => {
       } finally {
         setIsLoading(false);
       }
-    };
+    },
+    [account, chainId, isActive],
+  );
 
+  useEffect(() => {
     if (account && chainId) {
-      getBondsHelper();
+      getBondsListHelper();
     }
   }, [account, chainId, maturityType]);
 
@@ -85,6 +97,11 @@ export const Bonds = () => {
         chainId,
         bondIds: [bondId],
       });
+
+      notifySuccess('Redeemed successfully');
+
+      // update the list once the bond is redeemed
+      await getBondsListHelper();
     } catch (error) {
       window.console.error(error);
       notifyError();

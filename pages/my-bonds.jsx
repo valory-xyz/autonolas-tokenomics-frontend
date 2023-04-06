@@ -1,3 +1,3 @@
-import { Bonds } from 'components/Home/Bonds';
+import { MyBonds } from 'components/Home/MyBonds';
 
-export default Bonds;
+export default MyBonds;
