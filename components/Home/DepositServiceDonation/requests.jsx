@@ -5,7 +5,7 @@ import {
   getTreasuryContract,
 } from 'common-util/Contracts';
 
-export const getDepositoryContractRequest = ({
+export const depositServiceDonationRequest = ({
   account,
   chainId,
   serviceIds,
