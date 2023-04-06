@@ -3,7 +3,7 @@ import { Typography } from 'antd/lib';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import { notifySuccess, notifySpecificError } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
-import { claimOwnerIncentivesRequest } from '../requests';
+import { claimOwnerIncentivesRequest } from './requests';
 
 const { Title } = Typography;
 
@@ -23,7 +23,7 @@ export const ClaimIncentives = () => {
       };
       await claimOwnerIncentivesRequest(params);
 
-      notifySuccess('Claimed owner incentives successfully');
+      notifySuccess('Incentives claimed successfully');
     } catch (error) {
       notifySpecificError(error);
       window.console.error(error);

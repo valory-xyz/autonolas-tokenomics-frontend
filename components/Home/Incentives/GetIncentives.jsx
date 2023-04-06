@@ -3,9 +3,9 @@ import {
   Row, Col, Table, Typography,
 } from 'antd/lib';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
-import { notifySpecificError } from 'common-util/functions';
+import { notifySpecificError, parseToEth } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
-import { getOwnerIncentivesRequest } from '../requests';
+import { getOwnerIncentivesRequest } from './requests';
 
 const { Title } = Typography;
 
@@ -45,8 +45,8 @@ export const GetIncentives = () => {
       setRewardAndTopUp([
         {
           key: '1',
-          reward: response.reward,
-          topUp: response.topUp,
+          reward: parseToEth(response.reward),
+          topUp: parseToEth(response.topUp),
         },
       ]);
     } catch (error) {

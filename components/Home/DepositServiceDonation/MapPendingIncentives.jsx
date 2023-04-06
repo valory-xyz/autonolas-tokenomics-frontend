@@ -1,5 +1,4 @@
 import { useState } from 'react';
-// import PropTypes from 'prop-types';
 import {
   Radio,
   Form,
@@ -13,7 +12,7 @@ import {
 import { notifyError, parseToEth } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { getMapUnitIncentivesRequest } from './requests';
-// import { DynamicFormContainer } from "./styles";
+import { MapPendingIncentivesContainer } from './styles';
 
 const { Title } = Typography;
 
@@ -50,6 +49,7 @@ export const MapIncentives = () => {
         {
           pendingRelativeReward: parseToEth(response.pendingRelativeReward),
           pendingRelativeTopUp: parseToEth(response.pendingRelativeTopUp),
+          id: 0,
         },
       ]);
     } catch (error) {
@@ -61,7 +61,7 @@ export const MapIncentives = () => {
   };
 
   return (
-    <>
+    <MapPendingIncentivesContainer>
       <Title level={2}>Map Incentives</Title>
 
       <Row>
@@ -106,16 +106,11 @@ export const MapIncentives = () => {
               columns={columns}
               dataSource={pendingIncentives}
               bordered
-              style={{ width: '500px' }}
               pagination={false}
             />
           )}
         </Col>
       </Row>
-    </>
+    </MapPendingIncentivesContainer>
   );
 };
-
-// MapIncentives.propTypes = {};
-
-// MapIncentives.defaultProps = {};

@@ -3,8 +3,8 @@ import { Typography } from 'antd/lib';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import { notifyError, notifySuccess, parseToWei } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
+import { MapIncentives } from './MapPendingIncentives';
 import { getDepositoryContractRequest, getMapUnitIncentivesRequest } from './requests';
-import { MapIncentives } from './MapIncentives';
 
 const { Title, Paragraph } = Typography;
 
