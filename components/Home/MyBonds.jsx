@@ -10,7 +10,7 @@ import { getBondsRequest, redeemRequest } from './requests';
 
 const { Title } = Typography;
 
-const getBondsColumns = (onClick) => {
+const getBondsColumns = (onClick, account) => {
   const columns = [
     {
       title: 'Payout in OLAS',
@@ -35,7 +35,7 @@ const getBondsColumns = (onClick) => {
       render: (_, row) => {
         const redeemButton = (
           <Button
-            disabled={!row.matured}
+            disabled={!row.matured || !account}
             type="primary"
             onClick={() => onClick(row.bondId)}
           >
@@ -122,7 +122,7 @@ export const MyBonds = () => {
       </Title>
 
       <Table
-        columns={getBondsColumns(onRedeemClick)}
+        columns={getBondsColumns(onRedeemClick, account)}
         dataSource={bondsList}
         bordered
         loading={isLoading}

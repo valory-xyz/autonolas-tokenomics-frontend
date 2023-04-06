@@ -12,8 +12,8 @@ const ProductContainer = styled.div`
   }
 `;
 
-export const Products = () => {
-  const [productType, setProductType] = useState('active');
+export const BondingPrograms = () => {
+  const [bondingProgramType, setProductType] = useState('active');
 
   const onChange = (e) => {
     setProductType(e.target.value);
@@ -23,14 +23,14 @@ export const Products = () => {
     <ProductContainer>
       <Title level={2} className="choose-type-group">
         Bonding Programs
-        <Radio.Group onChange={onChange} value={productType}>
+        <Radio.Group onChange={onChange} value={bondingProgramType}>
           <Radio value="allProduct">All</Radio>
           <Radio value="active">Active</Radio>
           <Radio value="inactive">Inactive</Radio>
         </Radio.Group>
       </Title>
 
-      <BondingList productType={productType} />
+      <BondingList bondingProgramType={bondingProgramType} />
     </ProductContainer>
   );
 };

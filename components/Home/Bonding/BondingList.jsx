@@ -14,7 +14,7 @@ import { remove } from 'lodash';
 import { Deposit } from './Deposit';
 import { getProductListRequest, getAllTheProductsNotRemoved } from './requests';
 
-const getColumns = (showNoSupply, onClick, isActive) => {
+const getColumns = (showNoSupply, onClick, isActive, acc) => {
   const columns = [
     {
       title: 'Bonding Program ID',
@@ -87,7 +87,8 @@ const getColumns = (showNoSupply, onClick, isActive) => {
       render: (_, row) => (
         <Button
           type="primary"
-          disabled={showNoSupply}
+          // disbled if there is no supply or if the user is not connected
+          disabled={showNoSupply || !acc}
           onClick={() => onClick(row.token)}
         >
           Create Bond
@@ -96,6 +97,7 @@ const getColumns = (showNoSupply, onClick, isActive) => {
     },
   ];
 
+  // should remove the bond button if the product is not active
   if (!isActive) {
     const withoutCreateBond = remove(
       [...columns],
@@ -107,22 +109,22 @@ const getColumns = (showNoSupply, onClick, isActive) => {
   return columns;
 };
 
-export const BondingList = ({ productType }) => {
+export const BondingList = ({ bondingProgramType }) => {
   const { account, chainId } = useHelpers();
   const [isLoading, setIsLoading] = useState(false);
   const [products, setProducts] = useState([]);
-  const showNoSupply = productType === 'allProduct';
+  const showNoSupply = bondingProgramType === 'allProduct';
 
   // if productToken is `not null`, then open the deposit modal
   const [productToken, setProductToken] = useState(false);
 
-  const isActive = productType === 'active';
+  const isActive = bondingProgramType === 'active';
 
   const getProducts = useCallback(async () => {
     try {
       setIsLoading(true);
 
-      // If productType is allProduct, we will get all the products
+      // If bondingProgramType is allProduct, we will get all the products
       // that are not removed
       if (showNoSupply) {
         const productList = await getAllTheProductsNotRemoved({ chainId });
@@ -141,14 +143,14 @@ export const BondingList = ({ productType }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [account, chainId, productType]);
+  }, [account, chainId, bondingProgramType]);
 
-  // fetch the product list
+  // fetch the bonding list
   useEffect(() => {
     if (account && chainId) {
       getProducts();
     }
-  }, [account, chainId, productType]);
+  }, [account, chainId, bondingProgramType]);
 
   const onBondClick = (token) => {
     setProductToken(token);
@@ -157,26 +159,12 @@ export const BondingList = ({ productType }) => {
   return (
     <>
       <Table
-        columns={getColumns(showNoSupply, onBondClick)}
+        columns={getColumns(showNoSupply, onBondClick, isActive, account)}
         dataSource={products}
         bordered
         loading={isLoading}
         pagination={false}
         scroll={{ x: 400 }}
-        // components={{
-        //   header: {
-        //     cell: ({ children, ...rest }) => {
-        //       console.log('children', children);
-        //       return (
-        //         <Tooltip title="das">
-        //           <th {...rest} style={{ backgroundColor: COLOR.PRIMARY }}>
-        //             {children}
-        //           </th>
-        //         </Tooltip>
-        //       );
-        //     },
-        //   },
-        // }}
       />
 
       {!!productToken && (
@@ -192,9 +180,9 @@ export const BondingList = ({ productType }) => {
 };
 
 BondingList.propTypes = {
-  productType: PropTypes.string,
+  bondingProgramType: PropTypes.string,
 };
 
 BondingList.defaultProps = {
-  productType: 'active',
+  bondingProgramType: 'active',
 };

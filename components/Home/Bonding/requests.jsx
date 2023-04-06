@@ -36,7 +36,7 @@ const getLastIDFRequest = ({ chainId }) => new Promise((resolve, reject) => {
     });
 });
 
-const getProductsRequest = ({ chainId, isActive }) => new Promise((resolve, reject) => {
+const getBondingProgramsRequest = ({ chainId, isActive }) => new Promise((resolve, reject) => {
   const contract = getDepositoryContract(window.MODAL_PROVIDER, chainId);
 
   contract.methods
@@ -46,7 +46,7 @@ const getProductsRequest = ({ chainId, isActive }) => new Promise((resolve, reje
       resolve(response);
     })
     .catch((e) => {
-      window.console.log('Error on fetching product ID list');
+      window.console.log('Error on fetching the list');
       reject(e);
     });
 });
@@ -70,7 +70,7 @@ const getProductDetailsFromIds = ({ chainId, productIdList }) => new Promise((re
       .then((componentsList) => resolve(componentsList))
       .catch((e) => reject(e));
   } catch (error) {
-    window.console.log('Error on fetching products details');
+    window.console.log('Error on fetching bonding program details details');
     reject(error);
   }
 });
@@ -128,7 +128,7 @@ export const getAllTheProductsNotRemoved = async ({ chainId }) => new Promise((r
  */
 export const getProductListRequest = async ({ account, chainId, isActive }) => {
   try {
-    const productIdList = await getProductsRequest({
+    const productIdList = await getBondingProgramsRequest({
       account,
       chainId,
       isActive,

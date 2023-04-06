@@ -4,7 +4,7 @@ import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import { notifyError, notifySuccess, parseToWei } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { MapIncentives } from './MapPendingIncentives';
-import { depositServiceDonationRequest, getMapUnitIncentivesRequest } from './requests';
+import { depositServiceDonationRequest } from './requests';
 
 const { Title, Paragraph } = Typography;
 
@@ -24,10 +24,6 @@ export const DepositServiceDonation = () => {
         totalAmount: parseToWei(values.unitTypes.reduce((a, b) => a + b, 0)),
       };
       await depositServiceDonationRequest(params);
-
-      await getMapUnitIncentivesRequest({
-        chainId,
-      });
 
       notifySuccess('Deposited service donation successfully');
     } catch (error) {
