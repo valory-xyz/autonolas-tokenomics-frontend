@@ -1,4 +1,5 @@
 import { sendTransaction } from '@autonolas/frontend-library';
+import { parseToEth } from 'common-util/functions';
 import {
   getTokenomicsContract,
   getTreasuryContract,
@@ -37,7 +38,25 @@ export const getMapUnitIncentivesRequest = ({
     .mapUnitIncentives(unitType, unitId)
     .call()
     .then((response) => {
-      resolve(response);
+      /**
+         * for unitType agent(0) & component(1),
+         * the below formula is used to calculate the incentives
+         */
+      const values = [
+        {
+          pendingRelativeReward:
+              unitType === 0
+                ? (parseToEth(response.pendingRelativeReward) * 17) / 100
+                : (parseToEth(response.pendingRelativeReward) * 83) / 100,
+          pendingRelativeTopUp:
+              unitType === 0
+                ? (parseToEth(response.pendingRelativeTopUp) * 9) / 100
+                : (parseToEth(response.pendingRelativeTopUp) * 41) / 100,
+          id: '0',
+          key: '0',
+        },
+      ];
+      resolve(values);
     })
     .catch((e) => {
       window.console.log('Error occured on fetching mmap unit incentives');

@@ -9,7 +9,7 @@ import {
   Col,
   Table,
 } from 'antd/lib';
-import { notifyError, parseToEth } from 'common-util/functions';
+import { notifyError } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { getMapUnitIncentivesRequest } from './requests';
 import { MapPendingIncentivesContainer } from './styles';
@@ -45,13 +45,7 @@ export const MapIncentives = () => {
         unitType: values.unitType,
         unitId: `${values.unitId}`,
       });
-      setPendingIncentives([
-        {
-          pendingRelativeReward: parseToEth(response.pendingRelativeReward),
-          pendingRelativeTopUp: parseToEth(response.pendingRelativeTopUp),
-          id: 0,
-        },
-      ]);
+      setPendingIncentives(response);
     } catch (error) {
       window.console.error(error);
       notifyError();
