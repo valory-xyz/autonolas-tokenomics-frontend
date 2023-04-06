@@ -3,7 +3,8 @@ import { Typography } from 'antd/lib';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import { notifyError, notifySuccess, parseToWei } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
-import { getDepositoryContractRequest } from './requests';
+import { getDepositoryContractRequest, getMapUnitIncentivesRequest } from './requests';
+import { MapIncentives } from './MapIncentives';
 
 const { Title, Paragraph } = Typography;
 
@@ -23,6 +24,10 @@ export const DepositServiceDonation = () => {
         totalAmount: parseToWei(values.unitTypes.reduce((a, b) => a + b, 0)),
       };
       await getDepositoryContractRequest(params);
+
+      await getMapUnitIncentivesRequest({
+        chainId,
+      });
 
       notifySuccess('Deposited service donation successfully');
     } catch (error) {
@@ -51,6 +56,8 @@ export const DepositServiceDonation = () => {
         isLoading={isLoading}
         onSubmit={onDepositServiceDonationSubmit}
       />
+
+      <MapIncentives />
     </div>
   );
 };

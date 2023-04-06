@@ -2,13 +2,8 @@ import { sendTransaction } from '@autonolas/frontend-library';
 import {
   getDispenserContract,
   getTokenomicsContract,
-  getTreasuryContract,
   getDepositoryContract,
 } from 'common-util/Contracts';
-
-// ***************************************************
-//                 Tokenomics contract
-//  **************************************************
 
 export const getOwnerIncentivesRequest = ({
   account,
@@ -28,9 +23,6 @@ export const getOwnerIncentivesRequest = ({
     });
 });
 
-// ***************************************************
-//                 Dispenser contract
-//  **************************************************
 export const claimOwnerIncentivesRequest = ({
   account,
   chainId,
@@ -52,34 +44,6 @@ export const claimOwnerIncentivesRequest = ({
       reject(e);
     });
 });
-
-// ***************************************************
-//                 Treasory contract
-//  **************************************************
-export const getDepositoryContractRequest = ({
-  account,
-  chainId,
-  serviceIds,
-  amounts,
-  totalAmount,
-}) => new Promise((resolve, reject) => {
-  const contract = getTreasuryContract(window.MODAL_PROVIDER, chainId);
-
-  const fn = contract.methods
-    .depositServiceDonationsETH(serviceIds, amounts)
-    .send({ from: account, value: totalAmount });
-
-  sendTransaction(fn, account)
-    .then((response) => resolve(response?.transactionHash))
-    .catch((e) => {
-      window.console.log('Error occured on depositing service donation');
-      reject(e);
-    });
-});
-
-// ***************************************************
-//                 Depository contract
-//  **************************************************
 
 /**
  * Bonding functionalities
