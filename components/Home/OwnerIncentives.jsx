@@ -1,6 +1,6 @@
 import { Typography } from 'antd/lib';
-import { ClaimIncentives } from './Incentives/ClaimIncentives';
-import { GetIncentives } from './Incentives/GetIncentives';
+import { ClaimIncentives } from './DevIncentives/ClaimIncentives';
+import { GetIncentives } from './DevIncentives/GetIncentives';
 
 const { Title, Paragraph } = Typography;
 
