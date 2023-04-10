@@ -1,16 +1,37 @@
-import { useState } from 'react';
-import { Typography } from 'antd/lib';
+import { useState, useEffect } from 'react';
+import { Alert, Typography } from 'antd/lib';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import { notifyError, notifySuccess, parseToWei } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { MapIncentives } from './MapPendingIncentives';
-import { depositServiceDonationRequest } from './requests';
+import {
+  depositServiceDonationRequest,
+  getVeOlasThresholdRequest,
+} from './requests';
+import { DonateContainer } from './styles';
 
-const { Title, Paragraph } = Typography;
+const { Title, Paragraph, Text } = Typography;
 
 export const DepositServiceDonation = () => {
   const { account, chainId } = useHelpers();
   const [isLoading, setIsLoading] = useState(false);
+  const [threshold, setThreshold] = useState(0);
+
+  useEffect(() => {
+    const getThresholdData = async () => {
+      try {
+        const response = await getVeOlasThresholdRequest({ chainId });
+        setThreshold(response);
+      } catch (error) {
+        window.console.error(error);
+        notifyError();
+      }
+    };
+
+    if (chainId) {
+      getThresholdData();
+    }
+  }, [chainId]);
 
   const onDepositServiceDonationSubmit = async (values) => {
     try {
@@ -35,13 +56,30 @@ export const DepositServiceDonation = () => {
   };
 
   return (
-    <div>
+    <DonateContainer>
       <Title level={2}>Donate</Title>
       <Paragraph style={{ maxWidth: 550 }}>
         Show appreciation for the value of an autonomous service by making a
         donation. The protocol will reward devs who have contributed code for
         that service.
       </Paragraph>
+
+      <Alert
+        showIcon
+        type="info"
+        message={(
+          <>
+            Service owners can boost incentives of devs who contributed code to
+            their services with freshly minted OLAS, by owning&nbsp;
+            <Text strong>{threshold || '--'}</Text>
+            &nbsp;veOLAS. Grab your veOLAS by locking OLAS&nbsp;
+            <a href="https://member.autonolas.network/" target="_self">
+              here
+            </a>
+          </>
+        )}
+        className="mb-16"
+      />
 
       <DynamicFieldsForm
         isUnitTypeInput={false}
@@ -54,6 +92,6 @@ export const DepositServiceDonation = () => {
       />
 
       <MapIncentives />
-    </div>
+    </DonateContainer>
   );
 };

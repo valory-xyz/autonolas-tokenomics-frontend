@@ -21,6 +21,9 @@ const GlobalStyle = createGlobalStyle`
   .mb-8 {
     margin-bottom: 0.5rem;
   }
+  .mb-16 {
+    margin-bottom: 1rem;
+  }
   .mr-12 {
     margin-right: 12px;
   }

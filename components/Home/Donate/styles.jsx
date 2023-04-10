@@ -14,3 +14,7 @@ export const MapPendingIncentivesContainer = styled.div`
     width: 500px;
   }
 `;
+
+export const DonateContainer = styled.div`
+  width: 720px;
+`;

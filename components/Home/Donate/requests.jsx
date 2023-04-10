@@ -59,7 +59,22 @@ export const getMapUnitIncentivesRequest = ({
       resolve(values);
     })
     .catch((e) => {
-      window.console.log('Error occured on fetching mmap unit incentives');
+      window.console.log('Error occured on fetching map unit incentives');
+      reject(e);
+    });
+});
+
+export const getVeOlasThresholdRequest = ({ chainId }) => new Promise((resolve, reject) => {
+  const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
+
+  contract.methods
+    .veOLASThreshold()
+    .call()
+    .then((response) => {
+      resolve(parseToEth(response));
+    })
+    .catch((e) => {
+      window.console.log('Error occured on fetching veOLAS threshold');
       reject(e);
     });
 });
