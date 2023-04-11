@@ -1,3 +1,3 @@
-import { OwnerIncentives } from 'components/Home/OwnerIncentives';
+import { DevIncentives } from 'components/Home/DevIncentives';
 
-export default OwnerIncentives;
+export default DevIncentives;

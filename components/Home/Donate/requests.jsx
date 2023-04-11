@@ -26,44 +26,6 @@ export const depositServiceDonationRequest = ({
     });
 });
 
-export const getMapUnitIncentivesRequest = ({
-  // account,
-  chainId,
-  unitType,
-  unitId,
-}) => new Promise((resolve, reject) => {
-  const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
-
-  contract.methods
-    .mapUnitIncentives(unitType, unitId)
-    .call()
-    .then((response) => {
-      /**
-         * for unitType agent(0) & component(1),
-         * the below formula is used to calculate the incentives
-         */
-      const values = [
-        {
-          pendingRelativeReward:
-              unitType === 0
-                ? (parseToEth(response.pendingRelativeReward) * 17) / 100
-                : (parseToEth(response.pendingRelativeReward) * 83) / 100,
-          pendingRelativeTopUp:
-              unitType === 0
-                ? (parseToEth(response.pendingRelativeTopUp) * 9) / 100
-                : (parseToEth(response.pendingRelativeTopUp) * 41) / 100,
-          id: '0',
-          key: '0',
-        },
-      ];
-      resolve(values);
-    })
-    .catch((e) => {
-      window.console.log('Error occured on fetching map unit incentives');
-      reject(e);
-    });
-});
-
 export const getVeOlasThresholdRequest = ({ chainId }) => new Promise((resolve, reject) => {
   const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
 

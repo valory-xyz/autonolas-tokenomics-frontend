@@ -1,10 +1,11 @@
 import { Typography } from 'antd/lib';
-import { ClaimIncentives } from './DevIncentives/ClaimIncentives';
-import { GetIncentives } from './DevIncentives/GetIncentives';
+import { ClaimIncentives } from './ClaimIncentives';
+import { GetIncentives } from './GetIncentives';
+import { MapIncentives } from './MapPendingIncentives';
 
 const { Title, Paragraph } = Typography;
 
-export const OwnerIncentives = () => (
+export const DevIncentives = () => (
   <div>
     <Title level={2}>Dev Incentives</Title>
     <Paragraph style={{ maxWidth: 550 }}>
@@ -17,5 +18,9 @@ export const OwnerIncentives = () => (
     <br />
     <br />
     <ClaimIncentives />
+
+    <br />
+    <br />
+    <MapIncentives />
   </div>
 );

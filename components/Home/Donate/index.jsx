@@ -3,7 +3,6 @@ import { Alert, Typography } from 'antd/lib';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import { notifyError, notifySuccess, parseToWei } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
-import { MapIncentives } from './MapPendingIncentives';
 import {
   depositServiceDonationRequest,
   getVeOlasThresholdRequest,
@@ -58,7 +57,7 @@ export const DepositServiceDonation = () => {
   return (
     <DonateContainer>
       <Title level={2}>Donate</Title>
-      <Paragraph style={{ maxWidth: 550 }}>
+      <Paragraph>
         Show appreciation for the value of an autonomous service by making a
         donation. The protocol will reward devs who have contributed code for
         that service.
@@ -90,8 +89,28 @@ export const DepositServiceDonation = () => {
         isLoading={isLoading}
         onSubmit={onDepositServiceDonationSubmit}
       />
-
-      <MapIncentives />
     </DonateContainer>
   );
 };
+
+/**
+ * governance contract
+ * token contract
+ *
+ * eg.
+ * standard contract
+ * we have olas toke, people can create governace => we can vote for/againt the proposal
+ * but I don't have time to go through the => I can delegate my vote to someone else
+ * who has time to go through the proposal
+ *
+ * local - setup
+ *
+ * bigger question -
+ * - how does the proxy works ?
+ * - we have token address, if we use the ABI (default erc20 ABI) to interact with the contract
+ * (using the AAVE)
+ *
+ * - get the proxy contract address by actual contract address
+ * - we need balanceOf & delegate
+ *
+ */

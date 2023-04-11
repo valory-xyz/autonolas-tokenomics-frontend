@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import {
-  Row, Col, Table, Typography,
+  Alert, Row, Col, Table, Typography,
 } from 'antd/lib';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import { notifySpecificError, parseToEth } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { getOwnerIncentivesRequest } from './requests';
+import { RewardAndTopUpContainer } from './styles';
 
 const { Title } = Typography;
 
@@ -75,13 +76,20 @@ export const GetIncentives = () => {
 
         <Col lg={10} xs={24}>
           {rewardAndTopUp.length > 0 && (
-            <Table
-              columns={columns}
-              dataSource={rewardAndTopUp}
-              bordered
-              style={{ width: '400px' }}
-              pagination={false}
-            />
+            <RewardAndTopUpContainer>
+              <Table
+                columns={columns}
+                dataSource={rewardAndTopUp}
+                bordered
+                pagination={false}
+              />
+
+              <Alert
+                message="Note: Incentives are only available for the first 30 days after deployment."
+                type="info"
+                className="mt-16"
+              />
+            </RewardAndTopUpContainer>
           )}
         </Col>
       </Row>

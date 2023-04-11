@@ -36,6 +36,9 @@ const GlobalStyle = createGlobalStyle`
   .ml-16 {
     margin-left: 16px;
   }
+  .mt-16 {
+    margin-top: 16px;
+  }
   .walletconnect-modal__base {
     .walletconnect-modal__mobile__toggle a {
       /* color: ${COLOR.WALLECT_CONNECT_BLUE} !important; */
