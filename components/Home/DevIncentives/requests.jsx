@@ -100,9 +100,8 @@ export const checkpointRequest = ({ account, chainId }) => new Promise((resolve,
 });
 
 // function to fetch the last event from the tokenomics contract
-export const getLastEventRequest = ({ chainId }) => new Promise((resolve, reject) => {
+const getLastBlockTimestamp = ({ chainId }) => new Promise((resolve, reject) => {
   const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
-  console.log(contract);
 
   contract.getPastEvents(
     'allEvents',
@@ -114,14 +113,21 @@ export const getLastEventRequest = ({ chainId }) => new Promise((resolve, reject
       if (error) {
         reject(error);
       } else {
-        resolve(events[events.length - 1]);
+        const lastBlock = events[events.length - 1].blockNumber;
+        window.WEB3_PROVIDER.eth.getBlock(lastBlock, (e, block) => {
+          if (e) {
+            reject(e);
+          } else {
+            resolve(block.timestamp);
+          }
+        });
       }
     },
   );
 });
 
 // function to fetch the epoch length from the tokenomics contract
-export const getEpochLength = ({ chainId }) => new Promise((resolve, reject) => {
+const getEpochLength = ({ chainId }) => new Promise((resolve, reject) => {
   const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
 
   contract.methods
@@ -129,7 +135,7 @@ export const getEpochLength = ({ chainId }) => new Promise((resolve, reject) => 
     .epochLen()
     .call()
     .then((response) => {
-      resolve(response);
+      resolve(parseInt(response, 10));
     })
     .catch((e) => {
       window.console.log('Error occured on fetching epoch');
@@ -137,17 +143,13 @@ export const getEpochLength = ({ chainId }) => new Promise((resolve, reject) => 
     });
 });
 
-// TODO: pendingRelativeReward - to be fixed
-export const canShowCheckpoint = async ({ chainId, pendingRelativeReward }) => {
+export const canShowCheckpoint = async ({ chainId }) => {
   try {
-    const lastEvent = await getLastEventRequest({ chainId });
+    const lastBlockTs = await getLastBlockTimestamp({ chainId });
     const epochLen = await getEpochLength({ chainId });
-
-    console.log(lastEvent);
-    const itc = lastEvent; // TODO: what is this?
     const todayDateInSec = Math.floor(Date.now() / 1000);
 
-    if (itc - todayDateInSec >= epochLen && pendingRelativeReward >= 0) {
+    if (lastBlockTs - todayDateInSec >= epochLen) {
       return true;
     }
     return false;
