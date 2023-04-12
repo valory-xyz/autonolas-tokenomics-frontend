@@ -29,7 +29,7 @@ const columns = [
   },
 ];
 
-export const GetIncentives = () => {
+export const CheckIncentives = () => {
   const { account, chainId } = useHelpers();
 
   // fetch incentives state
@@ -53,12 +53,6 @@ export const GetIncentives = () => {
         {
           key: '1',
           leftText: 'can be claimed during this epoch',
-          reward: parseToEth(response.reward),
-          topUp: parseToEth(response.topUp),
-        },
-        {
-          key: '2',
-          leftText: 'can be claimed during next epoch',
           reward: parseToEth(response.reward),
           topUp: parseToEth(response.topUp),
         },

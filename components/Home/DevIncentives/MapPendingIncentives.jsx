@@ -18,12 +18,18 @@ const { Title } = Typography;
 
 const columns = [
   {
-    title: 'Pending Relative Reward',
+    title: '',
+    dataIndex: 'leftText',
+    key: 'leftText',
+    width: 180,
+  },
+  {
+    title: 'Pending Reward',
     dataIndex: 'pendingRelativeReward',
     key: 'pendingRelativeReward',
   },
   {
-    title: 'Pending Relative Topup',
+    title: 'Pending Topup',
     dataIndex: 'pendingRelativeTopUp',
     key: 'pendingRelativeTopUp',
   },
@@ -45,7 +51,9 @@ export const MapIncentives = () => {
         unitType: values.unitType,
         unitId: `${values.unitId}`,
       });
-      setPendingIncentives(response);
+      setPendingIncentives([
+        { ...response, leftText: 'can be claimed during next epoch' },
+      ]);
     } catch (error) {
       window.console.error(error);
       notifyError();

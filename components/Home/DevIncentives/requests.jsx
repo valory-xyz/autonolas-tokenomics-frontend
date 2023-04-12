@@ -63,20 +63,18 @@ export const getMapUnitIncentivesRequest = ({
          * for unitType agent(0) & component(1),
          * the below formula is used to calculate the incentives
          */
-      const values = [
-        {
-          pendingRelativeReward:
-              unitType === 0
-                ? (parseToEth(response.pendingRelativeReward) * 17) / 100
-                : (parseToEth(response.pendingRelativeReward) * 83) / 100,
-          pendingRelativeTopUp:
-              unitType === 0
-                ? (parseToEth(response.pendingRelativeTopUp) * 9) / 100
-                : (parseToEth(response.pendingRelativeTopUp) * 41) / 100,
-          id: '0',
-          key: '0',
-        },
-      ];
+      const values = {
+        pendingRelativeReward:
+            unitType === '0'
+              ? (parseToEth(response.pendingRelativeReward) * 17) / 100
+              : (parseToEth(response.pendingRelativeReward) * 83) / 100,
+        pendingRelativeTopUp:
+            unitType === '0'
+              ? (parseToEth(response.pendingRelativeTopUp) * 9) / 100
+              : (parseToEth(response.pendingRelativeTopUp) * 41) / 100,
+        id: '0',
+        key: '0',
+      };
       resolve(values);
     })
     .catch((e) => {
@@ -101,22 +99,61 @@ export const checkpointRequest = ({ account, chainId }) => new Promise((resolve,
     });
 });
 
-export const canShowCheckpoint = ({
-  chainId,
-  someValue,
-  pendingRelativeTopUp,
-}) => new Promise((resolve, reject) => {
+// function to fetch the last event from the tokenomics contract
+export const getLastEventRequest = ({ chainId }) => new Promise((resolve, reject) => {
+  const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
+  console.log(contract);
+
+  contract.getPastEvents(
+    'allEvents',
+    {
+      fromBlock: 0,
+      toBlock: 'latest',
+    },
+    (error, events) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(events[events.length - 1]);
+      }
+    },
+  );
+});
+
+// function to fetch the epoch length from the tokenomics contract
+export const getEpochLength = ({ chainId }) => new Promise((resolve, reject) => {
   const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
 
-  try {
-    const epochLen = contract.methods.epochLen().call();
-    if (someValue >= epochLen && pendingRelativeTopUp >= 0) {
-      resolve(false);
-    } else {
-      resolve(true);
-    }
-  } catch (e) {
-    window.console.log('Error occured on fetching epoch');
-    reject(e);
-  }
+  contract.methods
+
+    .epochLen()
+    .call()
+    .then((response) => {
+      resolve(response);
+    })
+    .catch((e) => {
+      window.console.log('Error occured on fetching epoch');
+      reject(e);
+    });
 });
+
+// TODO: pendingRelativeReward - to be fixed
+export const canShowCheckpoint = async ({ chainId, pendingRelativeReward }) => {
+  try {
+    const lastEvent = await getLastEventRequest({ chainId });
+    const epochLen = await getEpochLength({ chainId });
+
+    console.log(lastEvent);
+    const itc = lastEvent; // TODO: what is this?
+    const todayDateInSec = Math.floor(Date.now() / 1000);
+
+    if (itc - todayDateInSec >= epochLen && pendingRelativeReward >= 0) {
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error(error);
+  }
+
+  return false;
+};

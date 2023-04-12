@@ -1,6 +1,6 @@
 import { Typography } from 'antd/lib';
 import { ClaimIncentives } from './ClaimIncentives';
-import { GetIncentives } from './GetIncentives';
+import { CheckIncentives } from './CheckIncentives';
 import { MapIncentives } from './MapPendingIncentives';
 import { Checkpoint } from './Checkpoint';
 
@@ -15,7 +15,7 @@ export const DevIncentives = () => (
       you have any outstanding.
     </Paragraph>
 
-    <GetIncentives />
+    <CheckIncentives />
     <br />
     <br />
 
