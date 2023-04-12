@@ -16,7 +16,9 @@ export const getOwnerIncentivesRequest = ({
   contract.methods
     .getOwnerIncentives(account, unitTypes, unitIds)
     .call()
-    .then((response) => resolve(response))
+    .then((response) => {
+      resolve(response);
+    })
     .catch((e) => {
       window.console.log('Error occured on fetching owner incentives');
       reject(e);
@@ -81,4 +83,40 @@ export const getMapUnitIncentivesRequest = ({
       window.console.log('Error occured on fetching map unit incentives');
       reject(e);
     });
+});
+
+export const checkpointRequest = ({ account, chainId }) => new Promise((resolve, reject) => {
+  const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
+
+  contract.methods
+    .checkpoint()
+    .send({ from: account })
+    .then((response) => {
+      // console.log('checkpoint response', response);
+      resolve(response);
+    })
+    .catch((e) => {
+      window.console.log('Error occured on checkpoint');
+      reject(e);
+    });
+});
+
+export const canShowCheckpoint = ({
+  chainId,
+  someValue,
+  pendingRelativeTopUp,
+}) => new Promise((resolve, reject) => {
+  const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
+
+  try {
+    const epochLen = contract.methods.epochLen().call();
+    if (someValue >= epochLen && pendingRelativeTopUp >= 0) {
+      resolve(false);
+    } else {
+      resolve(true);
+    }
+  } catch (e) {
+    window.console.log('Error occured on fetching epoch');
+    reject(e);
+  }
 });

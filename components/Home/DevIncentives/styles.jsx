@@ -16,8 +16,15 @@ export const MapPendingIncentivesContainer = styled.div`
 `;
 
 export const RewardAndTopUpContainer = styled.div`
-  width: 500px;
+  width: 100%;
   .ant-table {
-    width: 400px;
+    width: 100%;
+  }
+`;
+
+export const CheckpointContainer = styled.div`
+  width: 700px;
+  .btn-container {
+    text-align: center;
   }
 `;

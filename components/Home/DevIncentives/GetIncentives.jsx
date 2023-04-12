@@ -12,6 +12,12 @@ const { Title } = Typography;
 
 const columns = [
   {
+    title: '',
+    dataIndex: 'leftText',
+    key: 'leftText',
+    width: 180,
+  },
+  {
     title: 'Reward',
     dataIndex: 'reward',
     key: 'reward',
@@ -46,6 +52,13 @@ export const GetIncentives = () => {
       setRewardAndTopUp([
         {
           key: '1',
+          leftText: 'can be claimed during this epoch',
+          reward: parseToEth(response.reward),
+          topUp: parseToEth(response.topUp),
+        },
+        {
+          key: '2',
+          leftText: 'can be claimed during next epoch',
           reward: parseToEth(response.reward),
           topUp: parseToEth(response.topUp),
         },
@@ -85,7 +98,7 @@ export const GetIncentives = () => {
               />
 
               <Alert
-                message="Note: Incentives are only available for the first 30 days after deployment."
+                message="Note that the incentives claimable from next epoch are estimated, they can eventually change during the epoch. While the amount that can be already claimed during this epoch is exact, and you can directly claim it."
                 type="info"
                 className="mt-16"
               />

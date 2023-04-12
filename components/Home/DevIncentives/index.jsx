@@ -2,6 +2,7 @@ import { Typography } from 'antd/lib';
 import { ClaimIncentives } from './ClaimIncentives';
 import { GetIncentives } from './GetIncentives';
 import { MapIncentives } from './MapPendingIncentives';
+import { Checkpoint } from './Checkpoint';
 
 const { Title, Paragraph } = Typography;
 
@@ -17,10 +18,15 @@ export const DevIncentives = () => (
     <GetIncentives />
     <br />
     <br />
-    <ClaimIncentives />
 
+    <Checkpoint />
     <br />
     <br />
+
+    <ClaimIncentives />
+    <br />
+    <br />
+
     <MapIncentives />
   </div>
 );
