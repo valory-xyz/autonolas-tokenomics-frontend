@@ -20,8 +20,6 @@ export const DevIncentives = () => (
     <br />
 
     <Checkpoint />
-    <br />
-    <br />
 
     <ClaimIncentives />
     <br />
