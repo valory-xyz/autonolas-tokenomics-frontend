@@ -8,6 +8,7 @@ import {
   Row,
   Col,
   Table,
+  Text,
 } from 'antd/lib';
 import { notifyError } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
@@ -30,7 +31,7 @@ const columns = [
 ];
 
 export const IncentivesForNextEpoch = () => {
-  const { chainId } = useHelpers();
+  const { chainId, account } = useHelpers();
   const [isLoading, setIsLoading] = useState(false);
   const [pendingIncentives, setPendingIncentives] = useState([]);
 
@@ -93,9 +94,20 @@ export const IncentivesForNextEpoch = () => {
             </Form.Item>
 
             <Form.Item wrapperCol={{ span: 6 }}>
-              <Button type="primary" htmlType="submit" loading={isLoading}>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={isLoading}
+                disabled={!account}
+              >
                 Check Incentives
               </Button>
+
+              {!account && (
+                <Text className="ml-8" type="secondary">
+                  To check incentives, connect a wallet
+                </Text>
+              )}
             </Form.Item>
           </Form>
         </Col>
