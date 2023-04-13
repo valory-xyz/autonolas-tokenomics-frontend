@@ -68,6 +68,9 @@ export const Checkpoint = () => {
         type="info"
         className="mt-16"
       />
+
+      <br />
+      <br />
     </CheckpointContainer>
   );
 };

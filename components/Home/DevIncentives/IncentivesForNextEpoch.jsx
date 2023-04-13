@@ -29,7 +29,7 @@ const columns = [
   },
 ];
 
-export const MapIncentives = () => {
+export const IncentivesForNextEpoch = () => {
   const { chainId } = useHelpers();
   const [isLoading, setIsLoading] = useState(false);
   const [pendingIncentives, setPendingIncentives] = useState([]);

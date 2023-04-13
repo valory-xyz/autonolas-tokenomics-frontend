@@ -25,7 +25,7 @@ const columns = [
   },
 ];
 
-export const CheckIncentives = () => {
+export const IncentivesForThisEpoch = () => {
   const { account, chainId } = useHelpers();
 
   // fetch incentives state
