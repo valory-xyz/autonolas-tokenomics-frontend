@@ -8,14 +8,13 @@ import {
   Row,
   Col,
   Table,
-  Text,
 } from 'antd/lib';
 import { notifyError } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { getMapUnitIncentivesRequest } from './requests';
 import { MapPendingIncentivesContainer } from './styles';
 
-const { Title, Paragraph } = Typography;
+const { Title, Paragraph, Text } = Typography;
 
 const columns = [
   {
