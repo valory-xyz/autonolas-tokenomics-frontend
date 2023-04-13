@@ -24,7 +24,7 @@ export const RewardAndTopUpContainer = styled.div`
 
 export const CheckpointContainer = styled.div`
   width: 700px;
-  margin-bottom: 2rem;
+  margin-bottom: 3rem;
   .btn-container {
     text-align: center;
   }

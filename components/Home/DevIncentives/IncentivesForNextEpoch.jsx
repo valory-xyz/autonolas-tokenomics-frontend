@@ -14,15 +14,9 @@ import { useHelpers } from 'common-util/hooks/useHelpers';
 import { getMapUnitIncentivesRequest } from './requests';
 import { MapPendingIncentivesContainer } from './styles';
 
-const { Title } = Typography;
+const { Title, Paragraph } = Typography;
 
 const columns = [
-  {
-    title: '',
-    dataIndex: 'leftText',
-    key: 'leftText',
-    width: 180,
-  },
   {
     title: 'Pending Reward',
     dataIndex: 'pendingRelativeReward',
@@ -51,9 +45,7 @@ export const MapIncentives = () => {
         unitType: values.unitType,
         unitId: `${values.unitId}`,
       });
-      setPendingIncentives([
-        { ...response, leftText: 'can be claimed during next epoch' },
-      ]);
+      setPendingIncentives([response]);
     } catch (error) {
       window.console.error(error);
       notifyError();
@@ -64,7 +56,13 @@ export const MapIncentives = () => {
 
   return (
     <MapPendingIncentivesContainer>
-      <Title level={2}>Map Incentives</Title>
+      <Title level={3}>Incentives for next epoch</Title>
+      <Paragraph style={{ maxWidth: 550 }}>
+        Note that the incentives claimable from next epoch are estimated, they
+        can eventually change during the epoch. While the amount that can be
+        already claimed during this epoch is exact, and you can directly claim
+        it.
+      </Paragraph>
 
       <Row>
         <Col lg={14} xs={24}>
@@ -96,7 +94,7 @@ export const MapIncentives = () => {
 
             <Form.Item wrapperCol={{ span: 6 }}>
               <Button type="primary" htmlType="submit" loading={isLoading}>
-                Get Incentives
+                Check Incentives
               </Button>
             </Form.Item>
           </Form>

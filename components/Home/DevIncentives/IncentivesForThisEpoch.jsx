@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  Alert, Row, Col, Table, Typography,
+  Row, Col, Table, Typography,
 } from 'antd/lib';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import { notifySpecificError, parseToEth } from 'common-util/functions';
@@ -11,17 +11,13 @@ import { RewardAndTopUpContainer } from './styles';
 const { Title } = Typography;
 
 const columns = [
-  {
-    title: '',
-    dataIndex: 'leftText',
-    key: 'leftText',
-    width: 180,
-  },
+  // TODO: max of 2 decimals is enough
   {
     title: 'Reward',
     dataIndex: 'reward',
     key: 'reward',
   },
+  // TODO: max of 2 decimals is enough
   {
     title: 'Top Up',
     dataIndex: 'topUp',
@@ -52,7 +48,6 @@ export const CheckIncentives = () => {
       setRewardAndTopUp([
         {
           key: '1',
-          leftText: 'can be claimed during this epoch',
           reward: parseToEth(response.reward),
           topUp: parseToEth(response.topUp),
         },
@@ -70,14 +65,14 @@ export const CheckIncentives = () => {
 
   return (
     <>
-      <Title level={3}>Check Incentives</Title>
+      <Title level={3}>Incentives for this epoch</Title>
 
       <Row>
         <Col lg={14} xs={24}>
           <DynamicFieldsForm
             isLoading={isLoading}
             onSubmit={getIncentives}
-            submitButtonText="Check"
+            submitButtonText="Check Incentives"
           />
         </Col>
 
@@ -89,12 +84,6 @@ export const CheckIncentives = () => {
                 dataSource={rewardAndTopUp}
                 bordered
                 pagination={false}
-              />
-
-              <Alert
-                message="Note that the incentives claimable from next epoch are estimated, they can eventually change during the epoch. While the amount that can be already claimed during this epoch is exact, and you can directly claim it."
-                type="info"
-                className="mt-16"
               />
             </RewardAndTopUpContainer>
           )}
