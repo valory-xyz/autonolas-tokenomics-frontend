@@ -69,7 +69,6 @@ const getEpochCounter = ({ chainId }) => new Promise((resolve, reject) => {
     .epochCounter()
     .call()
     .then((response) => {
-      console.log(response);
       resolve(parseInt(response, 10));
     })
     .catch((e) => {
@@ -93,7 +92,6 @@ const getEpochTokenomics = ({ chainId, lastPoint }) => new Promise((resolve, rej
     });
 });
 
-// function to fetch the epoch length from the tokenomics contract
 const getUnitPointReq = ({ lastPoint, chainId, num }) => new Promise((resolve, reject) => {
   const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
 
@@ -101,7 +99,6 @@ const getUnitPointReq = ({ lastPoint, chainId, num }) => new Promise((resolve, r
     .getUnitPoint(lastPoint, num)
     .call()
     .then((response) => {
-      console.log(response);
       resolve(response);
     })
     .catch((e) => {
@@ -161,12 +158,6 @@ export const getMapUnitIncentivesRequest = ({
     .then(async (response) => {
       const currentPoint = await getEpochCounter({ chainId });
 
-      // Get the epoch point of the last epoch
-      const ep = await getEpochTokenomics({
-        lastPoint: currentPoint,
-        chainId,
-      });
-
       // Get the unit points of the last epoch
       const componentInfo = await getUnitPointReq({
         lastPoint: currentPoint,
@@ -179,39 +170,31 @@ export const getMapUnitIncentivesRequest = ({
         num: 1,
         chainId,
       });
-      const up = [componentInfo, agentInfo];
 
-      // const compFraction = up[0].topUpUnitFraction;
-      console.log({
-        currentPoint,
-        ep,
-        up,
-      });
-
-      // unitType 0 is component
-      // unitType 1 is agent
+      const { pendingRelativeReward, pendingRelativeTopUp } = response;
+      const {
+        rewardUnitFraction: aRewardFraction,
+        topUpUnitFraction: aTopupFraction,
+      } = agentInfo;
+      const {
+        rewardUnitFraction: cRewardFraction,
+        topUpUnitFraction: cTopupFraction,
+      } = componentInfo;
 
       /**
          * for unitType agent(0) & component(1),
          * the below formula is used to calculate the incentives
          */
+      const componentPendingReward = (parseToEth(pendingRelativeReward) * cRewardFraction) / 100;
+      const agentPendingReward = (parseToEth(pendingRelativeReward) * aRewardFraction) / 100;
+      const componentPendingTopUp = (parseToEth(pendingRelativeTopUp) * cTopupFraction) / 100;
+      const agentPendingTopUp = (parseToEth(pendingRelativeTopUp) * aTopupFraction) / 100;
+
       const values = {
         pendingRelativeReward:
-            unitType === '0'
-              ? (parseToEth(response.pendingRelativeReward)
-                  * agentInfo.rewardUnitFraction)
-                / 100
-              : (parseToEth(response.pendingRelativeReward)
-                  * componentInfo.rewardUnitFraction)
-                / 100,
+            unitType === '0' ? componentPendingReward : agentPendingReward,
         pendingRelativeTopUp:
-            unitType === '0'
-              ? (parseToEth(response.pendingRelativeTopUp)
-                  * agentInfo.topUpUnitFraction)
-                / 100
-              : (parseToEth(response.pendingRelativeTopUp)
-                  * componentInfo.topUpUnitFraction)
-                / 100,
+            unitType === '0' ? componentPendingTopUp : agentPendingTopUp,
         id: '0',
         key: '0',
       };

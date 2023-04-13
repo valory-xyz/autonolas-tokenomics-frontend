@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   Row, Col, Table, Typography,
 } from 'antd/lib';
+import { round } from 'lodash';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import { notifySpecificError, parseToEth } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
@@ -11,13 +12,11 @@ import { RewardAndTopUpContainer } from './styles';
 const { Title } = Typography;
 
 const columns = [
-  // TODO: max of 2 decimals is enough
   {
     title: 'Reward (ETH)',
     dataIndex: 'reward',
     key: 'reward',
   },
-  // TODO: max of 2 decimals is enough
   {
     title: 'Top Up (OLAS)',
     dataIndex: 'topUp',
@@ -48,8 +47,8 @@ export const IncentivesForThisEpoch = () => {
       setRewardAndTopUp([
         {
           key: '1',
-          reward: parseToEth(response.reward),
-          topUp: parseToEth(response.topUp),
+          reward: round(parseToEth(response.reward), 2),
+          topUp: round(parseToEth(response.topUp), 2),
         },
       ]);
     } catch (error) {
