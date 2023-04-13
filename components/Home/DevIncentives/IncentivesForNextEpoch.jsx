@@ -91,7 +91,7 @@ export const IncentivesForNextEpoch = () => {
               <InputNumber min={0} className="mr-32" placeholder="Eg. 1" />
             </Form.Item>
 
-            <Form.Item wrapperCol={{ span: 6 }}>
+            <Form.Item>
               <Button
                 type="primary"
                 htmlType="submit"
