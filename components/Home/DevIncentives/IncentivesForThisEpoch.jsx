@@ -65,7 +65,7 @@ export const IncentivesForThisEpoch = () => {
 
   return (
     <>
-      <Title level={3}>Incentives for this epoch</Title>
+      <Title level={3}>Claimable Incentives up to this epoch</Title>
 
       <Row>
         <Col lg={14} xs={24}>

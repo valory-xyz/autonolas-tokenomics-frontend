@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Alert, Button, Typography } from 'antd/lib';
-import { notifySpecificError } from 'common-util/functions';
+import { notifySpecificError, notifySuccess } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { canShowCheckpoint, checkpointRequest } from './requests';
 import { CheckpointContainer } from './styles';
@@ -37,6 +37,8 @@ export const Checkpoint = () => {
         account,
         chainId,
       });
+
+      notifySuccess('Checkpoint called successfully');
 
       // check if checkpoint is visible again
       await getIfCheckpointVisible();
