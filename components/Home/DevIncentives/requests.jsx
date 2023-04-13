@@ -104,7 +104,7 @@ const getLastBlockTimestamp = ({ chainId }) => new Promise((resolve, reject) => 
   const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
 
   contract.getPastEvents(
-    'allEvents',
+    'EpochSettled',
     {
       fromBlock: 0,
       toBlock: 'latest',
@@ -114,10 +114,12 @@ const getLastBlockTimestamp = ({ chainId }) => new Promise((resolve, reject) => 
         reject(error);
       } else {
         const lastBlock = events[events.length - 1].blockNumber;
+        console.log({ events });
         window.WEB3_PROVIDER.eth.getBlock(lastBlock, (e, block) => {
           if (e) {
             reject(e);
           } else {
+            console.log({ block });
             resolve(block.timestamp);
           }
         });
@@ -131,7 +133,6 @@ const getEpochLength = ({ chainId }) => new Promise((resolve, reject) => {
   const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
 
   contract.methods
-
     .epochLen()
     .call()
     .then((response) => {
@@ -149,7 +150,20 @@ export const canShowCheckpoint = async ({ chainId }) => {
     const epochLen = await getEpochLength({ chainId });
     const todayDateInSec = Math.floor(Date.now() / 1000);
 
-    if (lastBlockTs - todayDateInSec >= epochLen) {
+    console.log({
+      lastBlockTs,
+      todayDateInSec,
+      epochLen,
+      lastBlockTsInDate: new Date(lastBlockTs * 1000),
+      todayDateInSecInDate: new Date(todayDateInSec * 1000),
+      multipiedBy2: (todayDateInSec + (epochLen * 2)),
+      minus1: (todayDateInSec + (epochLen * 2)) - lastBlockTs,
+      minus2: (todayDateInSec + (epochLen * 2)) - lastBlockTs >= epochLen,
+    });
+
+    // To check locally, add epochLen to todayDateInSec
+    // ie. (todayDateInSec + epochLen) instead of just todayDateInSec
+    if ((todayDateInSec + (epochLen * 2)) - lastBlockTs >= epochLen) {
       return true;
     }
     return false;
