@@ -13,13 +13,13 @@ const { Title } = Typography;
 const columns = [
   // TODO: max of 2 decimals is enough
   {
-    title: 'Reward',
+    title: 'Reward (ETH)',
     dataIndex: 'reward',
     key: 'reward',
   },
   // TODO: max of 2 decimals is enough
   {
-    title: 'Top Up',
+    title: 'Top Up (OLAS)',
     dataIndex: 'topUp',
     key: 'topUp',
   },

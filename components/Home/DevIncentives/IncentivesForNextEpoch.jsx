@@ -19,15 +19,16 @@ const { Title, Paragraph } = Typography;
 
 const columns = [
   {
-    title: 'Pending Reward',
+    title: 'Pending Reward (ETH)',
     dataIndex: 'pendingRelativeReward',
     key: 'pendingRelativeReward',
   },
-  {
-    title: 'Pending Topup',
-    dataIndex: 'pendingRelativeTopUp',
-    key: 'pendingRelativeTopUp',
-  },
+  // TODO: do the calculation later, as it is complicated
+  // {
+  //   title: 'Pending Topup',
+  //   dataIndex: 'pendingRelativeTopUp',
+  //   key: 'pendingRelativeTopUp',
+  // },
 ];
 
 export const IncentivesForNextEpoch = () => {
@@ -78,8 +79,8 @@ export const IncentivesForNextEpoch = () => {
               rules={[{ required: true, message: 'Please add unit type' }]}
             >
               <Radio.Group>
-                <Radio value="0">Agent</Radio>
-                <Radio value="1">Component</Radio>
+                <Radio value="1">Agent</Radio>
+                <Radio value="0">Component</Radio>
               </Radio.Group>
             </Form.Item>
 

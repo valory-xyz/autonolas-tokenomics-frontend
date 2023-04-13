@@ -62,8 +62,8 @@ export const FormList = ({
             >
               {isUnitTypeInput ? (
                 <Radio.Group>
-                  <Radio value="0">Agent</Radio>
-                  <Radio value="1">Component</Radio>
+                  <Radio value="1">Agent</Radio>
+                  <Radio value="0">Component</Radio>
                 </Radio.Group>
               ) : (
                 <InputNumber min={0} placeholder="Eg. 5" />
