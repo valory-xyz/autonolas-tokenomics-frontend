@@ -230,3 +230,48 @@ export const depositRequest = ({
       reject(e);
     });
 });
+
+/**
+ * call uniswap token0 - line 164
+ * - If token0 = OLAS then print "OLAS" +
+ *   call name() from the ABI of ERC20 token with address token1
+ * - else call name() from the ABI of ERC20 token
+ * - else
+ */
+
+// export const getTokenName = ({
+//   account,
+//   chainId,
+//   productId,
+//   tokenAmount,
+//   token = '0x073240f818dd606032956F709110656764008f58',
+// }) => new Promise((resolve, reject) => {
+//   const contract = getUniswapV2PairContract(window.MODAL_PROVIDER, token);
+
+//   contract.methods
+//     .token0()
+//     .call()
+//     .then((response) => {
+//       console.log(response);
+//     })
+//     .catch((e) => {
+//       window.console.log('Error occured on token');
+//       reject(e);
+//     });
+// });
+
+// export const getTokenName = async ({ chainId, token }) => {
+
+// const token0 = await contract.methods.token0().call();
+
+// if (token0 === getContractAddress('olas', chainId)) {
+//   const token1 = await contract.methods.token1().call();
+//   const token1Contract = getERC20Contract(window.MODAL_PROVIDER, token1);
+//   const token1Name = await token1Contract.methods.name().call();
+//   return `OLAS ${token1Name}`;
+// }
+
+// const tokenContract = getERC20Contract(window.MODAL_PROVIDER, token0);
+// const tokenName = await tokenContract.methods.name().call();
+// return tokenName;
+// };

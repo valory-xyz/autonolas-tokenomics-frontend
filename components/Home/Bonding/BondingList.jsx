@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import {
   Button, Table, Tag, Tooltip,
 } from 'antd/lib';
+import { remove } from 'lodash';
 import { COLOR } from '@autonolas/frontend-library';
 import {
   notifyError,
@@ -10,14 +11,19 @@ import {
   parseToEth,
 } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
-import { remove } from 'lodash';
 import { Deposit } from './Deposit';
-import { getProductListRequest, getAllTheProductsNotRemoved } from './requests';
+import {
+  getProductListRequest,
+  getAllTheProductsNotRemoved,
+  // getTokenName,
+} from './requests';
 
 const getColumns = (showNoSupply, onClick, isActive, acc) => {
   const columns = [
     {
-      title: 'Bonding Program ID',
+      title: (
+        <Tooltip title="Identifier of bonding program">Bonding Program</Tooltip>
+      ),
       dataIndex: 'id',
       key: 'id',
     },
@@ -32,10 +38,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
     },
     {
       title: (
-        <Tooltip
-          title="LP token price with 18 decimals and non-zero at which an LP
-      share is priced during the bonding program"
-        >
+        <Tooltip title="LP token price at which an LP share is priced during the bonding program">
           <span>Price LP</span>
         </Tooltip>
       ),
@@ -44,7 +47,11 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
       render: (x) => `${parseToEth(x)} OLAS`,
     },
     {
-      title: 'Discount',
+      title: (
+        <Tooltip title="Percentage of discount depending on the usefulness of the code in the ecosystem">
+          Discount
+        </Tooltip>
+      ),
       dataIndex: 'discount',
       key: 'discount',
       render: (x) => (
@@ -55,11 +62,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
     },
     {
       title: (
-        <Tooltip
-          title="OLAS supply (non-zero and beyond the limit fixed by the
-          tokenomics to fund bonding programs and not overflowing the contract
-          limit) that will be reserved to fund OLAS for this bonding program"
-        >
+        <Tooltip title="OLAS supply reserved for this bonding program">
           <span>Supply</span>
         </Tooltip>
       ),
@@ -69,10 +72,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
     },
     {
       title: (
-        <Tooltip
-          title="the vesting time (bigger or equal to the minimal vesting value) in
-      seconds that a bonder has to wait before being able to withdraw OLAS"
-        >
+        <Tooltip title="The vesting time to withdraw OLAS">
           <span>Expiry</span>
         </Tooltip>
       ),
@@ -81,7 +81,11 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
       render: (seconds) => getFormattedDate(seconds * 1000),
     },
     {
-      title: 'Bond',
+      title: (
+        <Tooltip title="Bond your LP pair to get OLAS at a discount">
+          Bond
+        </Tooltip>
+      ),
       dataIndex: 'bondForOlas',
       key: 'bondForOlas',
       render: (_, row) => (
@@ -149,6 +153,10 @@ export const BondingList = ({ bondingProgramType }) => {
   useEffect(() => {
     if (account && chainId) {
       getProducts();
+      // getTokenName({
+      //   account,
+      //   chainId,
+      // });
     }
   }, [account, chainId, bondingProgramType]);
 
