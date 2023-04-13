@@ -21,14 +21,23 @@ const GlobalStyle = createGlobalStyle`
   .mb-8 {
     margin-bottom: 0.5rem;
   }
+  .mb-16 {
+    margin-bottom: 1rem;
+  }
   .mr-12 {
     margin-right: 12px;
   }
   .mr-32 {
     margin-right: 32px;
   }
+  .ml-8 {
+    margin-left: 8px;
+  }
   .ml-16 {
     margin-left: 16px;
+  }
+  .mt-16 {
+    margin-top: 16px;
   }
   .walletconnect-modal__base {
     .walletconnect-modal__mobile__toggle a {
@@ -142,6 +151,21 @@ const GlobalStyle = createGlobalStyle`
   /* button */
   .ant-btn-danger {
     text-shadow: none;
+  }
+
+  /* radio-button for grouping */
+  .choose-type-group.ant-typography {
+    display: flex;
+    align-items: center;
+    .ant-radio-group {
+      margin-left: 2rem;
+      border: 1px solid ${COLOR.BORDER_GREY};
+      padding: 2px 16px;
+      .ant-radio {
+        display: inline-block;
+        top: 2px;
+      }
+    }
   }
 
   ${MEDIA_QUERY.tablet} {

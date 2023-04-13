@@ -45,20 +45,20 @@ const NavigationBar = ({ children }) => {
           onClick={handleMenuItemClick}
           items={[
             {
-              key: 'deposit-service-donation',
-              label: 'Deposit Service',
+              key: 'donate',
+              label: 'Donate',
             },
             {
-              key: 'owner-incentive',
-              label: 'Owner Incentives',
+              key: 'dev-incentives',
+              label: 'Dev Incentives',
             },
             {
-              key: 'products',
-              label: 'Products',
+              key: 'bonding-programs',
+              label: 'Bonding Programs',
             },
             {
-              key: 'bonds',
-              label: 'Bonds',
+              key: 'my-bonds',
+              label: 'My Bonds',
             },
           ]}
         />
