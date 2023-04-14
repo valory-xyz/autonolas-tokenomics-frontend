@@ -14,23 +14,24 @@ import { useHelpers } from 'common-util/hooks/useHelpers';
 import { getMapUnitIncentivesRequest } from './requests';
 import { MapPendingIncentivesContainer } from './styles';
 
-const { Title, Paragraph } = Typography;
+const { Title, Paragraph, Text } = Typography;
 
 const columns = [
   {
-    title: 'Pending Reward',
+    title: 'Pending Reward (ETH)',
     dataIndex: 'pendingRelativeReward',
     key: 'pendingRelativeReward',
   },
-  {
-    title: 'Pending Topup',
-    dataIndex: 'pendingRelativeTopUp',
-    key: 'pendingRelativeTopUp',
-  },
+  // TODO: do the calculation later, as it is complicated
+  // {
+  //   title: 'Pending Topup',
+  //   dataIndex: 'pendingRelativeTopUp',
+  //   key: 'pendingRelativeTopUp',
+  // },
 ];
 
 export const IncentivesForNextEpoch = () => {
-  const { chainId } = useHelpers();
+  const { chainId, account } = useHelpers();
   const [isLoading, setIsLoading] = useState(false);
   const [pendingIncentives, setPendingIncentives] = useState([]);
 
@@ -56,12 +57,10 @@ export const IncentivesForNextEpoch = () => {
 
   return (
     <MapPendingIncentivesContainer>
-      <Title level={3}>Incentives for next epoch</Title>
+      <Title level={3}>Projected Incentives for next epoch</Title>
       <Paragraph style={{ maxWidth: 550 }}>
-        Note that the incentives claimable from next epoch are estimated, they
-        can eventually change during the epoch. While the amount that can be
-        already claimed during this epoch is exact, and you can directly claim
-        it.
+        Note that the incentives claimable from the next epoch are estimated, as
+        they might eventually change during the epoch due to other donations.
       </Paragraph>
 
       <Row>
@@ -79,8 +78,8 @@ export const IncentivesForNextEpoch = () => {
               rules={[{ required: true, message: 'Please add unit type' }]}
             >
               <Radio.Group>
-                <Radio value="0">Agent</Radio>
-                <Radio value="1">Component</Radio>
+                <Radio value="1">Agent</Radio>
+                <Radio value="0">Component</Radio>
               </Radio.Group>
             </Form.Item>
 
@@ -92,10 +91,21 @@ export const IncentivesForNextEpoch = () => {
               <InputNumber min={0} className="mr-32" placeholder="Eg. 1" />
             </Form.Item>
 
-            <Form.Item wrapperCol={{ span: 6 }}>
-              <Button type="primary" htmlType="submit" loading={isLoading}>
+            <Form.Item>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={isLoading}
+                disabled={!account}
+              >
                 Check Incentives
               </Button>
+
+              {!account && (
+                <Text className="ml-8" type="secondary">
+                  To check incentives, connect a wallet
+                </Text>
+              )}
             </Form.Item>
           </Form>
         </Col>

@@ -1,5 +1,5 @@
 import { sendTransaction } from '@autonolas/frontend-library';
-import { parseToEth } from 'common-util/functions';
+import { getBlockTimestamp, parseToEth } from 'common-util/functions';
 import {
   getDispenserContract,
   getTokenomicsContract,
@@ -47,42 +47,6 @@ export const claimOwnerIncentivesRequest = ({
     });
 });
 
-export const getMapUnitIncentivesRequest = ({
-  // account,
-  chainId,
-  unitType,
-  unitId,
-}) => new Promise((resolve, reject) => {
-  const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
-
-  contract.methods
-    .mapUnitIncentives(unitType, unitId)
-    .call()
-    .then((response) => {
-      /**
-         * for unitType agent(0) & component(1),
-         * the below formula is used to calculate the incentives
-         */
-      const values = {
-        pendingRelativeReward:
-            unitType === '0'
-              ? (parseToEth(response.pendingRelativeReward) * 17) / 100
-              : (parseToEth(response.pendingRelativeReward) * 83) / 100,
-        pendingRelativeTopUp:
-            unitType === '0'
-              ? (parseToEth(response.pendingRelativeTopUp) * 9) / 100
-              : (parseToEth(response.pendingRelativeTopUp) * 41) / 100,
-        id: '0',
-        key: '0',
-      };
-      resolve(values);
-    })
-    .catch((e) => {
-      window.console.log('Error occured on fetching map unit incentives');
-      reject(e);
-    });
-});
-
 export const checkpointRequest = ({ account, chainId }) => new Promise((resolve, reject) => {
   const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
 
@@ -90,7 +54,6 @@ export const checkpointRequest = ({ account, chainId }) => new Promise((resolve,
     .checkpoint()
     .send({ from: account })
     .then((response) => {
-      // console.log('checkpoint response', response);
       resolve(response);
     })
     .catch((e) => {
@@ -99,35 +62,51 @@ export const checkpointRequest = ({ account, chainId }) => new Promise((resolve,
     });
 });
 
-// function to fetch the last event from the tokenomics contract
-const getLastBlockTimestamp = ({ chainId }) => new Promise((resolve, reject) => {
+const getEpochCounter = ({ chainId }) => new Promise((resolve, reject) => {
   const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
 
-  // get the last event of the checkpoint
-  contract.getPastEvents(
-    'EpochSettled',
-    {
-      fromBlock: 0,
-      toBlock: 'latest',
-    },
-    (error, events) => {
-      if (error) {
-        reject(error);
-      } else {
-        const lastBlock = events[events.length - 1].blockNumber;
-        window.WEB3_PROVIDER.eth.getBlock(lastBlock, (e, block) => {
-          if (e) {
-            reject(e);
-          } else {
-            resolve(block.timestamp);
-          }
-        });
-      }
-    },
-  );
+  contract.methods
+    .epochCounter()
+    .call()
+    .then((response) => {
+      resolve(parseInt(response, 10));
+    })
+    .catch((e) => {
+      window.console.log('Error occured on fetching epoch counter');
+      reject(e);
+    });
 });
 
-// function to fetch the epoch length from the tokenomics contract
+const getEpochTokenomics = ({ chainId, lastPoint }) => new Promise((resolve, reject) => {
+  const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
+
+  contract.methods
+    .mapEpochTokenomics(lastPoint)
+    .call()
+    .then((response) => {
+      resolve(response);
+    })
+    .catch((e) => {
+      window.console.log('Error occured on fetching epoch tokenomics');
+      reject(e);
+    });
+});
+
+const getUnitPointReq = ({ lastPoint, chainId, num }) => new Promise((resolve, reject) => {
+  const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
+
+  contract.methods
+    .getUnitPoint(lastPoint, num)
+    .call()
+    .then((response) => {
+      resolve(response);
+    })
+    .catch((e) => {
+      window.console.log('Error occured on fetching epoch');
+      reject(e);
+    });
+});
+
 const getEpochLength = ({ chainId }) => new Promise((resolve, reject) => {
   const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
 
@@ -145,13 +124,16 @@ const getEpochLength = ({ chainId }) => new Promise((resolve, reject) => {
 
 export const canShowCheckpoint = async ({ chainId }) => {
   try {
-    const lastBlockTs = await getLastBlockTimestamp({ chainId });
+    const epCounter = await getEpochCounter({ chainId });
+    const epTokenomics = await getEpochTokenomics({
+      lastPoint: Number(epCounter) - 1,
+      chainId,
+    });
     const epochLen = await getEpochLength({ chainId });
-    const todayDateInSec = Math.floor(Date.now() / 1000);
+    const blockTimestamp = await getBlockTimestamp();
+    const { endTime } = epTokenomics;
 
-    // To check locally, add epochLen to todayDateInSec
-    // ie. (todayDateInSec + epochLen) instead of just todayDateInSec
-    if (todayDateInSec - lastBlockTs >= epochLen) {
+    if (blockTimestamp - endTime >= epochLen) {
       return true;
     }
     return false;
@@ -161,3 +143,65 @@ export const canShowCheckpoint = async ({ chainId }) => {
 
   return false;
 };
+
+export const getMapUnitIncentivesRequest = ({
+  // account,
+  chainId,
+  unitType,
+  unitId,
+}) => new Promise((resolve, reject) => {
+  const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
+
+  contract.methods
+    .mapUnitIncentives(unitType, unitId)
+    .call()
+    .then(async (response) => {
+      const currentPoint = await getEpochCounter({ chainId });
+
+      // Get the unit points of the last epoch
+      const componentInfo = await getUnitPointReq({
+        lastPoint: currentPoint,
+        num: 0,
+        chainId,
+      });
+
+      const agentInfo = await getUnitPointReq({
+        lastPoint: currentPoint,
+        num: 1,
+        chainId,
+      });
+
+      const { pendingRelativeReward, pendingRelativeTopUp } = response;
+      const {
+        rewardUnitFraction: aRewardFraction,
+        topUpUnitFraction: aTopupFraction,
+      } = agentInfo;
+      const {
+        rewardUnitFraction: cRewardFraction,
+        topUpUnitFraction: cTopupFraction,
+      } = componentInfo;
+
+      /**
+         * for unitType agent(0) & component(1),
+         * the below formula is used to calculate the incentives
+         */
+      const componentPendingReward = (parseToEth(pendingRelativeReward) * cRewardFraction) / 100;
+      const agentPendingReward = (parseToEth(pendingRelativeReward) * aRewardFraction) / 100;
+      const componentPendingTopUp = (parseToEth(pendingRelativeTopUp) * cTopupFraction) / 100;
+      const agentPendingTopUp = (parseToEth(pendingRelativeTopUp) * aTopupFraction) / 100;
+
+      const values = {
+        pendingRelativeReward:
+            unitType === '0' ? componentPendingReward : agentPendingReward,
+        pendingRelativeTopUp:
+            unitType === '0' ? componentPendingTopUp : agentPendingTopUp,
+        id: '0',
+        key: '0',
+      };
+      resolve(values);
+    })
+    .catch((e) => {
+      window.console.log('Error occured on fetching map unit incentives');
+      reject(e);
+    });
+});

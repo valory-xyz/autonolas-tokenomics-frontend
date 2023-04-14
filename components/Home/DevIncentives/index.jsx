@@ -19,13 +19,12 @@ export const DevIncentives = () => (
     <br />
     <br />
 
-    <IncentivesForNextEpoch />
-    <br />
-    <br />
-
     <Checkpoint />
 
     <ClaimIncentives />
+    <br />
+    <br />
 
+    <IncentivesForNextEpoch />
   </div>
 );
