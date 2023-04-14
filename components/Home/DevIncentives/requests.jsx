@@ -50,9 +50,11 @@ export const claimOwnerIncentivesRequest = ({
 export const checkpointRequest = ({ account, chainId }) => new Promise((resolve, reject) => {
   const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
 
-  contract.methods
+  const fn = contract.methods
     .checkpoint()
-    .send({ from: account })
+    .send({ from: account });
+
+  sendTransaction(fn, account)
     .then((response) => {
       resolve(response);
     })
