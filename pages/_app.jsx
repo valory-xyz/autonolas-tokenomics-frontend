@@ -4,17 +4,14 @@ import Head from 'next/head';
 import { createWrapper } from 'next-redux-wrapper';
 import PropTypes from 'prop-types';
 
-import Web3 from 'web3';
-import { Web3ReactProvider } from '@web3-react/core';
+import { WagmiConfig } from 'wagmi';
 
-import { Web3DataProvider } from '@autonolas/frontend-library';
 import GlobalStyle from 'components/GlobalStyles';
 import Layout from 'components/Layout';
+import { wagmiConfig } from 'common-util/Login/config';
 import initStore from '../store';
 
 require('../styles/antd.less');
-
-const getLibrary = (p) => new Web3(p);
 
 class MyApp extends App {
   static async getInitialProps({ Component, ctx }) {
@@ -35,13 +32,11 @@ class MyApp extends App {
           <title>Autonolas Tokenomics</title>
           <meta name="title" content="Autonolas Tokenomics" />
         </Head>
-        <Web3DataProvider>
-          <Web3ReactProvider getLibrary={getLibrary}>
-            <Layout>
-              <Component {...pageProps} />
-            </Layout>
-          </Web3ReactProvider>
-        </Web3DataProvider>
+        <WagmiConfig config={wagmiConfig}>
+          <Layout>
+            <Component {...pageProps} />
+          </Layout>
+        </WagmiConfig>
       </>
     );
   }
