@@ -13,7 +13,9 @@
     "@autonolas/frontend-library": "^0.3.8",
     "@ethersproject/providers": "^5.6.8",
     "@walletconnect/web3-provider": "^1.7.8",
-    "@web3-react/core": "^6.1.9",
+    "@wagmi/core": "^1.0.5",
+    "@web3modal/ethereum": "^2.4.1",
+    "@web3modal/react": "^2.4.1",
     "@zeit/next-css": "^1.0.1",
     "@zeit/next-less": "^1.0.1",
     "antd": "^4.12.3",
@@ -34,8 +36,9 @@
     "redux-mock-store": "^1.5.4",
     "redux-thunk": "^2.3.0",
     "styled-components": "^5.0.1",
-    "web3": "^1.7.3",
-    "web3modal": "^1.9.8"
+    "viem": "^0.3.35",
+    "wagmi": "^1.0.8",
+    "web3": "^1.7.3"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^5.11.9",
