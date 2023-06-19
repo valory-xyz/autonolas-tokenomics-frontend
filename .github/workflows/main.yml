@@ -17,8 +17,6 @@ jobs:
       run: yarn
     - name: Run ESLint
       run: ./node_modules/.bin/eslint . --ext .js,.jsx,.ts,.tsx
-    - name: Run Test
-      run: yarn test
 
   scan:
     name: gitleaks

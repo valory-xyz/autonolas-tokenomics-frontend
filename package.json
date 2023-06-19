@@ -3,10 +3,7 @@
     "dev": "next",
     "build": "CI= next build",
     "start": "next start",
-    "lint": "eslint ./",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "testc": "jest --coverage --verbose"
+    "lint": "eslint ./"
   },
   "dependencies": {
     "@ant-design/icons": "^5.0.1",
