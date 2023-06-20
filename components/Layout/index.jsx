@@ -4,7 +4,8 @@ import dynamic from 'next/dynamic';
 import { Layout, Menu } from 'antd/lib';
 import PropTypes from 'prop-types';
 import Login from '../Login';
-import { CustomLayout, Container, Logo } from './styles';
+import Footer from './Footer';
+import { CustomLayout, Logo } from './styles';
 
 const LogoSvg = dynamic(() => import('common-util/SVGs/logo'));
 
@@ -69,7 +70,7 @@ const NavigationBar = ({ children }) => {
         <div className="site-layout-background">{children}</div>
       </Content>
 
-      <Container />
+      <Footer />
     </CustomLayout>
   );
 };
