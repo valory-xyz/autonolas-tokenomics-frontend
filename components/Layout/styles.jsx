@@ -48,12 +48,6 @@ export const Logo = styled.div`
   }
 `;
 
-// FOOTER
-export const Container = styled.div`
-  margin-top: 2rem;
-  font-size: 20px;
-`;
-
 export const SubFooter = styled.div`
   display: flex;
   align-items: flex-start;
