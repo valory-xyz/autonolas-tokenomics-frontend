@@ -47,8 +47,8 @@ export const IncentivesForThisEpoch = () => {
       setRewardAndTopUp([
         {
           key: '1',
-          reward: round(parseToEth(response.reward), 2),
-          topUp: round(parseToEth(response.topUp), 2),
+          reward: round(parseToEth(response.reward), 6),
+          topUp: round(parseToEth(response.topUp), 6),
         },
       ]);
     } catch (error) {
