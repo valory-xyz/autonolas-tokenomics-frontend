@@ -71,6 +71,10 @@ const getErrorMessage = (error) => {
     if ((error?.message || '').includes('TransferFailed')) {
       return 'Transfer failed';
     }
+
+    if ((error?.message || '').includes('execution reverted')) {
+      return 'Nothing to cliam for the connected wallet';
+    }
   }
 
   return 'Some error occured';
