@@ -2,7 +2,7 @@ export const DISPENSER_ADDRESS_MAINNET = '0xeED0000fE94d7cfeF4Dc0CA86a223f0F603A
 
 export const DISPENSER_ADDRESS_GOERLI = '0xeDd71796B90eaCc56B074C39BAC90ED2Ca6D93Ee';
 
-export const DISPENSER_ABI_MAINNET = [
+export const DISPENSER_ABI = [
   {
     inputs: [
       {
