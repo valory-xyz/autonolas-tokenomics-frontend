@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  Row, Col, Table, Typography,
+  Row, Col, Table, Typography, Alert,
 } from 'antd/lib';
 import { round } from 'lodash';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
@@ -65,6 +65,13 @@ export const IncentivesForThisEpoch = () => {
   return (
     <>
       <Title level={3}>Claimable Incentives up to this epoch</Title>
+
+      <Alert
+        message="Note: You must be the owner of each listed unit to see the claimable incentives."
+        type="info"
+        showIcon
+      />
+      <br />
 
       <Row>
         <Col lg={14} xs={24}>

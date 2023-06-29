@@ -1,7 +1,7 @@
 import { Typography } from 'antd/lib';
 import { ClaimIncentives } from './ClaimIncentives';
 import { IncentivesForThisEpoch } from './IncentivesForThisEpoch';
-import { IncentivesForNextEpoch } from './IncentivesForNextEpoch';
+// import { IncentivesForNextEpoch } from './IncentivesForNextEpoch';
 import { Checkpoint } from './Checkpoint';
 
 const { Title, Paragraph } = Typography;
@@ -25,6 +25,6 @@ export const DevIncentives = () => (
     <br />
     <br />
 
-    <IncentivesForNextEpoch />
+    {/* <IncentivesForNextEpoch /> */}
   </div>
 );
