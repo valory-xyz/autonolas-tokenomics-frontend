@@ -123,3 +123,8 @@ export const getUniswapV2PairContract = (p, address) => {
   const contract = new web3.eth.Contract(UNISWAP_V2_PAIR_ABI_MAINNET, address);
   return contract;
 };
+
+export const rpc = {
+  1: process.env.NEXT_PUBLIC_MAINNET_URL,
+  5: process.env.NEXT_PUBLIC_GOERLI_URL,
+};
