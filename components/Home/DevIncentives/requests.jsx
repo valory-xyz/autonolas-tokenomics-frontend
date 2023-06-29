@@ -7,7 +7,7 @@ import {
 } from 'common-util/Contracts';
 
 export const getOwnerIncentivesRequest = ({
-  account,
+  address,
   chainId,
   unitTypes,
   unitIds,
@@ -15,7 +15,7 @@ export const getOwnerIncentivesRequest = ({
   const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
 
   contract.methods
-    .getOwnerIncentives(account, unitTypes, unitIds)
+    .getOwnerIncentives(address, unitTypes, unitIds)
     .call()
     .then((response) => {
       resolve(response);

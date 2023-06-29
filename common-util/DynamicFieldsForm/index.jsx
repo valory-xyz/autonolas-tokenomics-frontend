@@ -1,5 +1,9 @@
 import PropTypes from 'prop-types';
-import { Button, Form, Typography } from 'antd/lib';
+import {
+  Button, Form, Typography, Input,
+} from 'antd/lib';
+import { FORM_TYPES } from 'util/constants';
+import { useEffect } from 'react';
 import { useHelpers } from '../hooks/useHelpers';
 import { FormList } from './FormList';
 import { DynamicFormContainer } from './styles';
@@ -14,15 +18,25 @@ export const DynamicFieldsForm = ({
   isLoading,
   submitButtonText,
   onSubmit,
+  dynamicFormType,
 }) => {
   const { account } = useHelpers();
   const [form] = Form.useForm();
+
+  useEffect(() => {
+    if (account) {
+      if (dynamicFormType === FORM_TYPES.CLAIMABLE_INCENTIVES) {
+        form.setFieldsValue({ address: account });
+      }
+    }
+  }, [account]);
 
   const onFinish = async (values) => {
     if (onSubmit) {
       await onSubmit({
         unitIds: values.units.map((unit) => unit.unitId),
         unitTypes: values.units.map((unit) => unit.unitType),
+        address: values.address,
       });
     }
   };
@@ -35,6 +49,17 @@ export const DynamicFieldsForm = ({
         onFinish={onFinish}
         autoComplete="off"
       >
+        {/* address input is only visible for claimable incentives */}
+        {dynamicFormType === FORM_TYPES.CLAIMABLE_INCENTIVES && (
+          <Form.Item
+            label="Address"
+            name="address"
+            rules={[{ required: true, message: 'Please add address' }]}
+          >
+            <Input placeholder="Eg. 0x" />
+          </Form.Item>
+        )}
+
         <FormList
           isUnitTypeInput={isUnitTypeInput}
           inputOneLabel={inputOneLabel}
@@ -71,6 +96,7 @@ DynamicFieldsForm.propTypes = {
   submitButtonText: PropTypes.string,
   isLoading: PropTypes.bool,
   isUnitTypeInput: PropTypes.bool,
+  dynamicFormType: PropTypes.string,
 };
 
 DynamicFieldsForm.defaultProps = {
@@ -80,4 +106,5 @@ DynamicFieldsForm.defaultProps = {
   submitButtonText: 'Submit',
   isLoading: false,
   isUnitTypeInput: true,
+  dynamicFormType: null,
 };

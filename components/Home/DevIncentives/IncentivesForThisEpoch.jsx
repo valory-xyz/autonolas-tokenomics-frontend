@@ -6,6 +6,7 @@ import { round } from 'lodash';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import { notifySpecificError, parseToEth } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
+import { FORM_TYPES } from 'util/constants';
 import { getOwnerIncentivesRequest } from './requests';
 import { RewardAndTopUpContainer } from './styles';
 
@@ -36,7 +37,7 @@ export const IncentivesForThisEpoch = () => {
       setIsLoading(true);
 
       const params = {
-        account,
+        address: values.address || account,
         chainId,
         unitIds: values.unitIds.map((e) => `${e}`),
         unitTypes: values.unitTypes.map((e) => `${e}`),
@@ -76,6 +77,7 @@ export const IncentivesForThisEpoch = () => {
       <Row>
         <Col lg={14} xs={24}>
           <DynamicFieldsForm
+            dynamicFormType={FORM_TYPES.CLAIMABLE_INCENTIVES}
             isLoading={isLoading}
             onSubmit={getIncentives}
             submitButtonText="Check Incentives"
