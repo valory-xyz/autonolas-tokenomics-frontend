@@ -73,7 +73,7 @@ const getErrorMessage = (error) => {
     }
 
     if ((error?.message || '').includes('execution reverted')) {
-      return 'Nothing to cliam for the connected wallet';
+      return 'Nothing to claim for the connected wallet';
     }
   }
 

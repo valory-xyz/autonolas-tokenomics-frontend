@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Typography } from 'antd/lib';
+import { Typography, Alert } from 'antd/lib';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import { notifySuccess, notifySpecificError } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
@@ -35,6 +35,14 @@ export const ClaimIncentives = () => {
   return (
     <>
       <Title level={3}>Claim Incentives</Title>
+
+      <Alert
+        message="Note: You must be the owner of each listed unit to claim incentives."
+        type="info"
+        showIcon
+      />
+
+      <br />
       <DynamicFieldsForm
         isLoading={isLoading}
         onSubmit={onClaimIncentivesSubmit}
