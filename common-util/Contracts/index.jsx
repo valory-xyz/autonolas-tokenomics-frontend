@@ -20,9 +20,9 @@ import {
 
   // tokenomics
   TOKENOMICS_ADDRESS_GOERLI,
-  TOKENOMICS_ABI_MAINNET as TOKENOMICS_ABI_GOERLI, // TODO: change to goerli abi?
-  TOKENOMICS_ADDRESS_MAINNET,
-  TOKENOMICS_ABI_MAINNET,
+  TOKENOMICS_ABI as TOKENOMICS_ABI_GOERLI, // TODO: change to goerli abi?
+  TOKENOMICS_PROXY_ADDRESS_MAINNET,
+  TOKENOMICS_ABI,
 
   // uniswap
   UNISWAP_V2_PAIR_ABI_MAINNET,
@@ -74,7 +74,7 @@ export const getContractAddress = (type, chainId) => {
         return LOCAL_ADDRESSES.TOKENOMICS_ADDRESS_LOCAL;
       }
       if (chainId === 5) return TOKENOMICS_ADDRESS_GOERLI;
-      return TOKENOMICS_ADDRESS_MAINNET;
+      return TOKENOMICS_PROXY_ADDRESS_MAINNET;
     }
 
     default:
@@ -112,7 +112,7 @@ export const getTreasuryContract = (p, chainId) => {
 export const getTokenomicsContract = (p, chainId) => {
   const web3 = new Web3(p);
   const contract = new web3.eth.Contract(
-    chainId === 1 ? TOKENOMICS_ABI_MAINNET : TOKENOMICS_ABI_GOERLI,
+    chainId === 1 ? TOKENOMICS_ABI : TOKENOMICS_ABI_GOERLI,
     getContractAddress('tokenomics', chainId),
   );
   return contract;
