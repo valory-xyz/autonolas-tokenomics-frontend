@@ -3,6 +3,7 @@ import { getBlockTimestamp, parseToEth } from 'common-util/functions';
 import {
   getDispenserContract,
   getTokenomicsContract,
+  getTreasuryContract,
 } from 'common-util/Contracts';
 
 export const getOwnerIncentivesRequest = ({
@@ -204,6 +205,21 @@ export const getMapUnitIncentivesRequest = ({
     })
     .catch((e) => {
       window.console.log('Error occured on fetching map unit incentives');
+      reject(e);
+    });
+});
+
+export const getPausedValueRequest = ({ chainId }) => new Promise((resolve, reject) => {
+  const contract = getTreasuryContract(window.MODAL_PROVIDER, chainId);
+
+  contract.methods
+    .paused()
+    .call()
+    .then((response) => {
+      resolve(response);
+    })
+    .catch((e) => {
+      window.console.log('Error occured on fetching is paused');
       reject(e);
     });
 });

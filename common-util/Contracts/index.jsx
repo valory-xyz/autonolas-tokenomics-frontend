@@ -78,6 +78,10 @@ export const getContractAddress = (type, chainId) => {
   }
 };
 
+export const getMyProvider = () => window.MODAL_PROVIDER
+  || window.web3?.currentProvider
+  || process.env.NEXT_PUBLIC_MAINNET_URL;
+
 export const getDepositoryContract = (p, chainId) => {
   const web3 = new Web3(p);
   const contract = new web3.eth.Contract(
@@ -97,7 +101,7 @@ export const getDispenserContract = (p, chainId) => {
 };
 
 export const getTreasuryContract = (p, chainId) => {
-  const web3 = new Web3(p);
+  const web3 = new Web3(getMyProvider() || p);
   const contract = new web3.eth.Contract(
     TREASURY_ABI,
     getContractAddress('treasury', chainId),
