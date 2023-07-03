@@ -1,5 +1,5 @@
 # Tokenomics App Frontend
-This repository contains code for the [Tokenomics App](https://tokenomics.autonolas.network/) frontend.
+This repository contains code for the [Tokenomics App](https://tokenomics.olas.network/) frontend.
 
 ## Tech Stack
 - web3.js

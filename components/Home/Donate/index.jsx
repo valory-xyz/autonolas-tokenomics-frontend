@@ -72,7 +72,7 @@ export const DepositServiceDonation = () => {
             their services with freshly minted OLAS, by owning&nbsp;
             <Text strong>{threshold || '--'}</Text>
             &nbsp;veOLAS. Grab your veOLAS by locking OLAS&nbsp;
-            <a href="https://member.autonolas.network/" target="_self">
+            <a href="https://member.olas.network/" target="_self">
               here
             </a>
           </>
