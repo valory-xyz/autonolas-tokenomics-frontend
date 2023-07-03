@@ -44,13 +44,15 @@ const ContractInfo = () => {
       return {
         textOne: 'Tokenomics',
         addressOne: getContractAddress('tokenomics', addressChainId),
+        textTwo: 'Dispenser',
+        addressTwo: getContractAddress('dispenser', addressChainId),
       };
     }
 
     if ((pathname || '').includes('bonding-programs')) {
       return {
-        textOne: 'Dispenser',
-        addressOne: getContractAddress('dispenser', addressChainId),
+        textOne: 'Depository',
+        addressOne: getContractAddress('depository', addressChainId),
       };
     }
 
@@ -83,7 +85,9 @@ const ContractInfo = () => {
     </div>
   );
 
-  const { textOne, addressOne } = getCurrentPageAddresses();
+  const {
+    textOne, addressOne, textTwo, addressTwo,
+  } = getCurrentPageAddresses();
 
   return (
     <ContractsInfoContainer>
@@ -96,6 +100,12 @@ const ContractInfo = () => {
       <span>Contracts</span>
       &nbsp;•&nbsp;
       {getContractInfo(textOne, addressOne)}
+      {textTwo && addressTwo && (
+        <>
+          &nbsp;•&nbsp;
+          {getContractInfo(textTwo, addressTwo)}
+        </>
+      )}
     </ContractsInfoContainer>
   );
 };
