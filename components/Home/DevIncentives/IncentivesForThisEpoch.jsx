@@ -2,12 +2,16 @@ import { useState } from 'react';
 import {
   Row, Col, Table, Typography, Alert,
 } from 'antd/lib';
-import { round } from 'lodash';
-import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
-import { notifySpecificError, parseToEth } from 'common-util/functions';
-import { useHelpers } from 'common-util/hooks/useHelpers';
+import { round, toLower } from 'lodash';
 import { FORM_TYPES } from 'util/constants';
-import { getOwnerIncentivesRequest } from './requests';
+import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
+import {
+  notifySpecificError,
+  parseToEth,
+  notifyError,
+} from 'common-util/functions';
+import { useHelpers } from 'common-util/hooks/useHelpers';
+import { getOwnerIncentivesRequest, getOwnersForUnits } from './requests';
 import { RewardAndTopUpContainer } from './styles';
 
 const { Title } = Typography;
@@ -35,23 +39,50 @@ export const IncentivesForThisEpoch = () => {
   const getIncentives = async (values) => {
     try {
       setIsLoading(true);
+      const address = values.address || account;
+      const unitIds = values.unitIds.map((e) => `${e}`);
+      const unitTypes = values.unitTypes.map((e) => `${e}`);
 
-      const params = {
-        address: values.address || account,
-        chainId,
-        unitIds: values.unitIds.map((e) => `${e}`),
-        unitTypes: values.unitTypes.map((e) => `${e}`),
-      };
-      const response = await getOwnerIncentivesRequest(params);
+      // fetch owners for each unit
+      const owners = await getOwnersForUnits({
+        unitIds,
+        unitTypes,
+      });
 
-      // set reward and top up for table
-      setRewardAndTopUp([
-        {
-          key: '1',
-          reward: round(parseToEth(response.reward), 6),
-          topUp: round(parseToEth(response.topUp), 6),
-        },
-      ]);
+      // check if the owner of each unit is the same as the address input
+      const indexesWithDifferentOwner = [];
+      owners.forEach((e, index) => {
+        if (toLower(e) !== toLower(address)) {
+          indexesWithDifferentOwner.push(index);
+        }
+      });
+
+      // if there are units with different owner, notify error
+      // (because only owners can see the incentives)
+      if (indexesWithDifferentOwner.length !== 0) {
+        const ids = indexesWithDifferentOwner
+          .map((e) => `${unitIds[e]}`)
+          .join(', ');
+        notifyError(`You are not the owner of the following units: ${ids}`);
+      } else {
+        const params = {
+          address,
+          chainId,
+          unitIds,
+          unitTypes,
+        };
+
+        const response = await getOwnerIncentivesRequest(params);
+
+        // set reward and top up for table
+        setRewardAndTopUp([
+          {
+            key: '1',
+            reward: round(parseToEth(response.reward), 6),
+            topUp: round(parseToEth(response.topUp), 6),
+          },
+        ]);
+      }
     } catch (error) {
       // reset reward and top up & notify error
       setRewardAndTopUp([]);
