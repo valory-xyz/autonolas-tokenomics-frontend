@@ -3,7 +3,7 @@ import {
   Row, Col, Table, Typography, Alert,
 } from 'antd/lib';
 import { round, toLower } from 'lodash';
-import { FORM_TYPES } from 'util/constants';
+import { FORM_TYPES, UNIT_TYPES } from 'util/constants';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import {
   notifySpecificError,
@@ -37,61 +37,75 @@ export const IncentivesForThisEpoch = () => {
   const [rewardAndTopUp, setRewardAndTopUp] = useState([]);
 
   const getIncentives = async (values) => {
-    try {
-      setIsLoading(true);
-      const address = values.address || account;
-      const unitIds = values.unitIds.map((e) => `${e}`);
-      const unitTypes = values.unitTypes.map((e) => `${e}`);
+    setIsLoading(true);
+    const address = values.address || account;
+    const unitIds = values.unitIds.map((e) => `${e}`);
+    const unitTypes = values.unitTypes.map((e) => `${e}`);
 
-      // fetch owners for each unit
-      const owners = await getOwnersForUnits({
-        unitIds,
-        unitTypes,
-      });
+    const indexesWithDifferentOwner = [];
 
-      // check if the owner of each unit is the same as the address input
-      const indexesWithDifferentOwner = [];
-      owners.forEach((e, index) => {
-        if (toLower(e) !== toLower(address)) {
-          indexesWithDifferentOwner.push(index);
+    // fetch owners for each unit
+    getOwnersForUnits({
+      unitIds,
+      unitTypes,
+    })
+      .then(async (owners) => {
+        // check if the owner of each unit is the same as the address input
+        owners.forEach((e, index) => {
+          if (toLower(e) !== toLower(address)) {
+            indexesWithDifferentOwner.push(index);
+          }
+        });
+
+        try {
+          // if there are units with different owner, notify error
+          // (because only owners can see the incentives)
+          if (indexesWithDifferentOwner.length !== 0) {
+            const ids = indexesWithDifferentOwner
+              .map((e) => {
+                const type = unitTypes[e] === UNIT_TYPES.AGENT
+                  ? 'Agent ID'
+                  : 'Component ID';
+                return `${type} ${unitIds[e]}`;
+              })
+              .join(', ');
+            notifyError('You are not the owner of the following units', ids);
+          } else {
+            const params = {
+              address,
+              chainId,
+              unitIds,
+              unitTypes,
+            };
+
+            const response = await getOwnerIncentivesRequest(params);
+
+            // set reward and top up for table
+            setRewardAndTopUp([
+              {
+                key: '1',
+                reward: round(parseToEth(response.reward), 6),
+                topUp: round(parseToEth(response.topUp), 6),
+              },
+            ]);
+          }
+        } catch (error) {
+          // reset reward and top up & notify error
+          setRewardAndTopUp([]);
+          notifySpecificError(error);
+
+          window.console.error(error);
+        } finally {
+          setIsLoading(false);
         }
+      })
+      .catch((ownersForUnitsError) => {
+        notifyError('Error occured on fetching owners for units');
+        window.console.error(ownersForUnitsError);
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
-
-      // if there are units with different owner, notify error
-      // (because only owners can see the incentives)
-      if (indexesWithDifferentOwner.length !== 0) {
-        const ids = indexesWithDifferentOwner
-          .map((e) => `${unitIds[e]}`)
-          .join(', ');
-        notifyError(`You are not the owner of the following units: ${ids}`);
-      } else {
-        const params = {
-          address,
-          chainId,
-          unitIds,
-          unitTypes,
-        };
-
-        const response = await getOwnerIncentivesRequest(params);
-
-        // set reward and top up for table
-        setRewardAndTopUp([
-          {
-            key: '1',
-            reward: round(parseToEth(response.reward), 6),
-            topUp: round(parseToEth(response.topUp), 6),
-          },
-        ]);
-      }
-    } catch (error) {
-      // reset reward and top up & notify error
-      setRewardAndTopUp([]);
-      notifySpecificError(error);
-
-      window.console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   return (

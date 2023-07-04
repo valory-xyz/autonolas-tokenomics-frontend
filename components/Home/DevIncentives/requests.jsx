@@ -1,4 +1,5 @@
 import { sendTransaction } from '@autonolas/frontend-library';
+import { UNIT_TYPES } from 'util/constants';
 import { getBlockTimestamp, parseToEth } from 'common-util/functions';
 import {
   getDispenserContract,
@@ -19,7 +20,7 @@ export const getOwnersForUnits = ({ unitIds, unitTypes }) => new Promise((resolv
 
   for (let i = 0; i < unitIds.length; i += 1) {
     // 1 = agent, 0 = component
-    if (unitTypes[i] === '1') {
+    if (unitTypes[i] === UNIT_TYPES.AGENT) {
       const result = agentContract.methods.ownerOf(unitIds[i]).call();
       ownersList.push(result);
     } else {
@@ -225,9 +226,9 @@ export const getMapUnitIncentivesRequest = ({
 
       const values = {
         pendingRelativeReward:
-            unitType === '0' ? componentPendingReward : agentPendingReward,
+            unitType === UNIT_TYPES.COMPONENT ? componentPendingReward : agentPendingReward,
         pendingRelativeTopUp:
-            unitType === '0' ? componentPendingTopUp : agentPendingTopUp,
+            unitType === UNIT_TYPES.COMPONENT ? componentPendingTopUp : agentPendingTopUp,
         id: '0',
         key: '0',
       };
