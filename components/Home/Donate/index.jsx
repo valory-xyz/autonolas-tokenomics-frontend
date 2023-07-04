@@ -75,6 +75,7 @@ export const DepositServiceDonation = () => {
             <a href="https://member.olas.network/" target="_self">
               here
             </a>
+            . And atleast 0.065 ETH of donation is required.
           </>
         )}
         className="mb-16"
