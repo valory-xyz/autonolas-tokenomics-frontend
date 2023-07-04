@@ -69,7 +69,7 @@ export const IncentivesForThisEpoch = () => {
                 return `${type} ${unitIds[e]}`;
               })
               .join(', ');
-            notifyError('You are not the owner of the following units', ids);
+            notifyError('You are not the owner of the following units: ', ids);
           } else {
             const params = {
               address,
