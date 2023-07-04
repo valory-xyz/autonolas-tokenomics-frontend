@@ -42,8 +42,12 @@ export const parseToWei = (amount) => ethers.utils.parseUnits(`${amount}`, 18).t
  */
 export const parseEther = (n) => ethers.utils.parseEther(`${n}`);
 
-export const notifyError = (message = 'Some error occured') => notification.error({
+export const notifyError = (
+  message = 'Some error occured',
+  description = null,
+) => notification.error({
   message,
+  description,
   style: { border: `1px solid ${COLOR.PRIMARY}` },
 });
 

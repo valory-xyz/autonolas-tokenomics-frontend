@@ -3,3 +3,5 @@ export * from './dispenser';
 export * from './treasury';
 export * from './tokenomics';
 export * from './uniswapV2PairMainnet';
+export * from './agentRegistry';
+export * from './componentRegistry';

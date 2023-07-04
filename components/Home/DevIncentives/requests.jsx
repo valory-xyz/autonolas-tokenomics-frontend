@@ -1,10 +1,43 @@
 import { sendTransaction } from '@autonolas/frontend-library';
+import { UNIT_TYPES } from 'util/constants';
 import { getBlockTimestamp, parseToEth } from 'common-util/functions';
 import {
   getDispenserContract,
   getTokenomicsContract,
   getTreasuryContract,
+  getAgentContract,
+  getComponentContract,
 } from 'common-util/Contracts';
+
+/**
+ * fetches the owners of the units
+ */
+export const getOwnersForUnits = ({ unitIds, unitTypes }) => new Promise((resolve, reject) => {
+  const ownersList = [];
+
+  const agentContract = getAgentContract();
+  const componentContract = getComponentContract();
+
+  for (let i = 0; i < unitIds.length; i += 1) {
+    // 1 = agent, 0 = component
+    if (unitTypes[i] === UNIT_TYPES.AGENT) {
+      const result = agentContract.methods.ownerOf(unitIds[i]).call();
+      ownersList.push(result);
+    } else {
+      const result = componentContract.methods.ownerOf(unitIds[i]).call();
+      ownersList.push(result);
+    }
+  }
+
+  Promise.all(ownersList)
+    .then(async (list) => {
+      const results = await Promise.all(list.map((e) => e));
+      resolve(results);
+    })
+    .catch((e) => {
+      reject(e);
+    });
+});
 
 export const getOwnerIncentivesRequest = ({
   address,
@@ -51,9 +84,7 @@ export const claimOwnerIncentivesRequest = ({
 export const checkpointRequest = ({ account, chainId }) => new Promise((resolve, reject) => {
   const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
 
-  const fn = contract.methods
-    .checkpoint()
-    .send({ from: account });
+  const fn = contract.methods.checkpoint().send({ from: account });
 
   sendTransaction(fn, account)
     .then((response) => {
@@ -195,9 +226,9 @@ export const getMapUnitIncentivesRequest = ({
 
       const values = {
         pendingRelativeReward:
-            unitType === '0' ? componentPendingReward : agentPendingReward,
+            unitType === UNIT_TYPES.COMPONENT ? componentPendingReward : agentPendingReward,
         pendingRelativeTopUp:
-            unitType === '0' ? componentPendingTopUp : agentPendingTopUp,
+            unitType === UNIT_TYPES.COMPONENT ? componentPendingTopUp : agentPendingTopUp,
         id: '0',
         key: '0',
       };
