@@ -29,6 +29,28 @@ const columns = [
   },
 ];
 
+const checkIfHasDuplicate = (unitIds, unitTypes) => {
+  const agentIds = unitIds.filter(
+    (e, index) => unitTypes[index] === UNIT_TYPES.AGENT,
+  );
+  const componentIds = unitIds.filter(
+    (e, index) => unitTypes[index] === UNIT_TYPES.COMPONENT,
+  );
+
+  const uniqueAgentIds = [...new Set(agentIds)];
+  const uniqueComponentIds = [...new Set(componentIds)];
+
+  if (uniqueAgentIds.length !== agentIds.length) {
+    return true;
+  }
+
+  if (uniqueComponentIds.length !== componentIds.length) {
+    return true;
+  }
+
+  return false;
+};
+
 export const IncentivesForThisEpoch = () => {
   const { account, chainId } = useHelpers();
 
@@ -42,13 +64,17 @@ export const IncentivesForThisEpoch = () => {
     const unitIds = values.unitIds.map((e) => `${e}`);
     const unitTypes = values.unitTypes.map((e) => `${e}`);
 
+    // check if there are duplicate unit ids
+    if (checkIfHasDuplicate(unitIds, unitTypes)) {
+      notifyError('Please input unique unit IDs.');
+      setIsLoading(false);
+      return;
+    }
+
     const indexesWithDifferentOwner = [];
 
     // fetch owners for each unit
-    getOwnersForUnits({
-      unitIds,
-      unitTypes,
-    })
+    getOwnersForUnits({ unitIds, unitTypes })
       .then(async (owners) => {
         // check if the owner of each unit is the same as the address input
         owners.forEach((e, index) => {
@@ -57,20 +83,22 @@ export const IncentivesForThisEpoch = () => {
           }
         });
 
-        try {
-          // if there are units with different owner, notify error
-          // (because only owners can see the incentives)
-          if (indexesWithDifferentOwner.length !== 0) {
-            const ids = indexesWithDifferentOwner
-              .map((e) => {
-                const type = unitTypes[e] === UNIT_TYPES.AGENT
-                  ? 'Agent ID'
-                  : 'Component ID';
-                return `${type} ${unitIds[e]}`;
-              })
-              .join(', ');
-            notifyError('Provided address is not the owner of the following units: ', ids);
-          } else {
+        // if there are units with different owner, notify error
+        // (because only owners can see the incentives)
+        if (indexesWithDifferentOwner.length !== 0) {
+          const ids = indexesWithDifferentOwner
+            .map((e) => {
+              const type = unitTypes[e] === UNIT_TYPES.AGENT ? 'Agent ID' : 'Component ID';
+              return `${type} ${unitIds[e]}`;
+            })
+            .join(', ');
+
+          notifyError(
+            'Provided address is not the owner of the following units: ',
+            ids,
+          );
+        } else {
+          try {
             const params = {
               address,
               chainId,
@@ -88,15 +116,15 @@ export const IncentivesForThisEpoch = () => {
                 topUp: round(parseToEth(response.topUp), 6),
               },
             ]);
-          }
-        } catch (error) {
-          // reset reward and top up & notify error
-          setRewardAndTopUp([]);
-          notifySpecificError(error);
+          } catch (error) {
+            // reset reward and top up & notify error
+            setRewardAndTopUp([]);
+            notifySpecificError(error);
 
-          window.console.error(error);
-        } finally {
-          setIsLoading(false);
+            window.console.error(error);
+          } finally {
+            setIsLoading(false);
+          }
         }
       })
       .catch((ownersForUnitsError) => {
