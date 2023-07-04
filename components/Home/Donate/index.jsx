@@ -85,12 +85,12 @@ export const DepositServiceDonation = () => {
             <a href="https://member.olas.network/" target="_self">
               here
             </a>
-            &nbsp;and atleast&nbsp;
+            &nbsp;. At least&nbsp;
             <Text strong>
               {minAcceptedEth ? parseToEth(minAcceptedEth) : '--'}
               &nbsp;ETH
             </Text>
-            &nbsp;of donation is required.
+            &nbsp;of donations is required to trigger boosts.
           </>
         )}
         className="mb-16"
