@@ -26,6 +26,19 @@ export const depositServiceDonationRequest = ({
     });
 });
 
+export const minAcceptedEthRequest = ({ chainId }) => new Promise((resolve, reject) => {
+  const contract = getTreasuryContract(window.MODAL_PROVIDER, chainId);
+
+  contract.methods
+    .minAcceptedETH()
+    .call()
+    .then((response) => resolve(response))
+    .catch((e) => {
+      window.console.log('Error occured on fetching min accepted ETH');
+      reject(e);
+    });
+});
+
 export const getVeOlasThresholdRequest = ({ chainId }) => new Promise((resolve, reject) => {
   const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
 
