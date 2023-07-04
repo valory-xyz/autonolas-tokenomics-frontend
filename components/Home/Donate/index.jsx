@@ -1,11 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Alert, Typography } from 'antd/lib';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
-import { notifyError, notifySuccess, parseToWei } from 'common-util/functions';
+import {
+  notifyError,
+  notifySuccess,
+  parseToEth,
+  parseToWei,
+} from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import {
   depositServiceDonationRequest,
   getVeOlasThresholdRequest,
+  minAcceptedEthRequest,
 } from './requests';
 import { DonateContainer } from './styles';
 
@@ -15,12 +21,16 @@ export const DepositServiceDonation = () => {
   const { account, chainId } = useHelpers();
   const [isLoading, setIsLoading] = useState(false);
   const [threshold, setThreshold] = useState(0);
+  const [minAcceptedEth, setMinAcceptedEth] = useState(0);
 
   useEffect(() => {
     const getThresholdData = async () => {
       try {
         const response = await getVeOlasThresholdRequest({ chainId });
         setThreshold(response);
+
+        const minEth = await minAcceptedEthRequest({ chainId });
+        setMinAcceptedEth(minEth);
       } catch (error) {
         window.console.error(error);
         notifyError();
@@ -68,13 +78,19 @@ export const DepositServiceDonation = () => {
         type="info"
         message={(
           <>
-            Service owners can boost incentives of devs who contributed code to
-            their services with freshly minted OLAS, by owning&nbsp;
+            To boost incentives of devs with freshly minted OLAS, you must hold
+            at least&nbsp;
             <Text strong>{threshold || '--'}</Text>
             &nbsp;veOLAS. Grab your veOLAS by locking OLAS&nbsp;
             <a href="https://member.olas.network/" target="_self">
               here
             </a>
+            . At least&nbsp;
+            <Text strong>
+              {minAcceptedEth ? parseToEth(minAcceptedEth) : '--'}
+              &nbsp;ETH
+            </Text>
+            &nbsp;of donations is required to trigger boosts.
           </>
         )}
         className="mb-16"
