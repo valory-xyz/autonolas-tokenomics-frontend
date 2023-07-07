@@ -190,49 +190,63 @@ export const getMapUnitIncentivesRequest = ({
     .mapUnitIncentives(unitType, unitId)
     .call()
     .then(async (response) => {
-      const currentPoint = await getEpochCounter({ chainId });
+      const currentEpochCounter = await getEpochCounter({ chainId });
 
       // Get the unit points of the last epoch
       const componentInfo = await getUnitPointReq({
-        lastPoint: currentPoint,
+        lastPoint: currentEpochCounter,
         num: 0,
         chainId,
       });
 
       const agentInfo = await getUnitPointReq({
-        lastPoint: currentPoint,
+        lastPoint: currentEpochCounter,
         num: 1,
         chainId,
       });
 
-      const { pendingRelativeReward, pendingRelativeTopUp } = response;
-      const {
-        rewardUnitFraction: aRewardFraction,
-        topUpUnitFraction: aTopupFraction,
-      } = agentInfo;
-      const {
-        rewardUnitFraction: cRewardFraction,
-        topUpUnitFraction: cTopupFraction,
-      } = componentInfo;
+      const { pendingRelativeReward, pendingRelativeTopUp, lastEpoch } = response;
 
-      /**
-         * for unitType agent(0) & component(1),
-         * the below formula is used to calculate the incentives
-         */
-      const componentPendingReward = (parseToEth(pendingRelativeReward) * cRewardFraction) / 100;
-      const agentPendingReward = (parseToEth(pendingRelativeReward) * aRewardFraction) / 100;
-      const componentPendingTopUp = (parseToEth(pendingRelativeTopUp) * cTopupFraction) / 100;
-      const agentPendingTopUp = (parseToEth(pendingRelativeTopUp) * aTopupFraction) / 100;
+      // if the current epoch is the last epoch, calculate the incentives
+      if (currentEpochCounter === lastEpoch) {
+        const {
+          rewardUnitFraction: aRewardFraction,
+          topUpUnitFraction: aTopupFraction,
+        } = agentInfo;
+        const {
+          rewardUnitFraction: cRewardFraction,
+          topUpUnitFraction: cTopupFraction,
+        } = componentInfo;
 
-      const values = {
-        pendingRelativeReward:
-            unitType === UNIT_TYPES.COMPONENT ? componentPendingReward : agentPendingReward,
-        pendingRelativeTopUp:
-            unitType === UNIT_TYPES.COMPONENT ? componentPendingTopUp : agentPendingTopUp,
-        id: '0',
-        key: '0',
-      };
-      resolve(values);
+        /**
+           * for unitType agent(0) & component(1),
+           * the below formula is used to calculate the incentives
+           */
+        const componentPendingReward = (parseToEth(pendingRelativeReward) * cRewardFraction) / 100;
+        const agentPendingReward = (parseToEth(pendingRelativeReward) * aRewardFraction) / 100;
+        const componentPendingTopUp = (parseToEth(pendingRelativeTopUp) * cTopupFraction) / 100;
+        const agentPendingTopUp = (parseToEth(pendingRelativeTopUp) * aTopupFraction) / 100;
+
+        resolve({
+          pendingRelativeReward:
+              unitType === UNIT_TYPES.COMPONENT
+                ? componentPendingReward
+                : agentPendingReward,
+          pendingRelativeTopUp:
+              unitType === UNIT_TYPES.COMPONENT
+                ? componentPendingTopUp
+                : agentPendingTopUp,
+          id: '0',
+          key: '0',
+        });
+      } else {
+        resolve({
+          pendingRelativeReward: 0,
+          pendingRelativeTopUp: 0,
+          id: '0',
+          key: '0',
+        });
+      }
     })
     .catch((e) => {
       window.console.log('Error occured on fetching map unit incentives');
