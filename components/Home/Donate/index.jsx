@@ -64,47 +64,59 @@ export const DepositServiceDonation = () => {
     }
   };
 
+  // const lastEpochCounter = await tokenomics.epochCounter() - 1;
+  // const prevEpochPoint = await tokenomics.mapEpochTokenomics(lastEpochCounter);
+  // const prevEpochEndTime = prevEpochPoint.endTime;
+  // const epochLen = await tokenomics.epocLen();
+  // const nextEpochEndTime = prevEpochEndTime + epochLen;
+
   return (
     <DonateContainer>
-      <Title level={2}>Donate</Title>
-      <Paragraph>
-        Show appreciation for the value of an autonomous service by making a
-        donation. The protocol will reward devs who have contributed code for
-        that service.
-      </Paragraph>
+      <div className="donate-section">
+        <Title level={2}>Donate</Title>
+        <Paragraph>
+          Show appreciation for the value of an autonomous service by making a
+          donation. The protocol will reward devs who have contributed code for
+          that service.
+        </Paragraph>
 
-      <Alert
-        showIcon
-        type="info"
-        message={(
-          <>
-            To boost incentives of devs with freshly minted OLAS, you must hold
-            at least&nbsp;
-            <Text strong>{threshold || '--'}</Text>
-            &nbsp;veOLAS. Grab your veOLAS by locking OLAS&nbsp;
-            <a href="https://member.olas.network/" target="_self">
-              here
-            </a>
-            . At least&nbsp;
-            <Text strong>
-              {minAcceptedEth ? parseToEth(minAcceptedEth) : '--'}
-              &nbsp;ETH
-            </Text>
-            &nbsp;of donations is required to trigger boosts.
-          </>
-        )}
-        className="mb-16"
-      />
+        <Alert
+          showIcon
+          type="info"
+          message={(
+            <>
+              To boost incentives of devs with freshly minted OLAS, you must
+              hold at least&nbsp;
+              <Text strong>{threshold || '--'}</Text>
+              &nbsp;veOLAS. Grab your veOLAS by locking OLAS&nbsp;
+              <a href="https://member.olas.network/" target="_self">
+                here
+              </a>
+              . At least&nbsp;
+              <Text strong>
+                {minAcceptedEth ? parseToEth(minAcceptedEth) : '--'}
+                &nbsp;ETH
+              </Text>
+              &nbsp;of donations is required to trigger boosts.
+            </>
+          )}
+          className="mb-16"
+        />
 
-      <DynamicFieldsForm
-        isUnitTypeInput={false}
-        inputOneLabel="Service ID"
-        inputTwoLabel="Amount"
-        buttonText="Add row"
-        submitButtonText="Donate"
-        isLoading={isLoading}
-        onSubmit={onDepositServiceDonationSubmit}
-      />
+        <DynamicFieldsForm
+          isUnitTypeInput={false}
+          inputOneLabel="Service ID"
+          inputTwoLabel="Amount"
+          buttonText="Add row"
+          submitButtonText="Donate"
+          isLoading={isLoading}
+          onSubmit={onDepositServiceDonationSubmit}
+        />
+      </div>
+
+      <div className="last-epoch-section">
+        <Title level={2}>Last Epoch</Title>
+      </div>
     </DonateContainer>
   );
 };
