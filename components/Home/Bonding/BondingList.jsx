@@ -131,12 +131,11 @@ export const BondingList = ({ bondingProgramType }) => {
       // If bondingProgramType is allProduct, we will get all the products
       // that are not removed
       if (showNoSupply) {
-        const productList = await getAllTheProductsNotRemoved({ chainId });
+        const productList = await getAllTheProductsNotRemoved();
         setProducts(productList);
       } else {
         const productList = await getProductListRequest({
           account,
-          chainId,
           isActive,
         });
         setProducts(productList);

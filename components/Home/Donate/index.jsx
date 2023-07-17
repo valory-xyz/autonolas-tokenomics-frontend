@@ -33,10 +33,10 @@ export const DepositServiceDonation = () => {
         const response = await getVeOlasThresholdRequest();
         setThreshold(response);
 
-        const minEth = await minAcceptedEthRequest({ chainId });
+        const minEth = await minAcceptedEthRequest();
         setMinAcceptedEth(minEth);
 
-        const epochResponse = await getLastEpochRequest({ chainId });
+        const epochResponse = await getLastEpochRequest();
         setEpochDetails(epochResponse);
       } catch (error) {
         window.console.error(error);
@@ -55,7 +55,6 @@ export const DepositServiceDonation = () => {
 
       const params = {
         account,
-        chainId,
         serviceIds: values.unitIds.map((e) => `${e}`),
         amounts: values.unitTypes.map((e) => parseToWei(e)),
         totalAmount: parseToWei(values.unitTypes.reduce((a, b) => a + b, 0)),

@@ -55,13 +55,8 @@ export const getOwnerIncentivesRequest = ({ address, unitTypes, unitIds }) => ne
     });
 });
 
-export const claimOwnerIncentivesRequest = ({
-  account,
-  chainId,
-  unitTypes,
-  unitIds,
-}) => new Promise((resolve, reject) => {
-  const contract = getDispenserContract(window.MODAL_PROVIDER, chainId);
+export const claimOwnerIncentivesRequest = ({ account, unitTypes, unitIds }) => new Promise((resolve, reject) => {
+  const contract = getDispenserContract();
 
   const fn = contract.methods
     .claimOwnerIncentives(unitTypes, unitIds)
@@ -242,8 +237,8 @@ export const getMapUnitIncentivesRequest = ({ unitType, unitId }) => new Promise
     });
 });
 
-export const getPausedValueRequest = ({ chainId }) => new Promise((resolve, reject) => {
-  const contract = getTreasuryContract(window.MODAL_PROVIDER, chainId);
+export const getPausedValueRequest = () => new Promise((resolve, reject) => {
+  const contract = getTreasuryContract();
 
   contract.methods
     .paused()
@@ -257,9 +252,9 @@ export const getPausedValueRequest = ({ chainId }) => new Promise((resolve, reje
     });
 });
 
-export const getLastEpochRequest = async ({ chainId }) => {
+export const getLastEpochRequest = async () => {
   try {
-    const epCounter = await getEpochCounter({ chainId });
+    const epCounter = await getEpochCounter();
     const prevEpochPoint = await getEpochTokenomics({
       lastPoint: Number(epCounter) - 1,
     });

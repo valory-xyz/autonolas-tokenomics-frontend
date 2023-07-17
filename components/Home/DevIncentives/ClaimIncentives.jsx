@@ -8,14 +8,14 @@ import { claimOwnerIncentivesRequest, getPausedValueRequest } from './requests';
 const { Title } = Typography;
 
 export const ClaimIncentives = () => {
-  const { account, chainId } = useHelpers();
+  const { account } = useHelpers();
   const [isLoading, setIsLoading] = useState(false);
   const [pauseValue, setPausedValue] = useState('0');
 
   useEffect(() => {
     const getData = async () => {
       try {
-        const value = await getPausedValueRequest({ chainId });
+        const value = await getPausedValueRequest();
         setPausedValue(value);
       } catch (error) {
         notifySpecificError(error);
@@ -34,7 +34,6 @@ export const ClaimIncentives = () => {
 
       const params = {
         account,
-        chainId,
         unitIds: values.unitIds.map((e) => `${e}`),
         unitTypes: values.unitTypes.map((e) => `${e}`),
       };

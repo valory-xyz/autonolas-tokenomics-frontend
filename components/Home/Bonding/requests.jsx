@@ -55,8 +55,8 @@ const getBondingProgramsRequest = ({ isActive }) => new Promise((resolve, reject
 /**
  *
  */
-const getProductDetailsFromIds = ({ chainId, productIdList }) => new Promise((resolve, reject) => {
-  const contract = getDepositoryContract(window.MODAL_PROVIDER, chainId);
+const getProductDetailsFromIds = ({ productIdList }) => new Promise((resolve, reject) => {
+  const contract = getDepositoryContract();
 
   try {
     const allListPromise = [];
@@ -82,8 +82,8 @@ const getProductDetailsFromIds = ({ chainId, productIdList }) => new Promise((re
  *     2. inactive products,
  *     3. 0 supply + active + inactive (combination of 1, 2, 3)
  */
-export const getAllTheProductsNotRemoved = async ({ chainId }) => new Promise((resolve, reject) => {
-  const contract = getDepositoryContract(window.MODAL_PROVIDER, chainId);
+export const getAllTheProductsNotRemoved = async () => new Promise((resolve, reject) => {
+  const contract = getDepositoryContract();
   contract.methods
     .productCounter()
     .call()
@@ -97,7 +97,7 @@ export const getAllTheProductsNotRemoved = async ({ chainId }) => new Promise((r
       }
 
       // discount factor is same for all the products
-      const discount = await getLastIDFRequest({ chainId });
+      const discount = await getLastIDFRequest();
 
       Promise.all(allListPromise)
         .then((response) => {
@@ -155,10 +155,7 @@ export const hasSufficientTokenRequest = ({
   token: productToken,
   tokenAmount,
 }) => new Promise((resolve, reject) => {
-  const contract = getUniswapV2PairContract(
-    window.MODAL_PROVIDER,
-    productToken,
-  );
+  const contract = getUniswapV2PairContract(productToken);
 
   const treasuryAddress = getContractAddress('treasury', chainId);
 
@@ -185,7 +182,7 @@ export const hasSufficientTokenRequest = ({
  * Approves the treasury contract to spend the token
  */
 export const approveRequest = ({ account, chainId, token }) => new Promise((resolve, reject) => {
-  const contract = getUniswapV2PairContract(window.MODAL_PROVIDER, token);
+  const contract = getUniswapV2PairContract(token);
 
   const treasuryAddress = getContractAddress('treasury', chainId);
 
