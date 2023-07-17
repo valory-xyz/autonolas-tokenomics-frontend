@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { Alert, Typography } from 'antd/lib';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import {
+  getFullFormattedDate,
   notifyError,
   notifySuccess,
   parseToEth,
   parseToWei,
 } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
+import { getLastEpochRequest } from '../DevIncentives/requests';
 import {
   depositServiceDonationRequest,
   getVeOlasThresholdRequest,
@@ -22,6 +24,7 @@ export const DepositServiceDonation = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [threshold, setThreshold] = useState(0);
   const [minAcceptedEth, setMinAcceptedEth] = useState(0);
+  const [lastEpoch, setLastEpoch] = useState(0); // in milliseconds
 
   useEffect(() => {
     const getThresholdData = async () => {
@@ -31,6 +34,9 @@ export const DepositServiceDonation = () => {
 
         const minEth = await minAcceptedEthRequest({ chainId });
         setMinAcceptedEth(minEth);
+
+        const lastEpochResponse = await getLastEpochRequest({ chainId });
+        setLastEpoch(lastEpochResponse);
       } catch (error) {
         window.console.error(error);
         notifyError();
@@ -63,12 +69,6 @@ export const DepositServiceDonation = () => {
       setIsLoading(false);
     }
   };
-
-  // const lastEpochCounter = await tokenomics.epochCounter() - 1;
-  // const prevEpochPoint = await tokenomics.mapEpochTokenomics(lastEpochCounter);
-  // const prevEpochEndTime = prevEpochPoint.endTime;
-  // const epochLen = await tokenomics.epocLen();
-  // const nextEpochEndTime = prevEpochEndTime + epochLen;
 
   return (
     <DonateContainer>
@@ -116,6 +116,9 @@ export const DepositServiceDonation = () => {
 
       <div className="last-epoch-section">
         <Title level={2}>Last Epoch</Title>
+        <Paragraph>
+          {lastEpoch ? getFullFormattedDate(lastEpoch * 1000) : '--'}
+        </Paragraph>
       </div>
     </DonateContainer>
   );
