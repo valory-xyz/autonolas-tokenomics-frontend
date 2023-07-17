@@ -1,9 +1,8 @@
-import { COLOR } from '@autonolas/frontend-library';
 import styled from 'styled-components';
+import { COLOR } from '@autonolas/frontend-library';
 
 export const DonateContainer = styled.div`
   display: flex;
-
   .donate-section {
     width: 720px;
   }
