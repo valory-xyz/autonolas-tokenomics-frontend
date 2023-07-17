@@ -12,3 +12,13 @@ export const DonateContainer = styled.div`
     border-left: 1px solid ${COLOR.BORDER_GREY}
   }
 `;
+
+export const EpochStatus = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  h5, div {
+    margin: 0
+  }
+`;

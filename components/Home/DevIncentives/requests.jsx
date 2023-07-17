@@ -281,7 +281,7 @@ export const getLastEpochRequest = async ({ chainId }) => {
     const epochLen = await getEpochLength({ chainId });
     const nextEpochEndTime = parseInt(prevEpochEndTime, 10) + epochLen;
 
-    return nextEpochEndTime;
+    return { epochLen, prevEpochEndTime, nextEpochEndTime };
   } catch (error) {
     window.console.log('Error occured on fetching last epoch');
     console.error(error);

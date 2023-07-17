@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Alert, Typography } from 'antd/lib';
+import { isNumber } from 'lodash';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import {
   getFullFormattedDate,
@@ -15,7 +16,7 @@ import {
   getVeOlasThresholdRequest,
   minAcceptedEthRequest,
 } from './requests';
-import { DonateContainer } from './styles';
+import { DonateContainer, EpochStatus } from './styles';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -24,7 +25,7 @@ export const DepositServiceDonation = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [threshold, setThreshold] = useState(0);
   const [minAcceptedEth, setMinAcceptedEth] = useState(0);
-  const [lastEpoch, setLastEpoch] = useState(0); // in milliseconds
+  const [epochDetails, setEpochDetails] = useState(null);
 
   useEffect(() => {
     const getThresholdData = async () => {
@@ -35,8 +36,8 @@ export const DepositServiceDonation = () => {
         const minEth = await minAcceptedEthRequest({ chainId });
         setMinAcceptedEth(minEth);
 
-        const lastEpochResponse = await getLastEpochRequest({ chainId });
-        setLastEpoch(lastEpochResponse);
+        const epochResponse = await getLastEpochRequest({ chainId });
+        setEpochDetails(epochResponse);
       } catch (error) {
         window.console.error(error);
         notifyError();
@@ -69,6 +70,27 @@ export const DepositServiceDonation = () => {
       setIsLoading(false);
     }
   };
+
+  const epochStatusList = [
+    {
+      text: 'Expected end time',
+      value: epochDetails?.nextEpochEndTime
+        ? getFullFormattedDate(epochDetails.nextEpochEndTime * 1000)
+        : '--',
+    },
+    {
+      text: 'Epoch length',
+      value: isNumber(epochDetails?.epochLen)
+        ? `${epochDetails.epochLen / 3600 / 24} days`
+        : '--',
+    },
+    {
+      text: 'Previous epoch end time',
+      value: epochDetails?.prevEpochEndTime
+        ? getFullFormattedDate(epochDetails.prevEpochEndTime * 1000)
+        : '--',
+    },
+  ];
 
   return (
     <DonateContainer>
@@ -115,33 +137,15 @@ export const DepositServiceDonation = () => {
       </div>
 
       <div className="last-epoch-section">
-        <Title level={2}>Last Epoch</Title>
-        <Paragraph>
-          {lastEpoch ? getFullFormattedDate(lastEpoch * 1000) : '--'}
-        </Paragraph>
+        <Title level={2}>Epoch Status</Title>
+
+        {epochStatusList.map((e, index) => (
+          <EpochStatus key={`epoch-section-${index}`}>
+            <Title level={5}>{`${e.text}:`}</Title>
+            <Paragraph>{e.value}</Paragraph>
+          </EpochStatus>
+        ))}
       </div>
     </DonateContainer>
   );
 };
-
-/**
- * governance contract
- * token contract
- *
- * eg.
- * standard contract
- * we have olas toke, people can create governace => we can vote for/againt the proposal
- * but I don't have time to go through the => I can delegate my vote to someone else
- * who has time to go through the proposal
- *
- * local - setup
- *
- * bigger question -
- * - how does the proxy works ?
- * - we have token address, if we use the ABI (default erc20 ABI) to interact with the contract
- * (using the AAVE)
- *
- * - get the proxy contract address by actual contract address
- * - we need balanceOf & delegate
- *
- */
