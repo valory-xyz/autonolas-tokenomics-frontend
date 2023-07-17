@@ -64,25 +64,18 @@ export const MyBonds = () => {
   const [bondsList, setBondsList] = useState([]);
   const isActive = maturityType === 'matured';
 
-  const getBondsListHelper = useCallback(
-    async () => {
-      try {
-        setIsLoading(true);
+  const getBondsListHelper = useCallback(async () => {
+    try {
+      setIsLoading(true);
 
-        const bonds = await getBondsRequest({
-          account,
-          chainId,
-          isActive,
-        });
-        setBondsList(bonds);
-      } catch (error) {
-        window.console.error(error);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [account, chainId, isActive],
-  );
+      const bonds = await getBondsRequest({ account, isActive });
+      setBondsList(bonds);
+    } catch (error) {
+      window.console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [account, chainId, isActive]);
 
   useEffect(() => {
     if (account && chainId) {
@@ -92,11 +85,7 @@ export const MyBonds = () => {
 
   const onRedeemClick = async (bondId) => {
     try {
-      await redeemRequest({
-        account,
-        chainId,
-        bondIds: [bondId],
-      });
+      await redeemRequest({ account, bondIds: [bondId] });
 
       notifySuccess('Redeemed successfully');
 

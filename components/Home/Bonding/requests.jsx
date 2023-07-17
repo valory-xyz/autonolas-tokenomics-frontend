@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import { ethers } from 'ethers';
 import { sendTransaction } from '@autonolas/frontend-library';
 import { MAX_AMOUNT, ADDRESS_ZERO, ONE_ETH } from 'common-util/functions';
@@ -11,8 +12,8 @@ import {
 /**
  * fetches the IDF (discount factor) for the product
  */
-const getLastIDFRequest = ({ chainId }) => new Promise((resolve, reject) => {
-  const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
+const getLastIDFRequest = () => new Promise((resolve, reject) => {
+  const contract = getTokenomicsContract();
 
   contract.methods
     .getLastIDF()
@@ -36,8 +37,8 @@ const getLastIDFRequest = ({ chainId }) => new Promise((resolve, reject) => {
     });
 });
 
-const getBondingProgramsRequest = ({ chainId, isActive }) => new Promise((resolve, reject) => {
-  const contract = getDepositoryContract(window.MODAL_PROVIDER, chainId);
+const getBondingProgramsRequest = ({ isActive }) => new Promise((resolve, reject) => {
+  const contract = getDepositoryContract();
 
   contract.methods
     .getProducts(isActive)
@@ -126,21 +127,14 @@ export const getAllTheProductsNotRemoved = async ({ chainId }) => new Promise((r
 /**
  * fetches product list based on the active/inactive status
  */
-export const getProductListRequest = async ({ account, chainId, isActive }) => {
+export const getProductListRequest = async ({ isActive }) => {
   try {
-    const productIdList = await getBondingProgramsRequest({
-      account,
-      chainId,
-      isActive,
-    });
+    const productIdList = await getBondingProgramsRequest({ isActive });
 
-    const response = await getProductDetailsFromIds({
-      productIdList,
-      chainId,
-    });
+    const response = await getProductDetailsFromIds({ productIdList });
 
     // discount factor is same for all the products
-    const discount = await getLastIDFRequest({ chainId });
+    const discount = await getLastIDFRequest();
 
     const productList = response.map((product, index) => ({
       id: productIdList[index],
@@ -212,10 +206,8 @@ export const approveRequest = ({ account, chainId, token }) => new Promise((reso
 /**
  * Deposits the token
  */
-export const depositRequest = ({
-  account, chainId, productId, tokenAmount,
-}) => new Promise((resolve, reject) => {
-  const contract = getDepositoryContract(window.MODAL_PROVIDER, chainId);
+export const depositRequest = ({ account, productId, tokenAmount }) => new Promise((resolve, reject) => {
+  const contract = getDepositoryContract();
 
   const fn = contract.methods
     .deposit(productId, tokenAmount)

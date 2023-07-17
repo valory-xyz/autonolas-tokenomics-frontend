@@ -30,7 +30,7 @@ export const DepositServiceDonation = () => {
   useEffect(() => {
     const getThresholdData = async () => {
       try {
-        const response = await getVeOlasThresholdRequest({ chainId });
+        const response = await getVeOlasThresholdRequest();
         setThreshold(response);
 
         const minEth = await minAcceptedEthRequest({ chainId });

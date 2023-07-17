@@ -39,8 +39,8 @@ export const minAcceptedEthRequest = ({ chainId }) => new Promise((resolve, reje
     });
 });
 
-export const getVeOlasThresholdRequest = ({ chainId }) => new Promise((resolve, reject) => {
-  const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
+export const getVeOlasThresholdRequest = () => new Promise((resolve, reject) => {
+  const contract = getTokenomicsContract();
 
   contract.methods
     .veOLASThreshold()

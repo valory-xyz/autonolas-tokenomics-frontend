@@ -125,8 +125,8 @@ export const getWeb3Details = () => {
   return { web3, chainId };
 };
 
-export const getDepositoryContract = (p, chainId) => {
-  const web3 = new Web3(p);
+export const getDepositoryContract = () => {
+  const { web3, chainId } = getWeb3Details();
   const contract = new web3.eth.Contract(
     DEPOSITORY_ABI,
     getContractAddress('depository', chainId),

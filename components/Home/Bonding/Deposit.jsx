@@ -29,7 +29,6 @@ export const Deposit = ({
       // deposit if LP token is present for the product ID
       const txHash = await depositRequest({
         account,
-        chainId,
         productId: form.getFieldValue('productId'),
         tokenAmount: parseToWei(form.getFieldValue('tokenAmount')),
       });
@@ -101,7 +100,9 @@ export const Deposit = ({
           <Form.Item
             label="Bonding Program ID"
             name="productId"
-            rules={[{ required: true, message: 'Please input Bonding Program ID' }]}
+            rules={[
+              { required: true, message: 'Please input Bonding Program ID' },
+            ]}
           >
             <Input disabled />
           </Form.Item>
