@@ -268,3 +268,23 @@ export const getPausedValueRequest = ({ chainId }) => new Promise((resolve, reje
       reject(e);
     });
 });
+
+export const getLastEpochRequest = async ({ chainId }) => {
+  try {
+    const epCounter = await getEpochCounter({ chainId });
+    const prevEpochPoint = await getEpochTokenomics({
+      lastPoint: Number(epCounter) - 1,
+      chainId,
+    });
+
+    const prevEpochEndTime = prevEpochPoint.endTime;
+    const epochLen = await getEpochLength({ chainId });
+    const nextEpochEndTime = parseInt(prevEpochEndTime, 10) + epochLen;
+
+    return { epochLen, prevEpochEndTime, nextEpochEndTime };
+  } catch (error) {
+    window.console.log('Error occured on fetching last epoch');
+    console.error(error);
+    return null;
+  }
+};
