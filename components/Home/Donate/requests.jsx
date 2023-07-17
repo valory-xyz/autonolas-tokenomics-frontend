@@ -53,24 +53,3 @@ export const getVeOlasThresholdRequest = ({ chainId }) => new Promise((resolve, 
       reject(e);
     });
 });
-
-// export const getLastEpochRequest = ({ chainId }) => new Promise((resolve, reject) => {
-//   const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
-
-//   // const lastEpochCounter = await tokenomics.epochCounter() - 1;
-//   // const prevEpochPoint = await tokenomics.mapEpochTokenomics(lastEpochCounter);
-//   // const prevEpochEndTime = prevEpochPoint.endTime;
-//   // const epochLen = await tokenomics.epocLen();
-//   // const nextEpochEndTime = prevEpochEndTime + epochLen;
-
-//   const epCounter = await getEpochCounter({ chainId });
-
-//   contract.methods
-//     .lastEpoch()
-//     .call()
-//     .then((response) => resolve(response))
-//     .catch((e) => {
-//       window.console.log('Error occured on fetching last epoch');
-//       reject(e);
-//     });
-// });

@@ -270,12 +270,6 @@ export const getPausedValueRequest = ({ chainId }) => new Promise((resolve, reje
 });
 
 export const getLastEpochRequest = async ({ chainId }) => {
-  // const lastEpochCounter = await tokenomics.epochCounter() - 1;
-  // const prevEpochPoint = await tokenomics.mapEpochTokenomics(lastEpochCounter);
-  // const prevEpochEndTime = prevEpochPoint.endTime;
-  // const epochLen = await tokenomics.epocLen();
-  // const nextEpochEndTime = prevEpochEndTime + epochLen;
-
   try {
     const epCounter = await getEpochCounter({ chainId });
     const prevEpochPoint = await getEpochTokenomics({
@@ -286,14 +280,6 @@ export const getLastEpochRequest = async ({ chainId }) => {
     const prevEpochEndTime = prevEpochPoint.endTime;
     const epochLen = await getEpochLength({ chainId });
     const nextEpochEndTime = parseInt(prevEpochEndTime, 10) + epochLen;
-
-    console.log({
-      epCounter,
-      prevEpochPoint,
-      prevEpochEndTime,
-      epochLen,
-      nextEpochEndTime,
-    });
 
     return nextEpochEndTime;
   } catch (error) {
