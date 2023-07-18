@@ -30,7 +30,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
     {
       title: (
         <Tooltip title="Uniswap v2 LP token address enabled by the Treasury">
-          <span>Token</span>
+          <span>LP Token</span>
         </Tooltip>
       ),
       dataIndex: 'token',
@@ -39,7 +39,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
     {
       title: (
         <Tooltip title="LP token price at which an LP share is priced during the bonding product">
-          <span>Price LP</span>
+          <span>OLAS per LP token</span>
         </Tooltip>
       ),
       dataIndex: 'priceLP',

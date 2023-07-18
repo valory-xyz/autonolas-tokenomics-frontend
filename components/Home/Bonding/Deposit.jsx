@@ -125,7 +125,7 @@ export const Deposit = ({
           onCancel={() => setIsApproveModalVisible(false)}
         >
           <Alert
-            message="Before depositing to the bonding product, an approval for OLAS is required. Please approve OLAS to proceed"
+            message="Before depositing to the bonding product, an approval for OLAS is required. Please approve OLAS to proceed."
             type="warning"
           />
 
