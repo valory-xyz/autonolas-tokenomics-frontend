@@ -57,19 +57,24 @@ const getBondingProgramsRequest = ({ isActive }) => new Promise((resolve, reject
  * output: 'OLAS-ETH'
  */
 export const getLpTokenName = async (address) => {
-  const contract = getUniswapV2PairContract(address);
+  try {
+    const contract = getUniswapV2PairContract(address);
 
-  let token0 = await contract.methods.token0().call();
-  const token1 = await contract.methods.token1().call();
+    let token0 = await contract.methods.token0().call();
+    const token1 = await contract.methods.token1().call();
 
-  if (token0 === OLAS_ADDRESS) {
-    token0 = token1;
+    if (token0 === OLAS_ADDRESS) {
+      token0 = token1;
+    }
+
+    const erc20Contract = getErc20Contract(token0);
+    const tokenSymbol = await erc20Contract.methods.symbol().call();
+
+    return `OLAS-${tokenSymbol}`;
+  } catch (error) {
+    window.console.log('Error on fetching lp token name');
+    return null;
   }
-
-  const erc20Contract = getErc20Contract(token0);
-  const tokenSymbol = await erc20Contract.methods.symbol().call();
-
-  return `OLAS-${tokenSymbol}`;
 };
 
 /**

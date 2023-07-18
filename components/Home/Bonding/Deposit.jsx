@@ -47,7 +47,7 @@ export const Deposit = ({
       });
       setLpBalance(lpResponse);
     }
-  }, [account]);
+  }, [account, productToken]);
 
   const depositHelper = async () => {
     try {
