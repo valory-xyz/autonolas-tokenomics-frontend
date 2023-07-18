@@ -12,11 +12,7 @@ import {
 } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { Deposit } from './Deposit';
-import {
-  getProductListRequest,
-  getAllTheProductsNotRemoved,
-  // getTokenName,
-} from './requests';
+import { getProductListRequest, getAllTheProductsNotRemoved } from './requests';
 
 const getColumns = (showNoSupply, onClick, isActive, acc) => {
   const columns = [
@@ -33,8 +29,17 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
           <span>LP Token</span>
         </Tooltip>
       ),
-      dataIndex: 'token',
-      key: 'token',
+      dataIndex: 'lpTokenName',
+      key: 'lpTokenName',
+      render: (x, data) => (
+        <a
+          href={`https://v2.info.uniswap.org/pair/${data.token}`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          {x}
+        </a>
+      ),
     },
     {
       title: (
@@ -152,10 +157,6 @@ export const BondingList = ({ bondingProgramType }) => {
   useEffect(() => {
     if (account && chainId) {
       getProducts();
-      // getTokenName({
-      //   account,
-      //   chainId,
-      // });
     }
   }, [account, chainId, bondingProgramType]);
 

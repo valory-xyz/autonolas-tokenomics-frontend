@@ -1,12 +1,14 @@
 /* eslint-disable max-len */
 import { ethers } from 'ethers';
 import { sendTransaction } from '@autonolas/frontend-library';
+import { OLAS_ADDRESS } from 'util/constants';
 import { MAX_AMOUNT, ADDRESS_ZERO, ONE_ETH } from 'common-util/functions';
 import {
   getContractAddress,
   getDepositoryContract,
   getUniswapV2PairContract,
   getTokenomicsContract,
+  getErc20Contract,
 } from 'common-util/Contracts';
 
 /**
@@ -21,14 +23,10 @@ const getLastIDFRequest = () => new Promise((resolve, reject) => {
     .then((lastIdfResponse) => {
       /**
          * 1 ETH = 1e18
-         * discount = (1 ETH - lastIDF) / 1 ETH
+         * discount = (lastIDF - 1 ETH) / 1 ETH
          */
-      const discount = ethers.BigNumber.from(ONE_ETH)
-        .sub(lastIdfResponse)
-        .div(ONE_ETH)
-        .mul(100) // to convert it to percentage
-        .toString();
-
+      const firstDiv = Number(lastIdfResponse) - Number(ONE_ETH);
+      const discount = ((firstDiv * 1.0) / Number(ONE_ETH)) * 100;
       resolve(discount);
     })
     .catch((e) => {
@@ -53,6 +51,50 @@ const getBondingProgramsRequest = ({ isActive }) => new Promise((resolve, reject
 });
 
 /**
+ * fetches the lp token name for the product
+ * @example
+ * input: '0x'
+ * output: 'OLAS-ETH'
+ */
+export const getLpTokenName = async (address) => {
+  const contract = getUniswapV2PairContract(address);
+
+  let token0 = await contract.methods.token0().call();
+  const token1 = await contract.methods.token1().call();
+
+  if (token0 === OLAS_ADDRESS) {
+    token0 = token1;
+  }
+
+  const erc20Contract = getErc20Contract(token0);
+  const tokenSymbol = await erc20Contract.methods.symbol().call();
+
+  return `OLAS-${tokenSymbol}`;
+};
+
+/**
+ * fetches the lp token name for the product
+ * @example
+ * input: [{ token: '0x', ...others }]
+ * output: [{ token: '0x', lpTokenName: 'OLAS-ETH', ...others }]
+ */
+const getLpTokenNamesForProducts = async (productList) => {
+  const lpTokenNamePromiseList = [];
+
+  for (let i = 0; i < productList.length; i += 1) {
+    const result = getLpTokenName(productList[i].token);
+    lpTokenNamePromiseList.push(result);
+  }
+
+  const lpTokenNameList = await Promise.all(lpTokenNamePromiseList);
+
+  return productList.map((component, index) => ({
+    ...component,
+    lpTokenName: lpTokenNameList[index],
+  }));
+};
+
+/**
  *
  */
 const getProductDetailsFromIds = ({ productIdList }) => new Promise((resolve, reject) => {
@@ -68,7 +110,10 @@ const getProductDetailsFromIds = ({ productIdList }) => new Promise((resolve, re
     }
 
     Promise.all(allListPromise)
-      .then((componentsList) => resolve(componentsList))
+      .then(async (productList) => {
+        const list = await getLpTokenNamesForProducts(productList);
+        resolve(list);
+      })
       .catch((e) => reject(e));
   } catch (error) {
     window.console.log('Error on fetching bonding program details details');
@@ -100,7 +145,7 @@ export const getAllTheProductsNotRemoved = async () => new Promise((resolve, rej
       const discount = await getLastIDFRequest();
 
       Promise.all(allListPromise)
-        .then((response) => {
+        .then(async (response) => {
           // add id & discount to the product
           const productWithIds = response.map((product, index) => ({
             ...product,
@@ -109,8 +154,12 @@ export const getAllTheProductsNotRemoved = async () => new Promise((resolve, rej
             key: index,
           }));
 
+          const productsWithLpTokens = await getLpTokenNamesForProducts(
+            productWithIds,
+          );
+
           // filter out the products that are removed
-          const filteredList = productWithIds.filter(
+          const filteredList = productsWithLpTokens.filter(
             (product) => product.token !== ADDRESS_ZERO,
           );
 
@@ -220,10 +269,17 @@ export const depositRequest = ({ account, productId, tokenAmount }) => new Promi
     });
 });
 
-/**
- * call uniswap token0 - line 164
- * - If token0 = OLAS then print "OLAS" +
- *   call name() from the ABI of ERC20 token with address token1
- * - else call name() from the ABI of ERC20 token
- * - else
- */
+export const getLpBalanceRequest = ({ account, token }) => new Promise((resolve, reject) => {
+  const contract = getUniswapV2PairContract(token);
+
+  contract.methods
+    .balanceOf(account)
+    .call()
+    .then((response) => {
+      resolve(Number(response));
+    })
+    .catch((e) => {
+      window.console.log('Error occured on fetching LP balance');
+      reject(e);
+    });
+});

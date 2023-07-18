@@ -33,6 +33,9 @@ import {
   COMPONENT_REGISTRY_ADDRESS_GOERLI,
   COMPONENT_REGISTRY_ADDRESS_MAINNET,
   COMPONENT_REGISTRY_ABI,
+
+  // erc20
+  ERC20_ABI,
 } from 'common-util/AbiAndAddresses';
 import { LOCAL_CHAIN_ID } from 'util/constants';
 
@@ -164,6 +167,12 @@ export const getTokenomicsContract = () => {
 export const getUniswapV2PairContract = (address) => {
   const { web3 } = getWeb3Details();
   const contract = new web3.eth.Contract(UNISWAP_V2_PAIR_ABI, address);
+  return contract;
+};
+
+export const getErc20Contract = (address) => {
+  const { web3 } = getWeb3Details();
+  const contract = new web3.eth.Contract(ERC20_ABI, address);
   return contract;
 };
 
