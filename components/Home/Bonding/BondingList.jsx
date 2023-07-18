@@ -22,7 +22,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
   const columns = [
     {
       title: (
-        <Tooltip title="Identifier of bonding program">Bonding Program</Tooltip>
+        <Tooltip title="Identifier of bonding product">Bonding Product</Tooltip>
       ),
       dataIndex: 'id',
       key: 'id',
@@ -38,7 +38,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
     },
     {
       title: (
-        <Tooltip title="LP token price at which an LP share is priced during the bonding program">
+        <Tooltip title="LP token price at which an LP share is priced during the bonding product">
           <span>Price LP</span>
         </Tooltip>
       ),
@@ -62,7 +62,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
     },
     {
       title: (
-        <Tooltip title="OLAS supply reserved for this bonding program">
+        <Tooltip title="OLAS supply reserved for this bonding product">
           <span>Supply</span>
         </Tooltip>
       ),

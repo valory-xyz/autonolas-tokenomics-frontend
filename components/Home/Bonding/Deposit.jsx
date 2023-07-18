@@ -98,17 +98,17 @@ export const Deposit = ({
           }}
         >
           <Form.Item
-            label="Bonding Program ID"
+            label="Bonding Product ID"
             name="productId"
             rules={[
-              { required: true, message: 'Please input Bonding Program ID' },
+              { required: true, message: 'Please input Bonding Product ID' },
             ]}
           >
             <Input disabled />
           </Form.Item>
 
           <Form.Item
-            label="Token Amount"
+            label="LP Token Amount"
             name="tokenAmount"
             rules={[{ required: true, message: 'Please input token' }]}
           >
