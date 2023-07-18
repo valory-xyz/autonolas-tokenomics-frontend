@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import {
   Button, Table, Tag, Tooltip,
 } from 'antd/lib';
-import { remove } from 'lodash';
+import { remove, round } from 'lodash';
 import { COLOR } from '@autonolas/frontend-library';
 import {
   notifyError,
@@ -49,7 +49,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
       ),
       dataIndex: 'priceLP',
       key: 'priceLP',
-      render: (x) => `${parseToEth(x)} OLAS`,
+      render: (x) => `${round(parseToEth(x), 4)} OLAS`,
     },
     {
       title: (

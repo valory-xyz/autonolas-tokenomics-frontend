@@ -1,15 +1,31 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
+import { isNil, isNumber } from 'lodash';
 import {
-  Form, Input, Modal, Alert, Button,
+  Form,
+  Input,
+  InputNumber,
+  Modal,
+  Alert,
+  Button,
+  Typography,
 } from 'antd/lib';
-import { parseToWei, notifySuccess, notifyError } from 'common-util/functions';
+import {
+  parseToWei,
+  notifySuccess,
+  notifyError,
+  getCommaSeparatedNumber,
+} from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import {
   depositRequest,
   hasSufficientTokenRequest,
   approveRequest,
+  getLpBalanceRequest,
 } from './requests';
+
+const { Text } = Typography;
+const fullWidth = { width: '100%' };
 
 export const Deposit = ({
   productId,
@@ -21,6 +37,17 @@ export const Deposit = ({
   const [form] = Form.useForm();
   const [isLoading, setIsLoading] = useState(false);
   const [isApproveModalVisible, setIsApproveModalVisible] = useState(false);
+  const [lpBalance, setLpBalance] = useState(0);
+
+  useEffect(async () => {
+    if (account) {
+      const lpResponse = await getLpBalanceRequest({
+        account,
+        token: productToken,
+      });
+      setLpBalance(lpResponse);
+    }
+  }, [account]);
 
   const depositHelper = async () => {
     try {
@@ -79,9 +106,12 @@ export const Deposit = ({
   return (
     <>
       <Modal
-        visible
+        open
         title="Create Bond"
         okText="Create Bond"
+        okButtonProps={{
+          disabled: !account || lpBalance === 0,
+        }}
         cancelText="Cancel"
         onCancel={closeModal}
         onOk={onCreate}
@@ -90,9 +120,8 @@ export const Deposit = ({
         <Form
           form={form}
           name="create_bond_form"
+          layout="vertical"
           autoComplete="off"
-          labelCol={{ span: 10 }}
-          wrapperCol={{ span: 14 }}
           initialValues={{
             productId: productId || undefined,
           }}
@@ -108,12 +137,47 @@ export const Deposit = ({
           </Form.Item>
 
           <Form.Item
+            className="custom-form-item-tokenAmount"
             label="LP Token Amount"
             name="tokenAmount"
-            rules={[{ required: true, message: 'Please input token' }]}
+            rules={[
+              { required: true, message: 'Please input token' },
+              () => ({
+                validator(_, value) {
+                  if (value === '' || isNil(value)) return Promise.resolve();
+                  if (value <= 1) {
+                    return Promise.reject(
+                      new Error('Please input a valid amount'),
+                    );
+                  }
+                  if (isNumber(lpBalance) && value > lpBalance) {
+                    return Promise.reject(
+                      new Error('Amount cannot be greater than the balance'),
+                    );
+                  }
+                  return Promise.resolve();
+                },
+              }),
+            ]}
           >
-            <Input />
+            <InputNumber style={fullWidth} />
           </Form.Item>
+
+          <Text type="secondary">
+            LP balance:&nbsp;
+            {getCommaSeparatedNumber(lpBalance)}
+            <Button
+              htmlType="button"
+              type="link"
+              onClick={() => {
+                form.setFieldsValue({ tokenAmount: lpBalance });
+                form.validateFields(['tokenAmount']);
+              }}
+              className="pl-0"
+            >
+              Max
+            </Button>
+          </Text>
         </Form>
       </Modal>
 
