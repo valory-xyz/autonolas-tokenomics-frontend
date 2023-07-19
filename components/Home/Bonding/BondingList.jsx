@@ -44,7 +44,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
     {
       title: (
         <Tooltip title="LP token price at which an LP share is priced during the bonding product">
-          <span>OLAS per LP token minted</span>
+          <span>OLAS minted per LP token</span>
         </Tooltip>
       ),
       dataIndex: 'priceLP',
@@ -73,12 +73,12 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
       ),
       dataIndex: 'supply',
       key: 'supply',
-      render: (x) => `${parseToEth(x)}`,
+      render: (x) => `${round(parseToEth(x), 4)}`,
     },
     {
       title: (
         <Tooltip title="APY">
-          <span>APY</span>
+          <span>Projected APY</span>
         </Tooltip>
       ),
       dataIndex: 'apy',
@@ -98,7 +98,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
     {
       title: (
         <Tooltip title="Bond your LP pair to get OLAS at a discount">
-          Bond
+          Initiate Bond
         </Tooltip>
       ),
       dataIndex: 'bondForOlas',
@@ -110,7 +110,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
           disabled={showNoSupply || !acc}
           onClick={() => onClick(row.token)}
         >
-          Create Bond
+          Deposit
         </Button>
       ),
     },

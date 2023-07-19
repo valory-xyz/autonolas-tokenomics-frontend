@@ -135,7 +135,8 @@ export const getApyRequestForEachProduct = ({ productId, address }) => new Promi
       const product = await depositoryContract.methods
         .mapBondProducts(productId)
         .call();
-      const vesting = Number(product.expiry);
+      // TODO: Calculate vesting based on product.expiry and the creation event block.timestamp
+      const vesting = 3600 * 24 * 7;
       const priceLP = ethers.BigNumber.from(product.priceLP);
 
       const IDF = await tokenomicsContract.methods.getLastIDF().call();
@@ -146,11 +147,11 @@ export const getApyRequestForEachProduct = ({ productId, address }) => new Promi
         .mul(inverseMultiplierNumerator)
         .div(e36);
       const profitDenominator = inverseMultiplierDinominator.mul(resOLAS);
-      const profit = (Number(profitNumerator) * 1.0) / Number(profitDenominator);
+      const profit = (Number(profitNumerator) * 1.0) / Number(profitDenominator) - 1;
 
       const oneYear = 3600 * 24 * 365;
       const n = oneYear / vesting;
-      const APY = profit ** n - 1;
+      const APY = (1 + profit / n) ** n - 1;
       const apyInPercentage = round(APY * 100, 2);
 
       resolve(apyInPercentage);
