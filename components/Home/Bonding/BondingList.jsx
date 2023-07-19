@@ -12,7 +12,7 @@ import {
 } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { Deposit } from './Deposit';
-import { getProductListRequest, getAllTheProductsNotRemoved } from './requests';
+import { getProductListRequest, getAllTheProductsNotRemoved, getApyRequest } from './requests';
 
 const getColumns = (showNoSupply, onClick, isActive, acc) => {
   const columns = [
@@ -74,6 +74,16 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
       dataIndex: 'supply',
       key: 'supply',
       render: (x) => `${parseToEth(x)}`,
+    },
+    {
+      title: (
+        <Tooltip title="APY">
+          <span>APY</span>
+        </Tooltip>
+      ),
+      dataIndex: 'apy',
+      key: 'apy',
+      render: (text) => text || '--',
     },
     {
       title: (
@@ -157,6 +167,9 @@ export const BondingList = ({ bondingProgramType }) => {
   useEffect(() => {
     if (account && chainId) {
       getProducts();
+
+      // TODO: add it correctly
+      getApyRequest({});
     }
   }, [account, chainId, bondingProgramType]);
 

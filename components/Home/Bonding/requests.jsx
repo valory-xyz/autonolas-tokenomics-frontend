@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 /* eslint-disable max-len */
 import { ethers } from 'ethers';
 import { sendTransaction } from '@autonolas/frontend-library';
@@ -10,6 +11,7 @@ import {
   getTokenomicsContract,
   getErc20Contract,
 } from 'common-util/Contracts';
+import { round } from 'lodash';
 
 /**
  * fetches the IDF (discount factor) for the product
@@ -285,6 +287,72 @@ export const getLpBalanceRequest = ({ account, token }) => new Promise((resolve,
     })
     .catch((e) => {
       window.console.log('Error occured on fetching LP balance');
+      reject(e);
+    });
+});
+
+/**
+ * APY calculation
+ */
+export const getApyRequest = ({
+  productId = 0,
+  address = '0x09D1d767eDF8Fa23A64C51fa559E0688E526812F',
+}) => new Promise((resolve, reject) => {
+  const contract = getUniswapV2PairContract(address);
+  const depositoryContract = getDepositoryContract();
+  const tokenomicsContract = getTokenomicsContract();
+
+  contract.methods
+    .getReserves()
+    .call()
+    .then(async (res) => {
+      // below constants might change depending on the product ID in future
+      // because for each product ID price LP is calculated manually
+      const inverseMultiplierNumerator = ethers.BigNumber.from(2);
+      const inverseMultiplierDinominator = ethers.BigNumber.from(3);
+
+      let resOLAS = null;
+      const token0 = await contract.methods.token0().call();
+
+      if (token0 === OLAS_ADDRESS) {
+        resOLAS = ethers.BigNumber.from(res._reserve0);
+      } else {
+        resOLAS = ethers.BigNumber.from(res._reserve1);
+      }
+
+      const totalSupplyInNum = await contract.methods.totalSupply().call();
+      const totalSupply = ethers.BigNumber.from(totalSupplyInNum);
+
+      // Get the product with a specific Id
+      const product = await depositoryContract.methods
+        .mapBondProducts(productId)
+        .call();
+      const vesting = Number(product.expiry);
+      const priceLP = ethers.BigNumber.from(product.priceLP);
+
+      // Get this from the tokenomics contract
+      const IDF = await tokenomicsContract.methods.getLastIDF().call();
+      const e36 = ethers.BigNumber.from(`1${'0'.repeat(36)}`);
+      const profitNumerator = priceLP
+        .mul(totalSupply)
+        .mul(IDF)
+        .mul(inverseMultiplierNumerator)
+        .div(e36);
+      const profitDenominator = inverseMultiplierDinominator.mul(resOLAS);
+      console.log('profitDenominator', profitDenominator.toString());
+
+      const profit = (Number(profitNumerator) * 1.0) / Number(profitDenominator);
+      console.log('profit', profit);
+
+      const oneYear = 3600 * 24 * 365;
+      const n = oneYear / vesting;
+      const APY = profit ** n - 1;
+      const apyInPercentage = round(APY * 100, 2);
+      console.log({ APY, apyInPercentage });
+      resolve(apyInPercentage);
+    })
+    .catch((e) => {
+      window.console.log('Error occured on fetching APY');
       reject(e);
     });
 });
