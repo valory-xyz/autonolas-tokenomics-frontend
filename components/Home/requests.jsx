@@ -3,19 +3,6 @@ import { sendTransaction } from '@autonolas/frontend-library';
 import { getDepositoryContract } from 'common-util/Contracts';
 
 export const getBondInfoRequest = async (bondList) => {
-  // const contract = getDepositoryContract();
-
-  // contract.methods
-  //   .mapUserBonds(bondId)
-  //   .call()
-  //   .then((response) => {
-  //     resolve(response);
-  //   })
-  //   .catch((e) => {
-  //     window.console.log(`Error on fetching bond info: ${bondId}`);
-  //     reject(e);
-  //   });
-
   const contract = getDepositoryContract();
 
   try {
@@ -55,11 +42,7 @@ export const getBondsRequest = ({ account, isActive: isBondMatured }) => new Pro
       for (let i = 0; i < bondIds.length; i += 1) {
         const id = `${bondIds[i]}`;
         const result = contract.methods.getBondStatus(id).call();
-        /**
-         * TODO:
-         * if (result.payout !== 0 || result.matured)
-         * then add the bond to the list
-         */
+
         allListPromise.push(result);
         idsList.push(id);
       }
@@ -72,8 +55,18 @@ export const getBondsRequest = ({ account, isActive: isBondMatured }) => new Pro
             key: idsList[index],
           }));
 
+          /**
+             * if (result.payout !== 0 || result.matured)
+             * then add the bond to the list
+             */
+          const filteredBonds = bondsListWithDetails.filter((bond) => {
+            if (bond.payout > 0) return true;
+            if (bond.matured) return true;
+            return false;
+          });
+
           const bondsWithMaturityDate = await getBondInfoRequest(
-            bondsListWithDetails,
+            filteredBonds,
           );
           resolve(bondsWithMaturityDate);
         })
