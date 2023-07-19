@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import {
   Button, Table, Tag, Tooltip,
 } from 'antd/lib';
-import { remove, round } from 'lodash';
+import { isNumber, remove, round } from 'lodash';
 import { COLOR } from '@autonolas/frontend-library';
 import {
   notifyError,
@@ -12,7 +12,7 @@ import {
 } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { Deposit } from './Deposit';
-import { getProductListRequest, getAllTheProductsNotRemoved, getApyRequest } from './requests';
+import { getProductListRequest, getAllTheProductsNotRemoved } from './requests';
 
 const getColumns = (showNoSupply, onClick, isActive, acc) => {
   const columns = [
@@ -83,7 +83,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
       ),
       dataIndex: 'apy',
       key: 'apy',
-      render: (text) => text || '--',
+      render: (text) => (isNumber(text) ? `${text}%` : '--'),
     },
     {
       title: (
@@ -167,9 +167,6 @@ export const BondingList = ({ bondingProgramType }) => {
   useEffect(() => {
     if (account && chainId) {
       getProducts();
-
-      // TODO: add it correctly
-      getApyRequest({});
     }
   }, [account, chainId, bondingProgramType]);
 
