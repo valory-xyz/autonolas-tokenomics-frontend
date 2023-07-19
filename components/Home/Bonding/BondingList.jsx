@@ -98,7 +98,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
     {
       title: (
         <Tooltip title="Bond your LP pair to get OLAS at a discount">
-          Bond
+          Initiate Bond
         </Tooltip>
       ),
       dataIndex: 'bondForOlas',
