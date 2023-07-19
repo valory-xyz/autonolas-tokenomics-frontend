@@ -44,12 +44,12 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
     {
       title: (
         <Tooltip title="LP token price at which an LP share is priced during the bonding product">
-          <span>OLAS per LP token</span>
+          <span>OLAS per LP token minted</span>
         </Tooltip>
       ),
       dataIndex: 'priceLP',
       key: 'priceLP',
-      render: (x) => `${round(parseToEth(x), 4)} OLAS`,
+      render: (x) => `${round(parseToEth(x), 4)}`,
     },
     {
       title: (
@@ -68,12 +68,12 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
     {
       title: (
         <Tooltip title="OLAS supply reserved for this bonding product">
-          <span>Supply</span>
+          <span>OLAS Supply</span>
         </Tooltip>
       ),
       dataIndex: 'supply',
       key: 'supply',
-      render: (x) => `${parseToEth(x)} OLAS`,
+      render: (x) => `${parseToEth(x)}`,
     },
     {
       title: (
