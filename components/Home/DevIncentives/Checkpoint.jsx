@@ -33,10 +33,7 @@ export const Checkpoint = () => {
     try {
       setIsLoading(true);
 
-      await checkpointRequest({
-        account,
-        chainId,
-      });
+      await checkpointRequest({ account });
 
       notifySuccess('Checkpoint called successfully');
 

@@ -49,7 +49,7 @@ const ContractInfo = () => {
       };
     }
 
-    if ((pathname || '').includes('bonding-programs')) {
+    if ((pathname || '').includes('bonding-products')) {
       return {
         textOne: 'Depository',
         addressOne: getContractAddress('depository', addressChainId),

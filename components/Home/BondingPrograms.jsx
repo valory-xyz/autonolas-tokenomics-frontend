@@ -22,7 +22,7 @@ export const BondingPrograms = () => {
   return (
     <ProductContainer>
       <Title level={2} className="choose-type-group">
-        Bonding Programs
+        Bonding Products
         <Radio.Group onChange={onChange} value={bondingProgramType}>
           <Radio value="allProduct">All</Radio>
           <Radio value="active">Active</Radio>

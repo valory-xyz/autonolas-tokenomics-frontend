@@ -31,7 +31,7 @@ const columns = [
 ];
 
 export const IncentivesForNextEpoch = () => {
-  const { chainId, account } = useHelpers();
+  const { account } = useHelpers();
   const [isLoading, setIsLoading] = useState(false);
   const [pendingIncentives, setPendingIncentives] = useState([]);
 
@@ -42,7 +42,6 @@ export const IncentivesForNextEpoch = () => {
       setIsLoading(true);
 
       const response = await getMapUnitIncentivesRequest({
-        chainId,
         unitType: values.unitType,
         unitId: `${values.unitId}`,
       });

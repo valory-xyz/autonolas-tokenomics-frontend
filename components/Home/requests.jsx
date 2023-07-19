@@ -6,10 +6,9 @@ import { getDepositoryContract } from 'common-util/Contracts';
  */
 export const getBondsRequest = ({
   account,
-  chainId,
   isActive: isBondMatured,
 }) => new Promise((resolve, reject) => {
-  const contract = getDepositoryContract(window.MODAL_PROVIDER, chainId);
+  const contract = getDepositoryContract();
 
   contract.methods
     .getBonds(account, isBondMatured)
@@ -44,8 +43,8 @@ export const getBondsRequest = ({
     });
 });
 
-export const redeemRequest = ({ account, chainId, bondIds }) => new Promise((resolve, reject) => {
-  const contract = getDepositoryContract(window.MODAL_PROVIDER, chainId);
+export const redeemRequest = ({ account, bondIds }) => new Promise((resolve, reject) => {
+  const contract = getDepositoryContract();
 
   const fn = contract.methods.redeem(bondIds).send({ from: account });
 

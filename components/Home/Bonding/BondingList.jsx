@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import {
   Button, Table, Tag, Tooltip,
 } from 'antd/lib';
-import { remove } from 'lodash';
+import { remove, round } from 'lodash';
 import { COLOR } from '@autonolas/frontend-library';
 import {
   notifyError,
@@ -12,17 +12,13 @@ import {
 } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { Deposit } from './Deposit';
-import {
-  getProductListRequest,
-  getAllTheProductsNotRemoved,
-  // getTokenName,
-} from './requests';
+import { getProductListRequest, getAllTheProductsNotRemoved } from './requests';
 
 const getColumns = (showNoSupply, onClick, isActive, acc) => {
   const columns = [
     {
       title: (
-        <Tooltip title="Identifier of bonding program">Bonding Program</Tooltip>
+        <Tooltip title="Identifier of bonding product">Bonding Product</Tooltip>
       ),
       dataIndex: 'id',
       key: 'id',
@@ -30,21 +26,30 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
     {
       title: (
         <Tooltip title="Uniswap v2 LP token address enabled by the Treasury">
-          <span>Token</span>
+          <span>LP Token</span>
         </Tooltip>
       ),
-      dataIndex: 'token',
-      key: 'token',
+      dataIndex: 'lpTokenName',
+      key: 'lpTokenName',
+      render: (x, data) => (
+        <a
+          href={`https://v2.info.uniswap.org/pair/${data.token}`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          {x}
+        </a>
+      ),
     },
     {
       title: (
-        <Tooltip title="LP token price at which an LP share is priced during the bonding program">
-          <span>Price LP</span>
+        <Tooltip title="LP token price at which an LP share is priced during the bonding product">
+          <span>OLAS per LP token minted</span>
         </Tooltip>
       ),
       dataIndex: 'priceLP',
       key: 'priceLP',
-      render: (x) => `${parseToEth(x)} OLAS`,
+      render: (x) => `${round(parseToEth(x), 4)}`,
     },
     {
       title: (
@@ -62,13 +67,13 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
     },
     {
       title: (
-        <Tooltip title="OLAS supply reserved for this bonding program">
-          <span>Supply</span>
+        <Tooltip title="OLAS supply reserved for this bonding product">
+          <span>OLAS Supply</span>
         </Tooltip>
       ),
       dataIndex: 'supply',
       key: 'supply',
-      render: (x) => `${parseToEth(x)} OLAS`,
+      render: (x) => `${parseToEth(x)}`,
     },
     {
       title: (
@@ -131,12 +136,11 @@ export const BondingList = ({ bondingProgramType }) => {
       // If bondingProgramType is allProduct, we will get all the products
       // that are not removed
       if (showNoSupply) {
-        const productList = await getAllTheProductsNotRemoved({ chainId });
+        const productList = await getAllTheProductsNotRemoved();
         setProducts(productList);
       } else {
         const productList = await getProductListRequest({
           account,
-          chainId,
           isActive,
         });
         setProducts(productList);
@@ -153,10 +157,6 @@ export const BondingList = ({ bondingProgramType }) => {
   useEffect(() => {
     if (account && chainId) {
       getProducts();
-      // getTokenName({
-      //   account,
-      //   chainId,
-      // });
     }
   }, [account, chainId, bondingProgramType]);
 

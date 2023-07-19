@@ -141,7 +141,7 @@ const GlobalStyle = createGlobalStyle`
   .ant-form-item-label > label {
     font-weight: bold;
   }
-  .custom-form-item-lock {
+  .custom-form-item-tokenAmount {
     margin-bottom: 4px;
   }
 
