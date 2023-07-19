@@ -165,22 +165,27 @@ export const getApyRequestForEachProduct = ({ productId, address }) => new Promi
  * APY calculation
  */
 export const fetchApyRequestForProducts = async (productList) => {
-  const list = [];
+  try {
+    const list = [];
 
-  for (let i = 0; i < productList.length; i += 1) {
-    const result = getApyRequestForEachProduct({
-      productId: productList[i].id,
-      address: productList[i].token,
-    });
-    list.push(result);
+    for (let i = 0; i < productList.length; i += 1) {
+      const result = getApyRequestForEachProduct({
+        productId: productList[i].id,
+        address: productList[i].token,
+      });
+      list.push(result);
+    }
+
+    const reservesList = await Promise.all(list);
+
+    return productList.map((eachProduct, index) => ({
+      ...eachProduct,
+      apy: reservesList[index],
+    }));
+  } catch (error) {
+    window.console.log('Error on fetching APY for products');
+    throw new Error(error);
   }
-
-  const reservesList = await Promise.all(list);
-
-  return productList.map((eachProduct, index) => ({
-    ...eachProduct,
-    apy: reservesList[index],
-  }));
 };
 
 /**
@@ -199,9 +204,21 @@ const getProductDetailsFromIds = ({ productIdList }) => new Promise((resolve, re
     }
 
     Promise.all(allListPromise)
-      .then(async (productList) => {
-        const list = await getLpTokenNamesForProducts(productList);
-        resolve(list);
+      .then(async (response) => {
+        const productList = response.map((product, index) => ({
+          ...product,
+          id: productIdList[index],
+        }));
+
+        const productListWithLpTokens = await getLpTokenNamesForProducts(
+          productList,
+        );
+
+        const productWithApy = await fetchApyRequestForProducts(
+          productListWithLpTokens,
+        );
+
+        resolve(productWithApy);
       })
       .catch((e) => reject(e));
   } catch (error) {
@@ -272,11 +289,8 @@ export const getAllTheProductsNotRemoved = async () => new Promise((resolve, rej
 export const getProductListRequest = async ({ isActive }) => {
   try {
     const productIdList = await getBondingProgramsRequest({ isActive });
-
     const response = await getProductDetailsFromIds({ productIdList });
-
-    // discount factor is same for all the products
-    const discount = await getLastIDFRequest();
+    const discount = await getLastIDFRequest(); // discount factor is same for all the products
 
     const productList = response.map((product, index) => ({
       id: productIdList[index],
@@ -287,6 +301,7 @@ export const getProductListRequest = async ({ isActive }) => {
 
     return productList;
   } catch (error) {
+    window.console.error(error);
     throw new Error(error);
   }
 };
