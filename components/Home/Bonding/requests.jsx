@@ -293,6 +293,7 @@ export const getLpBalanceRequest = ({ account, token }) => new Promise((resolve,
 
 /**
  * APY calculation
+ * TODO: add to the table
  */
 export const getApyRequest = ({
   productId = 0,
@@ -306,31 +307,34 @@ export const getApyRequest = ({
     .getReserves()
     .call()
     .then(async (res) => {
+      const isActive = await depositoryContract.methods
+        .isActiveProduct(productId)
+        .call();
+
+      if (!isActive) {
+        resolve(0);
+        return;
+      }
+
       // below constants might change depending on the product ID in future
       // because for each product ID price LP is calculated manually
       const inverseMultiplierNumerator = ethers.BigNumber.from(2);
       const inverseMultiplierDinominator = ethers.BigNumber.from(3);
 
-      let resOLAS = null;
       const token0 = await contract.methods.token0().call();
-
-      if (token0 === OLAS_ADDRESS) {
-        resOLAS = ethers.BigNumber.from(res._reserve0);
-      } else {
-        resOLAS = ethers.BigNumber.from(res._reserve1);
-      }
+      const resOLAS = ethers.BigNumber.from(
+        token0 === OLAS_ADDRESS ? res._reserve0 : res._reserve1,
+      );
 
       const totalSupplyInNum = await contract.methods.totalSupply().call();
       const totalSupply = ethers.BigNumber.from(totalSupplyInNum);
 
-      // Get the product with a specific Id
       const product = await depositoryContract.methods
         .mapBondProducts(productId)
         .call();
       const vesting = Number(product.expiry);
       const priceLP = ethers.BigNumber.from(product.priceLP);
 
-      // Get this from the tokenomics contract
       const IDF = await tokenomicsContract.methods.getLastIDF().call();
       const e36 = ethers.BigNumber.from(`1${'0'.repeat(36)}`);
       const profitNumerator = priceLP
@@ -339,16 +343,13 @@ export const getApyRequest = ({
         .mul(inverseMultiplierNumerator)
         .div(e36);
       const profitDenominator = inverseMultiplierDinominator.mul(resOLAS);
-      console.log('profitDenominator', profitDenominator.toString());
-
       const profit = (Number(profitNumerator) * 1.0) / Number(profitDenominator);
-      console.log('profit', profit);
 
       const oneYear = 3600 * 24 * 365;
       const n = oneYear / vesting;
       const APY = profit ** n - 1;
       const apyInPercentage = round(APY * 100, 2);
-      console.log({ APY, apyInPercentage });
+
       resolve(apyInPercentage);
     })
     .catch((e) => {
