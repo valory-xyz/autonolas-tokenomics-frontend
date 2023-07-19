@@ -44,7 +44,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
     {
       title: (
         <Tooltip title="LP token price at which an LP share is priced during the bonding product">
-          <span>OLAS per LP token minted</span>
+          <span>OLAS minted per LP token</span>
         </Tooltip>
       ),
       dataIndex: 'priceLP',
