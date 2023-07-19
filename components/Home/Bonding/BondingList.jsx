@@ -50,7 +50,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
       dataIndex: 'priceLP',
       key: 'priceLP',
       render: (x, data) => {
-        const discount = data?.discount;
+        const discount = data?.discount || 0;
         const price = Number(parseToEth(x));
         const discountedPrice = price + (price * discount) / 100;
         return `${round(discountedPrice, 4)}`;
