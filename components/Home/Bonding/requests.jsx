@@ -101,6 +101,94 @@ const getLpTokenNamesForProducts = async (productList) => {
   }));
 };
 
+export const getApyRequestForEachProduct = ({ productId, address }) => new Promise((resolve, reject) => {
+  const contract = getUniswapV2PairContract(address);
+  const depositoryContract = getDepositoryContract();
+  const tokenomicsContract = getTokenomicsContract();
+
+  contract.methods
+    .getReserves()
+    .call()
+    .then(async (res) => {
+      const isActive = await depositoryContract.methods
+        .isActiveProduct(productId)
+        .call();
+
+      if (!isActive) {
+        resolve(0);
+        return;
+      }
+
+      // below constants might change depending on the product ID in future
+      // because for each product ID price LP is calculated manually
+      const inverseMultiplierNumerator = ethers.BigNumber.from(2);
+      const inverseMultiplierDinominator = ethers.BigNumber.from(3);
+
+      const token0 = await contract.methods.token0().call();
+      const resOLAS = ethers.BigNumber.from(
+        token0 === OLAS_ADDRESS ? res._reserve0 : res._reserve1,
+      );
+
+      const totalSupplyInNum = await contract.methods.totalSupply().call();
+      const totalSupply = ethers.BigNumber.from(totalSupplyInNum);
+
+      const product = await depositoryContract.methods
+        .mapBondProducts(productId)
+        .call();
+      // TODO: Calculate vesting based on product.expiry and the creation event block.timestamp
+      const vesting = 3600 * 24 * 7;
+      const priceLP = ethers.BigNumber.from(product.priceLP);
+
+      const IDF = await tokenomicsContract.methods.getLastIDF().call();
+      const e36 = ethers.BigNumber.from(`1${'0'.repeat(36)}`);
+      const profitNumerator = priceLP
+        .mul(totalSupply)
+        .mul(IDF)
+        .mul(inverseMultiplierNumerator)
+        .div(e36);
+      const profitDenominator = inverseMultiplierDinominator.mul(resOLAS);
+      const profit = (Number(profitNumerator) * 1.0) / Number(profitDenominator) - 1;
+
+      const oneYear = 3600 * 24 * 365;
+      const n = oneYear / vesting;
+      const APY = (1 + profit / n) ** n - 1;
+      const apyInPercentage = round(APY * 100, 2);
+
+      resolve(apyInPercentage);
+    })
+    .catch((e) => {
+      window.console.log('Error occured on fetching APY');
+      reject(e);
+    });
+});
+
+/**
+ * APY calculation
+ */
+export const fetchApyRequestForProducts = async (productList) => {
+  try {
+    const list = [];
+
+    for (let i = 0; i < productList.length; i += 1) {
+      const result = getApyRequestForEachProduct({
+        productId: productList[i].id,
+        address: productList[i].token,
+      });
+      list.push(result);
+    }
+
+    const reservesList = await Promise.all(list);
+
+    return productList.map((eachProduct, index) => ({
+      ...eachProduct,
+      apy: reservesList[index],
+    }));
+  } catch (error) {
+    window.console.log('Error on fetching APY for products');
+    throw new Error(error);
+  }
+};
+
 /**
  *
  */
@@ -117,9 +205,21 @@ const getProductDetailsFromIds = ({ productIdList }) => new Promise((resolve, re
     }
 
     Promise.all(allListPromise)
-      .then(async (productList) => {
-        const list = await getLpTokenNamesForProducts(productList);
-        resolve(list);
+      .then(async (response) => {
+        const productList = response.map((product, index) => ({
+          ...product,
+          id: productIdList[index],
+        }));
+
+        const productListWithLpTokens = await getLpTokenNamesForProducts(
+          productList,
+        );
+
+        const productWithApy = await fetchApyRequestForProducts(
+          productListWithLpTokens,
+        );
+
+        resolve(productWithApy);
       })
       .catch((e) => reject(e));
   } catch (error) {
@@ -165,8 +265,12 @@ export const getAllTheProductsNotRemoved = async () => new Promise((resolve, rej
             productWithIds,
           );
 
+          const productsWithdApy = await fetchApyRequestForProducts(
+            productsWithLpTokens,
+          );
+
           // filter out the products that are removed
-          const filteredList = productsWithLpTokens.filter(
+          const filteredList = productsWithdApy.filter(
             (product) => product.token !== ADDRESS_ZERO,
           );
 
@@ -186,11 +290,8 @@ export const getAllTheProductsNotRemoved = async () => new Promise((resolve, rej
 export const getProductListRequest = async ({ isActive }) => {
   try {
     const productIdList = await getBondingProgramsRequest({ isActive });
-
     const response = await getProductDetailsFromIds({ productIdList });
-
-    // discount factor is same for all the products
-    const discount = await getLastIDFRequest();
+    const discount = await getLastIDFRequest(); // discount factor is same for all the products
 
     const productList = response.map((product, index) => ({
       id: productIdList[index],
@@ -201,6 +302,7 @@ export const getProductListRequest = async ({ isActive }) => {
 
     return productList;
   } catch (error) {
+    window.console.error(error);
     throw new Error(error);
   }
 };
@@ -287,73 +389,6 @@ export const getLpBalanceRequest = ({ account, token }) => new Promise((resolve,
     })
     .catch((e) => {
       window.console.log('Error occured on fetching LP balance');
-      reject(e);
-    });
-});
-
-/**
- * APY calculation
- * TODO: add to the table
- */
-export const getApyRequest = ({
-  productId = 0,
-  address = '0x09D1d767eDF8Fa23A64C51fa559E0688E526812F',
-}) => new Promise((resolve, reject) => {
-  const contract = getUniswapV2PairContract(address);
-  const depositoryContract = getDepositoryContract();
-  const tokenomicsContract = getTokenomicsContract();
-
-  contract.methods
-    .getReserves()
-    .call()
-    .then(async (res) => {
-      const isActive = await depositoryContract.methods
-        .isActiveProduct(productId)
-        .call();
-
-      if (!isActive) {
-        resolve(0);
-        return;
-      }
-
-      // below constants might change depending on the product ID in future
-      // because for each product ID price LP is calculated manually
-      const inverseMultiplierNumerator = ethers.BigNumber.from(2);
-      const inverseMultiplierDinominator = ethers.BigNumber.from(3);
-
-      const token0 = await contract.methods.token0().call();
-      const resOLAS = ethers.BigNumber.from(
-        token0 === OLAS_ADDRESS ? res._reserve0 : res._reserve1,
-      );
-
-      const totalSupplyInNum = await contract.methods.totalSupply().call();
-      const totalSupply = ethers.BigNumber.from(totalSupplyInNum);
-
-      const product = await depositoryContract.methods
-        .mapBondProducts(productId)
-        .call();
-      const vesting = Number(product.expiry);
-      const priceLP = ethers.BigNumber.from(product.priceLP);
-
-      const IDF = await tokenomicsContract.methods.getLastIDF().call();
-      const e36 = ethers.BigNumber.from(`1${'0'.repeat(36)}`);
-      const profitNumerator = priceLP
-        .mul(totalSupply)
-        .mul(IDF)
-        .mul(inverseMultiplierNumerator)
-        .div(e36);
-      const profitDenominator = inverseMultiplierDinominator.mul(resOLAS);
-      const profit = (Number(profitNumerator) * 1.0) / Number(profitDenominator);
-
-      const oneYear = 3600 * 24 * 365;
-      const n = oneYear / vesting;
-      const APY = profit ** n - 1;
-      const apyInPercentage = round(APY * 100, 2);
-
-      resolve(apyInPercentage);
-    })
-    .catch((e) => {
-      window.console.log('Error occured on fetching APY');
       reject(e);
     });
 });

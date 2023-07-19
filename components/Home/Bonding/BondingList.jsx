@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import {
   Button, Table, Tag, Tooltip,
 } from 'antd/lib';
-import { remove, round } from 'lodash';
+import { isNumber, remove, round } from 'lodash';
 import { COLOR } from '@autonolas/frontend-library';
 import {
   notifyError,
@@ -12,7 +12,7 @@ import {
 } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { Deposit } from './Deposit';
-import { getProductListRequest, getAllTheProductsNotRemoved, getApyRequest } from './requests';
+import { getProductListRequest, getAllTheProductsNotRemoved } from './requests';
 
 const getColumns = (showNoSupply, onClick, isActive, acc) => {
   const columns = [
@@ -44,7 +44,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
     {
       title: (
         <Tooltip title="LP token price at which an LP share is priced during the bonding product">
-          <span>OLAS per LP token minted</span>
+          <span>OLAS minted per LP token</span>
         </Tooltip>
       ),
       dataIndex: 'priceLP',
@@ -73,17 +73,17 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
       ),
       dataIndex: 'supply',
       key: 'supply',
-      render: (x) => `${parseToEth(x)}`,
+      render: (x) => `${round(parseToEth(x), 4)}`,
     },
     {
       title: (
         <Tooltip title="APY">
-          <span>APY</span>
+          <span>Projected APY</span>
         </Tooltip>
       ),
       dataIndex: 'apy',
       key: 'apy',
-      render: (text) => text || '--',
+      render: (text) => (isNumber(text) ? `${text}%` : '--'),
     },
     {
       title: (
@@ -98,7 +98,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
     {
       title: (
         <Tooltip title="Bond your LP pair to get OLAS at a discount">
-          Bond
+          Initiate Bond
         </Tooltip>
       ),
       dataIndex: 'bondForOlas',
@@ -110,7 +110,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
           disabled={showNoSupply || !acc}
           onClick={() => onClick(row.token)}
         >
-          Create Bond
+          Deposit
         </Button>
       ),
     },
@@ -167,9 +167,6 @@ export const BondingList = ({ bondingProgramType }) => {
   useEffect(() => {
     if (account && chainId) {
       getProducts();
-
-      // TODO: add it correctly
-      getApyRequest({});
     }
   }, [account, chainId, bondingProgramType]);
 

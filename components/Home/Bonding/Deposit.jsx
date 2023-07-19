@@ -46,8 +46,12 @@ export const Deposit = ({
         token: productToken,
       });
       setLpBalance(lpResponse);
+
+      if (productId) {
+        form.setFieldsValue({ productId });
+      }
     }
-  }, [account, productToken]);
+  }, [account, productToken, productId]);
 
   const depositHelper = async () => {
     try {
@@ -107,8 +111,8 @@ export const Deposit = ({
     <>
       <Modal
         open
-        title="Create Bond"
-        okText="Create Bond"
+        title="Deposit LP tokens for OLAS"
+        okText="Deposit"
         okButtonProps={{
           disabled: !account || lpBalance === 0,
         }}
@@ -116,6 +120,7 @@ export const Deposit = ({
         onCancel={closeModal}
         onOk={onCreate}
         confirmLoading={isLoading}
+        destroyOnClose
       >
         <Form
           form={form}
