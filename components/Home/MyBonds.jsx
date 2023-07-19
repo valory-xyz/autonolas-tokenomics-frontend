@@ -1,11 +1,17 @@
 import { useEffect, useState, useCallback } from 'react';
+import { round } from 'lodash';
 import {
   Typography, Radio, Table, Button, Tooltip,
 } from 'antd/lib';
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { COLOR } from '@autonolas/frontend-library';
 import { useHelpers } from 'common-util/hooks/useHelpers';
-import { notifyError, notifySuccess, parseToEth } from 'common-util/functions';
+import {
+  getFormattedDate,
+  notifyError,
+  notifySuccess,
+  parseToEth,
+} from 'common-util/functions';
 import { getBondsRequest, redeemRequest } from './requests';
 
 const { Title } = Typography;
@@ -16,7 +22,7 @@ const getBondsColumns = (onClick, account) => {
       title: 'Payout in OLAS',
       dataIndex: 'payout',
       key: 'payout',
-      render: (value) => `${parseToEth(value)} OLAS`,
+      render: (value) => `${round(parseToEth(value), 4)}`,
     },
     {
       title: 'Matured?',
@@ -27,6 +33,12 @@ const getBondsColumns = (onClick, account) => {
       ) : (
         <CloseOutlined style={{ color: COLOR.RED, fontSize: 24 }} />
       )),
+    },
+    {
+      title: 'Maturity Date',
+      dataIndex: 'maturityDate',
+      key: 'maturityDate',
+      render: (value) => (value ? getFormattedDate(value) : '--'),
     },
     {
       title: 'Redeem',
@@ -59,7 +71,7 @@ const getBondsColumns = (onClick, account) => {
 
 export const MyBonds = () => {
   const { account, chainId } = useHelpers();
-  const [maturityType, setMaturityType] = useState('matured');
+  const [maturityType, setMaturityType] = useState('not-matured');
   const [isLoading, setIsLoading] = useState(false);
   const [bondsList, setBondsList] = useState([]);
   const isActive = maturityType === 'matured';

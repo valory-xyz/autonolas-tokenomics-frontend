@@ -1,13 +1,47 @@
+/* eslint-disable max-len */
 import { sendTransaction } from '@autonolas/frontend-library';
 import { getDepositoryContract } from 'common-util/Contracts';
+
+export const getBondInfoRequest = async (bondList) => {
+  // const contract = getDepositoryContract();
+
+  // contract.methods
+  //   .mapUserBonds(bondId)
+  //   .call()
+  //   .then((response) => {
+  //     resolve(response);
+  //   })
+  //   .catch((e) => {
+  //     window.console.log(`Error on fetching bond info: ${bondId}`);
+  //     reject(e);
+  //   });
+
+  const contract = getDepositoryContract();
+
+  try {
+    const bondListPromise = [];
+
+    for (let i = 0; i < bondList.length; i += 1) {
+      const result = contract.methods.mapUserBonds(bondList[i].bondId).call();
+      bondListPromise.push(result);
+    }
+
+    const lpTokenNameList = await Promise.all(bondListPromise);
+
+    return bondList.map((component, index) => ({
+      ...component,
+      maturityDate: lpTokenNameList[index].maturity * 1000,
+    }));
+  } catch (error) {
+    window.console.log('Error on fetching bond info');
+    return bondList;
+  }
+};
 
 /**
  * Bonding functionalities
  */
-export const getBondsRequest = ({
-  account,
-  isActive: isBondMatured,
-}) => new Promise((resolve, reject) => {
+export const getBondsRequest = ({ account, isActive: isBondMatured }) => new Promise((resolve, reject) => {
   const contract = getDepositoryContract();
 
   contract.methods
@@ -21,19 +55,27 @@ export const getBondsRequest = ({
       for (let i = 0; i < bondIds.length; i += 1) {
         const id = `${bondIds[i]}`;
         const result = contract.methods.getBondStatus(id).call();
+        /**
+         * TODO:
+         * if (result.payout !== 0 || result.matured)
+         * then add the bond to the list
+         */
         allListPromise.push(result);
         idsList.push(id);
       }
 
       Promise.all(allListPromise)
-        .then((allListResponse) => {
+        .then(async (allListResponse) => {
           const bondsListWithDetails = allListResponse.map((bond, index) => ({
             ...bond,
             bondId: idsList[index],
             key: idsList[index],
           }));
 
-          resolve(bondsListWithDetails);
+          const bondsWithMaturityDate = await getBondInfoRequest(
+            bondsListWithDetails,
+          );
+          resolve(bondsWithMaturityDate);
         })
         .catch((e) => reject(e));
     })
