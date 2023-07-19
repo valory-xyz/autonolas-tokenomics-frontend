@@ -78,7 +78,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
     {
       title: (
         <Tooltip title="APY">
-          <span>APY</span>
+          <span>Projected APY</span>
         </Tooltip>
       ),
       dataIndex: 'apy',
