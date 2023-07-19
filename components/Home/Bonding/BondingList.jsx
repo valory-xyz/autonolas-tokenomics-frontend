@@ -73,7 +73,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
       ),
       dataIndex: 'supply',
       key: 'supply',
-      render: (x) => `${parseToEth(x)}`,
+      render: (x) => `${round(parseToEth(x), 4)}`,
     },
     {
       title: (
@@ -110,7 +110,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
           disabled={showNoSupply || !acc}
           onClick={() => onClick(row.token)}
         >
-          Create Bond
+          Deposit
         </Button>
       ),
     },
