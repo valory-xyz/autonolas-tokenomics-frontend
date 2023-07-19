@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import {
   Button, Table, Tag, Tooltip,
 } from 'antd/lib';
-import { remove, round } from 'lodash';
+import { isNumber, remove, round } from 'lodash';
 import { COLOR } from '@autonolas/frontend-library';
 import {
   notifyError,
@@ -74,6 +74,16 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
       dataIndex: 'supply',
       key: 'supply',
       render: (x) => `${parseToEth(x)}`,
+    },
+    {
+      title: (
+        <Tooltip title="APY">
+          <span>APY</span>
+        </Tooltip>
+      ),
+      dataIndex: 'apy',
+      key: 'apy',
+      render: (text) => (isNumber(text) ? `${text}%` : '--'),
     },
     {
       title: (
