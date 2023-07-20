@@ -1,3 +1,3 @@
-import { BondingPrograms } from 'components/Home/BondingPrograms';
+import { BondingProducts } from 'components/Home/BondingProducts';
 
-export default BondingPrograms;
+export default BondingProducts;
