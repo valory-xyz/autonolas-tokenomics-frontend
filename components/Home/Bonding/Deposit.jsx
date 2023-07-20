@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { isNil, isNumber } from 'lodash';
+import { isNil } from 'lodash';
 import {
   Form,
   InputNumber,
@@ -16,7 +16,7 @@ import {
   parseToWei,
   notifySuccess,
   notifyError,
-  getCommaSeparatedNumber,
+  parseToEth,
 } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import {
@@ -47,7 +47,7 @@ export const Deposit = ({
         account,
         token: productToken,
       });
-      setLpBalance(lpResponse);
+      setLpBalance(parseToEth(lpResponse));
     }
   }, [account, productToken]);
 
@@ -127,10 +127,7 @@ export const Deposit = ({
           autoComplete="off"
         >
           <Tag color={COLOR.PRIMARY} className="deposit-tag">
-            <Title
-              level={5}
-              className="m-0"
-            >
+            <Title level={5} className="m-0">
               {`Bonding Product ID: ${productId}`}
             </Title>
           </Tag>
@@ -149,7 +146,7 @@ export const Deposit = ({
                       new Error('Please input a valid amount'),
                     );
                   }
-                  if (isNumber(lpBalance) && value > lpBalance) {
+                  if (value > lpBalance) {
                     return Promise.reject(
                       new Error('Amount cannot be greater than the balance'),
                     );
@@ -164,7 +161,7 @@ export const Deposit = ({
 
           <Text type="secondary">
             LP balance:&nbsp;
-            {getCommaSeparatedNumber(lpBalance)}
+            {lpBalance}
             <Button
               htmlType="button"
               type="link"
