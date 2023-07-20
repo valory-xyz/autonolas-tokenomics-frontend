@@ -10,7 +10,7 @@ import {
   getUniswapV2PairContract,
   getTokenomicsContract,
   getErc20Contract,
-  getMyProvider,
+  getEthersProvider,
 } from 'common-util/Contracts';
 import { round } from 'lodash';
 
@@ -108,7 +108,7 @@ const getLpTokenNamesForProducts = async (productList) => {
 export const getCreateProductEvents = async () => {
   const contract = getDepositoryContract();
 
-  const provider = new ethers.providers.Web3Provider(getMyProvider(), 'any');
+  const provider = getEthersProvider();
   const block = await provider.getBlock('latest');
 
   const events = contract.getPastEvents('CreateProduct', {
@@ -159,10 +159,7 @@ export const getApyRequestForEachProduct = ({
         .call();
 
       const { blockNumber } = productEvent;
-      const provider = new ethers.providers.Web3Provider(
-        getMyProvider(),
-        'any',
-      );
+      const provider = getEthersProvider();
       const { timestamp } = await provider.getBlock(blockNumber);
       const vesting = productEvent.returnValues.expiry - timestamp;
       const priceLP = ethers.BigNumber.from(product.priceLP);

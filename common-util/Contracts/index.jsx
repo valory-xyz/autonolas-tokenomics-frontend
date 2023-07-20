@@ -1,4 +1,5 @@
 import Web3 from 'web3';
+import { ethers } from 'ethers';
 import { getChainId } from '@autonolas/frontend-library';
 import {
   // depository
@@ -121,6 +122,14 @@ export const getContractAddress = (type, chainId) => {
 export const getMyProvider = () => window.MODAL_PROVIDER
   || window.web3?.currentProvider
   || process.env.NEXT_PUBLIC_MAINNET_URL;
+
+export const getEthersProvider = () => {
+  const provider = getMyProvider();
+  if (provider === process.env.NEXT_PUBLIC_MAINNET_URL) {
+    return new ethers.providers.JsonRpcProvider(provider);
+  }
+  return new ethers.providers.Web3Provider(provider);
+};
 
 export const getWeb3Details = () => {
   const web3 = new Web3(getMyProvider());
