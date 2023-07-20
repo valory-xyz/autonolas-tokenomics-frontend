@@ -122,8 +122,8 @@ export const Deposit = ({
     <>
       <Modal
         open
-        title="Deposit LP tokens for OLAS"
-        okText="Deposit"
+        title="Bond LP tokens for OLAS"
+        okText="Bond"
         okButtonProps={{
           disabled: !account || lpBalance === 0,
         }}

@@ -119,7 +119,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
           disabled={showNoSupply || !acc}
           onClick={() => onClick(row)}
         >
-          Deposit
+          Bond
         </Button>
       ),
     },
