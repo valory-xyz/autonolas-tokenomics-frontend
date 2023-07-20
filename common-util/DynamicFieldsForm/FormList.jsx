@@ -24,7 +24,6 @@ export const FormList = ({
   isUnitTypeInput,
 }) => {
   const screens = useBreakpoint();
-
   const inputStyle = screens.xs ? { width: '140px' } : { width: 'auto' };
 
   return (

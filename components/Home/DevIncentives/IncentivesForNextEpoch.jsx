@@ -6,7 +6,8 @@ import {
   InputNumber,
   Typography,
   Row,
-  Col, Grid,
+  Col,
+  Grid,
   Table,
 } from 'antd/lib';
 import { notifyError } from 'common-util/functions';
@@ -107,8 +108,8 @@ export const IncentivesForNextEpoch = () => {
                   className="ml-8"
                   type="secondary"
                   style={
-                  screens.xs ? { display: 'block' } : { display: 'inline' }
-                }
+                    screens.xs ? { display: 'block' } : { display: 'inline' }
+                  }
                 >
                   To check incentives, connect a wallet
                 </Text>
