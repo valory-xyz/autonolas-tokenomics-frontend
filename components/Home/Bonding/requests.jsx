@@ -10,6 +10,7 @@ import {
   getUniswapV2PairContract,
   getTokenomicsContract,
   getErc20Contract,
+  getMyProvider,
 } from 'common-util/Contracts';
 import { round } from 'lodash';
 
@@ -229,6 +230,23 @@ const getProductDetailsFromIds = ({ productIdList }) => new Promise((resolve, re
 });
 
 /**
+ * returns events for the product creation
+ */
+export const getCreateProductEvents = async () => {
+  const contract = getDepositoryContract();
+
+  const provider = new ethers.providers.Web3Provider(getMyProvider(), 'any');
+  const block = await provider.getBlock('latest');
+
+  const events = contract.getPastEvents('CreateProduct', {
+    fromBlock: block.number - 1000000,
+    toBlock: block.number,
+  });
+
+  return events;
+};
+
+/**
  * returns all the products that are not removed
  * ie. 1. active products,
  *     2. inactive products,
@@ -274,7 +292,26 @@ export const getAllTheProductsNotRemoved = async () => new Promise((resolve, rej
             (product) => product.token !== ADDRESS_ZERO,
           );
 
-          resolve(filteredList);
+          const productEvents = await getCreateProductEvents();
+          const listAfterSupplyLeftCalc = filteredList.map((product) => {
+            const productEvent = productEvents.find(
+              (event) => event.returnValues.productId === `${product.id}`,
+            );
+
+            const eventSupply = Number(
+              ethers.BigNumber.from(productEvent.returnValues.supply).div(
+                ONE_ETH,
+              ),
+            );
+            const productSupply = Number(
+              ethers.BigNumber.from(product.supply).div(ONE_ETH),
+            );
+            const supplyLeft = productSupply / eventSupply;
+
+            return { ...product, supplyLeft };
+          });
+
+          resolve(listAfterSupplyLeftCalc);
         })
         .catch((e) => reject(e));
     })
