@@ -14,6 +14,12 @@ import { useHelpers } from 'common-util/hooks/useHelpers';
 import { Deposit } from './Deposit';
 import { getProductListRequest, getAllTheProductsNotRemoved } from './requests';
 
+const getLpTokenWithDiscound = (lpTokenValue, discount) => {
+  const price = Number(parseToEth(lpTokenValue));
+  const discountedPrice = price + (price * discount) / 100;
+  return round(discountedPrice, 4);
+};
+
 const getColumns = (showNoSupply, onClick, isActive, acc) => {
   const columns = [
     {
@@ -51,9 +57,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
       key: 'priceLP',
       render: (x, data) => {
         const discount = data?.discount || 0;
-        const price = Number(parseToEth(x));
-        const discountedPrice = price + (price * discount) / 100;
-        return `${round(discountedPrice, 4)}`;
+        return getLpTokenWithDiscound(x, discount);
       },
     },
     {
@@ -113,7 +117,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
           type="primary"
           // disbled if there is no supply or if the user is not connected
           disabled={showNoSupply || !acc}
-          onClick={() => onClick(row.id, row.token)}
+          onClick={() => onClick(row)}
         >
           Deposit
         </Button>
@@ -139,9 +143,8 @@ export const BondingList = ({ bondingProgramType }) => {
   const [products, setProducts] = useState([]);
   const showNoSupply = bondingProgramType === 'allProduct';
 
-  // if productToken is `not null`, then open the deposit modal
-  const [productToken, setProductToken] = useState(false);
-  const [productId, setProductId] = useState(null);
+  // if productDetails is `not null`, then open the deposit modal
+  const [productDetails, setProductDetails] = useState(null);
 
   const isActive = bondingProgramType === 'active';
 
@@ -176,14 +179,12 @@ export const BondingList = ({ bondingProgramType }) => {
     }
   }, [account, chainId, bondingProgramType]);
 
-  const onBondClick = (id, token) => {
-    setProductId(id);
-    setProductToken(token);
+  const onBondClick = (row) => {
+    setProductDetails(row);
   };
 
   const onModalClose = () => {
-    setProductId(null);
-    setProductToken(null);
+    setProductDetails(null);
   };
 
   return (
@@ -197,10 +198,11 @@ export const BondingList = ({ bondingProgramType }) => {
         scroll={{ x: 400 }}
       />
 
-      {!!productToken && (
+      {!!productDetails && (
         <Deposit
-          productId={productId}
-          productToken={productToken}
+          productId={productDetails?.id}
+          productToken={productDetails?.token}
+          productLpPrice={getLpTokenWithDiscound(productDetails?.priceLP, productDetails?.discount)}
           getProducts={getProducts}
           closeModal={onModalClose}
         />
