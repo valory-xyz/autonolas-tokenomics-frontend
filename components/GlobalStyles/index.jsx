@@ -168,6 +168,10 @@ const GlobalStyle = createGlobalStyle`
     }
   }
 
+  .ant-tooltip-inner {
+    background-color: ${COLOR.BLACK};
+  }
+
   .deposit-tag {
     margin-bottom: 1rem;
     > * {
