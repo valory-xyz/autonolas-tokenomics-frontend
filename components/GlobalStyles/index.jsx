@@ -200,6 +200,18 @@ const GlobalStyle = createGlobalStyle`
       margin-top: 0;
     }
   }
+
+  ${MEDIA_QUERY.mobileL} {
+    .site-layout {
+      padding: 0 1rem;
+    }
+    .choose-type-group.ant-typography {
+      flex-direction: column;
+      .ant-radio-group {
+        margin-left: 0rem;
+      }
+    }
+  }
 `;
 
 export default GlobalStyle;

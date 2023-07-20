@@ -1,3 +1,4 @@
+import { MEDIA_QUERY } from '@autonolas/frontend-library';
 import styled from 'styled-components';
 
 export const LoginContainer = styled.div`
@@ -5,4 +6,7 @@ export const LoginContainer = styled.div`
   align-items: center;
   font-size: 18px;
   line-height: normal;
+  ${MEDIA_QUERY.mobileL} {
+    margin-top: 0.5rem;
+  }
 `;
