@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { COLOR } from '@autonolas/frontend-library';
+import { COLOR, MEDIA_QUERY } from '@autonolas/frontend-library';
 
 export const DonateContainer = styled.div`
   display: flex;
@@ -10,6 +10,18 @@ export const DonateContainer = styled.div`
     padding-left: 1rem;
     margin-left: 1rem;
     border-left: 1px solid ${COLOR.BORDER_GREY}
+  }
+
+  ${MEDIA_QUERY.mobileL} {
+    flex-direction: column;
+    .donate-section {
+      width: 100%;
+    }
+    .last-epoch-section {
+      padding-left: 0;
+      margin-left: 0;
+      border-left: none;
+    }
   }
 `;
 

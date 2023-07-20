@@ -8,6 +8,11 @@ export const CustomLayout = styled(Layout)`
       width: 100%;
     }
   }
+  ${MEDIA_QUERY.mobileL} {
+    .footer-center {
+      display: none;
+    }
+  }
 `;
 
 // HEADER
