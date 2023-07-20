@@ -1,17 +1,22 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
-  Typography, Radio, Table, Button, Tooltip,
+  Typography, Radio, Table, Button,
 } from 'antd/lib';
 import { round } from 'lodash';
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { COLOR } from '@autonolas/frontend-library';
 import { useHelpers } from 'common-util/hooks/useHelpers';
-import { notifyError, notifySuccess, parseToEth } from 'common-util/functions';
+import {
+  getFormattedDate,
+  notifyError,
+  notifySuccess,
+  parseToEth,
+} from 'common-util/functions';
 import { getBondsRequest, redeemRequest } from './requests';
 
 const { Title } = Typography;
 
-const getBondsColumns = (onClick, account) => {
+const getBondsColumns = () => {
   const columns = [
     {
       title: 'Payout in OLAS',
@@ -30,28 +35,10 @@ const getBondsColumns = (onClick, account) => {
       )),
     },
     {
-      title: 'Redeem',
-      dataIndex: 'redeem',
-      key: 'redeem',
-      render: (_, row) => {
-        const redeemButton = (
-          <Button
-            disabled={!row.matured || !account}
-            type="primary"
-            onClick={() => onClick(row.bondId)}
-          >
-            Redeem
-          </Button>
-        );
-
-        return row.matured ? (
-          redeemButton
-        ) : (
-          <Tooltip title="To redeem, wait until bond matures">
-            {redeemButton}
-          </Tooltip>
-        );
-      },
+      title: 'Maturity Date',
+      dataIndex: 'maturityDate',
+      key: 'maturityDate',
+      render: (value) => (value ? getFormattedDate(value) : '--'),
     },
   ];
 
@@ -60,9 +47,10 @@ const getBondsColumns = (onClick, account) => {
 
 export const MyBonds = () => {
   const { account, chainId } = useHelpers();
-  const [maturityType, setMaturityType] = useState('matured');
+  const [maturityType, setMaturityType] = useState('not-matured');
   const [isLoading, setIsLoading] = useState(false);
   const [bondsList, setBondsList] = useState([]);
+  const [selectedBondIds, setSelectedBondIds] = useState([]);
   const isActive = maturityType === 'matured';
 
   const getBondsListHelper = useCallback(async () => {
@@ -84,10 +72,9 @@ export const MyBonds = () => {
     }
   }, [account, chainId, maturityType]);
 
-  const onRedeemClick = async (bondId) => {
+  const onRedeem = async () => {
     try {
-      await redeemRequest({ account, bondIds: [bondId] });
-
+      await redeemRequest({ account, bondIds: selectedBondIds });
       notifySuccess('Redeemed successfully');
 
       // update the list once the bond is redeemed
@@ -112,14 +99,41 @@ export const MyBonds = () => {
       </Title>
 
       <Table
-        columns={getBondsColumns(onRedeemClick, account)}
+        columns={getBondsColumns()}
         dataSource={bondsList}
         bordered
         loading={isLoading}
         pagination={false}
         scroll={{ x: 400 }}
         rowKey="bondId"
+        rowSelection={
+          maturityType === 'matured'
+            ? {
+              type: 'checkbox',
+              selectedRowKeys: selectedBondIds,
+              onChange: (selectedRowKeys) => {
+                setSelectedBondIds(selectedRowKeys);
+              },
+              // disable the checkbox if the bond is not matured
+              getCheckboxProps: (record) => ({
+                disabled: !record.matured,
+              }),
+            }
+            : undefined
+        }
       />
+
+      {maturityType === 'matured' && (
+        <div style={{ textAlign: 'right', marginTop: '1rem' }}>
+          <Button
+            disabled={!account || selectedBondIds.length === 0}
+            type="primary"
+            onClick={onRedeem}
+          >
+            Redeem
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
