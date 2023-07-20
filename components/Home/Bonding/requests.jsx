@@ -119,7 +119,11 @@ export const getCreateProductEvents = async () => {
   return events;
 };
 
-export const getApyRequestForEachProduct = ({ productId, address }) => new Promise((resolve, reject) => {
+export const getApyRequestForEachProduct = ({
+  productId,
+  address,
+  productEvent,
+}) => new Promise((resolve, reject) => {
   const contract = getUniswapV2PairContract(address);
   const depositoryContract = getDepositoryContract();
   const tokenomicsContract = getTokenomicsContract();
@@ -153,15 +157,12 @@ export const getApyRequestForEachProduct = ({ productId, address }) => new Promi
       const product = await depositoryContract.methods
         .mapBondProducts(productId)
         .call();
-        // TODO: Calculate vesting based on product.expiry and the creation event block.timestamp
-
-      const productEvents = await getCreateProductEvents();
-      const productEvent = productEvents.find(
-        (event) => event.returnValues.productId === `${productId}`,
-      );
 
       const { blockNumber } = productEvent;
-      const provider = new ethers.providers.Web3Provider(getMyProvider(), 'any');
+      const provider = new ethers.providers.Web3Provider(
+        getMyProvider(),
+        'any',
+      );
       const { timestamp } = await provider.getBlock(blockNumber);
       const vesting = productEvent.returnValues.expiry - timestamp;
       const priceLP = ethers.BigNumber.from(product.priceLP);
@@ -192,14 +193,20 @@ export const getApyRequestForEachProduct = ({ productId, address }) => new Promi
 /**
  * APY calculation
  */
-export const fetchApyRequestForProducts = async (productList) => {
+export const fetchApyRequestForProducts = async (productList, eventList) => {
   try {
     const list = [];
 
     for (let i = 0; i < productList.length; i += 1) {
+      const currentProductId = productList[i].id;
+      const productEvent = eventList.find(
+        (event) => event.returnValues.productId === `${currentProductId}`,
+      );
+
       const result = getApyRequestForEachProduct({
-        productId: productList[i].id,
+        productId: currentProductId,
         address: productList[i].token,
+        productEvent,
       });
       list.push(result);
     }
@@ -216,8 +223,7 @@ export const fetchApyRequestForProducts = async (productList) => {
   }
 };
 
-export const getListWithSupplyList = async (list) => {
-  const productEvents = await getCreateProductEvents();
+export const getListWithSupplyList = async (list, productEvents) => {
   const listAfterSupplyLeftCalc = list.map((product) => {
     const productEvent = productEvents.find(
       (event) => event.returnValues.productId === `${product.id}`,
@@ -263,11 +269,14 @@ const getProductDetailsFromIds = ({ productIdList }) => new Promise((resolve, re
           productList,
         );
 
+        const eventList = await getCreateProductEvents();
+
         const productWithApy = await fetchApyRequestForProducts(
           productListWithLpTokens,
+          eventList,
         );
 
-        const list = await getListWithSupplyList(productWithApy);
+        const list = await getListWithSupplyList(productWithApy, eventList);
         resolve(list);
       })
       .catch((e) => reject(e));
@@ -314,8 +323,11 @@ export const getAllTheProductsNotRemoved = async () => new Promise((resolve, rej
             productWithIds,
           );
 
+          const eventList = await getCreateProductEvents();
+
           const productsWithdApy = await fetchApyRequestForProducts(
             productsWithLpTokens,
+            eventList,
           );
 
           // filter out the products that are removed
@@ -323,7 +335,7 @@ export const getAllTheProductsNotRemoved = async () => new Promise((resolve, rej
             (product) => product.token !== ADDRESS_ZERO,
           );
 
-          const list = await getListWithSupplyList(filteredList);
+          const list = await getListWithSupplyList(filteredList, eventList);
           resolve(list);
         })
         .catch((e) => reject(e));
