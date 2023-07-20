@@ -191,6 +191,44 @@ export const fetchApyRequestForProducts = async (productList) => {
 };
 
 /**
+ * returns events for the product creation
+ */
+export const getCreateProductEvents = async () => {
+  const contract = getDepositoryContract();
+
+  const provider = new ethers.providers.Web3Provider(getMyProvider(), 'any');
+  const block = await provider.getBlock('latest');
+
+  const events = contract.getPastEvents('CreateProduct', {
+    fromBlock: block.number - 1000000,
+    toBlock: block.number,
+  });
+
+  return events;
+};
+
+export const getListWithSupplyList = async (list) => {
+  const productEvents = await getCreateProductEvents();
+  const listAfterSupplyLeftCalc = list.map((product) => {
+    const productEvent = productEvents.find(
+      (event) => event.returnValues.productId === `${product.id}`,
+    );
+
+    const eventSupply = Number(
+      ethers.BigNumber.from(productEvent.returnValues.supply).div(ONE_ETH),
+    );
+    const productSupply = Number(
+      ethers.BigNumber.from(product.supply).div(ONE_ETH),
+    );
+    const supplyLeft = productSupply / eventSupply;
+
+    return { ...product, supplyLeft };
+  });
+
+  return listAfterSupplyLeftCalc;
+};
+
+/**
  *
  */
 const getProductDetailsFromIds = ({ productIdList }) => new Promise((resolve, reject) => {
@@ -220,7 +258,8 @@ const getProductDetailsFromIds = ({ productIdList }) => new Promise((resolve, re
           productListWithLpTokens,
         );
 
-        resolve(productWithApy);
+        const list = await getListWithSupplyList(productWithApy);
+        resolve(list);
       })
       .catch((e) => reject(e));
   } catch (error) {
@@ -228,23 +267,6 @@ const getProductDetailsFromIds = ({ productIdList }) => new Promise((resolve, re
     reject(error);
   }
 });
-
-/**
- * returns events for the product creation
- */
-export const getCreateProductEvents = async () => {
-  const contract = getDepositoryContract();
-
-  const provider = new ethers.providers.Web3Provider(getMyProvider(), 'any');
-  const block = await provider.getBlock('latest');
-
-  const events = contract.getPastEvents('CreateProduct', {
-    fromBlock: block.number - 1000000,
-    toBlock: block.number,
-  });
-
-  return events;
-};
 
 /**
  * returns all the products that are not removed
@@ -292,26 +314,8 @@ export const getAllTheProductsNotRemoved = async () => new Promise((resolve, rej
             (product) => product.token !== ADDRESS_ZERO,
           );
 
-          const productEvents = await getCreateProductEvents();
-          const listAfterSupplyLeftCalc = filteredList.map((product) => {
-            const productEvent = productEvents.find(
-              (event) => event.returnValues.productId === `${product.id}`,
-            );
-
-            const eventSupply = Number(
-              ethers.BigNumber.from(productEvent.returnValues.supply).div(
-                ONE_ETH,
-              ),
-            );
-            const productSupply = Number(
-              ethers.BigNumber.from(product.supply).div(ONE_ETH),
-            );
-            const supplyLeft = productSupply / eventSupply;
-
-            return { ...product, supplyLeft };
-          });
-
-          resolve(listAfterSupplyLeftCalc);
+          const list = await getListWithSupplyList(filteredList);
+          resolve(list);
         })
         .catch((e) => reject(e));
     })
