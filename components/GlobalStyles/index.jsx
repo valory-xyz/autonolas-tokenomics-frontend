@@ -21,6 +21,9 @@ const GlobalStyle = createGlobalStyle`
   background-color: ${COLOR.WHITE};
 
   /* common */
+  .m-0 {
+    margin: 0 !important;
+  }
   .mb-8 {
     margin-bottom: 0.5rem;
   }
@@ -162,6 +165,13 @@ const GlobalStyle = createGlobalStyle`
         display: inline-block;
         top: 2px;
       }
+    }
+  }
+
+  .deposit-tag {
+    margin-bottom: 1rem;
+    > * {
+      color: ${COLOR.WHITE} !important;
     }
   }
 

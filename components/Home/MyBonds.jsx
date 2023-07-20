@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import {
   Typography, Radio, Table, Button, Tooltip,
 } from 'antd/lib';
+import { round } from 'lodash';
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { COLOR } from '@autonolas/frontend-library';
 import { useHelpers } from 'common-util/hooks/useHelpers';
@@ -16,7 +17,7 @@ const getBondsColumns = (onClick, account) => {
       title: 'Payout in OLAS',
       dataIndex: 'payout',
       key: 'payout',
-      render: (value) => `${parseToEth(value)} OLAS`,
+      render: (value) => `${round(parseToEth(value), 4)}`,
     },
     {
       title: 'Matured?',

@@ -49,7 +49,12 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
       ),
       dataIndex: 'priceLP',
       key: 'priceLP',
-      render: (x) => `${round(parseToEth(x), 4)}`,
+      render: (x, data) => {
+        const discount = data?.discount || 0;
+        const price = Number(parseToEth(x));
+        const discountedPrice = price + (price * discount) / 100;
+        return `${round(discountedPrice, 4)}`;
+      },
     },
     {
       title: (
@@ -77,7 +82,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
     },
     {
       title: (
-        <Tooltip title="APY">
+        <Tooltip title="Projected APY">
           <span>Projected APY</span>
         </Tooltip>
       ),
@@ -108,7 +113,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
           type="primary"
           // disbled if there is no supply or if the user is not connected
           disabled={showNoSupply || !acc}
-          onClick={() => onClick(row.token)}
+          onClick={() => onClick(row.id, row.token)}
         >
           Deposit
         </Button>
@@ -136,6 +141,7 @@ export const BondingList = ({ bondingProgramType }) => {
 
   // if productToken is `not null`, then open the deposit modal
   const [productToken, setProductToken] = useState(false);
+  const [productId, setProductId] = useState(null);
 
   const isActive = bondingProgramType === 'active';
 
@@ -170,8 +176,14 @@ export const BondingList = ({ bondingProgramType }) => {
     }
   }, [account, chainId, bondingProgramType]);
 
-  const onBondClick = (token) => {
+  const onBondClick = (id, token) => {
+    setProductId(id);
     setProductToken(token);
+  };
+
+  const onModalClose = () => {
+    setProductId(null);
+    setProductToken(null);
   };
 
   return (
@@ -187,10 +199,10 @@ export const BondingList = ({ bondingProgramType }) => {
 
       {!!productToken && (
         <Deposit
-          productId={products.find((e) => e.token === productToken)?.id}
+          productId={productId}
           productToken={productToken}
           getProducts={getProducts}
-          closeModal={() => setProductToken(null)}
+          closeModal={onModalClose}
         />
       )}
     </>
