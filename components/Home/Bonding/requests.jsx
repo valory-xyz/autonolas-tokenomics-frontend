@@ -135,7 +135,7 @@ export const getApyRequestForEachProduct = ({ productId, address }) => new Promi
       const product = await depositoryContract.methods
         .mapBondProducts(productId)
         .call();
-      // TODO: Calculate vesting based on product.expiry and the creation event block.timestamp
+        // TODO: Calculate vesting based on product.expiry and the creation event block.timestamp
       const vesting = 3600 * 24 * 7;
       const priceLP = ethers.BigNumber.from(product.priceLP);
 
@@ -385,7 +385,8 @@ export const getLpBalanceRequest = ({ account, token }) => new Promise((resolve,
     .balanceOf(account)
     .call()
     .then((response) => {
-      resolve(Number(response));
+      // convert big number to string
+      resolve(response.toString());
     })
     .catch((e) => {
       window.console.log('Error occured on fetching LP balance');

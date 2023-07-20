@@ -17,6 +17,7 @@ import {
   notifySuccess,
   notifyError,
   parseToEth,
+  getCommaSeparatedNumber,
 } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import {
@@ -115,7 +116,7 @@ export const Deposit = ({
     const olasPayout = tokenAmountInputValue
       ? productLpPrice * tokenAmountInputValue
       : 0;
-    return olasPayout;
+    return getCommaSeparatedNumber(olasPayout, 4);
   };
 
   return (
@@ -175,7 +176,7 @@ export const Deposit = ({
           <div className="mb-8">
             <Text type="secondary">
               LP balance:&nbsp;
-              {lpBalance}
+              {getCommaSeparatedNumber(lpBalance, 4)}
               <Button
                 htmlType="button"
                 type="link"
