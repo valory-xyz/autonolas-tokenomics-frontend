@@ -32,6 +32,7 @@ const fullWidth = { width: '100%' };
 export const Deposit = ({
   productId,
   productToken,
+  productLpPrice,
   getProducts,
   closeModal,
 }) => {
@@ -105,6 +106,18 @@ export const Deposit = ({
       });
   };
 
+  const tokenAmountInputValue = Form.useWatch('tokenAmount', form);
+
+  const getOlasPayout = () => {
+    if (!tokenAmountInputValue) return '--';
+    if (tokenAmountInputValue > lpBalance) return '--';
+
+    const olasPayout = tokenAmountInputValue
+      ? productLpPrice * tokenAmountInputValue
+      : 0;
+    return olasPayout;
+  };
+
   return (
     <>
       <Modal
@@ -137,11 +150,11 @@ export const Deposit = ({
             label="LP Token Amount"
             name="tokenAmount"
             rules={[
-              { required: true, message: 'Please input token' },
+              { required: true, message: 'Please input a valid amount' },
               () => ({
                 validator(_, value) {
                   if (value === '' || isNil(value)) return Promise.resolve();
-                  if (value <= 1) {
+                  if (value <= 0) {
                     return Promise.reject(
                       new Error('Please input a valid amount'),
                     );
@@ -159,21 +172,27 @@ export const Deposit = ({
             <InputNumber style={fullWidth} />
           </Form.Item>
 
-          <Text type="secondary">
-            LP balance:&nbsp;
-            {lpBalance}
-            <Button
-              htmlType="button"
-              type="link"
-              onClick={() => {
-                form.setFieldsValue({ tokenAmount: lpBalance });
-                form.validateFields(['tokenAmount']);
-              }}
-              className="pl-0"
-            >
-              Max
-            </Button>
-          </Text>
+          <div className="mb-8">
+            <Text type="secondary">
+              LP balance:&nbsp;
+              {lpBalance}
+              <Button
+                htmlType="button"
+                type="link"
+                onClick={() => {
+                  form.setFieldsValue({ tokenAmount: lpBalance });
+                  form.validateFields(['tokenAmount']);
+                }}
+                className="pl-0"
+              >
+                Max
+              </Button>
+            </Text>
+          </div>
+
+          <div>
+            <Text>{`OLAS Payout: ${getOlasPayout()}`}</Text>
+          </div>
         </Form>
       </Modal>
 
@@ -227,6 +246,7 @@ export const Deposit = ({
 Deposit.propTypes = {
   productId: PropTypes.string,
   productToken: PropTypes.string,
+  productLpPrice: PropTypes.number,
   closeModal: PropTypes.func,
   getProducts: PropTypes.func,
 };
@@ -234,6 +254,7 @@ Deposit.propTypes = {
 Deposit.defaultProps = {
   productId: undefined,
   productToken: null,
+  productLpPrice: null,
   closeModal: () => {},
   getProducts: () => {},
 };
