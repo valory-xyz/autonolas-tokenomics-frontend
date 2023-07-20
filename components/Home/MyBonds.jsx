@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback } from 'react';
-import { round } from 'lodash';
 import {
   Typography, Radio, Table, Button,
 } from 'antd/lib';
@@ -102,26 +101,6 @@ export const MyBonds = () => {
       <Table
         columns={getBondsColumns()}
         dataSource={bondsList}
-        // dataSource={[
-        //   {
-        //     bondId: '0',
-        //     payout: '1000000000000000000',
-        //     matured: true,
-        //     maturityDate: 1627574400000,
-        //   },
-        //   {
-        //     bondId: '1',
-        //     payout: '1000000000000000000',
-        //     matured: true,
-        //     maturityDate: 1627578400000,
-        //   },
-        //   {
-        //     bondId: '2',
-        //     payout: '1000000000000000000',
-        //     matured: false,
-        //     maturityDate: 1627594400000,
-        //   },
-        // ]}
         bordered
         loading={isLoading}
         pagination={false}
