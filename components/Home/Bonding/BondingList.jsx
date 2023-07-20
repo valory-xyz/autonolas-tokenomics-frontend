@@ -1,13 +1,10 @@
 import { useEffect, useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import {
-  Button,
-  Table,
-  // Tag,
-  Tooltip,
+  Button, Table, Tag, Tooltip,
 } from 'antd/lib';
 import { isNumber, remove, round } from 'lodash';
-// import { COLOR } from '@autonolas/frontend-library';
+import { COLOR } from '@autonolas/frontend-library';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import {
   notifyError,
@@ -86,19 +83,32 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
     //   ),
     // },
     {
-      title: getTitle(
-        'OLAS Supply',
-        'OLAS supply reserved for this bonding product',
-      ),
-      dataIndex: 'supply',
-      key: 'supply',
-      render: (x) => `${round(parseToEth(x), 4)}`,
-    },
-    {
       title: getTitle('Projected APY', APY_DESC),
       dataIndex: 'apy',
       key: 'apy',
       render: (text) => (isNumber(text) ? `${text}%` : '--'),
+    },
+    {
+      title: getTitle(
+        'OLAS Supply',
+        'Remaining OLAS supply reserved for this bonding product',
+      ),
+      dataIndex: 'supply',
+      key: 'supply',
+      render: (x, row) => {
+        const supplyLeftInPercent = round(row.supplyLeft * 100, 0);
+        return (
+          <>
+            {round(parseToEth(x), 4)}
+            &nbsp;
+            <Tooltip title={`${supplyLeftInPercent}% of supply left`}>
+              <Tag color={supplyLeftInPercent < 6 ? COLOR.RED : COLOR.PRIMARY}>
+                {`${supplyLeftInPercent}%`}
+              </Tag>
+            </Tooltip>
+          </>
+        );
+      },
     },
     {
       title: getTitle('Expiry', 'The vesting time to withdraw OLAS'),

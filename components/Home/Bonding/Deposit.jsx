@@ -49,6 +49,7 @@ export const Deposit = ({
         account,
         token: productToken,
       });
+
       setLpBalance(parseToEth(lpResponse));
     }
   }, [account, productToken]);
@@ -210,34 +211,35 @@ export const Deposit = ({
           />
 
           <br />
-          <Button
-            type="primary"
-            htmlType="submit"
-            style={{ right: 'calc(-100% + 100px)', position: 'relative' }}
-            loading={isLoading}
-            onClick={async () => {
-              try {
-                setIsLoading(true);
-                await approveRequest({
-                  account,
-                  chainId,
-                  token: productToken,
-                });
+          <div className="align-right">
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={isLoading}
+              onClick={async () => {
+                try {
+                  setIsLoading(true);
+                  await approveRequest({
+                    account,
+                    chainId,
+                    token: productToken,
+                  });
 
-                // once approved, close the modal and call deposit helper
-                setIsApproveModalVisible(false);
-                await depositHelper();
-              } catch (error) {
-                window.console.error(error);
-                setIsApproveModalVisible(false);
-                notifyError();
-              } finally {
-                setIsLoading(false);
-              }
-            }}
-          >
-            Approve
-          </Button>
+                  // once approved, close the modal and call deposit helper
+                  setIsApproveModalVisible(false);
+                  await depositHelper();
+                } catch (error) {
+                  window.console.error(error);
+                  setIsApproveModalVisible(false);
+                  notifyError();
+                } finally {
+                  setIsLoading(false);
+                }
+              }}
+            >
+              Approve
+            </Button>
+          </div>
         </Modal>
       )}
     </>
