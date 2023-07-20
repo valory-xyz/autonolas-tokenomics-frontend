@@ -62,7 +62,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
     },
     {
       title: (
-        <Tooltip title="Percentage of discount depending on the usefulness of the code in the ecosystem">
+        <Tooltip title="The discount factor is determined by the activity of the protocol per epoch, and it applies to the product's calculated LP price. The more useful code that is introduced, the larger the discount factor becomes. This system is designed to stimulate the creation of more useful code.">
           Discount
         </Tooltip>
       ),
