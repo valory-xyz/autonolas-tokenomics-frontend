@@ -102,6 +102,23 @@ const getLpTokenNamesForProducts = async (productList) => {
   }));
 };
 
+/**
+ * returns events for the product creation
+ */
+export const getCreateProductEvents = async () => {
+  const contract = getDepositoryContract();
+
+  const provider = new ethers.providers.Web3Provider(getMyProvider(), 'any');
+  const block = await provider.getBlock('latest');
+
+  const events = contract.getPastEvents('CreateProduct', {
+    fromBlock: block.number - 1000000,
+    toBlock: block.number,
+  });
+
+  return events;
+};
+
 export const getApyRequestForEachProduct = ({ productId, address }) => new Promise((resolve, reject) => {
   const contract = getUniswapV2PairContract(address);
   const depositoryContract = getDepositoryContract();
@@ -137,7 +154,16 @@ export const getApyRequestForEachProduct = ({ productId, address }) => new Promi
         .mapBondProducts(productId)
         .call();
         // TODO: Calculate vesting based on product.expiry and the creation event block.timestamp
-      const vesting = 3600 * 24 * 7;
+
+      const productEvents = await getCreateProductEvents();
+      const productEvent = productEvents.find(
+        (event) => event.returnValues.productId === `${productId}`,
+      );
+
+      const { blockNumber } = productEvent;
+      const provider = new ethers.providers.Web3Provider(getMyProvider(), 'any');
+      const { timestamp } = await provider.getBlock(blockNumber);
+      const vesting = productEvent.returnValues.expiry - timestamp;
       const priceLP = ethers.BigNumber.from(product.priceLP);
 
       const IDF = await tokenomicsContract.methods.getLastIDF().call();
@@ -188,23 +214,6 @@ export const fetchApyRequestForProducts = async (productList) => {
     window.console.log('Error on fetching APY for products');
     throw new Error(error);
   }
-};
-
-/**
- * returns events for the product creation
- */
-export const getCreateProductEvents = async () => {
-  const contract = getDepositoryContract();
-
-  const provider = new ethers.providers.Web3Provider(getMyProvider(), 'any');
-  const block = await provider.getBlock('latest');
-
-  const events = contract.getPastEvents('CreateProduct', {
-    fromBlock: block.number - 1000000,
-    toBlock: block.number,
-  });
-
-  return events;
 };
 
 export const getListWithSupplyList = async (list) => {
