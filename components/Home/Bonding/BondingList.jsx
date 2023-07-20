@@ -86,6 +86,12 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
     //   ),
     // },
     {
+      title: getTitle('Projected APY', APY_DESC),
+      dataIndex: 'apy',
+      key: 'apy',
+      render: (text) => (isNumber(text) ? `${text}%` : '--'),
+    },
+    {
       title: getTitle(
         'OLAS Supply',
         'OLAS supply reserved for this bonding product',
@@ -93,12 +99,6 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
       dataIndex: 'supply',
       key: 'supply',
       render: (x) => `${round(parseToEth(x), 4)}`,
-    },
-    {
-      title: getTitle('Projected APY', APY_DESC),
-      dataIndex: 'apy',
-      key: 'apy',
-      render: (text) => (isNumber(text) ? `${text}%` : '--'),
     },
     {
       title: getTitle('Expiry', 'The vesting time to withdraw OLAS'),

@@ -49,6 +49,11 @@ export const Deposit = ({
         account,
         token: productToken,
       });
+
+      // console.log({
+      //   lpTokenInWei: lpResponse,
+      //   lpBalance: parseToEth(lpResponse),
+      // });
       setLpBalance(parseToEth(lpResponse));
     }
   }, [account, productToken]);
@@ -83,6 +88,10 @@ export const Deposit = ({
     form
       .validateFields()
       .then(async (values) => {
+        // console.log({
+        //   inputValue: values.tokenAmount,
+        //   parsedToWei: parseToWei(values.tokenAmount),
+        // });
         // check allowance of the product ID and open approve modal if not approved
         const hasSufficientAllowance = await hasSufficientTokenRequest({
           account,
