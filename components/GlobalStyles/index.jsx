@@ -206,6 +206,7 @@ const GlobalStyle = createGlobalStyle`
       padding: 0 1rem;
     }
     .choose-type-group.ant-typography {
+      flex-direction: column;
       .ant-radio-group {
         margin-left: 0rem;
       }

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { Typography, Radio } from 'antd/lib';
-import { MEDIA_QUERY } from '@autonolas/frontend-library';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { BondingList } from './Bonding/BondingList';
 
@@ -11,11 +10,6 @@ const ProductContainer = styled.div`
   .ant-typography {
     display: flex;
     align-items: center;
-  }
-  ${MEDIA_QUERY.mobileL} {
-    .ant-typography {
-      flex-direction: column;
-    }
   }
 `;
 

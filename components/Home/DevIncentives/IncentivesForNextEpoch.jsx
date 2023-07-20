@@ -6,7 +6,7 @@ import {
   InputNumber,
   Typography,
   Row,
-  Col,
+  Col, Grid,
   Table,
 } from 'antd/lib';
 import { notifyError } from 'common-util/functions';
@@ -15,6 +15,7 @@ import { getMapUnitIncentivesRequest } from './requests';
 import { MapPendingIncentivesContainer } from './styles';
 
 const { Title, Paragraph, Text } = Typography;
+const { useBreakpoint } = Grid;
 
 const columns = [
   {
@@ -34,6 +35,7 @@ export const IncentivesForNextEpoch = () => {
   const { account } = useHelpers();
   const [isLoading, setIsLoading] = useState(false);
   const [pendingIncentives, setPendingIncentives] = useState([]);
+  const screens = useBreakpoint();
 
   const [form] = Form.useForm();
 
@@ -101,7 +103,13 @@ export const IncentivesForNextEpoch = () => {
               </Button>
 
               {!account && (
-                <Text className="ml-8" type="secondary">
+                <Text
+                  className="ml-8"
+                  type="secondary"
+                  style={
+                  screens.xs ? { display: 'block' } : { display: 'inline' }
+                }
+                >
                   To check incentives, connect a wallet
                 </Text>
               )}
