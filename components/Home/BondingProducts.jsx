@@ -23,7 +23,11 @@ export const BondingProducts = () => {
 
   useEffect(() => {
     if (account) {
+      // if user is connected, show active products
       setProductType('active');
+    } else {
+      // if user disconnected, switch to all products
+      setProductType('allProduct');
     }
   }, [account]);
 
