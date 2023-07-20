@@ -88,7 +88,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
       title: (
         <Tooltip
           title="
-        APY is a calculation of the LP per OLAS bonding at a current time. The value is based on the chosen initial LP price before the product was initialized, and the current LP price, if the LP was liquidated and fully converted to OLAS - compared to the amount of OLAS one can get if they bond their LP tokens (without liquidation) for OLAS."
+          Value of the OLAS you receive at the expiration of the product, proportional to the value of the LP tokens you bond, extrapolated out to a yearly return. It assumes the value of the tokens in the LP remains constant."
         >
           <span>Projected APY</span>
         </Tooltip>
