@@ -160,7 +160,7 @@ export const BondingList = ({ bondingProgramType }) => {
       if (showNoSupply) {
         const productList = await getAllTheProductsNotRemoved();
         setProducts(productList);
-      } else {
+      } else if (account) {
         const productList = await getProductListRequest({
           account,
           isActive,
@@ -177,9 +177,7 @@ export const BondingList = ({ bondingProgramType }) => {
 
   // fetch the bonding list
   useEffect(() => {
-    if (account && chainId) {
-      getProducts();
-    }
+    getProducts();
   }, [account, chainId, bondingProgramType]);
 
   const onBondClick = (row) => {
