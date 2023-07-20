@@ -110,15 +110,6 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
         );
       },
     },
-    // {
-    //   title: getTitle(
-    //     '% of Supply Left',
-    //     'Percentage of OLAS supply left for this bonding product',
-    //   ),
-    //   dataIndex: 'supplyLeft',
-    //   key: 'supplyLeft',
-    //   render: (x) => `${round(parseToEth(x), 4)}`,
-    // },
     {
       title: getTitle('Expiry', 'The vesting time to withdraw OLAS'),
       dataIndex: 'expiry',
