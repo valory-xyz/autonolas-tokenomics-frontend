@@ -3,13 +3,15 @@ import PropTypes from 'prop-types';
 import { isNil, isNumber } from 'lodash';
 import {
   Form,
-  Input,
   InputNumber,
   Modal,
   Alert,
   Button,
   Typography,
+  Tag,
 } from 'antd/lib';
+import { COLOR } from '@autonolas/frontend-library';
+
 import {
   parseToWei,
   notifySuccess,
@@ -24,7 +26,7 @@ import {
   getLpBalanceRequest,
 } from './requests';
 
-const { Text } = Typography;
+const { Text, Title } = Typography;
 const fullWidth = { width: '100%' };
 
 export const Deposit = ({
@@ -46,12 +48,8 @@ export const Deposit = ({
         token: productToken,
       });
       setLpBalance(lpResponse);
-
-      if (productId) {
-        form.setFieldsValue({ productId });
-      }
     }
-  }, [account, productToken, productId]);
+  }, [account, productToken]);
 
   const depositHelper = async () => {
     try {
@@ -60,7 +58,7 @@ export const Deposit = ({
       // deposit if LP token is present for the product ID
       const txHash = await depositRequest({
         account,
-        productId: form.getFieldValue('productId'),
+        productId,
         tokenAmount: parseToWei(form.getFieldValue('tokenAmount')),
       });
       notifySuccess('Deposited successfully!', `Transaction Hash: ${txHash}`);
@@ -127,19 +125,15 @@ export const Deposit = ({
           name="create_bond_form"
           layout="vertical"
           autoComplete="off"
-          initialValues={{
-            productId: productId || undefined,
-          }}
         >
-          <Form.Item
-            label="Bonding Product ID"
-            name="productId"
-            rules={[
-              { required: true, message: 'Please input Bonding Product ID' },
-            ]}
-          >
-            <Input disabled />
-          </Form.Item>
+          <Tag color={COLOR.PRIMARY} className="deposit-tag">
+            <Title
+              level={5}
+              className="m-0"
+            >
+              {`Bonding Product ID: ${productId}`}
+            </Title>
+          </Tag>
 
           <Form.Item
             className="custom-form-item-tokenAmount"
