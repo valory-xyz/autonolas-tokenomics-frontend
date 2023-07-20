@@ -1,20 +1,22 @@
 import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { isNil, isNumber } from 'lodash';
+import { isNil } from 'lodash';
 import {
   Form,
-  Input,
   InputNumber,
   Modal,
   Alert,
   Button,
   Typography,
+  Tag,
 } from 'antd/lib';
+import { COLOR } from '@autonolas/frontend-library';
+
 import {
   parseToWei,
   notifySuccess,
   notifyError,
-  getCommaSeparatedNumber,
+  parseToEth,
 } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import {
@@ -24,12 +26,13 @@ import {
   getLpBalanceRequest,
 } from './requests';
 
-const { Text } = Typography;
+const { Text, Title } = Typography;
 const fullWidth = { width: '100%' };
 
 export const Deposit = ({
   productId,
   productToken,
+  productLpPrice,
   getProducts,
   closeModal,
 }) => {
@@ -45,13 +48,9 @@ export const Deposit = ({
         account,
         token: productToken,
       });
-      setLpBalance(lpResponse);
-
-      if (productId) {
-        form.setFieldsValue({ productId });
-      }
+      setLpBalance(parseToEth(lpResponse));
     }
-  }, [account, productToken, productId]);
+  }, [account, productToken]);
 
   const depositHelper = async () => {
     try {
@@ -60,7 +59,7 @@ export const Deposit = ({
       // deposit if LP token is present for the product ID
       const txHash = await depositRequest({
         account,
-        productId: form.getFieldValue('productId'),
+        productId,
         tokenAmount: parseToWei(form.getFieldValue('tokenAmount')),
       });
       notifySuccess('Deposited successfully!', `Transaction Hash: ${txHash}`);
@@ -107,6 +106,18 @@ export const Deposit = ({
       });
   };
 
+  const tokenAmountInputValue = Form.useWatch('tokenAmount', form);
+
+  const getOlasPayout = () => {
+    if (!tokenAmountInputValue) return '--';
+    if (tokenAmountInputValue > lpBalance) return '--';
+
+    const olasPayout = tokenAmountInputValue
+      ? productLpPrice * tokenAmountInputValue
+      : 0;
+    return olasPayout;
+  };
+
   return (
     <>
       <Modal
@@ -127,35 +138,28 @@ export const Deposit = ({
           name="create_bond_form"
           layout="vertical"
           autoComplete="off"
-          initialValues={{
-            productId: productId || undefined,
-          }}
         >
-          <Form.Item
-            label="Bonding Product ID"
-            name="productId"
-            rules={[
-              { required: true, message: 'Please input Bonding Product ID' },
-            ]}
-          >
-            <Input disabled />
-          </Form.Item>
+          <Tag color={COLOR.PRIMARY} className="deposit-tag">
+            <Title level={5} className="m-0">
+              {`Bonding Product ID: ${productId}`}
+            </Title>
+          </Tag>
 
           <Form.Item
             className="custom-form-item-tokenAmount"
             label="LP Token Amount"
             name="tokenAmount"
             rules={[
-              { required: true, message: 'Please input token' },
+              { required: true, message: 'Please input a valid amount' },
               () => ({
                 validator(_, value) {
                   if (value === '' || isNil(value)) return Promise.resolve();
-                  if (value <= 1) {
+                  if (value <= 0) {
                     return Promise.reject(
                       new Error('Please input a valid amount'),
                     );
                   }
-                  if (isNumber(lpBalance) && value > lpBalance) {
+                  if (value > lpBalance) {
                     return Promise.reject(
                       new Error('Amount cannot be greater than the balance'),
                     );
@@ -168,21 +172,27 @@ export const Deposit = ({
             <InputNumber style={fullWidth} />
           </Form.Item>
 
-          <Text type="secondary">
-            LP balance:&nbsp;
-            {getCommaSeparatedNumber(lpBalance)}
-            <Button
-              htmlType="button"
-              type="link"
-              onClick={() => {
-                form.setFieldsValue({ tokenAmount: lpBalance });
-                form.validateFields(['tokenAmount']);
-              }}
-              className="pl-0"
-            >
-              Max
-            </Button>
-          </Text>
+          <div className="mb-8">
+            <Text type="secondary">
+              LP balance:&nbsp;
+              {lpBalance}
+              <Button
+                htmlType="button"
+                type="link"
+                onClick={() => {
+                  form.setFieldsValue({ tokenAmount: lpBalance });
+                  form.validateFields(['tokenAmount']);
+                }}
+                className="pl-0"
+              >
+                Max
+              </Button>
+            </Text>
+          </div>
+
+          <div>
+            <Text>{`OLAS Payout: ${getOlasPayout()}`}</Text>
+          </div>
         </Form>
       </Modal>
 
@@ -236,6 +246,7 @@ export const Deposit = ({
 Deposit.propTypes = {
   productId: PropTypes.string,
   productToken: PropTypes.string,
+  productLpPrice: PropTypes.number,
   closeModal: PropTypes.func,
   getProducts: PropTypes.func,
 };
@@ -243,6 +254,7 @@ Deposit.propTypes = {
 Deposit.defaultProps = {
   productId: undefined,
   productToken: null,
+  productLpPrice: null,
   closeModal: () => {},
   getProducts: () => {},
 };

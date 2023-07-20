@@ -3,6 +3,7 @@ import { round } from 'lodash';
 import {
   Typography, Radio, Table, Button,
 } from 'antd/lib';
+import { round } from 'lodash';
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { COLOR } from '@autonolas/frontend-library';
 import { useHelpers } from 'common-util/hooks/useHelpers';
