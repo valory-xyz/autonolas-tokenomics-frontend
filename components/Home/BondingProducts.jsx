@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { Typography, Radio } from 'antd/lib';
 import { MEDIA_QUERY } from '@autonolas/frontend-library';
+import { useHelpers } from 'common-util/hooks/useHelpers';
 import { BondingList } from './Bonding/BondingList';
 
 const { Title } = Typography;
@@ -18,8 +19,23 @@ const ProductContainer = styled.div`
   }
 `;
 
-export const BondingPrograms = () => {
-  const [bondingProgramType, setProductType] = useState('active');
+export const BondingProducts = () => {
+  const { account } = useHelpers();
+
+  // if user not connected, show all products
+  const [bondingProgramType, setProductType] = useState(
+    account ? 'active' : 'allProduct',
+  );
+
+  useEffect(() => {
+    if (account) {
+      // if user is connected, show active products
+      setProductType('active');
+    } else {
+      // if user disconnected, switch to all products
+      setProductType('allProduct');
+    }
+  }, [account]);
 
   const onChange = (e) => {
     setProductType(e.target.value);
@@ -29,7 +45,11 @@ export const BondingPrograms = () => {
     <ProductContainer>
       <Title level={2} className="choose-type-group">
         Bonding Products
-        <Radio.Group onChange={onChange} value={bondingProgramType}>
+        <Radio.Group
+          onChange={onChange}
+          value={bondingProgramType}
+          disabled={!account}
+        >
           <Radio value="allProduct">All</Radio>
           <Radio value="active">Active</Radio>
           <Radio value="inactive">Inactive</Radio>

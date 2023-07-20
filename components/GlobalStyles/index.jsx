@@ -45,6 +45,9 @@ const GlobalStyle = createGlobalStyle`
   .mt-16 {
     margin-top: 16px;
   }
+  .align-right {
+    text-align: right;
+  }
   .walletconnect-modal__base {
     .walletconnect-modal__mobile__toggle a {
       /* color: ${COLOR.WALLECT_CONNECT_BLUE} !important; */
@@ -166,6 +169,10 @@ const GlobalStyle = createGlobalStyle`
         top: 2px;
       }
     }
+  }
+
+  .ant-tooltip-inner {
+    background-color: ${COLOR.BLACK};
   }
 
   .deposit-tag {
