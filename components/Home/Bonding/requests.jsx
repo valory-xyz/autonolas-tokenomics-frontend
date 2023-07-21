@@ -12,7 +12,6 @@ import {
   getErc20Contract,
   getEthersProvider,
 } from 'common-util/Contracts';
-import { round } from 'lodash';
 
 /**
  * fetches the IDF (discount factor) for the product
@@ -139,74 +138,6 @@ export const getCreateProductEvents = async () => {
 
   return events;
 };
-
-export const getApyRequestForEachProduct = ({
-  productId,
-  address,
-  productEvent,
-}) => new Promise((resolve, reject) => {
-  const contract = getUniswapV2PairContract(address);
-  const depositoryContract = getDepositoryContract();
-  const tokenomicsContract = getTokenomicsContract();
-
-  contract.methods
-    .getReserves()
-    .call()
-    .then(async (res) => {
-      const isActive = await depositoryContract.methods
-        .isActiveProduct(productId)
-        .call();
-
-      if (!isActive) {
-        resolve(0);
-        return;
-      }
-
-      // below constants might change depending on the product ID in future
-      // because for each product ID price LP is calculated manually
-      const inverseMultiplierNumerator = ethers.BigNumber.from(2);
-      const inverseMultiplierDinominator = ethers.BigNumber.from(3);
-
-      const token0 = await contract.methods.token0().call();
-      const resOLAS = ethers.BigNumber.from(
-        token0 === OLAS_ADDRESS ? res._reserve0 : res._reserve1,
-      );
-
-      const totalSupplyInNum = await contract.methods.totalSupply().call();
-      const totalSupply = ethers.BigNumber.from(totalSupplyInNum);
-
-      const product = await depositoryContract.methods
-        .mapBondProducts(productId)
-        .call();
-
-      const { blockNumber } = productEvent;
-      const provider = getEthersProvider();
-      const { timestamp } = await provider.getBlock(blockNumber);
-      const vesting = productEvent.returnValues.expiry - timestamp;
-      const priceLP = ethers.BigNumber.from(product.priceLP);
-
-      const IDF = await tokenomicsContract.methods.getLastIDF().call();
-      const e36 = ethers.BigNumber.from(`1${'0'.repeat(36)}`);
-      const profitNumerator = priceLP
-        .mul(totalSupply)
-        .mul(IDF)
-        .mul(inverseMultiplierNumerator)
-        .div(e36);
-      const profitDenominator = inverseMultiplierDinominator.mul(resOLAS);
-      const profit = (Number(profitNumerator) * 1.0) / Number(profitDenominator) - 1;
-
-      const oneYear = 3600 * 24 * 365;
-      const n = oneYear / vesting;
-      const APY = (1 + profit / n) ** n - 1;
-      const apyInPercentage = round(APY * 100, 2);
-
-      resolve(apyInPercentage);
-    })
-    .catch((e) => {
-      window.console.log('Error occured on fetching APY');
-      reject(e);
-    });
-});
 
 export const getListWithSupplyList = async (list, productEvents) => {
   const listAfterSupplyLeftCalc = list.map((product) => {
