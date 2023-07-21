@@ -179,7 +179,8 @@ export const BondingList = ({ bondingProgramType }) => {
       window.console.error(error);
       notifyError();
     } finally {
-      setIsLoading(false);
+      setIsLoading(true);
+      notifyError();
     }
   }, [account, chainId, bondingProgramType]);
 
