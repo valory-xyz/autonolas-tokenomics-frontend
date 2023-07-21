@@ -128,12 +128,12 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
       },
     },
     {
-      title: getTitle('Matures', 'The vesting time to withdraw OLAS'),
+      title: getTitle('Maturation Date', 'The vesting time to withdraw OLAS'),
       dataIndex: 'expiry',
       key: 'expiry',
       render: (seconds) => (
         <a
-          href="https://etherscan.io/address/0x52A043bcebdB2f939BaEF2E8b6F01652290eAB3f#readContract#F6"
+          href="https://etherscan.io/address/0x52A043bcebdB2f939BaEF2E8b6F01652290eAB3f#readContract#F9"
           rel="noopener noreferrer"
           target="_blank"
         >
