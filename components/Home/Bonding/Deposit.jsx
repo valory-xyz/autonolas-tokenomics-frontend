@@ -116,12 +116,6 @@ export const Deposit = ({
     const supplyInEth = parseToEth(productSupply);
 
     const remainingSupply = supplyInEth / productLpPrice;
-    // console.log({
-    //   remainingSupply,
-    //   supplyInEth,
-    //   productLpPrice,
-    //   lpBalance,
-    // });
 
     if (remainingSupply < lpBalance) return remainingSupply;
 
@@ -129,14 +123,7 @@ export const Deposit = ({
   };
 
   const getOlasPayout = () => {
-    if (!tokenAmountInputValue) return '--';
-
-    // console.log({
-    //   tokenAmountInputValue,
-    //   eee: getRemainingLpSupply(),
-    // });
-
-    if (tokenAmountInputValue > getRemainingLpSupply()) {
+    if (!tokenAmountInputValue || tokenAmountInputValue > getRemainingLpSupply()) {
       return '--';
     }
 
@@ -187,7 +174,7 @@ export const Deposit = ({
                       new Error('Please input a valid amount'),
                     );
                   }
-                  if (value > lpBalance) {
+                  if (value > getRemainingLpSupply()) {
                     return Promise.reject(
                       new Error('Amount cannot be greater than the balance'),
                     );
@@ -203,7 +190,7 @@ export const Deposit = ({
           <div className="mb-8">
             <Text type="secondary">
               LP balance:&nbsp;
-              {getCommaSeparatedNumber(lpBalance, 4)}
+              {getCommaSeparatedNumber(getRemainingLpSupply(), 4)}
               <Button
                 htmlType="button"
                 type="link"
