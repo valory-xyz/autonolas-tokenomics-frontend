@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import {
   Button, Table, Tag, Tooltip,
 } from 'antd/lib';
-import { isNumber, remove, round } from 'lodash';
+import { remove, round } from 'lodash';
 import { COLOR } from '@autonolas/frontend-library';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import {
@@ -34,7 +34,8 @@ const getTitle = (title, tooltipDesc) => (
 // eslint-disable-next-line max-len
 // const DISCOUNT = "The discount factor is determined by the activity of the protocol per epoch, and it applies to the product's calculated LP price. The more useful code that is introduced, the larger the discount factor becomes. This system is designed to stimulate the creation of more useful code.";
 
-const APY_DESC = 'Value of the OLAS you receive at the expiration of the product, proportional to the value of the LP tokens you bond, extrapolated out to a yearly return. It assumes the value of the tokens in the LP remains constant.';
+// eslint-disable-next-line max-len
+// const APY_DESC = 'Value of the OLAS you receive at the expiration of the product, proportional to the value of the LP tokens you bond, extrapolated out to a yearly return. It assumes the value of the tokens in the LP remains constant.';
 
 const getColumns = (showNoSupply, onClick, isActive, acc) => {
   const columns = [
@@ -82,12 +83,12 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
     //     </Tag>
     //   ),
     // },
-    {
-      title: getTitle('Projected APY', APY_DESC),
-      dataIndex: 'apy',
-      key: 'apy',
-      render: (text) => (isNumber(text) ? `${text}%` : '--'),
-    },
+    // {
+    //   title: getTitle('Projected APY', APY_DESC),
+    //   dataIndex: 'apy',
+    //   key: 'apy',
+    //   render: (text) => (isNumber(text) ? `${text}%` : '--'),
+    // },
     {
       title: getTitle(
         'OLAS Supply',
@@ -166,21 +167,20 @@ export const BondingList = ({ bondingProgramType }) => {
       // If bondingProgramType is allProduct, we will get all the products
       // that are not removed
       if (showNoSupply) {
-        await getAllTheProductsNotRemoved();
-        setProducts();
+        const productList = await getAllTheProductsNotRemoved();
+        setProducts(productList);
       } else if (account) {
-        await getProductListRequest({
+        const productList = await getProductListRequest({
           account,
-          isActive: !isActive,
+          isActive,
         });
-        setProducts();
+        setProducts(productList);
       }
     } catch (error) {
       window.console.error(error);
       notifyError();
     } finally {
-      setIsLoading(true);
-      notifyError();
+      setIsLoading(false);
     }
   }, [account, chainId, bondingProgramType]);
 
