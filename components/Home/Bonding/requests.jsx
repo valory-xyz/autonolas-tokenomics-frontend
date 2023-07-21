@@ -248,35 +248,42 @@ const getProductDetailsFromIds = ({ productIdList }) => new Promise((resolve, re
 
   try {
     const allListPromise = [];
+    const allListCurrentPriceLpPromise = [];
 
     for (let i = 0; i < productIdList.length; i += 1) {
       const id = productIdList[i];
-      const result = contract.methods.mapBondProducts(id).call();
-      allListPromise.push(result);
+      const allListResult = contract.methods.mapBondProducts(id).call();
+      const allListCurrentPriceLpResult = contract.methods.getCurrentPriceLP('0x09D1d767eDF8Fa23A64C51fa559E0688E526812F').call();
+      allListPromise.push(allListResult);
+      allListCurrentPriceLpPromise.push(allListCurrentPriceLpResult);
     }
 
-    Promise.all(allListPromise)
-      .then(async (response) => {
-        const productList = response.map((product, index) => ({
-          ...product,
-          id: productIdList[index],
-        }));
+    Promise.all(allListCurrentPriceLpPromise)
+      .then(async (currentPriceLpResponse) => {
+        Promise.all(allListPromise)
+          .then(async (response) => {
+            const productList = response.map((product, index) => ({
+              ...product,
+              id: productIdList[index],
+              currentPriceLp: currentPriceLpResponse[index],
+            }));
 
-        const productListWithLpTokens = await getLpTokenNamesForProducts(
-          productList,
-        );
+            const productListWithLpTokens = await getLpTokenNamesForProducts(
+              productList,
+            );
 
-        const eventList = await getCreateProductEvents();
+            const eventList = await getCreateProductEvents();
 
-        const productWithApy = await fetchApyRequestForProducts(
-          productListWithLpTokens,
-          eventList,
-        );
+            const productWithApy = await fetchApyRequestForProducts(
+              productListWithLpTokens,
+              eventList,
+            );
 
-        const list = await getListWithSupplyList(productWithApy, eventList);
-        resolve(list);
-      })
-      .catch((e) => reject(e));
+            const list = await getListWithSupplyList(productWithApy, eventList);
+            resolve(list);
+          })
+          .catch((e) => reject(e));
+      }).catch((e) => reject(e));
   } catch (error) {
     window.console.log('Error on fetching bonding program details details');
     reject(error);
