@@ -20,7 +20,7 @@ import {
   getCommaSeparatedNumber,
 } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
-import { ethers } from 'ethers';
+// import { ethers } from 'ethers';
 import {
   depositRequest,
   hasSufficientTokenRequest,
