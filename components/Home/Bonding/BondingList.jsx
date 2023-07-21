@@ -153,10 +153,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
           type="primary"
           // disbled if there is no supply or if the user is not connected
           disabled={showNoSupply || !acc}
-          onClick={() => {
-            console.log(row);
-            onClick(row);
-          }}
+          onClick={() => onClick(row)}
         >
           Bond
         </Button>
