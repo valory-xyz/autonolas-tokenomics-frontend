@@ -20,6 +20,7 @@ import {
   getCommaSeparatedNumber,
 } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
+import { ethers } from 'ethers';
 import {
   depositRequest,
   hasSufficientTokenRequest,
@@ -34,6 +35,7 @@ export const Deposit = ({
   productId,
   productToken,
   productLpPrice,
+  productSupply,
   getProducts,
   closeModal,
 }) => {
@@ -110,9 +112,33 @@ export const Deposit = ({
 
   const tokenAmountInputValue = Form.useWatch('tokenAmount', form);
 
+  const getRemainingLpSupply = () => {
+    const supplyInEth = parseToEth(productSupply);
+
+    const remainingSupply = supplyInEth / productLpPrice;
+    // console.log({
+    //   remainingSupply,
+    //   supplyInEth,
+    //   productLpPrice,
+    //   lpBalance,
+    // });
+
+    if (remainingSupply < lpBalance) return remainingSupply;
+
+    return lpBalance;
+  };
+
   const getOlasPayout = () => {
     if (!tokenAmountInputValue) return '--';
-    if (tokenAmountInputValue > lpBalance) return '--';
+
+    // console.log({
+    //   tokenAmountInputValue,
+    //   eee: getRemainingLpSupply(),
+    // });
+
+    if (tokenAmountInputValue > getRemainingLpSupply()) {
+      return '--';
+    }
 
     const olasPayout = tokenAmountInputValue
       ? productLpPrice * tokenAmountInputValue
@@ -182,7 +208,7 @@ export const Deposit = ({
                 htmlType="button"
                 type="link"
                 onClick={() => {
-                  form.setFieldsValue({ tokenAmount: lpBalance });
+                  form.setFieldsValue({ tokenAmount: getRemainingLpSupply() });
                   form.validateFields(['tokenAmount']);
                 }}
                 className="pl-0"
@@ -249,6 +275,7 @@ export const Deposit = ({
 Deposit.propTypes = {
   productId: PropTypes.string,
   productToken: PropTypes.string,
+  productSupply: PropTypes.string,
   productLpPrice: PropTypes.number,
   closeModal: PropTypes.func,
   getProducts: PropTypes.func,
@@ -258,6 +285,7 @@ Deposit.defaultProps = {
   productId: undefined,
   productToken: null,
   productLpPrice: null,
+  productSupply: null,
   closeModal: () => {},
   getProducts: () => {},
 };

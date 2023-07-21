@@ -153,7 +153,10 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
           type="primary"
           // disbled if there is no supply or if the user is not connected
           disabled={showNoSupply || !acc}
-          onClick={() => onClick(row)}
+          onClick={() => {
+            console.log(row);
+            onClick(row);
+          }}
         >
           Bond
         </Button>
@@ -240,6 +243,7 @@ export const BondingList = ({ bondingProgramType }) => {
             productDetails?.priceLP,
             productDetails?.discount,
           )}
+          productSupply={productDetails?.supply}
           getProducts={getProducts}
           closeModal={onModalClose}
         />
