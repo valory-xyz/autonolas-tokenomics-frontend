@@ -4,7 +4,6 @@ import {
   Button, Table, Tag, Tooltip,
 } from 'antd/lib';
 import { remove, round } from 'lodash';
-import { remove, round } from 'lodash';
 import { COLOR } from '@autonolas/frontend-library';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import {
