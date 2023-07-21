@@ -145,6 +145,10 @@ export const getListWithSupplyList = async (list, productEvents) => {
       (event) => event.returnValues.productId === `${product.id}`,
     );
 
+    if (!productEvent) {
+      return { ...product, supplyLeft: 0 };
+    }
+
     const eventSupply = Number(
       ethers.BigNumber.from(productEvent.returnValues.supply).div(ONE_ETH),
     );
