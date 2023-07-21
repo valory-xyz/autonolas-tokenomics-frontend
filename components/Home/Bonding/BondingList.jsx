@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import {
-  Button, Table, Tag, Tooltip,
+  Button, Table, Tag, Tooltip, Typography,
 } from 'antd/lib';
 import { remove, round } from 'lodash';
 import { COLOR } from '@autonolas/frontend-library';
@@ -15,11 +15,15 @@ import { useHelpers } from 'common-util/hooks/useHelpers';
 import { Deposit } from './Deposit';
 import { getProductListRequest, getAllTheProductsNotRemoved } from './requests';
 
+const { Text } = Typography;
+
 const getLpTokenWithDiscound = (lpTokenValue, discount) => {
   const price = Number(parseToEth(lpTokenValue));
   const discountedPrice = price + (price * discount) / 100;
-  return round(discountedPrice, 4);
+  return round(discountedPrice, 2);
 };
+
+const buildFullCurrentPriceLp = (currentPriceLp) => Number(round(parseToEth(currentPriceLp * 2), 2)) || '--';
 
 const getTitle = (title, tooltipDesc) => (
   <Tooltip title={tooltipDesc}>
@@ -31,15 +35,12 @@ const getTitle = (title, tooltipDesc) => (
   </Tooltip>
 );
 
-// eslint-disable-next-line max-len
-// const DISCOUNT = "The discount factor is determined by the activity of the protocol per epoch, and it applies to the product's calculated LP price. The more useful code that is introduced, the larger the discount factor becomes. This system is designed to stimulate the creation of more useful code.";
-
 const APY_DESC = 'Denominated in OLAS';
 
 const getColumns = (showNoSupply, onClick, isActive, acc) => {
   const columns = [
     {
-      title: getTitle('Bonding Product', 'Identifier of bonding product'),
+      title: 'ID',
       dataIndex: 'id',
       key: 'id',
     },
@@ -59,6 +60,12 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
           {x}
         </a>
       ),
+    },
+    {
+      title: getTitle('Current Price of LP Token', APY_DESC),
+      dataIndex: 'currentPriceLp',
+      key: 'currentPriceLp',
+      render: (text) => buildFullCurrentPriceLp(text),
     },
     {
       title: getTitle(
@@ -82,21 +89,37 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
         );
       },
     },
-    // {
-    //   title: getTitle('Discount', DISCOUNT),
-    //   dataIndex: 'discount',
-    //   key: 'discount',
-    //   render: (x) => (
-    //     <Tag color={COLOR.PRIMARY} key={x}>
-    //       {`${x}%`}
-    //     </Tag>
-    //   ),
-    // },
     {
-      title: getTitle('Current Price of LP Token', APY_DESC),
-      dataIndex: 'currentPriceLp',
-      key: 'currentPriceLp',
-      render: (text) => Number(round(parseToEth(text * 2), 2)) || '--',
+      title: getTitle('Current difference in value', 'Percentage difference between current price of LP token and OLAS minted per LP token'),
+      render: (record) => {
+        const fullCurrentPriceLp = buildFullCurrentPriceLp(record.currentPriceLp);
+        const olasPerLpToken = Number(parseToEth(record.priceLP));
+
+        // eslint-disable-next-line max-len
+        const projectedChange = round(((olasPerLpToken - fullCurrentPriceLp) / fullCurrentPriceLp) * 100, 2);
+
+        return (
+          <Text style={{ color: projectedChange > 0 ? 'green' : 'red' }}>
+            {projectedChange > 0 && '+'}
+            {projectedChange}
+            %
+          </Text>
+        );
+      },
+    },
+    {
+      title: getTitle('Matures', 'The vesting time to withdraw OLAS'),
+      dataIndex: 'expiry',
+      key: 'expiry',
+      render: (seconds) => (
+        <a
+          href="https://etherscan.io/address/0x52A043bcebdB2f939BaEF2E8b6F01652290eAB3f#readContract#F6"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          {getFormattedDate(seconds * 1000)}
+        </a>
+      ),
     },
     {
       title: getTitle(
@@ -126,20 +149,6 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
           </>
         );
       },
-    },
-    {
-      title: getTitle('Matures', 'The vesting time to withdraw OLAS'),
-      dataIndex: 'expiry',
-      key: 'expiry',
-      render: (seconds) => (
-        <a
-          href="https://etherscan.io/address/0x52A043bcebdB2f939BaEF2E8b6F01652290eAB3f#readContract#F6"
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          {getFormattedDate(seconds * 1000)}
-        </a>
-      ),
     },
     {
       title: getTitle(
