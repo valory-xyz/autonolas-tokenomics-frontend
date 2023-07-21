@@ -1,7 +1,7 @@
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable max-len */
 import { ethers } from 'ethers';
-import { sendTransaction } from '@autonolas/frontend-library';
+import { getChainId, sendTransaction } from '@autonolas/frontend-library';
 import { OLAS_ADDRESS } from 'util/constants';
 import { MAX_AMOUNT, ADDRESS_ZERO, ONE_ETH } from 'common-util/functions';
 import {
@@ -12,7 +12,6 @@ import {
   getErc20Contract,
   getEthersProvider,
 } from 'common-util/Contracts';
-import { round } from 'lodash';
 
 /**
  * fetches the IDF (discount factor) for the product
@@ -131,113 +130,13 @@ export const getCreateProductEvents = async () => {
   const provider = getEthersProvider();
   const block = await provider.getBlock('latest');
 
+  const oldestBlock = (getChainId() || 1) >= 100000 ? 10 : 1000000;
   const events = contract.getPastEvents('CreateProduct', {
-    fromBlock: block.number - 1000000,
+    fromBlock: block.number - oldestBlock,
     toBlock: block.number,
   });
 
   return events;
-};
-
-export const getApyRequestForEachProduct = ({
-  productId,
-  address,
-  productEvent,
-}) => new Promise((resolve, reject) => {
-  const contract = getUniswapV2PairContract(address);
-  const depositoryContract = getDepositoryContract();
-  const tokenomicsContract = getTokenomicsContract();
-
-  contract.methods
-    .getReserves()
-    .call()
-    .then(async (res) => {
-      const isActive = await depositoryContract.methods
-        .isActiveProduct(productId)
-        .call();
-
-      if (!isActive) {
-        resolve(0);
-        return;
-      }
-
-      // below constants might change depending on the product ID in future
-      // because for each product ID price LP is calculated manually
-      const inverseMultiplierNumerator = ethers.BigNumber.from(2);
-      const inverseMultiplierDinominator = ethers.BigNumber.from(3);
-
-      const token0 = await contract.methods.token0().call();
-      const resOLAS = ethers.BigNumber.from(
-        token0 === OLAS_ADDRESS ? res._reserve0 : res._reserve1,
-      );
-
-      const totalSupplyInNum = await contract.methods.totalSupply().call();
-      const totalSupply = ethers.BigNumber.from(totalSupplyInNum);
-
-      const product = await depositoryContract.methods
-        .mapBondProducts(productId)
-        .call();
-
-      const { blockNumber } = productEvent;
-      const provider = getEthersProvider();
-      const { timestamp } = await provider.getBlock(blockNumber);
-      const vesting = productEvent.returnValues.expiry - timestamp;
-      const priceLP = ethers.BigNumber.from(product.priceLP);
-
-      const IDF = await tokenomicsContract.methods.getLastIDF().call();
-      const e36 = ethers.BigNumber.from(`1${'0'.repeat(36)}`);
-      const profitNumerator = priceLP
-        .mul(totalSupply)
-        .mul(IDF)
-        .mul(inverseMultiplierNumerator)
-        .div(e36);
-      const profitDenominator = inverseMultiplierDinominator.mul(resOLAS);
-      const profit = (Number(profitNumerator) * 1.0) / Number(profitDenominator) - 1;
-
-      const oneYear = 3600 * 24 * 365;
-      const n = oneYear / vesting;
-      const APY = (1 + profit / n) ** n - 1;
-      const apyInPercentage = round(APY * 100, 2);
-
-      resolve(apyInPercentage);
-    })
-    .catch((e) => {
-      window.console.log('Error occured on fetching APY');
-      reject(e);
-    });
-});
-
-/**
- * APY calculation
- */
-export const fetchApyRequestForProducts = async (productList, eventList) => {
-  try {
-    const list = [];
-
-    for (let i = 0; i < productList.length; i += 1) {
-      const currentProductId = productList[i].id;
-      const productEvent = eventList.find(
-        (event) => event.returnValues.productId === `${currentProductId}`,
-      );
-
-      const result = getApyRequestForEachProduct({
-        productId: currentProductId,
-        address: productList[i].token,
-        productEvent,
-      });
-      list.push(result);
-    }
-
-    const reservesList = await Promise.all(list);
-
-    return productList.map((eachProduct, index) => ({
-      ...eachProduct,
-      apy: reservesList[index],
-    }));
-  } catch (error) {
-    window.console.log('Error on fetching APY for products');
-    throw new Error(error);
-  }
 };
 
 export const getListWithSupplyList = async (list, productEvents) => {
@@ -245,6 +144,10 @@ export const getListWithSupplyList = async (list, productEvents) => {
     const productEvent = productEvents.find(
       (event) => event.returnValues.productId === `${product.id}`,
     );
+
+    if (!productEvent) {
+      return { ...product, supplyLeft: 0 };
+    }
 
     const eventSupply = Number(
       ethers.BigNumber.from(productEvent.returnValues.supply).div(ONE_ETH),
@@ -292,13 +195,8 @@ const getProductDetailsFromIds = ({ productIdList }) => new Promise((resolve, re
           listWithLpTokens,
         );
 
-        const listWithApy = await fetchApyRequestForProducts(
-          listWithCurrentLpPrice,
-          eventList,
-        );
-
         const listWithSupplyList = await getListWithSupplyList(
-          listWithApy,
+          listWithCurrentLpPrice,
           eventList,
         );
 
@@ -354,13 +252,8 @@ export const getAllTheProductsNotRemoved = async () => new Promise((resolve, rej
             listWithLpTokens,
           );
 
-          const listWithApy = await fetchApyRequestForProducts(
-            listWithCurrentLpPrice,
-            eventList,
-          );
-
           // filter out the products that are removed
-          const filteredList = listWithApy.filter(
+          const filteredList = listWithCurrentLpPrice.filter(
             (product) => product.token !== ADDRESS_ZERO,
           );
 

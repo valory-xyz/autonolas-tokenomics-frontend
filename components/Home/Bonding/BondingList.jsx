@@ -240,6 +240,7 @@ export const BondingList = ({ bondingProgramType }) => {
             productDetails?.priceLP,
             productDetails?.discount,
           )}
+          productSupply={productDetails?.supply}
           getProducts={getProducts}
           closeModal={onModalClose}
         />
