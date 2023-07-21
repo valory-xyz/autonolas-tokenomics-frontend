@@ -1,7 +1,7 @@
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable max-len */
 import { ethers } from 'ethers';
-import { sendTransaction } from '@autonolas/frontend-library';
+import { getChainId, sendTransaction } from '@autonolas/frontend-library';
 import { OLAS_ADDRESS } from 'util/constants';
 import { MAX_AMOUNT, ADDRESS_ZERO, ONE_ETH } from 'common-util/functions';
 import {
@@ -131,8 +131,9 @@ export const getCreateProductEvents = async () => {
   const provider = getEthersProvider();
   const block = await provider.getBlock('latest');
 
+  const oldestBlock = (getChainId() || 1) >= 100000 ? 10 : 1000000;
   const events = contract.getPastEvents('CreateProduct', {
-    fromBlock: block.number - 1000000,
+    fromBlock: block.number - oldestBlock,
     toBlock: block.number,
   });
 
@@ -207,39 +208,6 @@ export const getApyRequestForEachProduct = ({
     });
 });
 
-/**
- * APY calculation
- */
-export const fetchApyRequestForProducts = async (productList, eventList) => {
-  try {
-    const list = [];
-
-    for (let i = 0; i < productList.length; i += 1) {
-      const currentProductId = productList[i].id;
-      const productEvent = eventList.find(
-        (event) => event.returnValues.productId === `${currentProductId}`,
-      );
-
-      const result = getApyRequestForEachProduct({
-        productId: currentProductId,
-        address: productList[i].token,
-        productEvent,
-      });
-      list.push(result);
-    }
-
-    const reservesList = await Promise.all(list);
-
-    return productList.map((eachProduct, index) => ({
-      ...eachProduct,
-      apy: reservesList[index],
-    }));
-  } catch (error) {
-    window.console.log('Error on fetching APY for products');
-    throw new Error(error);
-  }
-};
-
 export const getListWithSupplyList = async (list, productEvents) => {
   const listAfterSupplyLeftCalc = list.map((product) => {
     const productEvent = productEvents.find(
@@ -292,13 +260,8 @@ const getProductDetailsFromIds = ({ productIdList }) => new Promise((resolve, re
           listWithLpTokens,
         );
 
-        const listWithApy = await fetchApyRequestForProducts(
-          listWithCurrentLpPrice,
-          eventList,
-        );
-
         const listWithSupplyList = await getListWithSupplyList(
-          listWithApy,
+          listWithCurrentLpPrice,
           eventList,
         );
 
@@ -354,13 +317,8 @@ export const getAllTheProductsNotRemoved = async () => new Promise((resolve, rej
             listWithLpTokens,
           );
 
-          const listWithApy = await fetchApyRequestForProducts(
-            listWithCurrentLpPrice,
-            eventList,
-          );
-
           // filter out the products that are removed
-          const filteredList = listWithApy.filter(
+          const filteredList = listWithCurrentLpPrice.filter(
             (product) => product.token !== ADDRESS_ZERO,
           );
 
