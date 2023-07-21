@@ -15,10 +15,10 @@ import { useHelpers } from 'common-util/hooks/useHelpers';
 import { Deposit } from './Deposit';
 import { getProductListRequest, getAllTheProductsNotRemoved } from './requests';
 
-const getLpTokenWithDiscound = (lpTokenValue, discount) => {
+const getLpTokenWithDiscount = (lpTokenValue, discount) => {
   const price = Number(parseToEth(lpTokenValue));
   const discountedPrice = price + (price * discount) / 100;
-  return round(discountedPrice, 4);
+  return round(discountedPrice, 2);
 };
 
 const getTitle = (title, tooltipDesc) => (
@@ -39,7 +39,7 @@ const APY_DESC = 'Denominated in OLAS';
 const getColumns = (showNoSupply, onClick, isActive, acc) => {
   const columns = [
     {
-      title: getTitle('Bonding Product', 'Identifier of bonding product'),
+      title: getTitle('Product ID', 'Identifier of bonding product'),
       dataIndex: 'id',
       key: 'id',
     },
@@ -69,7 +69,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
       key: 'priceLP',
       render: (x, data) => {
         const discount = data?.discount || 0;
-        const discountedPrice = getLpTokenWithDiscound(x, discount);
+        const discountedPrice = getLpTokenWithDiscount(x, discount);
 
         return (
           <a
@@ -128,7 +128,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
       },
     },
     {
-      title: getTitle('Maturation Date', 'The vesting time to withdraw OLAS'),
+      title: getTitle('Expiry Date', 'The vesting time to withdraw OLAS'),
       dataIndex: 'expiry',
       key: 'expiry',
       render: (seconds) => (
@@ -236,7 +236,7 @@ export const BondingList = ({ bondingProgramType }) => {
         <Deposit
           productId={productDetails?.id}
           productToken={productDetails?.token}
-          productLpPrice={getLpTokenWithDiscound(
+          productLpPrice={getLpTokenWithDiscount(
             productDetails?.priceLP,
             productDetails?.discount,
           )}
