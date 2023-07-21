@@ -59,7 +59,7 @@ const getBondingProgramsRequest = ({ isActive }) => new Promise((resolve, reject
  * input: '0x'
  * output: 'OLAS-ETH'
  */
-export const getLpTokenName = async (address) => {
+const getLpTokenName = async (address) => {
   try {
     const contract = getUniswapV2PairContract(address);
 
@@ -99,6 +99,26 @@ const getLpTokenNamesForProducts = async (productList) => {
   return productList.map((component, index) => ({
     ...component,
     lpTokenName: lpTokenNameList[index],
+  }));
+};
+
+const getCurrentLpPriceForProducts = async (productList) => {
+  const contract = getDepositoryContract();
+
+  const currentLpPricePromiseList = [];
+
+  for (let i = 0; i < productList.length; i += 1) {
+    const currentLpPricePromise = contract.methods
+      .getCurrentPriceLP(productList[i].token)
+      .call();
+    currentLpPricePromiseList.push(currentLpPricePromise);
+  }
+
+  const resolvedList = await Promise.all(currentLpPricePromiseList);
+
+  return productList.map((component, index) => ({
+    ...component,
+    currentPriceLp: resolvedList[index],
   }));
 };
 
@@ -248,42 +268,42 @@ const getProductDetailsFromIds = ({ productIdList }) => new Promise((resolve, re
 
   try {
     const allListPromise = [];
-    const allListCurrentPriceLpPromise = [];
 
     for (let i = 0; i < productIdList.length; i += 1) {
       const id = productIdList[i];
       const allListResult = contract.methods.mapBondProducts(id).call();
-      const allListCurrentPriceLpResult = contract.methods.getCurrentPriceLP('0x09D1d767eDF8Fa23A64C51fa559E0688E526812F').call();
       allListPromise.push(allListResult);
-      allListCurrentPriceLpPromise.push(allListCurrentPriceLpResult);
     }
 
-    Promise.all(allListCurrentPriceLpPromise)
-      .then(async (currentPriceLpResponse) => {
-        Promise.all(allListPromise)
-          .then(async (response) => {
-            const productList = response.map((product, index) => ({
-              ...product,
-              id: productIdList[index],
-              currentPriceLp: currentPriceLpResponse[index],
-            }));
+    Promise.all(allListPromise)
+      .then(async (response) => {
+        const productList = response.map((product, index) => ({
+          ...product,
+          id: productIdList[index],
+        }));
 
-            const productListWithLpTokens = await getLpTokenNamesForProducts(
-              productList,
-            );
+        const eventList = await getCreateProductEvents();
 
-            const eventList = await getCreateProductEvents();
+        const listWithLpTokens = await getLpTokenNamesForProducts(
+          productList,
+        );
 
-            const productWithApy = await fetchApyRequestForProducts(
-              productListWithLpTokens,
-              eventList,
-            );
+        const listWithCurrentLpPrice = await getCurrentLpPriceForProducts(
+          listWithLpTokens,
+        );
 
-            const list = await getListWithSupplyList(productWithApy, eventList);
-            resolve(list);
-          })
-          .catch((e) => reject(e));
-      }).catch((e) => reject(e));
+        const listWithApy = await fetchApyRequestForProducts(
+          listWithCurrentLpPrice,
+          eventList,
+        );
+
+        const listWithSupplyList = await getListWithSupplyList(
+          listWithApy,
+          eventList,
+        );
+        resolve(listWithSupplyList);
+      })
+      .catch((e) => reject(e));
   } catch (error) {
     window.console.log('Error on fetching bonding program details details');
     reject(error);
@@ -308,7 +328,9 @@ export const getAllTheProductsNotRemoved = async () => new Promise((resolve, rej
       for (let i = 0; i < productsList; i += 1) {
         const id = `${i}`;
         const result = contract.methods.mapBondProducts(id).call();
-        const allListCurrentPriceLpResult = contract.methods.getCurrentPriceLP('0x09D1d767eDF8Fa23A64C51fa559E0688E526812F').call();
+        const allListCurrentPriceLpResult = contract.methods
+          .getCurrentPriceLP('0x09D1d767eDF8Fa23A64C51fa559E0688E526812F')
+          .call();
         allListCurrentPriceLpPromise.push(allListCurrentPriceLpResult);
         allListPromise.push(result);
       }
@@ -345,11 +367,15 @@ export const getAllTheProductsNotRemoved = async () => new Promise((resolve, rej
                 (product) => product.token !== ADDRESS_ZERO,
               );
 
-              const list = await getListWithSupplyList(filteredList, eventList);
+              const list = await getListWithSupplyList(
+                filteredList,
+                eventList,
+              );
               resolve(list);
             })
             .catch((e) => reject(e));
-        }).catch((e) => reject(e));
+        })
+        .catch((e) => reject(e));
     })
     .catch((e) => {
       window.console.log('Error on fetching products');
