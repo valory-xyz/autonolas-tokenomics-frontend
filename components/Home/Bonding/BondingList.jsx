@@ -83,7 +83,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
     //   ),
     // },
     {
-      title: getTitle('Projected APY', APY_DESC),
+      title: getTitle('Projected APY at Current LP Price', APY_DESC),
       dataIndex: 'apy',
       key: 'apy',
       render: (text) => (isNumber(text) ? `${text}%` : '--'),
@@ -166,21 +166,20 @@ export const BondingList = ({ bondingProgramType }) => {
       // If bondingProgramType is allProduct, we will get all the products
       // that are not removed
       if (showNoSupply) {
-        await getAllTheProductsNotRemoved();
-        setProducts();
+        const productList = await getAllTheProductsNotRemoved();
+        setProducts(productList);
       } else if (account) {
-        await getProductListRequest({
+        const productList = await getProductListRequest({
           account,
           isActive: !isActive,
         });
-        setProducts();
+        setProducts(productList);
       }
     } catch (error) {
       window.console.error(error);
       notifyError();
     } finally {
-      setIsLoading(true);
-      notifyError();
+      setIsLoading(false);
     }
   }, [account, chainId, bondingProgramType]);
 
