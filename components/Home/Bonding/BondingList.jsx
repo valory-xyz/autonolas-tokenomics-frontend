@@ -34,8 +34,7 @@ const getTitle = (title, tooltipDesc) => (
 // eslint-disable-next-line max-len
 // const DISCOUNT = "The discount factor is determined by the activity of the protocol per epoch, and it applies to the product's calculated LP price. The more useful code that is introduced, the larger the discount factor becomes. This system is designed to stimulate the creation of more useful code.";
 
-// eslint-disable-next-line max-len
-// const APY_DESC = 'Value of the OLAS you receive at the expiration of the product, proportional to the value of the LP tokens you bond, extrapolated out to a yearly return. It assumes the value of the tokens in the LP remains constant.';
+const APY_DESC = 'Denominated in OLAS';
 
 const getColumns = (showNoSupply, onClick, isActive, acc) => {
   const columns = [
@@ -64,7 +63,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
     {
       title: getTitle(
         'OLAS minted per LP token',
-        'LP token price at which an LP share is priced during the bonding product',
+        'Price for one LP token denominated in OLAS as offered by the bonding product.',
       ),
       dataIndex: 'priceLP',
       key: 'priceLP',
@@ -83,12 +82,12 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
     //     </Tag>
     //   ),
     // },
-    // {
-    //   title: getTitle('Projected APY', APY_DESC),
-    //   dataIndex: 'apy',
-    //   key: 'apy',
-    //   render: (text) => (isNumber(text) ? `${text}%` : '--'),
-    // },
+    {
+      title: getTitle('Current Price of LP Token', APY_DESC),
+      dataIndex: 'currentPriceLp',
+      key: 'currentPriceLp',
+      render: (text) => (Number(round(parseToEth(text * 2), 2)) || '--'),
+    },
     {
       title: getTitle(
         'OLAS Supply',
@@ -100,7 +99,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
         const supplyLeftInPercent = round(row.supplyLeft * 100, 0);
         return (
           <>
-            {round(parseToEth(x), 4)}
+            {round(parseToEth(x), 2)}
             &nbsp;
             <Tooltip title={`${supplyLeftInPercent}% of supply left`}>
               <Tag color={supplyLeftInPercent < 6 ? COLOR.RED : COLOR.PRIMARY}>
