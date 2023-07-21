@@ -203,7 +203,7 @@ export const Deposit = ({
           <div className="mb-8">
             <Text type="secondary">
               LP balance:&nbsp;
-              {getCommaSeparatedNumber(lpBalance, 4)}
+              {getCommaSeparatedNumber(getRemainingLpSupply(), 4)}
               <Button
                 htmlType="button"
                 type="link"
