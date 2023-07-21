@@ -169,11 +169,11 @@ export const BondingList = ({ bondingProgramType }) => {
         const productList = await getAllTheProductsNotRemoved();
         setProducts(productList);
       } else if (account) {
-        const productList = await getProductListRequest({
+        await getProductListRequest({
           account,
           isActive: !isActive,
         });
-        setProducts(productList);
+        setProducts();
       }
     } catch (error) {
       window.console.error(error);
