@@ -69,7 +69,17 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
       key: 'priceLP',
       render: (x, data) => {
         const discount = data?.discount || 0;
-        return getLpTokenWithDiscound(x, discount);
+        const discountedPrice = getLpTokenWithDiscound(x, discount);
+
+        return (
+          <a
+            href="https://etherscan.io/address/0x52A043bcebdB2f939BaEF2E8b6F01652290eAB3f#readContract#F9"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            {discountedPrice}
+          </a>
+        );
       },
     },
     // {
@@ -86,7 +96,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
       title: getTitle('Current Price of LP Token', APY_DESC),
       dataIndex: 'currentPriceLp',
       key: 'currentPriceLp',
-      render: (text) => (Number(round(parseToEth(text * 2), 2)) || '--'),
+      render: (text) => Number(round(parseToEth(text * 2), 2)) || '--',
     },
     {
       title: getTitle(
@@ -99,11 +109,18 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
         const supplyLeftInPercent = round(row.supplyLeft * 100, 0);
         return (
           <>
-            {round(parseToEth(x), 2)}
+            <a
+              href="https://etherscan.io/address/0x52A043bcebdB2f939BaEF2E8b6F01652290eAB3f#readContract#F6"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              {round(parseToEth(x), 2)}
+            </a>
             &nbsp;
             <Tooltip title={`${supplyLeftInPercent}% of supply left`}>
               <Tag color={supplyLeftInPercent < 6 ? COLOR.RED : COLOR.PRIMARY}>
                 {`${supplyLeftInPercent}%`}
+
               </Tag>
             </Tooltip>
           </>
@@ -111,10 +128,18 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
       },
     },
     {
-      title: getTitle('Expiry', 'The vesting time to withdraw OLAS'),
+      title: getTitle('Maturation Date', 'The vesting time to withdraw OLAS'),
       dataIndex: 'expiry',
       key: 'expiry',
-      render: (seconds) => getFormattedDate(seconds * 1000),
+      render: (seconds) => (
+        <a
+          href="https://etherscan.io/address/0x52A043bcebdB2f939BaEF2E8b6F01652290eAB3f#readContract#F9"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          {getFormattedDate(seconds * 1000)}
+        </a>
+      ),
     },
     {
       title: getTitle(
