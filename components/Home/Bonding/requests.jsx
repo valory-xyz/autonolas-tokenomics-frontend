@@ -303,46 +303,53 @@ export const getAllTheProductsNotRemoved = async () => new Promise((resolve, rej
     .call()
     .then(async (productsList) => {
       const allListPromise = [];
+      const allListCurrentPriceLpPromise = [];
 
       for (let i = 0; i < productsList; i += 1) {
         const id = `${i}`;
         const result = contract.methods.mapBondProducts(id).call();
+        const allListCurrentPriceLpResult = contract.methods.getCurrentPriceLP('0x09D1d767eDF8Fa23A64C51fa559E0688E526812F').call();
+        allListCurrentPriceLpPromise.push(allListCurrentPriceLpResult);
         allListPromise.push(result);
       }
 
       // discount factor is same for all the products
       const discount = await getLastIDFRequest();
 
-      Promise.all(allListPromise)
-        .then(async (response) => {
-          // add id & discount to the product
-          const productWithIds = response.map((product, index) => ({
-            ...product,
-            discount,
-            id: index,
-            key: index,
-          }));
+      Promise.all(allListCurrentPriceLpPromise)
+        .then(async (currentPriceLpResponse) => {
+          Promise.all(allListPromise)
+            .then(async (response) => {
+              // add id & discount to the product
+              const productWithIds = response.map((product, index) => ({
+                ...product,
+                discount,
+                id: index,
+                key: index,
+                currentPriceLp: currentPriceLpResponse[index],
+              }));
 
-          const productsWithLpTokens = await getLpTokenNamesForProducts(
-            productWithIds,
-          );
+              const productsWithLpTokens = await getLpTokenNamesForProducts(
+                productWithIds,
+              );
 
-          const eventList = await getCreateProductEvents();
+              const eventList = await getCreateProductEvents();
 
-          const productsWithdApy = await fetchApyRequestForProducts(
-            productsWithLpTokens,
-            eventList,
-          );
+              const productsWithdApy = await fetchApyRequestForProducts(
+                productsWithLpTokens,
+                eventList,
+              );
 
-          // filter out the products that are removed
-          const filteredList = productsWithdApy.filter(
-            (product) => product.token !== ADDRESS_ZERO,
-          );
+              // filter out the products that are removed
+              const filteredList = productsWithdApy.filter(
+                (product) => product.token !== ADDRESS_ZERO,
+              );
 
-          const list = await getListWithSupplyList(filteredList, eventList);
-          resolve(list);
-        })
-        .catch((e) => reject(e));
+              const list = await getListWithSupplyList(filteredList, eventList);
+              resolve(list);
+            })
+            .catch((e) => reject(e));
+        }).catch((e) => reject(e));
     })
     .catch((e) => {
       window.console.log('Error on fetching products');
