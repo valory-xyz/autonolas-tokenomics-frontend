@@ -171,7 +171,7 @@ export const BondingList = ({ bondingProgramType }) => {
       } else if (account) {
         const productList = await getProductListRequest({
           account,
-          isActive,
+          isActive: !isActive,
         });
         setProducts(productList);
       }
