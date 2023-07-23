@@ -90,13 +90,26 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
       },
     },
     {
-      title: getTitle('Current difference in value', 'Percentage difference between current price of LP token and OLAS minted per LP token'),
+      title: getTitle(
+        'Current difference in value',
+        'Percentage difference between current price of LP token and OLAS minted per LP token',
+      ),
       render: (record) => {
-        const fullCurrentPriceLp = buildFullCurrentPriceLp(record.currentPriceLp);
-        const olasPerLpToken = Number(parseToEth(record.priceLP));
+        const fullCurrentPriceLp = buildFullCurrentPriceLp(
+          record.currentPriceLp,
+        );
+        const discount = record?.discount || 0;
+        const discountedOlasPerLpToken = getLpTokenWithDiscount(
+          record.priceLP,
+          discount,
+        );
 
-        // eslint-disable-next-line max-len
-        const projectedChange = round(((olasPerLpToken - fullCurrentPriceLp) / fullCurrentPriceLp) * 100, 2);
+        const projectedChange = round(
+          ((discountedOlasPerLpToken - fullCurrentPriceLp)
+            / fullCurrentPriceLp)
+            * 100,
+          2,
+        );
 
         return (
           <Text style={{ color: projectedChange > 0 ? 'green' : 'red' }}>
@@ -143,7 +156,6 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
             <Tooltip title={`${supplyLeftInPercent}% of supply left`}>
               <Tag color={supplyLeftInPercent < 6 ? COLOR.RED : COLOR.PRIMARY}>
                 {`${supplyLeftInPercent}%`}
-
               </Tag>
             </Tooltip>
           </>
