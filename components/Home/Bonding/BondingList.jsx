@@ -65,7 +65,15 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
       title: getTitle('Current Price of LP Token', APY_DESC),
       dataIndex: 'currentPriceLp',
       key: 'currentPriceLp',
-      render: (text) => buildFullCurrentPriceLp(text),
+      render: (text) => (
+        <a
+          href="https://etherscan.io/address/0x52A043bcebdB2f939BaEF2E8b6F01652290eAB3f#readContract#F6"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          {buildFullCurrentPriceLp(text)}
+        </a>
+      ),
     },
     {
       title: getTitle(
@@ -126,7 +134,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
       key: 'expiry',
       render: (seconds) => (
         <a
-          href="https://etherscan.io/address/0x52A043bcebdB2f939BaEF2E8b6F01652290eAB3f#readContract#F6"
+          href="https://etherscan.io/address/0x52A043bcebdB2f939BaEF2E8b6F01652290eAB3f#readContract#F9"
           rel="noopener noreferrer"
           target="_blank"
         >
@@ -146,7 +154,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
         return (
           <>
             <a
-              href="https://etherscan.io/address/0x52A043bcebdB2f939BaEF2E8b6F01652290eAB3f#readContract#F6"
+              href="https://etherscan.io/address/0x52A043bcebdB2f939BaEF2E8b6F01652290eAB3f#readContract#F9"
               rel="noopener noreferrer"
               target="_blank"
             >
