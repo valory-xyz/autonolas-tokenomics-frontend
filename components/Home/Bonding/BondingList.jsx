@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import {
   Button, Table, Tag, Tooltip, Typography,
@@ -218,7 +218,7 @@ export const BondingList = ({ bondingProgramType }) => {
 
   const isActive = bondingProgramType === 'active';
 
-  const getProducts = useCallback(async () => {
+  const getProducts = async () => {
     try {
       setIsLoading(true);
 
@@ -240,7 +240,7 @@ export const BondingList = ({ bondingProgramType }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [account, chainId, bondingProgramType]);
+  };
 
   // fetch the bonding list
   useEffect(() => {

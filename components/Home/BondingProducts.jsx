@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import styled from 'styled-components';
 import { Typography, Radio } from 'antd/lib';
 import { useHelpers } from 'common-util/hooks/useHelpers';
@@ -17,19 +17,7 @@ export const BondingProducts = () => {
   const { account } = useHelpers();
 
   // if user not connected, show all products
-  const [bondingProgramType, setProductType] = useState(
-    account ? 'active' : 'allProduct',
-  );
-
-  useEffect(() => {
-    if (account) {
-      // if user is connected, show active products
-      setProductType('active');
-    } else {
-      // if user disconnected, switch to all products
-      setProductType('allProduct');
-    }
-  }, [account]);
+  const [bondingProgramType, setProductType] = useState('allProduct');
 
   const onChange = (e) => {
     setProductType(e.target.value);
