@@ -17,7 +17,7 @@ import {
   notifySuccess,
   parseToEth,
 } from 'common-util/functions';
-import { getBondsRequest, redeemRequest } from './requests';
+import { getAllBondsRequest, redeemRequest } from './requests';
 
 const { Title } = Typography;
 
@@ -67,13 +67,11 @@ export const MyBonds = () => {
     try {
       setIsLoading(true);
 
-      const mBonds = await getBondsRequest({ account, isActive: true });
-      setMaturedBondList(mBonds);
-
-      const nBonds = await getBondsRequest({ account, isActive: false });
-      setNonMaturedBondList(nBonds);
-
-      console.log({ mBonds, nBonds });
+      const { maturedBonds, nonMaturedBonds } = await getAllBondsRequest({
+        account,
+      });
+      setMaturedBondList(maturedBonds);
+      setNonMaturedBondList(nonMaturedBonds);
     } catch (error) {
       window.console.error(error);
     } finally {
@@ -81,19 +79,26 @@ export const MyBonds = () => {
     }
   };
 
-  // on load
+  // on load, get the list of bonds & set the maturity type radio button
   useEffect(async () => {
-    const getData = async () => {
-      await getBondsListHelper();
-
-      console.log({ maturedBondList, nonMaturedBondList });
-
-      setMaturityType(
-        maturedBondList.length > 0 ? BONDS.MATURED : BONDS.NOT_MATURED,
-      );
-    };
     if (account && chainId) {
-      getData();
+      try {
+        setIsLoading(true);
+
+        const { maturedBonds, nonMaturedBonds } = await getAllBondsRequest({
+          account,
+        });
+        setMaturedBondList(maturedBonds);
+        setNonMaturedBondList(nonMaturedBonds);
+
+        setMaturityType(
+          maturedBonds.length > 0 ? BONDS.MATURED : BONDS.NOT_MATURED,
+        );
+      } catch (error) {
+        window.console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
     }
   }, [account, chainId]);
 

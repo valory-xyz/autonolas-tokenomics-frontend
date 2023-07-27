@@ -77,6 +77,12 @@ export const getBondsRequest = ({ account, isActive: isBondMatured }) => new Pro
     });
 });
 
+export const getAllBondsRequest = async ({ account }) => {
+  const maturedBonds = await getBondsRequest({ account, isActive: true });
+  const nonMaturedBonds = await getBondsRequest({ account, isActive: false });
+  return { maturedBonds, nonMaturedBonds };
+};
+
 export const redeemRequest = ({ account, bondIds }) => new Promise((resolve, reject) => {
   const contract = getDepositoryContract();
 
