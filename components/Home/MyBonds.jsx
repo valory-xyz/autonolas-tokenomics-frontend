@@ -1,6 +1,11 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import {
-  Typography, Radio, Table, Button,
+  Typography,
+  Radio,
+  Table,
+  Button,
+  ConfigProvider,
+  Empty,
 } from 'antd/lib';
 import { round } from 'lodash';
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
@@ -12,7 +17,7 @@ import {
   notifySuccess,
   parseToEth,
 } from 'common-util/functions';
-import { getBondsRequest, redeemRequest } from './requests';
+import { getAllBondsRequest, redeemRequest } from './requests';
 
 const { Title } = Typography;
 
@@ -54,23 +59,50 @@ export const MyBonds = () => {
   const { account, chainId } = useHelpers();
   const [maturityType, setMaturityType] = useState(BONDS.NOT_MATURED);
   const [isLoading, setIsLoading] = useState(false);
-  const [bondsList, setBondsList] = useState([]);
+  const [maturedBondList, setMaturedBondList] = useState([]);
+  const [nonMaturedBondList, setNonMaturedBondList] = useState([]);
   const [selectedBondIds, setSelectedBondIds] = useState([]);
-  const isActive = maturityType === BONDS.MATURED;
 
-  const getBondsListHelper = useCallback(async () => {
+  const getBondsListHelper = async () => {
     try {
       setIsLoading(true);
 
-      const bonds = await getBondsRequest({ account, isActive });
-      setBondsList(bonds);
+      const { maturedBonds, nonMaturedBonds } = await getAllBondsRequest({
+        account,
+      });
+      setMaturedBondList(maturedBonds);
+      setNonMaturedBondList(nonMaturedBonds);
     } catch (error) {
       window.console.error(error);
     } finally {
       setIsLoading(false);
     }
-  }, [account, chainId, isActive]);
+  };
 
+  // on load, get the list of bonds & set the maturity type radio button
+  useEffect(async () => {
+    if (account && chainId) {
+      try {
+        setIsLoading(true);
+
+        const { maturedBonds, nonMaturedBonds } = await getAllBondsRequest({
+          account,
+        });
+        setMaturedBondList(maturedBonds);
+        setNonMaturedBondList(nonMaturedBonds);
+
+        setMaturityType(
+          maturedBonds.length > 0 ? BONDS.MATURED : BONDS.NOT_MATURED,
+        );
+      } catch (error) {
+        window.console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  }, [account, chainId]);
+
+  // on maturity type change
   useEffect(() => {
     if (account && chainId) {
       getBondsListHelper();
@@ -97,37 +129,62 @@ export const MyBonds = () => {
         My Bonds
         <Radio.Group
           onChange={(e) => setMaturityType(e.target.value)}
-          value={maturityType}
+          value={account ? maturityType : null}
+          disabled={isLoading || !account}
         >
           <Radio value={BONDS.MATURED}>Matured</Radio>
           <Radio value={BONDS.NOT_MATURED}>Not Matured</Radio>
         </Radio.Group>
       </Title>
-
-      <Table
-        columns={getBondsColumns()}
-        dataSource={bondsList}
-        bordered
-        loading={isLoading}
-        pagination={false}
-        scroll={{ x: 400 }}
-        rowKey="bondId"
-        rowSelection={
-          maturityType === BONDS.MATURED
-            ? {
-              type: 'checkbox',
-              selectedRowKeys: selectedBondIds,
-              onChange: (selectedRowKeys) => {
-                setSelectedBondIds(selectedRowKeys);
-              },
-              // disable the checkbox if the bond is not matured
-              getCheckboxProps: (record) => ({
-                disabled: !record.matured,
-              }),
+      <ConfigProvider
+        renderEmpty={() => {
+          const getDesc = () => {
+            if (isLoading) {
+              return 'Loading bonds...';
             }
-            : undefined
-        }
-      />
+            if (!account) {
+              return 'Please connect your wallet';
+            }
+            return 'No bonds found';
+          };
+
+          return (
+            <Empty
+              description={getDesc()}
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+            />
+          );
+        }}
+      >
+        <Table
+          columns={getBondsColumns()}
+          dataSource={
+            maturityType === BONDS.MATURED
+              ? maturedBondList
+              : nonMaturedBondList
+          }
+          bordered
+          loading={isLoading}
+          pagination={false}
+          scroll={{ x: 400 }}
+          rowKey="bondId"
+          rowSelection={
+            maturityType === BONDS.MATURED
+              ? {
+                type: 'checkbox',
+                selectedRowKeys: selectedBondIds,
+                onChange: (selectedRowKeys) => {
+                  setSelectedBondIds(selectedRowKeys);
+                },
+                // disable the checkbox if the bond is not matured
+                getCheckboxProps: (record) => ({
+                  disabled: !record.matured,
+                }),
+              }
+              : undefined
+          }
+        />
+      </ConfigProvider>
 
       {maturityType === BONDS.MATURED && (
         <div style={{ textAlign: 'right', marginTop: '1rem' }}>
