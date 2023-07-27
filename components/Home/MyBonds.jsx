@@ -45,13 +45,18 @@ const getBondsColumns = () => {
   return columns;
 };
 
+const BONDS = {
+  MATURED: 'matured',
+  NOT_MATURED: 'not-matured',
+};
+
 export const MyBonds = () => {
   const { account, chainId } = useHelpers();
-  const [maturityType, setMaturityType] = useState('not-matured');
+  const [maturityType, setMaturityType] = useState(BONDS.NOT_MATURED);
   const [isLoading, setIsLoading] = useState(false);
   const [bondsList, setBondsList] = useState([]);
   const [selectedBondIds, setSelectedBondIds] = useState([]);
-  const isActive = maturityType === 'matured';
+  const isActive = maturityType === BONDS.MATURED;
 
   const getBondsListHelper = useCallback(async () => {
     try {
@@ -93,8 +98,8 @@ export const MyBonds = () => {
           onChange={(e) => setMaturityType(e.target.value)}
           value={maturityType}
         >
-          <Radio value="matured">Matured</Radio>
-          <Radio value="not-matured">Not Matured</Radio>
+          <Radio value={BONDS.MATURED}>Matured</Radio>
+          <Radio value={BONDS.NOT_MATURED}>Not Matured</Radio>
         </Radio.Group>
       </Title>
 
@@ -107,7 +112,7 @@ export const MyBonds = () => {
         scroll={{ x: 400 }}
         rowKey="bondId"
         rowSelection={
-          maturityType === 'matured'
+          maturityType === BONDS.MATURED
             ? {
               type: 'checkbox',
               selectedRowKeys: selectedBondIds,
@@ -123,7 +128,7 @@ export const MyBonds = () => {
         }
       />
 
-      {maturityType === 'matured' && (
+      {maturityType === BONDS.MATURED && (
         <div style={{ textAlign: 'right', marginTop: '1rem' }}>
           <Button
             disabled={!account || selectedBondIds.length === 0}

@@ -55,18 +55,8 @@ export const getBondsRequest = ({ account, isActive: isBondMatured }) => new Pro
             key: idsList[index],
           }));
 
-          /**
-             * if (result.payout !== 0 || result.matured)
-             * then add the bond to the list
-             */
-          const filteredBonds = bondsListWithDetails.filter((bond) => {
-            if (bond.payout > 0) return true;
-            if (bond.matured) return true;
-            return false;
-          });
-
           const bondsWithMaturityDate = await getBondInfoRequest(
-            filteredBonds,
+            bondsListWithDetails,
           );
           resolve(bondsWithMaturityDate);
         })
