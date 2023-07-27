@@ -72,6 +72,8 @@ export const MyBonds = () => {
 
       const nBonds = await getBondsRequest({ account, isActive: false });
       setNonMaturedBondList(nBonds);
+
+      console.log({ mBonds, nBonds });
     } catch (error) {
       window.console.error(error);
     } finally {
@@ -81,17 +83,17 @@ export const MyBonds = () => {
 
   // on load
   useEffect(async () => {
-    if (account && chainId) {
+    const getData = async () => {
       await getBondsListHelper();
 
-      console.log({
-        maturedBondList,
-        nonMaturedBondList,
-      });
+      console.log({ maturedBondList, nonMaturedBondList });
 
       setMaturityType(
         maturedBondList.length > 0 ? BONDS.MATURED : BONDS.NOT_MATURED,
       );
+    };
+    if (account && chainId) {
+      getData();
     }
   }, [account, chainId]);
 
