@@ -37,6 +37,7 @@ export const getBondsRequest = ({ account, isActive: isBondMatured }) => new Pro
     .getBonds(account, isBondMatured)
     .call()
     .then(async (response) => {
+      console.log({ response });
       const { bondIds } = response;
       const allListPromise = [];
       const idsList = [];
