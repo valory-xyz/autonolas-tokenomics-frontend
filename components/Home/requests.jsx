@@ -64,10 +64,7 @@ export const getBondsRequest = ({ account, isActive: isBondMatured }) => new Pro
              */
           const filteredBonds = isBondMatured
             ? bondsListWithDetails
-            : bondsListWithDetails.filter((bond) => {
-              if (bond.matured) return false;
-              return true;
-            });
+            : bondsListWithDetails.filter((bond) => !bond.matured);
           console.log({ bondsListWithDetails });
 
           const bondsWithMaturityDate = await getBondInfoRequest(
