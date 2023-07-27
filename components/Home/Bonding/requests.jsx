@@ -61,13 +61,9 @@ const getBondingProgramsRequest = ({ isActive }) => new Promise((resolve, reject
 const getLpTokenName = async (address) => {
   try {
     const contract = getUniswapV2PairContract(address);
-    console.log({ address });
 
     let token0 = await contract.methods.token0().call();
-    console.log({ token0 });
-
     const token1 = await contract.methods.token1().call();
-    console.log({ token1 });
 
     if (token0 === OLAS_ADDRESS) {
       token0 = token1;
