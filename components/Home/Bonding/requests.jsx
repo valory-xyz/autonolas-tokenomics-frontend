@@ -3,7 +3,12 @@
 import { ethers } from 'ethers';
 import { getChainId, sendTransaction } from '@autonolas/frontend-library';
 import { OLAS_ADDRESS } from 'util/constants';
-import { MAX_AMOUNT, ADDRESS_ZERO, ONE_ETH } from 'common-util/functions';
+import {
+  MAX_AMOUNT,
+  ADDRESS_ZERO,
+  ONE_ETH,
+  notifyError,
+} from 'common-util/functions';
 import {
   getContractAddress,
   getDepositoryContract,
@@ -53,26 +58,44 @@ const getBondingProgramsRequest = ({ isActive }) => new Promise((resolve, reject
 });
 
 /**
+ * returns events for the product creation
+ */
+export const getProductEvents = async (eventName) => {
+  const contract = getDepositoryContract();
+
+  const provider = getEthersProvider();
+  const block = await provider.getBlock('latest');
+
+  const oldestBlock = (getChainId() || 1) >= 100000 ? 10 : 1000000;
+  const events = contract.getPastEvents(eventName, {
+    fromBlock: block.number - oldestBlock,
+    toBlock: block.number,
+  });
+
+  return events;
+};
+
+/**
  * fetches the lp token name for the product
  * @example
  * input: '0x'
  * output: 'OLAS-ETH'
  */
-const getLpTokenName = async (address, index) => {
+const getLpTokenName = async (address) => {
   try {
     const contract = getUniswapV2PairContract(address);
-    console.log({ address, index });
+    console.log({ address });
 
     let token0 = await contract.methods.token0().call();
-    console.log({ token0 });
+    // console.log({ token0 });
 
     const token1 = await contract.methods.token1().call();
-    console.log({ token1 });
+    // console.log({ token1 });
 
     if (token0 === OLAS_ADDRESS) {
       token0 = token1;
     }
-    console.log({ token0 });
+    // console.log({ token0 });
 
     const erc20Contract = getErc20Contract(token0);
     const tokenSymbol = await erc20Contract.methods.symbol().call();
@@ -80,11 +103,23 @@ const getLpTokenName = async (address, index) => {
 
     return `OLAS-${tokenSymbol}`;
   } catch (error) {
-    console.log('error section ', { address, index });
+    console.log('error section ', { address });
     window.console.log('Error on fetching lp token name');
     console.error(error);
     return null;
   }
+};
+
+const getProductToken = (product, events, keyName) => {
+  if ((events || []).length === 0) return product[keyName];
+
+  if (product.token !== ADDRESS_ZERO) return product[keyName];
+
+  const event = events.find(
+    (e) => e.returnValues.productId === `${product.id}`,
+  );
+  if (!event) notifyError('Product not found in the event list');
+  return event.returnValues[keyName];
 };
 
 /**
@@ -96,12 +131,22 @@ const getLpTokenName = async (address, index) => {
 const getLpTokenNamesForProducts = async (productList) => {
   const lpTokenNamePromiseList = [];
 
+  const events = await getProductEvents('CreateProduct');
+  console.log(events);
+  // return null;
+
   for (let i = 0; i < productList.length; i += 1) {
-    const result = getLpTokenName(productList[i].token, i);
+    console.log(productList[i]);
+
+    const result = getLpTokenName(
+      getProductToken(productList[i], events, 'token'),
+    );
     lpTokenNamePromiseList.push(result);
   }
 
   const lpTokenNameList = await Promise.all(lpTokenNamePromiseList);
+
+  console.log(lpTokenNameList);
 
   return productList.map((component, index) => ({
     ...component,
@@ -115,10 +160,14 @@ const getCurrentLpPriceForProducts = async (productList) => {
   const currentLpPricePromiseList = [];
 
   for (let i = 0; i < productList.length; i += 1) {
-    const currentLpPricePromise = contract.methods
-      .getCurrentPriceLP(productList[i].token)
-      .call();
-    currentLpPricePromiseList.push(currentLpPricePromise);
+    if (productList[i].token === ADDRESS_ZERO) {
+      currentLpPricePromiseList.push(0);
+    } else {
+      const currentLpPricePromise = contract.methods
+        .getCurrentPriceLP(productList[i].token)
+        .call();
+      currentLpPricePromiseList.push(currentLpPricePromise);
+    }
   }
 
   const resolvedList = await Promise.all(currentLpPricePromiseList);
@@ -127,24 +176,6 @@ const getCurrentLpPriceForProducts = async (productList) => {
     ...component,
     currentPriceLp: resolvedList[index],
   }));
-};
-
-/**
- * returns events for the product creation
- */
-export const getCreateProductEvents = async () => {
-  const contract = getDepositoryContract();
-
-  const provider = getEthersProvider();
-  const block = await provider.getBlock('latest');
-
-  const oldestBlock = (getChainId() || 1) >= 100000 ? 10 : 1000000;
-  const events = contract.getPastEvents('CreateProduct', {
-    fromBlock: block.number - oldestBlock,
-    toBlock: block.number,
-  });
-
-  return events;
 };
 
 export const getListWithSupplyList = async (list, productEvents) => {
@@ -193,7 +224,7 @@ const getProductDetailsFromIds = ({ productIdList }) => new Promise((resolve, re
           id: productIdList[index],
         }));
 
-        const eventList = await getCreateProductEvents();
+        const eventList = await getProductEvents('CreateProduct');
 
         const listWithLpTokens = await getLpTokenNamesForProducts(
           productList,
@@ -250,7 +281,7 @@ export const getAllTheProductsNotRemoved = async () => new Promise((resolve, rej
             key: index,
           }));
 
-          const eventList = await getCreateProductEvents();
+          const eventList = await getProductEvents('CreateProduct');
 
           const listWithLpTokens = await getLpTokenNamesForProducts(
             productWithIds,
@@ -261,16 +292,35 @@ export const getAllTheProductsNotRemoved = async () => new Promise((resolve, rej
           );
 
           // filter out the products that are removed
-          const filteredList = listWithCurrentLpPrice.filter(
-            (product) => product.token !== ADDRESS_ZERO,
-          );
+          // const filteredList = listWithCurrentLpPrice.filter(
+          //   (product) => product.token !== ADDRESS_ZERO,
+          // );
+
+          // update priceLp if the address is ADDRESS_ZERO
+          const listWithPriceLp = listWithCurrentLpPrice.map((product) => {
+            if (product.token !== ADDRESS_ZERO) return product;
+
+            const event = eventList.find(
+              (e) => e.returnValues.productId === `${product.id}`,
+            );
+
+            const priceLpFromEvent = event?.returnValues?.priceLP || 0;
+
+            console.log({ eventList, product, priceLpFromEvent });
+
+            return { ...product, priceLP: priceLpFromEvent };
+          });
 
           const listWithSupplyList = await getListWithSupplyList(
-            filteredList,
+            listWithPriceLp,
             eventList,
           );
 
+          console.log({ listWithSupplyList });
+
           resolve(listWithSupplyList);
+
+          // resolve(listWithSupplyList);
         })
         .catch((e) => reject(e));
     })

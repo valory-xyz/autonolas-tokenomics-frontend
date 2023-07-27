@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import {
   Button, Table, Tag, Tooltip, Typography,
 } from 'antd/lib';
-import { remove, round } from 'lodash';
+import { remove, round, isNaN } from 'lodash';
 import { COLOR } from '@autonolas/frontend-library';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import {
@@ -12,6 +12,7 @@ import {
   parseToEth,
 } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
+import { NA } from 'common-util/constants';
 import { Deposit } from './Deposit';
 import { getProductListRequest, getAllTheProductsNotRemoved } from './requests';
 
@@ -86,6 +87,8 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
         const discount = data?.discount || 0;
         const discountedPrice = getLpTokenWithDiscount(x, discount);
 
+        console.log({ x, discount, discountedPrice });
+
         return (
           <a
             href="https://etherscan.io/address/0x52A043bcebdB2f939BaEF2E8b6F01652290eAB3f#readContract#F9"
@@ -118,6 +121,10 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
             * 100,
           2,
         );
+
+        if (isNaN(projectedChange)) {
+          return <Text>{NA}</Text>;
+        }
 
         return (
           <Text style={{ color: projectedChange > 0 ? 'green' : 'red' }}>
