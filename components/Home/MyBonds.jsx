@@ -78,6 +78,7 @@ export const MyBonds = () => {
       notifySuccess('Redeemed successfully');
 
       // update the list once the bond is redeemed
+      setSelectedBondIds([]);
       await getBondsListHelper();
     } catch (error) {
       window.console.error(error);
