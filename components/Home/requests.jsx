@@ -31,6 +31,8 @@ export const getBondInfoRequest = async (bondList) => {
 export const getBondsRequest = ({ account, isActive: isBondMatured }) => new Promise((resolve, reject) => {
   const contract = getDepositoryContract();
 
+  console.log({ account, isBondMatured });
+
   contract.methods
     .getBonds(account, isBondMatured)
     .call()
@@ -55,9 +57,14 @@ export const getBondsRequest = ({ account, isActive: isBondMatured }) => new Pro
             key: idsList[index],
           }));
 
+          console.log({ bondsListWithDetails });
+
           const bondsWithMaturityDate = await getBondInfoRequest(
             bondsListWithDetails,
           );
+
+          console.log({ bondsWithMaturityDate });
+
           resolve(bondsWithMaturityDate);
         })
         .catch((e) => reject(e));
