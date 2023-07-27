@@ -12,6 +12,7 @@ import {
   getErc20Contract,
   getEthersProvider,
 } from 'common-util/Contracts';
+import { getProductValueFromEvent, updateProductDefaultValues } from './requestsHelpers';
 
 /**
  * fetches the IDF (discount factor) for the product
@@ -53,6 +54,24 @@ const getBondingProgramsRequest = ({ isActive }) => new Promise((resolve, reject
 });
 
 /**
+ * returns events for the product creation
+ */
+export const getProductEvents = async (eventName) => {
+  const contract = getDepositoryContract();
+
+  const provider = getEthersProvider();
+  const block = await provider.getBlock('latest');
+
+  const oldestBlock = (getChainId() || 1) >= 100000 ? 10 : 1000000;
+  const events = contract.getPastEvents(eventName, {
+    fromBlock: block.number - oldestBlock,
+    toBlock: block.number,
+  });
+
+  return events;
+};
+
+/**
  * fetches the lp token name for the product
  * @example
  * input: '0x'
@@ -75,6 +94,7 @@ const getLpTokenName = async (address) => {
     return `OLAS-${tokenSymbol}`;
   } catch (error) {
     window.console.log('Error on fetching lp token name');
+    console.error(error);
     return null;
   }
 };
@@ -88,8 +108,12 @@ const getLpTokenName = async (address) => {
 const getLpTokenNamesForProducts = async (productList) => {
   const lpTokenNamePromiseList = [];
 
+  const events = await getProductEvents('CreateProduct');
+
   for (let i = 0; i < productList.length; i += 1) {
-    const result = getLpTokenName(productList[i].token);
+    const result = getLpTokenName(
+      getProductValueFromEvent(productList[i], events, 'token'),
+    );
     lpTokenNamePromiseList.push(result);
   }
 
@@ -107,10 +131,14 @@ const getCurrentLpPriceForProducts = async (productList) => {
   const currentLpPricePromiseList = [];
 
   for (let i = 0; i < productList.length; i += 1) {
-    const currentLpPricePromise = contract.methods
-      .getCurrentPriceLP(productList[i].token)
-      .call();
-    currentLpPricePromiseList.push(currentLpPricePromise);
+    if (productList[i].token === ADDRESS_ZERO) {
+      currentLpPricePromiseList.push(0);
+    } else {
+      const currentLpPricePromise = contract.methods
+        .getCurrentPriceLP(productList[i].token)
+        .call();
+      currentLpPricePromiseList.push(currentLpPricePromise);
+    }
   }
 
   const resolvedList = await Promise.all(currentLpPricePromiseList);
@@ -119,24 +147,6 @@ const getCurrentLpPriceForProducts = async (productList) => {
     ...component,
     currentPriceLp: resolvedList[index],
   }));
-};
-
-/**
- * returns events for the product creation
- */
-export const getCreateProductEvents = async () => {
-  const contract = getDepositoryContract();
-
-  const provider = getEthersProvider();
-  const block = await provider.getBlock('latest');
-
-  const oldestBlock = (getChainId() || 1) >= 100000 ? 10 : 1000000;
-  const events = contract.getPastEvents('CreateProduct', {
-    fromBlock: block.number - oldestBlock,
-    toBlock: block.number,
-  });
-
-  return events;
 };
 
 export const getListWithSupplyList = async (list, productEvents) => {
@@ -185,7 +195,7 @@ const getProductDetailsFromIds = ({ productIdList }) => new Promise((resolve, re
           id: productIdList[index],
         }));
 
-        const eventList = await getCreateProductEvents();
+        const eventList = await getProductEvents('CreateProduct');
 
         const listWithLpTokens = await getLpTokenNamesForProducts(
           productList,
@@ -242,7 +252,7 @@ export const getAllTheProductsNotRemoved = async () => new Promise((resolve, rej
             key: index,
           }));
 
-          const eventList = await getCreateProductEvents();
+          const eventList = await getProductEvents('CreateProduct');
 
           const listWithLpTokens = await getLpTokenNamesForProducts(
             productWithIds,
@@ -252,13 +262,14 @@ export const getAllTheProductsNotRemoved = async () => new Promise((resolve, rej
             listWithLpTokens,
           );
 
-          // filter out the products that are removed
-          const filteredList = listWithCurrentLpPrice.filter(
-            (product) => product.token !== ADDRESS_ZERO,
+          // update priceLp if the address is ADDRESS_ZERO
+          const listWithUpdatedPriceLp = updateProductDefaultValues(
+            listWithCurrentLpPrice,
+            eventList,
           );
 
           const listWithSupplyList = await getListWithSupplyList(
-            filteredList,
+            listWithUpdatedPriceLp,
             eventList,
           );
 
