@@ -58,23 +58,31 @@ const getBondingProgramsRequest = ({ isActive }) => new Promise((resolve, reject
  * input: '0x'
  * output: 'OLAS-ETH'
  */
-const getLpTokenName = async (address) => {
+const getLpTokenName = async (address, index) => {
   try {
     const contract = getUniswapV2PairContract(address);
+    console.log({ address, index });
 
     let token0 = await contract.methods.token0().call();
+    console.log({ token0 });
+
     const token1 = await contract.methods.token1().call();
+    console.log({ token1 });
 
     if (token0 === OLAS_ADDRESS) {
       token0 = token1;
     }
+    console.log({ token0 });
 
     const erc20Contract = getErc20Contract(token0);
     const tokenSymbol = await erc20Contract.methods.symbol().call();
+    console.log({ tokenSymbol });
 
     return `OLAS-${tokenSymbol}`;
   } catch (error) {
+    console.log('error section ', { address, index });
     window.console.log('Error on fetching lp token name');
+    console.error(error);
     return null;
   }
 };
@@ -89,7 +97,7 @@ const getLpTokenNamesForProducts = async (productList) => {
   const lpTokenNamePromiseList = [];
 
   for (let i = 0; i < productList.length; i += 1) {
-    const result = getLpTokenName(productList[i].token);
+    const result = getLpTokenName(productList[i].token, i);
     lpTokenNamePromiseList.push(result);
   }
 
