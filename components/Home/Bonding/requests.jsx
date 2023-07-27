@@ -12,7 +12,7 @@ import {
   getErc20Contract,
   getEthersProvider,
 } from 'common-util/Contracts';
-import { getProductValueFromEvent, updatePriceLpForProducts } from './requestsHelpers';
+import { getProductValueFromEvent, updateProductDefaultValues } from './requestsHelpers';
 
 /**
  * fetches the IDF (discount factor) for the product
@@ -263,7 +263,7 @@ export const getAllTheProductsNotRemoved = async () => new Promise((resolve, rej
           );
 
           // update priceLp if the address is ADDRESS_ZERO
-          const listWithUpdatedPriceLp = updatePriceLpForProducts(
+          const listWithUpdatedPriceLp = updateProductDefaultValues(
             listWithCurrentLpPrice,
             eventList,
           );

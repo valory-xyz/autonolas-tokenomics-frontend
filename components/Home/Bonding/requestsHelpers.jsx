@@ -24,12 +24,14 @@ export const getProductValueFromEvent = (product, events, keyName) => {
  * else
  *  priceLP = from the product (as it is)
  */
-export const updatePriceLpForProducts = (productList, events) => productList.map((product) => {
+export const updateProductDefaultValues = (productList, events) => productList.map((product) => {
   if (product.token !== ADDRESS_ZERO) return product;
 
   const event = events.find(
     (e) => e.returnValues.productId === `${product.id}`,
   );
   const priceLpFromEvent = event?.returnValues?.priceLP || 0;
-  return { ...product, priceLP: priceLpFromEvent };
+  const supplyFromEvent = event?.returnValues?.supply || 0;
+
+  return { ...product, priceLP: priceLpFromEvent, supply: supplyFromEvent };
 });
