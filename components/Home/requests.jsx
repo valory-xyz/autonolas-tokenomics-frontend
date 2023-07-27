@@ -58,10 +58,20 @@ export const getBondsRequest = ({ account, isActive: isBondMatured }) => new Pro
             key: idsList[index],
           }));
 
+          /**
+             * backend returns all the bonds if "isBondMatured = false",
+             * hence we need to filter out if the bonds are matured or not
+             */
+          const filteredBonds = isBondMatured
+            ? bondsListWithDetails
+            : bondsListWithDetails.filter((bond) => {
+              if (bond.matured) return false;
+              return true;
+            });
           console.log({ bondsListWithDetails });
 
           const bondsWithMaturityDate = await getBondInfoRequest(
-            bondsListWithDetails,
+            filteredBonds,
           );
 
           console.log({ bondsWithMaturityDate });
