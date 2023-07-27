@@ -56,18 +56,17 @@ export const getBondsRequest = ({ account, isActive: isBondMatured }) => new Pro
           }));
 
           /**
-             * if (result.payout !== 0 || result.matured)
-             * then add the bond to the list
+             * backend returns all the bonds if "isBondMatured = false",
+             * hence we need to filter out if the bonds are matured or not
              */
-          const filteredBonds = bondsListWithDetails.filter((bond) => {
-            if (bond.payout > 0) return true;
-            if (bond.matured) return true;
-            return false;
-          });
+          const filteredBonds = isBondMatured
+            ? bondsListWithDetails
+            : bondsListWithDetails.filter((bond) => !bond.matured);
 
           const bondsWithMaturityDate = await getBondInfoRequest(
             filteredBonds,
           );
+
           resolve(bondsWithMaturityDate);
         })
         .catch((e) => reject(e));
