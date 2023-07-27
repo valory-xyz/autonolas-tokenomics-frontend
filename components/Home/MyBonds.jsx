@@ -83,6 +83,12 @@ export const MyBonds = () => {
   useEffect(async () => {
     if (account && chainId) {
       await getBondsListHelper();
+
+      console.log({
+        maturedBondList,
+        nonMaturedBondList,
+      });
+
       setMaturityType(
         maturedBondList.length > 0 ? BONDS.MATURED : BONDS.NOT_MATURED,
       );
