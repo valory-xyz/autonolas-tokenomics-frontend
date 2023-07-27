@@ -3,12 +3,7 @@
 import { ethers } from 'ethers';
 import { getChainId, sendTransaction } from '@autonolas/frontend-library';
 import { OLAS_ADDRESS } from 'util/constants';
-import {
-  MAX_AMOUNT,
-  ADDRESS_ZERO,
-  ONE_ETH,
-  notifyError,
-} from 'common-util/functions';
+import { MAX_AMOUNT, ADDRESS_ZERO, ONE_ETH } from 'common-util/functions';
 import {
   getContractAddress,
   getDepositoryContract,
@@ -17,6 +12,7 @@ import {
   getErc20Contract,
   getEthersProvider,
 } from 'common-util/Contracts';
+import { getProductValueFromEvent, updatePriceLpForProducts } from './requestsHelpers';
 
 /**
  * fetches the IDF (discount factor) for the product
@@ -84,42 +80,23 @@ export const getProductEvents = async (eventName) => {
 const getLpTokenName = async (address) => {
   try {
     const contract = getUniswapV2PairContract(address);
-    console.log({ address });
 
     let token0 = await contract.methods.token0().call();
-    // console.log({ token0 });
-
     const token1 = await contract.methods.token1().call();
-    // console.log({ token1 });
 
     if (token0 === OLAS_ADDRESS) {
       token0 = token1;
     }
-    // console.log({ token0 });
 
     const erc20Contract = getErc20Contract(token0);
     const tokenSymbol = await erc20Contract.methods.symbol().call();
-    console.log({ tokenSymbol });
 
     return `OLAS-${tokenSymbol}`;
   } catch (error) {
-    console.log('error section ', { address });
     window.console.log('Error on fetching lp token name');
     console.error(error);
     return null;
   }
-};
-
-const getProductToken = (product, events, keyName) => {
-  if ((events || []).length === 0) return product[keyName];
-
-  if (product.token !== ADDRESS_ZERO) return product[keyName];
-
-  const event = events.find(
-    (e) => e.returnValues.productId === `${product.id}`,
-  );
-  if (!event) notifyError('Product not found in the event list');
-  return event.returnValues[keyName];
 };
 
 /**
@@ -132,21 +109,15 @@ const getLpTokenNamesForProducts = async (productList) => {
   const lpTokenNamePromiseList = [];
 
   const events = await getProductEvents('CreateProduct');
-  console.log(events);
-  // return null;
 
   for (let i = 0; i < productList.length; i += 1) {
-    console.log(productList[i]);
-
     const result = getLpTokenName(
-      getProductToken(productList[i], events, 'token'),
+      getProductValueFromEvent(productList[i], events, 'token'),
     );
     lpTokenNamePromiseList.push(result);
   }
 
   const lpTokenNameList = await Promise.all(lpTokenNamePromiseList);
-
-  console.log(lpTokenNameList);
 
   return productList.map((component, index) => ({
     ...component,
@@ -291,36 +262,18 @@ export const getAllTheProductsNotRemoved = async () => new Promise((resolve, rej
             listWithLpTokens,
           );
 
-          // filter out the products that are removed
-          // const filteredList = listWithCurrentLpPrice.filter(
-          //   (product) => product.token !== ADDRESS_ZERO,
-          // );
-
           // update priceLp if the address is ADDRESS_ZERO
-          const listWithPriceLp = listWithCurrentLpPrice.map((product) => {
-            if (product.token !== ADDRESS_ZERO) return product;
-
-            const event = eventList.find(
-              (e) => e.returnValues.productId === `${product.id}`,
-            );
-
-            const priceLpFromEvent = event?.returnValues?.priceLP || 0;
-
-            console.log({ eventList, product, priceLpFromEvent });
-
-            return { ...product, priceLP: priceLpFromEvent };
-          });
-
-          const listWithSupplyList = await getListWithSupplyList(
-            listWithPriceLp,
+          const listWithUpdatedPriceLp = updatePriceLpForProducts(
+            listWithCurrentLpPrice,
             eventList,
           );
 
-          console.log({ listWithSupplyList });
+          const listWithSupplyList = await getListWithSupplyList(
+            listWithUpdatedPriceLp,
+            eventList,
+          );
 
           resolve(listWithSupplyList);
-
-          // resolve(listWithSupplyList);
         })
         .catch((e) => reject(e));
     })

@@ -1,4 +1,20 @@
-import { ADDRESS_ZERO } from 'common-util/functions';
+import { ADDRESS_ZERO, notifyError } from 'common-util/functions';
+
+export const getProductValueFromEvent = (product, events, keyName) => {
+  if ((events || []).length === 0) {
+    return product[keyName];
+  }
+
+  if (product.token !== ADDRESS_ZERO) {
+    return product[keyName];
+  }
+
+  const event = events.find(
+    (e) => e.returnValues.productId === `${product.id}`,
+  );
+  if (!event) notifyError('Product not found in the event list');
+  return event.returnValues[keyName];
+};
 
 /**
  * Updates the priceLP for products that are not LP tokens
@@ -14,8 +30,6 @@ export const updatePriceLpForProducts = (productList, events) => productList.map
   const event = events.find(
     (e) => e.returnValues.productId === `${product.id}`,
   );
-
   const priceLpFromEvent = event?.returnValues?.priceLP || 0;
-
   return { ...product, priceLP: priceLpFromEvent };
 });

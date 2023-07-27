@@ -87,8 +87,6 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
         const discount = data?.discount || 0;
         const discountedPrice = getLpTokenWithDiscount(x, discount);
 
-        console.log({ x, discount, discountedPrice });
-
         return (
           <a
             href="https://etherscan.io/address/0x52A043bcebdB2f939BaEF2E8b6F01652290eAB3f#readContract#F9"
