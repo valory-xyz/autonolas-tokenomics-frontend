@@ -8,7 +8,7 @@ const { Title, Paragraph } = Typography;
 
 export const DevIncentives = () => (
   <div>
-    <Title level={2}>Claimable Dev Incentives</Title>
+    <Title level={2}>Developer Rewards</Title>
     <Paragraph style={{ maxWidth: 550 }}>
       The protocol rewards developers who contribute useful units of code. Units
       can be agents or components. Check available incentives and claim them if

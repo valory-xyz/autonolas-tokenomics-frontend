@@ -76,7 +76,7 @@ export const ClaimIncentives = () => {
           {pauseValue === '2' && (
             <>
               <Alert
-                message="Note: Claim incentives is currently paused and governance can unpause withdrawals."
+                message="Note: Incentives claiming is currently paused and will resume once the governance unpauses withdrawals."
                 type="info"
                 showIcon
               />

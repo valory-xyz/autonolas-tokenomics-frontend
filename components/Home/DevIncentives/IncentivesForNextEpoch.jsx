@@ -59,7 +59,7 @@ export const IncentivesForNextEpoch = () => {
 
   return (
     <MapPendingIncentivesContainer>
-      <Title level={3}>Projected Incentives for next epoch</Title>
+      <Title level={3}>ESTIMATE INCENTIVES FOR NEXT EPOCH</Title>
       <Paragraph style={{ maxWidth: 550 }}>
         Note that the incentives claimable from the next epoch are estimated, as
         they might eventually change during the epoch due to other donations.
@@ -100,7 +100,7 @@ export const IncentivesForNextEpoch = () => {
                 loading={isLoading}
                 disabled={!account}
               >
-                Check Incentives
+                Estimate
               </Button>
 
               {!account && (

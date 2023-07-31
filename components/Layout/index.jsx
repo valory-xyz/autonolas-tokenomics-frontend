@@ -51,7 +51,7 @@ const NavigationBar = ({ children }) => {
             },
             {
               key: 'dev-incentives',
-              label: 'Dev Incentives',
+              label: 'Developer Rewards',
             },
             {
               key: 'bonding-products',
