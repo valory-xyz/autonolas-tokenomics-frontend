@@ -6,6 +6,7 @@ import {
 import { remove, round, isNaN } from 'lodash';
 import { COLOR } from '@autonolas/frontend-library';
 import { QuestionCircleOutlined } from '@ant-design/icons';
+import { BONDING_PRODUCTS } from 'util/constants';
 import {
   notifyError,
   getFormattedDate,
@@ -210,13 +211,14 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
 export const BondingList = ({ bondingProgramType }) => {
   const { account, chainId } = useHelpers();
   const [isLoading, setIsLoading] = useState(false);
-  const [products, setProducts] = useState([]);
-  const showNoSupply = bondingProgramType === 'allProduct';
+  const [allProducts, setAllProducts] = useState([]); // all products
+  const [filteredProducts, setFilteredProducts] = useState([]); // (active / inactive products)
+  const showNoSupply = bondingProgramType === BONDING_PRODUCTS.ALL;
 
   // if productDetails is `not null`, then open the deposit modal
   const [productDetails, setProductDetails] = useState(null);
 
-  const isActive = bondingProgramType === 'active';
+  const isActive = bondingProgramType === BONDING_PRODUCTS.ACTIVE;
 
   const getProducts = async () => {
     try {
@@ -226,13 +228,13 @@ export const BondingList = ({ bondingProgramType }) => {
       // that are not removed
       if (showNoSupply) {
         const productList = await getAllTheProductsNotRemoved();
-        setProducts(productList);
+        setAllProducts(productList);
       } else if (account) {
-        const productList = await getProductListRequest({
+        const filteredProductList = await getProductListRequest({
           account,
           isActive,
         });
-        setProducts(productList);
+        setFilteredProducts(filteredProductList);
       }
     } catch (error) {
       window.console.error(error);
@@ -259,7 +261,7 @@ export const BondingList = ({ bondingProgramType }) => {
     <>
       <Table
         columns={getColumns(showNoSupply, onBondClick, isActive, account)}
-        dataSource={products}
+        dataSource={showNoSupply ? allProducts : filteredProducts}
         bordered
         loading={isLoading}
         pagination={false}

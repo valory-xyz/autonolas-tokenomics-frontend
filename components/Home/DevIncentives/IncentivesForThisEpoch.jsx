@@ -132,7 +132,7 @@ export const IncentivesForThisEpoch = () => {
 
   return (
     <>
-      <Title level={3}>CHECK FOR AVAILABLE INCENTIVES</Title>
+      <Title level={3}>Check for available incentives</Title>
 
       <Alert
         message="Note: You must be the owner of each listed unit to see the claimable incentives."
