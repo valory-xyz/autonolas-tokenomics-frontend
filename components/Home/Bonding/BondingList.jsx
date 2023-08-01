@@ -229,11 +229,8 @@ export const BondingList = ({ bondingProgramType }) => {
       if (showNoSupply) {
         const productList = await getAllTheProductsNotRemoved();
         setAllProducts(productList);
-      } else if (account) {
-        const filteredProductList = await getProductListRequest({
-          account,
-          isActive,
-        });
+      } else {
+        const filteredProductList = await getProductListRequest({ isActive });
         setFilteredProducts(filteredProductList);
       }
     } catch (error) {
