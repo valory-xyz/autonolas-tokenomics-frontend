@@ -12,3 +12,9 @@ export const UNIT_TYPES = {
 };
 
 export const OLAS_ADDRESS = '0x0001A500A6B18995B03f44bb040A5fFc28E45CB0';
+
+export const BONDING_PRODUCTS = {
+  ACTIVE: 'active',
+  INACTIVE: 'inactive',
+  ALL: 'allProduct',
+};

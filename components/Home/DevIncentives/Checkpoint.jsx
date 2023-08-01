@@ -52,7 +52,7 @@ export const Checkpoint = () => {
   return (
     <CheckpointContainer>
       <Title level={5}>
-        A new epoch can start, in order to be able to claim your incentives call
+        A new epoch can start, in order to be able to claim your rewards call
         the checkpoint
       </Title>
 

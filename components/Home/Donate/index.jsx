@@ -106,7 +106,7 @@ export const DepositServiceDonation = () => {
           type="info"
           message={(
             <>
-              To boost incentives of devs with freshly minted OLAS, you must
+              To boost rewards of devs with freshly minted OLAS, you must
               hold at least&nbsp;
               <Text strong>{threshold || '--'}</Text>
               &nbsp;veOLAS. Grab your veOLAS by locking OLAS&nbsp;
