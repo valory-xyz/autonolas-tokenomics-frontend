@@ -39,7 +39,7 @@ export const ClaimIncentives = () => {
       };
       await claimOwnerIncentivesRequest(params);
 
-      notifySuccess('Rewards claimed successfully');
+      notifySuccess('Rewards claimed');
     } catch (error) {
       notifySpecificError(error);
       window.console.error(error);
