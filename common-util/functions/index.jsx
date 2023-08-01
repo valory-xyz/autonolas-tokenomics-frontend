@@ -69,7 +69,7 @@ const getErrorMessage = (error) => {
     }
 
     if ((error?.message || '').includes('ClaimIncentivesFailed')) {
-      return 'You do not have any incentives to claim';
+      return 'You do not have any rewards to claim';
     }
 
     if ((error?.message || '').includes('TransferFailed')) {

@@ -59,9 +59,9 @@ export const IncentivesForNextEpoch = () => {
 
   return (
     <MapPendingIncentivesContainer>
-      <Title level={3}>Estimate incentives for next epoch</Title>
+      <Title level={3}>Estimate rewards for next epoch</Title>
       <Paragraph style={{ maxWidth: 550 }}>
-        Note that the incentives claimable from the next epoch are estimated, as
+        Note that the rewards claimable from the next epoch are estimated, as
         they might eventually change during the epoch due to other donations.
       </Paragraph>
 
@@ -111,7 +111,7 @@ export const IncentivesForNextEpoch = () => {
                     screens.xs ? { display: 'block' } : { display: 'inline' }
                   }
                 >
-                  To check incentives, connect a wallet
+                  To check rewards, connect a wallet
                 </Text>
               )}
             </Form.Item>

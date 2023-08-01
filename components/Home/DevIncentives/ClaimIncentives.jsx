@@ -39,7 +39,7 @@ export const ClaimIncentives = () => {
       };
       await claimOwnerIncentivesRequest(params);
 
-      notifySuccess('Incentives claimed successfully');
+      notifySuccess('Rewards claimed successfully');
     } catch (error) {
       notifySpecificError(error);
       window.console.error(error);
@@ -54,12 +54,12 @@ export const ClaimIncentives = () => {
         <></>
       ) : (
         <>
-          <Title level={3}>Claim Incentives</Title>
+          <Title level={3}>Claim Rewards</Title>
 
           {pauseValue === '1' && (
             <>
               <Alert
-                message="Note: You must be the owner of each listed unit to claim incentives."
+                message="Note: You must be the owner of each listed unit to claim rewards."
                 type="info"
                 showIcon
               />
@@ -68,7 +68,7 @@ export const ClaimIncentives = () => {
               <DynamicFieldsForm
                 isLoading={isLoading}
                 onSubmit={onClaimIncentivesSubmit}
-                submitButtonText="Claim Incentives"
+                submitButtonText="Claim Rewards"
               />
             </>
           )}
@@ -76,7 +76,7 @@ export const ClaimIncentives = () => {
           {pauseValue === '2' && (
             <>
               <Alert
-                message="Note: Incentives claiming is currently paused and will resume once the governance unpauses withdrawals."
+                message="Note: Rewards claiming is currently paused and will resume once the governance unpauses withdrawals."
                 type="info"
                 showIcon
               />

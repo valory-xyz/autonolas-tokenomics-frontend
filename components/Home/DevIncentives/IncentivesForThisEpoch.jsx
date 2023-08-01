@@ -132,10 +132,10 @@ export const IncentivesForThisEpoch = () => {
 
   return (
     <>
-      <Title level={3}>Check for available incentives</Title>
+      <Title level={3}>Check for available rewards</Title>
 
       <Alert
-        message="Note: You must be the owner of each listed unit to see the claimable incentives."
+        message="Note: You must be the owner of each listed unit to see the claimable rewards."
         type="info"
         showIcon
       />
@@ -147,7 +147,7 @@ export const IncentivesForThisEpoch = () => {
             dynamicFormType={FORM_TYPES.CLAIMABLE_INCENTIVES}
             isLoading={isLoading}
             onSubmit={getIncentives}
-            submitButtonText="Check Incentives"
+            submitButtonText="Check Rewards"
           />
         </Col>
 
