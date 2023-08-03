@@ -21,6 +21,9 @@ const GlobalStyle = createGlobalStyle`
   background-color: ${COLOR.WHITE};
 
   /* common */
+  .m-0 {
+    margin: 0 !important;
+  }
   .mb-8 {
     margin-bottom: 0.5rem;
   }
@@ -41,6 +44,9 @@ const GlobalStyle = createGlobalStyle`
   }
   .mt-16 {
     margin-top: 16px;
+  }
+  .align-right {
+    text-align: right;
   }
   .walletconnect-modal__base {
     .walletconnect-modal__mobile__toggle a {
@@ -141,7 +147,7 @@ const GlobalStyle = createGlobalStyle`
   .ant-form-item-label > label {
     font-weight: bold;
   }
-  .custom-form-item-lock {
+  .custom-form-item-tokenAmount {
     margin-bottom: 4px;
   }
 
@@ -165,6 +171,17 @@ const GlobalStyle = createGlobalStyle`
     }
   }
 
+  .ant-tooltip-inner {
+    background-color: ${COLOR.BLACK};
+  }
+
+  .deposit-tag {
+    margin-bottom: 1rem;
+    > * {
+      color: ${COLOR.WHITE} !important;
+    }
+  }
+
   ${MEDIA_QUERY.tablet} {
     body {
       padding: 0rem;
@@ -181,6 +198,18 @@ const GlobalStyle = createGlobalStyle`
     }
     .site-layout {
       margin-top: 0;
+    }
+  }
+
+  ${MEDIA_QUERY.mobileL} {
+    .site-layout {
+      padding: 0 1rem;
+    }
+    .choose-type-group.ant-typography {
+      flex-direction: column;
+      .ant-radio-group {
+        margin-left: 0rem;
+      }
     }
   }
 `;

@@ -52,7 +52,7 @@ const checkIfHasDuplicate = (unitIds, unitTypes) => {
 };
 
 export const IncentivesForThisEpoch = () => {
-  const { account, chainId } = useHelpers();
+  const { account } = useHelpers();
 
   // fetch incentives state
   const [isLoading, setIsLoading] = useState(false);
@@ -99,13 +99,7 @@ export const IncentivesForThisEpoch = () => {
           );
         } else {
           try {
-            const params = {
-              address,
-              chainId,
-              unitIds,
-              unitTypes,
-            };
-
+            const params = { address, unitIds, unitTypes };
             const response = await getOwnerIncentivesRequest(params);
 
             // set reward and top up for table
@@ -138,10 +132,10 @@ export const IncentivesForThisEpoch = () => {
 
   return (
     <>
-      <Title level={3}>Claimable Incentives up to this epoch</Title>
+      <Title level={3}>Check for available rewards</Title>
 
       <Alert
-        message="Note: You must be the owner of each listed unit to see the claimable incentives."
+        message="Note: You must be the owner of each listed unit to see the claimable rewards."
         type="info"
         showIcon
       />
@@ -153,7 +147,7 @@ export const IncentivesForThisEpoch = () => {
             dynamicFormType={FORM_TYPES.CLAIMABLE_INCENTIVES}
             isLoading={isLoading}
             onSubmit={getIncentives}
-            submitButtonText="Check Incentives"
+            submitButtonText="Check Rewards"
           />
         </Col>
 

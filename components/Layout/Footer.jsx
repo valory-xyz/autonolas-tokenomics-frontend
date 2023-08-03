@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/router';
+import { Grid } from 'antd/lib';
 import Link from 'next/link';
 import {
   Footer as CommonFooter,
@@ -10,6 +11,8 @@ import {
 import { getContractAddress } from 'common-util/Contracts';
 import Socials from './Socials';
 import { ContractsInfoContainer } from './styles';
+
+const { useBreakpoint } = Grid;
 
 const ContractInfo = () => {
   const chainId = useSelector((state) => state?.setup?.chainId);
@@ -49,7 +52,7 @@ const ContractInfo = () => {
       };
     }
 
-    if ((pathname || '').includes('bonding-programs')) {
+    if ((pathname || '').includes('bonding-products')) {
       return {
         textOne: 'Depository',
         addressOne: getContractAddress('depository', addressChainId),
@@ -110,19 +113,25 @@ const ContractInfo = () => {
   );
 };
 
-const Footer = () => (
-  <CommonFooter
-    leftContent={<ContractInfo />}
-    rightContent={<Socials />}
-    centerContent={(
-      <>
-        ©&nbsp;Autonolas DAO&nbsp;
-        {new Date().getFullYear()}
-        &nbsp;•&nbsp;
-        <Link href="/disclaimer">Disclaimer</Link>
-      </>
-    )}
-  />
-);
+const Footer = () => {
+  const screens = useBreakpoint();
+
+  return (
+    <CommonFooter
+      leftContent={<ContractInfo />}
+      rightContent={<Socials />}
+      centerContent={
+        screens.xs ? null : (
+          <>
+            ©&nbsp;Autonolas DAO&nbsp;
+            {new Date().getFullYear()}
+            &nbsp;•&nbsp;
+            <Link href="/disclaimer">Disclaimer</Link>
+          </>
+        )
+      }
+    />
+  );
+};
 
 export default Footer;

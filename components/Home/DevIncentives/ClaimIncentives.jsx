@@ -8,14 +8,14 @@ import { claimOwnerIncentivesRequest, getPausedValueRequest } from './requests';
 const { Title } = Typography;
 
 export const ClaimIncentives = () => {
-  const { account, chainId } = useHelpers();
+  const { account } = useHelpers();
   const [isLoading, setIsLoading] = useState(false);
   const [pauseValue, setPausedValue] = useState('0');
 
   useEffect(() => {
     const getData = async () => {
       try {
-        const value = await getPausedValueRequest({ chainId });
+        const value = await getPausedValueRequest();
         setPausedValue(value);
       } catch (error) {
         notifySpecificError(error);
@@ -34,13 +34,12 @@ export const ClaimIncentives = () => {
 
       const params = {
         account,
-        chainId,
         unitIds: values.unitIds.map((e) => `${e}`),
         unitTypes: values.unitTypes.map((e) => `${e}`),
       };
       await claimOwnerIncentivesRequest(params);
 
-      notifySuccess('Incentives claimed successfully');
+      notifySuccess('Rewards claimed');
     } catch (error) {
       notifySpecificError(error);
       window.console.error(error);
@@ -55,12 +54,12 @@ export const ClaimIncentives = () => {
         <></>
       ) : (
         <>
-          <Title level={3}>Claim Incentives</Title>
+          <Title level={3}>Claim Rewards</Title>
 
           {pauseValue === '1' && (
             <>
               <Alert
-                message="Note: You must be the owner of each listed unit to claim incentives."
+                message="Note: You must be the owner of each listed unit to claim rewards."
                 type="info"
                 showIcon
               />
@@ -69,7 +68,7 @@ export const ClaimIncentives = () => {
               <DynamicFieldsForm
                 isLoading={isLoading}
                 onSubmit={onClaimIncentivesSubmit}
-                submitButtonText="Claim Incentives"
+                submitButtonText="Claim Rewards"
               />
             </>
           )}
@@ -77,7 +76,7 @@ export const ClaimIncentives = () => {
           {pauseValue === '2' && (
             <>
               <Alert
-                message="Note: Claim incentives is currently paused and governance can unpause withdrawals."
+                message="Note: Rewards claiming is currently paused and will resume once the governance unpauses withdrawals."
                 type="info"
                 showIcon
               />

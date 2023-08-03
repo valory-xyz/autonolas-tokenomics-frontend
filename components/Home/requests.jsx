@@ -1,15 +1,35 @@
+/* eslint-disable max-len */
 import { sendTransaction } from '@autonolas/frontend-library';
 import { getDepositoryContract } from 'common-util/Contracts';
+
+export const getBondInfoRequest = async (bondList) => {
+  const contract = getDepositoryContract();
+
+  try {
+    const bondListPromise = [];
+
+    for (let i = 0; i < bondList.length; i += 1) {
+      const result = contract.methods.mapUserBonds(bondList[i].bondId).call();
+      bondListPromise.push(result);
+    }
+
+    const lpTokenNameList = await Promise.all(bondListPromise);
+
+    return bondList.map((component, index) => ({
+      ...component,
+      maturityDate: lpTokenNameList[index].maturity * 1000,
+    }));
+  } catch (error) {
+    window.console.log('Error on fetching bond info');
+    return bondList;
+  }
+};
 
 /**
  * Bonding functionalities
  */
-export const getBondsRequest = ({
-  account,
-  chainId,
-  isActive: isBondMatured,
-}) => new Promise((resolve, reject) => {
-  const contract = getDepositoryContract(window.MODAL_PROVIDER, chainId);
+export const getBondsRequest = ({ account, isActive: isBondMatured }) => new Promise((resolve, reject) => {
+  const contract = getDepositoryContract();
 
   contract.methods
     .getBonds(account, isBondMatured)
@@ -22,19 +42,32 @@ export const getBondsRequest = ({
       for (let i = 0; i < bondIds.length; i += 1) {
         const id = `${bondIds[i]}`;
         const result = contract.methods.getBondStatus(id).call();
+
         allListPromise.push(result);
         idsList.push(id);
       }
 
       Promise.all(allListPromise)
-        .then((allListResponse) => {
+        .then(async (allListResponse) => {
           const bondsListWithDetails = allListResponse.map((bond, index) => ({
             ...bond,
             bondId: idsList[index],
             key: idsList[index],
           }));
 
-          resolve(bondsListWithDetails);
+          /**
+             * backend returns all the bonds if "isBondMatured = false",
+             * hence we need to filter out if the bonds are matured or not
+             */
+          const filteredBonds = isBondMatured
+            ? bondsListWithDetails
+            : bondsListWithDetails.filter((bond) => !bond.matured);
+
+          const bondsWithMaturityDate = await getBondInfoRequest(
+            filteredBonds,
+          );
+
+          resolve(bondsWithMaturityDate);
         })
         .catch((e) => reject(e));
     })
@@ -44,8 +77,14 @@ export const getBondsRequest = ({
     });
 });
 
-export const redeemRequest = ({ account, chainId, bondIds }) => new Promise((resolve, reject) => {
-  const contract = getDepositoryContract(window.MODAL_PROVIDER, chainId);
+export const getAllBondsRequest = async ({ account }) => {
+  const maturedBonds = await getBondsRequest({ account, isActive: true });
+  const nonMaturedBonds = await getBondsRequest({ account, isActive: false });
+  return { maturedBonds, nonMaturedBonds };
+};
+
+export const redeemRequest = ({ account, bondIds }) => new Promise((resolve, reject) => {
+  const contract = getDepositoryContract();
 
   const fn = contract.methods.redeem(bondIds).send({ from: account });
 

@@ -7,6 +7,7 @@ import {
   Typography,
   Row,
   Col,
+  Grid,
   Table,
 } from 'antd/lib';
 import { notifyError } from 'common-util/functions';
@@ -15,6 +16,7 @@ import { getMapUnitIncentivesRequest } from './requests';
 import { MapPendingIncentivesContainer } from './styles';
 
 const { Title, Paragraph, Text } = Typography;
+const { useBreakpoint } = Grid;
 
 const columns = [
   {
@@ -31,9 +33,10 @@ const columns = [
 ];
 
 export const IncentivesForNextEpoch = () => {
-  const { chainId, account } = useHelpers();
+  const { account } = useHelpers();
   const [isLoading, setIsLoading] = useState(false);
   const [pendingIncentives, setPendingIncentives] = useState([]);
+  const screens = useBreakpoint();
 
   const [form] = Form.useForm();
 
@@ -42,7 +45,6 @@ export const IncentivesForNextEpoch = () => {
       setIsLoading(true);
 
       const response = await getMapUnitIncentivesRequest({
-        chainId,
         unitType: values.unitType,
         unitId: `${values.unitId}`,
       });
@@ -57,9 +59,9 @@ export const IncentivesForNextEpoch = () => {
 
   return (
     <MapPendingIncentivesContainer>
-      <Title level={3}>Projected Incentives for next epoch</Title>
+      <Title level={3}>Estimate rewards for next epoch</Title>
       <Paragraph style={{ maxWidth: 550 }}>
-        Note that the incentives claimable from the next epoch are estimated, as
+        Note that the rewards claimable from the next epoch are estimated, as
         they might eventually change during the epoch due to other donations.
       </Paragraph>
 
@@ -98,12 +100,18 @@ export const IncentivesForNextEpoch = () => {
                 loading={isLoading}
                 disabled={!account}
               >
-                Check Incentives
+                Estimate
               </Button>
 
               {!account && (
-                <Text className="ml-8" type="secondary">
-                  To check incentives, connect a wallet
+                <Text
+                  className="ml-8"
+                  type="secondary"
+                  style={
+                    screens.xs ? { display: 'block' } : { display: 'inline' }
+                  }
+                >
+                  To check rewards, connect a wallet
                 </Text>
               )}
             </Form.Item>

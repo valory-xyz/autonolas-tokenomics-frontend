@@ -7,12 +7,11 @@ import {
 
 export const depositServiceDonationRequest = ({
   account,
-  chainId,
   serviceIds,
   amounts,
   totalAmount,
 }) => new Promise((resolve, reject) => {
-  const contract = getTreasuryContract(window.MODAL_PROVIDER, chainId);
+  const contract = getTreasuryContract();
 
   const fn = contract.methods
     .depositServiceDonationsETH(serviceIds, amounts)
@@ -26,8 +25,8 @@ export const depositServiceDonationRequest = ({
     });
 });
 
-export const minAcceptedEthRequest = ({ chainId }) => new Promise((resolve, reject) => {
-  const contract = getTreasuryContract(window.MODAL_PROVIDER, chainId);
+export const minAcceptedEthRequest = () => new Promise((resolve, reject) => {
+  const contract = getTreasuryContract();
 
   contract.methods
     .minAcceptedETH()
@@ -39,8 +38,8 @@ export const minAcceptedEthRequest = ({ chainId }) => new Promise((resolve, reje
     });
 });
 
-export const getVeOlasThresholdRequest = ({ chainId }) => new Promise((resolve, reject) => {
-  const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
+export const getVeOlasThresholdRequest = () => new Promise((resolve, reject) => {
+  const contract = getTokenomicsContract();
 
   contract.methods
     .veOLASThreshold()

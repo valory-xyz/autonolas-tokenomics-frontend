@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import styled from 'styled-components';
 import { Typography, Radio } from 'antd/lib';
+import { BONDING_PRODUCTS } from 'util/constants';
 import { BondingList } from './Bonding/BondingList';
 
 const { Title } = Typography;
@@ -12,8 +13,11 @@ const ProductContainer = styled.div`
   }
 `;
 
-export const BondingPrograms = () => {
-  const [bondingProgramType, setProductType] = useState('active');
+export const BondingProducts = () => {
+  // if user not connected, show all products
+  const [bondingProgramType, setProductType] = useState(
+    BONDING_PRODUCTS.ACTIVE,
+  );
 
   const onChange = (e) => {
     setProductType(e.target.value);
@@ -22,11 +26,11 @@ export const BondingPrograms = () => {
   return (
     <ProductContainer>
       <Title level={2} className="choose-type-group">
-        Bonding Programs
+        Bonding Products
         <Radio.Group onChange={onChange} value={bondingProgramType}>
-          <Radio value="allProduct">All</Radio>
-          <Radio value="active">Active</Radio>
-          <Radio value="inactive">Inactive</Radio>
+          <Radio value={BONDING_PRODUCTS.ALL}>All</Radio>
+          <Radio value={BONDING_PRODUCTS.ACTIVE}>Active</Radio>
+          <Radio value={BONDING_PRODUCTS.INACTIVE}>Inactive</Radio>
         </Radio.Group>
       </Title>
 

@@ -1,18 +1,24 @@
+/* eslint-disable no-underscore-dangle */
+/* eslint-disable max-len */
 import { ethers } from 'ethers';
-import { sendTransaction } from '@autonolas/frontend-library';
+import { getChainId, sendTransaction } from '@autonolas/frontend-library';
+import { OLAS_ADDRESS } from 'util/constants';
 import { MAX_AMOUNT, ADDRESS_ZERO, ONE_ETH } from 'common-util/functions';
 import {
   getContractAddress,
   getDepositoryContract,
   getUniswapV2PairContract,
   getTokenomicsContract,
+  getErc20Contract,
+  getEthersProvider,
 } from 'common-util/Contracts';
+import { getProductValueFromEvent, updateProductDefaultValues } from './requestsHelpers';
 
 /**
  * fetches the IDF (discount factor) for the product
  */
-const getLastIDFRequest = ({ chainId }) => new Promise((resolve, reject) => {
-  const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
+const getLastIDFRequest = () => new Promise((resolve, reject) => {
+  const contract = getTokenomicsContract();
 
   contract.methods
     .getLastIDF()
@@ -20,14 +26,10 @@ const getLastIDFRequest = ({ chainId }) => new Promise((resolve, reject) => {
     .then((lastIdfResponse) => {
       /**
          * 1 ETH = 1e18
-         * discount = (1 ETH - lastIDF) / 1 ETH
+         * discount = (lastIDF - 1 ETH) / 1 ETH
          */
-      const discount = ethers.BigNumber.from(ONE_ETH)
-        .sub(lastIdfResponse)
-        .div(ONE_ETH)
-        .mul(100) // to convert it to percentage
-        .toString();
-
+      const firstDiv = Number(lastIdfResponse) - Number(ONE_ETH);
+      const discount = ((firstDiv * 1.0) / Number(ONE_ETH)) * 100;
       resolve(discount);
     })
     .catch((e) => {
@@ -36,8 +38,8 @@ const getLastIDFRequest = ({ chainId }) => new Promise((resolve, reject) => {
     });
 });
 
-const getBondingProgramsRequest = ({ chainId, isActive }) => new Promise((resolve, reject) => {
-  const contract = getDepositoryContract(window.MODAL_PROVIDER, chainId);
+const getBondingProgramsRequest = ({ isActive }) => new Promise((resolve, reject) => {
+  const contract = getDepositoryContract();
 
   contract.methods
     .getProducts(isActive)
@@ -52,22 +54,164 @@ const getBondingProgramsRequest = ({ chainId, isActive }) => new Promise((resolv
 });
 
 /**
+ * returns events for the product creation
+ */
+export const getProductEvents = async (eventName) => {
+  const contract = getDepositoryContract();
+
+  const provider = getEthersProvider();
+  const block = await provider.getBlock('latest');
+
+  const oldestBlock = (getChainId() || 1) >= 100000 ? 10 : 1000000;
+  const events = contract.getPastEvents(eventName, {
+    fromBlock: block.number - oldestBlock,
+    toBlock: block.number,
+  });
+
+  return events;
+};
+
+/**
+ * fetches the lp token name for the product
+ * @example
+ * input: '0x'
+ * output: 'OLAS-ETH'
+ */
+const getLpTokenName = async (address) => {
+  try {
+    const contract = getUniswapV2PairContract(address);
+
+    let token0 = await contract.methods.token0().call();
+    const token1 = await contract.methods.token1().call();
+
+    if (token0 === OLAS_ADDRESS) {
+      token0 = token1;
+    }
+
+    const erc20Contract = getErc20Contract(token0);
+    const tokenSymbol = await erc20Contract.methods.symbol().call();
+
+    return `OLAS-${tokenSymbol}`;
+  } catch (error) {
+    window.console.log('Error on fetching lp token name');
+    console.error(error);
+    return null;
+  }
+};
+
+/**
+ * fetches the lp token name for the product
+ * @example
+ * input: [{ token: '0x', ...others }]
+ * output: [{ token: '0x', lpTokenName: 'OLAS-ETH', ...others }]
+ */
+const getLpTokenNamesForProducts = async (productList) => {
+  const lpTokenNamePromiseList = [];
+
+  const events = await getProductEvents('CreateProduct');
+
+  for (let i = 0; i < productList.length; i += 1) {
+    const result = getLpTokenName(
+      getProductValueFromEvent(productList[i], events, 'token'),
+    );
+    lpTokenNamePromiseList.push(result);
+  }
+
+  const lpTokenNameList = await Promise.all(lpTokenNamePromiseList);
+
+  return productList.map((component, index) => ({
+    ...component,
+    lpTokenName: lpTokenNameList[index],
+  }));
+};
+
+const getCurrentLpPriceForProducts = async (productList) => {
+  const contract = getDepositoryContract();
+
+  const currentLpPricePromiseList = [];
+
+  for (let i = 0; i < productList.length; i += 1) {
+    if (productList[i].token === ADDRESS_ZERO) {
+      currentLpPricePromiseList.push(0);
+    } else {
+      const currentLpPricePromise = contract.methods
+        .getCurrentPriceLP(productList[i].token)
+        .call();
+      currentLpPricePromiseList.push(currentLpPricePromise);
+    }
+  }
+
+  const resolvedList = await Promise.all(currentLpPricePromiseList);
+
+  return productList.map((component, index) => ({
+    ...component,
+    currentPriceLp: resolvedList[index],
+  }));
+};
+
+export const getListWithSupplyList = async (list, productEvents) => {
+  const listAfterSupplyLeftCalc = list.map((product) => {
+    const productEvent = productEvents.find(
+      (event) => event.returnValues.productId === `${product.id}`,
+    );
+
+    if (!productEvent) {
+      return { ...product, supplyLeft: 0 };
+    }
+
+    const eventSupply = Number(
+      ethers.BigNumber.from(productEvent.returnValues.supply).div(ONE_ETH),
+    );
+    const productSupply = Number(
+      ethers.BigNumber.from(product.supply).div(ONE_ETH),
+    );
+    const supplyLeft = productSupply / eventSupply;
+
+    return { ...product, supplyLeft };
+  });
+
+  return listAfterSupplyLeftCalc;
+};
+
+/**
  *
  */
-const getProductDetailsFromIds = ({ chainId, productIdList }) => new Promise((resolve, reject) => {
-  const contract = getDepositoryContract(window.MODAL_PROVIDER, chainId);
+const getProductDetailsFromIds = ({ productIdList }) => new Promise((resolve, reject) => {
+  const contract = getDepositoryContract();
 
   try {
     const allListPromise = [];
 
     for (let i = 0; i < productIdList.length; i += 1) {
       const id = productIdList[i];
-      const result = contract.methods.mapBondProducts(id).call();
-      allListPromise.push(result);
+      const allListResult = contract.methods.mapBondProducts(id).call();
+      allListPromise.push(allListResult);
     }
 
     Promise.all(allListPromise)
-      .then((componentsList) => resolve(componentsList))
+      .then(async (response) => {
+        const productList = response.map((product, index) => ({
+          ...product,
+          id: productIdList[index],
+        }));
+
+        const eventList = await getProductEvents('CreateProduct');
+
+        const listWithLpTokens = await getLpTokenNamesForProducts(
+          productList,
+        );
+
+        const listWithCurrentLpPrice = await getCurrentLpPriceForProducts(
+          listWithLpTokens,
+        );
+
+        const listWithSupplyList = await getListWithSupplyList(
+          listWithCurrentLpPrice,
+          eventList,
+        );
+
+        resolve(listWithSupplyList);
+      })
       .catch((e) => reject(e));
   } catch (error) {
     window.console.log('Error on fetching bonding program details details');
@@ -81,8 +225,8 @@ const getProductDetailsFromIds = ({ chainId, productIdList }) => new Promise((re
  *     2. inactive products,
  *     3. 0 supply + active + inactive (combination of 1, 2, 3)
  */
-export const getAllTheProductsNotRemoved = async ({ chainId }) => new Promise((resolve, reject) => {
-  const contract = getDepositoryContract(window.MODAL_PROVIDER, chainId);
+export const getAllTheProductsNotRemoved = async () => new Promise((resolve, reject) => {
+  const contract = getDepositoryContract();
   contract.methods
     .productCounter()
     .call()
@@ -96,10 +240,10 @@ export const getAllTheProductsNotRemoved = async ({ chainId }) => new Promise((r
       }
 
       // discount factor is same for all the products
-      const discount = await getLastIDFRequest({ chainId });
+      const discount = await getLastIDFRequest();
 
       Promise.all(allListPromise)
-        .then((response) => {
+        .then(async (response) => {
           // add id & discount to the product
           const productWithIds = response.map((product, index) => ({
             ...product,
@@ -108,12 +252,28 @@ export const getAllTheProductsNotRemoved = async ({ chainId }) => new Promise((r
             key: index,
           }));
 
-          // filter out the products that are removed
-          const filteredList = productWithIds.filter(
-            (product) => product.token !== ADDRESS_ZERO,
+          const eventList = await getProductEvents('CreateProduct');
+
+          const listWithLpTokens = await getLpTokenNamesForProducts(
+            productWithIds,
           );
 
-          resolve(filteredList);
+          const listWithCurrentLpPrice = await getCurrentLpPriceForProducts(
+            listWithLpTokens,
+          );
+
+          // update priceLp if the address is ADDRESS_ZERO
+          const listWithUpdatedPriceLp = updateProductDefaultValues(
+            listWithCurrentLpPrice,
+            eventList,
+          );
+
+          const listWithSupplyList = await getListWithSupplyList(
+            listWithUpdatedPriceLp,
+            eventList,
+          );
+
+          resolve(listWithSupplyList);
         })
         .catch((e) => reject(e));
     })
@@ -126,21 +286,11 @@ export const getAllTheProductsNotRemoved = async ({ chainId }) => new Promise((r
 /**
  * fetches product list based on the active/inactive status
  */
-export const getProductListRequest = async ({ account, chainId, isActive }) => {
+export const getProductListRequest = async ({ isActive }) => {
   try {
-    const productIdList = await getBondingProgramsRequest({
-      account,
-      chainId,
-      isActive,
-    });
-
-    const response = await getProductDetailsFromIds({
-      productIdList,
-      chainId,
-    });
-
-    // discount factor is same for all the products
-    const discount = await getLastIDFRequest({ chainId });
+    const productIdList = await getBondingProgramsRequest({ isActive });
+    const response = await getProductDetailsFromIds({ productIdList });
+    const discount = await getLastIDFRequest(); // discount factor is same for all the products
 
     const productList = response.map((product, index) => ({
       id: productIdList[index],
@@ -151,6 +301,7 @@ export const getProductListRequest = async ({ account, chainId, isActive }) => {
 
     return productList;
   } catch (error) {
+    window.console.error(error);
     throw new Error(error);
   }
 };
@@ -161,10 +312,7 @@ export const hasSufficientTokenRequest = ({
   token: productToken,
   tokenAmount,
 }) => new Promise((resolve, reject) => {
-  const contract = getUniswapV2PairContract(
-    window.MODAL_PROVIDER,
-    productToken,
-  );
+  const contract = getUniswapV2PairContract(productToken);
 
   const treasuryAddress = getContractAddress('treasury', chainId);
 
@@ -191,7 +339,7 @@ export const hasSufficientTokenRequest = ({
  * Approves the treasury contract to spend the token
  */
 export const approveRequest = ({ account, chainId, token }) => new Promise((resolve, reject) => {
-  const contract = getUniswapV2PairContract(window.MODAL_PROVIDER, token);
+  const contract = getUniswapV2PairContract(token);
 
   const treasuryAddress = getContractAddress('treasury', chainId);
 
@@ -212,10 +360,8 @@ export const approveRequest = ({ account, chainId, token }) => new Promise((reso
 /**
  * Deposits the token
  */
-export const depositRequest = ({
-  account, chainId, productId, tokenAmount,
-}) => new Promise((resolve, reject) => {
-  const contract = getDepositoryContract(window.MODAL_PROVIDER, chainId);
+export const depositRequest = ({ account, productId, tokenAmount }) => new Promise((resolve, reject) => {
+  const contract = getDepositoryContract();
 
   const fn = contract.methods
     .deposit(productId, tokenAmount)
@@ -231,10 +377,18 @@ export const depositRequest = ({
     });
 });
 
-/**
- * call uniswap token0 - line 164
- * - If token0 = OLAS then print "OLAS" +
- *   call name() from the ABI of ERC20 token with address token1
- * - else call name() from the ABI of ERC20 token
- * - else
- */
+export const getLpBalanceRequest = ({ account, token }) => new Promise((resolve, reject) => {
+  const contract = getUniswapV2PairContract(token);
+
+  contract.methods
+    .balanceOf(account)
+    .call()
+    .then((response) => {
+      // convert big number to string
+      resolve(response.toString());
+    })
+    .catch((e) => {
+      window.console.log('Error occured on fetching LP balance');
+      reject(e);
+    });
+});

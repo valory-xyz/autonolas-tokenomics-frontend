@@ -1,19 +1,41 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
+import { isNil } from 'lodash';
 import {
-  Form, Input, Modal, Alert, Button,
+  Form,
+  InputNumber,
+  Modal,
+  Alert,
+  Button,
+  Typography,
+  Tag,
 } from 'antd/lib';
-import { parseToWei, notifySuccess, notifyError } from 'common-util/functions';
+import { COLOR } from '@autonolas/frontend-library';
+
+import {
+  parseToWei,
+  notifySuccess,
+  notifyError,
+  parseToEth,
+  getCommaSeparatedNumber,
+} from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
+// import { ethers } from 'ethers';
 import {
   depositRequest,
   hasSufficientTokenRequest,
   approveRequest,
+  getLpBalanceRequest,
 } from './requests';
+
+const { Text, Title } = Typography;
+const fullWidth = { width: '100%' };
 
 export const Deposit = ({
   productId,
   productToken,
+  productLpPrice,
+  productSupply,
   getProducts,
   closeModal,
 }) => {
@@ -21,6 +43,18 @@ export const Deposit = ({
   const [form] = Form.useForm();
   const [isLoading, setIsLoading] = useState(false);
   const [isApproveModalVisible, setIsApproveModalVisible] = useState(false);
+  const [lpBalance, setLpBalance] = useState(0);
+
+  useEffect(async () => {
+    if (account) {
+      const lpResponse = await getLpBalanceRequest({
+        account,
+        token: productToken,
+      });
+
+      setLpBalance(parseToEth(lpResponse));
+    }
+  }, [account, productToken]);
 
   const depositHelper = async () => {
     try {
@@ -29,8 +63,7 @@ export const Deposit = ({
       // deposit if LP token is present for the product ID
       const txHash = await depositRequest({
         account,
-        chainId,
-        productId: form.getFieldValue('productId'),
+        productId,
         tokenAmount: parseToWei(form.getFieldValue('tokenAmount')),
       });
       notifySuccess('Deposited successfully!', `Transaction Hash: ${txHash}`);
@@ -77,42 +110,104 @@ export const Deposit = ({
       });
   };
 
+  const tokenAmountInputValue = Form.useWatch('tokenAmount', form);
+
+  const getRemainingLpSupply = () => {
+    const supplyInEth = parseToEth(productSupply);
+
+    const remainingSupply = supplyInEth / productLpPrice;
+
+    if (remainingSupply < lpBalance) return remainingSupply;
+
+    return lpBalance;
+  };
+
+  const getOlasPayout = () => {
+    if (!tokenAmountInputValue || tokenAmountInputValue > getRemainingLpSupply()) {
+      return '--';
+    }
+
+    const olasPayout = tokenAmountInputValue
+      ? productLpPrice * tokenAmountInputValue
+      : 0;
+    return getCommaSeparatedNumber(olasPayout, 4);
+  };
+
   return (
     <>
       <Modal
-        visible
-        title="Create Bond"
-        okText="Create Bond"
+        open
+        title="Bond LP tokens for OLAS"
+        okText="Bond"
+        okButtonProps={{
+          disabled: !account || lpBalance === 0,
+        }}
         cancelText="Cancel"
         onCancel={closeModal}
         onOk={onCreate}
         confirmLoading={isLoading}
+        destroyOnClose
       >
         <Form
           form={form}
           name="create_bond_form"
+          layout="vertical"
           autoComplete="off"
-          labelCol={{ span: 10 }}
-          wrapperCol={{ span: 14 }}
-          initialValues={{
-            productId: productId || undefined,
-          }}
         >
-          <Form.Item
-            label="Bonding Program ID"
-            name="productId"
-            rules={[{ required: true, message: 'Please input Bonding Program ID' }]}
-          >
-            <Input disabled />
-          </Form.Item>
+          <Tag color={COLOR.PRIMARY} className="deposit-tag">
+            <Title level={5} className="m-0">
+              {`Bonding Product ID: ${productId}`}
+            </Title>
+          </Tag>
 
           <Form.Item
-            label="Token Amount"
+            className="custom-form-item-tokenAmount"
+            label="LP Token Amount"
             name="tokenAmount"
-            rules={[{ required: true, message: 'Please input token' }]}
+            rules={[
+              { required: true, message: 'Please input a valid amount' },
+              () => ({
+                validator(_, value) {
+                  if (value === '' || isNil(value)) return Promise.resolve();
+                  if (value <= 0) {
+                    return Promise.reject(
+                      new Error('Please input a valid amount'),
+                    );
+                  }
+                  if (value > getRemainingLpSupply()) {
+                    return Promise.reject(
+                      new Error('Amount cannot be greater than the balance'),
+                    );
+                  }
+                  return Promise.resolve();
+                },
+              }),
+            ]}
           >
-            <Input />
+            <InputNumber style={fullWidth} />
           </Form.Item>
+
+          <div className="mb-8">
+            <Text type="secondary">
+              LP balance:&nbsp;
+              {getCommaSeparatedNumber(getRemainingLpSupply(), 4)}
+              <Button
+                htmlType="button"
+                type="link"
+                onClick={() => {
+                  form.setFieldsValue({ tokenAmount: getRemainingLpSupply() });
+                  form.validateFields(['tokenAmount']);
+                }}
+                className="pl-0"
+              >
+                Max
+              </Button>
+            </Text>
+          </div>
+
+          <div>
+            <Text>{`OLAS Payout: ${getOlasPayout()}`}</Text>
+          </div>
         </Form>
       </Modal>
 
@@ -124,39 +219,40 @@ export const Deposit = ({
           onCancel={() => setIsApproveModalVisible(false)}
         >
           <Alert
-            message="Before depositing an approval for OLAS is required, please approve to proceed"
+            message="Before depositing to the bonding product, an approval for OLAS is required. Please approve OLAS to proceed."
             type="warning"
           />
 
           <br />
-          <Button
-            type="primary"
-            htmlType="submit"
-            style={{ right: 'calc(-100% + 100px)', position: 'relative' }}
-            loading={isLoading}
-            onClick={async () => {
-              try {
-                setIsLoading(true);
-                await approveRequest({
-                  account,
-                  chainId,
-                  token: productToken,
-                });
+          <div className="align-right">
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={isLoading}
+              onClick={async () => {
+                try {
+                  setIsLoading(true);
+                  await approveRequest({
+                    account,
+                    chainId,
+                    token: productToken,
+                  });
 
-                // once approved, close the modal and call deposit helper
-                setIsApproveModalVisible(false);
-                await depositHelper();
-              } catch (error) {
-                window.console.error(error);
-                setIsApproveModalVisible(false);
-                notifyError();
-              } finally {
-                setIsLoading(false);
-              }
-            }}
-          >
-            Approve
-          </Button>
+                  // once approved, close the modal and call deposit helper
+                  setIsApproveModalVisible(false);
+                  await depositHelper();
+                } catch (error) {
+                  window.console.error(error);
+                  setIsApproveModalVisible(false);
+                  notifyError();
+                } finally {
+                  setIsLoading(false);
+                }
+              }}
+            >
+              Approve
+            </Button>
+          </div>
         </Modal>
       )}
     </>
@@ -166,6 +262,8 @@ export const Deposit = ({
 Deposit.propTypes = {
   productId: PropTypes.string,
   productToken: PropTypes.string,
+  productSupply: PropTypes.string,
+  productLpPrice: PropTypes.number,
   closeModal: PropTypes.func,
   getProducts: PropTypes.func,
 };
@@ -173,6 +271,8 @@ Deposit.propTypes = {
 Deposit.defaultProps = {
   productId: undefined,
   productToken: null,
+  productLpPrice: null,
+  productSupply: null,
   closeModal: () => {},
   getProducts: () => {},
 };

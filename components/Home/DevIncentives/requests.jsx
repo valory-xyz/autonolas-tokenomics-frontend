@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import { sendTransaction } from '@autonolas/frontend-library';
 import { UNIT_TYPES } from 'util/constants';
 import { getBlockTimestamp, parseToEth } from 'common-util/functions';
@@ -39,13 +40,8 @@ export const getOwnersForUnits = ({ unitIds, unitTypes }) => new Promise((resolv
     });
 });
 
-export const getOwnerIncentivesRequest = ({
-  address,
-  chainId,
-  unitTypes,
-  unitIds,
-}) => new Promise((resolve, reject) => {
-  const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
+export const getOwnerIncentivesRequest = ({ address, unitTypes, unitIds }) => new Promise((resolve, reject) => {
+  const contract = getTokenomicsContract();
 
   contract.methods
     .getOwnerIncentives(address, unitTypes, unitIds)
@@ -59,13 +55,8 @@ export const getOwnerIncentivesRequest = ({
     });
 });
 
-export const claimOwnerIncentivesRequest = ({
-  account,
-  chainId,
-  unitTypes,
-  unitIds,
-}) => new Promise((resolve, reject) => {
-  const contract = getDispenserContract(window.MODAL_PROVIDER, chainId);
+export const claimOwnerIncentivesRequest = ({ account, unitTypes, unitIds }) => new Promise((resolve, reject) => {
+  const contract = getDispenserContract();
 
   const fn = contract.methods
     .claimOwnerIncentives(unitTypes, unitIds)
@@ -81,8 +72,8 @@ export const claimOwnerIncentivesRequest = ({
     });
 });
 
-export const checkpointRequest = ({ account, chainId }) => new Promise((resolve, reject) => {
-  const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
+export const checkpointRequest = ({ account }) => new Promise((resolve, reject) => {
+  const contract = getTokenomicsContract();
 
   const fn = contract.methods.checkpoint().send({ from: account });
 
@@ -96,8 +87,8 @@ export const checkpointRequest = ({ account, chainId }) => new Promise((resolve,
     });
 });
 
-const getEpochCounter = ({ chainId }) => new Promise((resolve, reject) => {
-  const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
+const getEpochCounter = () => new Promise((resolve, reject) => {
+  const contract = getTokenomicsContract();
 
   contract.methods
     .epochCounter()
@@ -111,8 +102,8 @@ const getEpochCounter = ({ chainId }) => new Promise((resolve, reject) => {
     });
 });
 
-const getEpochTokenomics = ({ chainId, lastPoint }) => new Promise((resolve, reject) => {
-  const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
+const getEpochTokenomics = ({ lastPoint }) => new Promise((resolve, reject) => {
+  const contract = getTokenomicsContract();
 
   contract.methods
     .mapEpochTokenomics(lastPoint)
@@ -126,8 +117,8 @@ const getEpochTokenomics = ({ chainId, lastPoint }) => new Promise((resolve, rej
     });
 });
 
-const getUnitPointReq = ({ lastPoint, chainId, num }) => new Promise((resolve, reject) => {
-  const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
+const getUnitPointReq = ({ lastPoint, num }) => new Promise((resolve, reject) => {
+  const contract = getTokenomicsContract();
 
   contract.methods
     .getUnitPoint(lastPoint, num)
@@ -141,8 +132,8 @@ const getUnitPointReq = ({ lastPoint, chainId, num }) => new Promise((resolve, r
     });
 });
 
-const getEpochLength = ({ chainId }) => new Promise((resolve, reject) => {
-  const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
+const getEpochLength = () => new Promise((resolve, reject) => {
+  const contract = getTokenomicsContract();
 
   contract.methods
     .epochLen()
@@ -156,14 +147,13 @@ const getEpochLength = ({ chainId }) => new Promise((resolve, reject) => {
     });
 });
 
-export const canShowCheckpoint = async ({ chainId }) => {
+export const canShowCheckpoint = async () => {
   try {
-    const epCounter = await getEpochCounter({ chainId });
+    const epCounter = await getEpochCounter();
     const epTokenomics = await getEpochTokenomics({
       lastPoint: Number(epCounter) - 1,
-      chainId,
     });
-    const epochLen = await getEpochLength({ chainId });
+    const epochLen = await getEpochLength();
     const blockTimestamp = await getBlockTimestamp();
     const { endTime } = epTokenomics;
 
@@ -178,31 +168,24 @@ export const canShowCheckpoint = async ({ chainId }) => {
   return false;
 };
 
-export const getMapUnitIncentivesRequest = ({
-  // account,
-  chainId,
-  unitType,
-  unitId,
-}) => new Promise((resolve, reject) => {
-  const contract = getTokenomicsContract(window.MODAL_PROVIDER, chainId);
+export const getMapUnitIncentivesRequest = ({ unitType, unitId }) => new Promise((resolve, reject) => {
+  const contract = getTokenomicsContract();
 
   contract.methods
     .mapUnitIncentives(unitType, unitId)
     .call()
     .then(async (response) => {
-      const currentEpochCounter = await getEpochCounter({ chainId });
+      const currentEpochCounter = await getEpochCounter();
 
       // Get the unit points of the last epoch
       const componentInfo = await getUnitPointReq({
         lastPoint: currentEpochCounter,
         num: 0,
-        chainId,
       });
 
       const agentInfo = await getUnitPointReq({
         lastPoint: currentEpochCounter,
         num: 1,
-        chainId,
       });
 
       const { pendingRelativeReward, pendingRelativeTopUp, lastEpoch } = response;
@@ -254,8 +237,8 @@ export const getMapUnitIncentivesRequest = ({
     });
 });
 
-export const getPausedValueRequest = ({ chainId }) => new Promise((resolve, reject) => {
-  const contract = getTreasuryContract(window.MODAL_PROVIDER, chainId);
+export const getPausedValueRequest = () => new Promise((resolve, reject) => {
+  const contract = getTreasuryContract();
 
   contract.methods
     .paused()
@@ -268,3 +251,22 @@ export const getPausedValueRequest = ({ chainId }) => new Promise((resolve, reje
       reject(e);
     });
 });
+
+export const getLastEpochRequest = async () => {
+  try {
+    const epCounter = await getEpochCounter();
+    const prevEpochPoint = await getEpochTokenomics({
+      lastPoint: Number(epCounter) - 1,
+    });
+
+    const prevEpochEndTime = prevEpochPoint.endTime;
+    const epochLen = await getEpochLength();
+    const nextEpochEndTime = parseInt(prevEpochEndTime, 10) + epochLen;
+
+    return { epochLen, prevEpochEndTime, nextEpochEndTime };
+  } catch (error) {
+    window.console.log('Error occured on fetching last epoch');
+    console.error(error);
+    return null;
+  }
+};

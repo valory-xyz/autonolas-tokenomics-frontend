@@ -1,90 +1,185 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import {
-  Button, Table, Tag, Tooltip,
+  Button, Table, Tag, Tooltip, Typography,
 } from 'antd/lib';
-import { remove } from 'lodash';
+import { remove, round, isNaN } from 'lodash';
 import { COLOR } from '@autonolas/frontend-library';
+import { QuestionCircleOutlined } from '@ant-design/icons';
+import { BONDING_PRODUCTS } from 'util/constants';
 import {
   notifyError,
   getFormattedDate,
   parseToEth,
 } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
+import { NA } from 'common-util/constants';
 import { Deposit } from './Deposit';
-import {
-  getProductListRequest,
-  getAllTheProductsNotRemoved,
-  // getTokenName,
-} from './requests';
+import { getProductListRequest, getAllTheProductsNotRemoved } from './requests';
+
+const { Text } = Typography;
+
+const getLpTokenWithDiscount = (lpTokenValue, discount) => {
+  const price = Number(parseToEth(lpTokenValue));
+  const discountedPrice = price + (price * discount) / 100;
+  return round(discountedPrice, 2);
+};
+
+const buildFullCurrentPriceLp = (currentPriceLp) => Number(round(parseToEth(currentPriceLp * 2), 2)) || '--';
+
+const getTitle = (title, tooltipDesc) => (
+  <Tooltip title={tooltipDesc}>
+    <span>
+      {title}
+      &nbsp;
+      <QuestionCircleOutlined />
+    </span>
+  </Tooltip>
+);
+
+const APY_DESC = 'Denominated in OLAS';
 
 const getColumns = (showNoSupply, onClick, isActive, acc) => {
   const columns = [
     {
-      title: (
-        <Tooltip title="Identifier of bonding program">Bonding Program</Tooltip>
-      ),
+      title: 'ID',
       dataIndex: 'id',
       key: 'id',
     },
     {
-      title: (
-        <Tooltip title="Uniswap v2 LP token address enabled by the Treasury">
-          <span>Token</span>
-        </Tooltip>
+      title: getTitle(
+        'LP Token',
+        'Uniswap v2 LP token address enabled by the Treasury',
       ),
-      dataIndex: 'token',
-      key: 'token',
+      dataIndex: 'lpTokenName',
+      key: 'lpTokenName',
+      render: (x, data) => (
+        <a
+          href={`https://v2.info.uniswap.org/pair/${data.token}`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          {x}
+        </a>
+      ),
     },
     {
-      title: (
-        <Tooltip title="LP token price at which an LP share is priced during the bonding program">
-          <span>Price LP</span>
-        </Tooltip>
+      title: getTitle('Current Price of LP Token', APY_DESC),
+      dataIndex: 'currentPriceLp',
+      key: 'currentPriceLp',
+      render: (text) => (
+        <a
+          href="https://etherscan.io/address/0x52A043bcebdB2f939BaEF2E8b6F01652290eAB3f#readContract#F6"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          {buildFullCurrentPriceLp(text)}
+        </a>
+      ),
+    },
+    {
+      title: getTitle(
+        'OLAS minted per LP token',
+        'Price for one LP token denominated in OLAS as offered by the bonding product.',
       ),
       dataIndex: 'priceLP',
       key: 'priceLP',
-      render: (x) => `${parseToEth(x)} OLAS`,
+      render: (x, data) => {
+        const discount = data?.discount || 0;
+        const discountedPrice = getLpTokenWithDiscount(x, discount);
+
+        return (
+          <a
+            href="https://etherscan.io/address/0x52A043bcebdB2f939BaEF2E8b6F01652290eAB3f#readContract#F9"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            {discountedPrice}
+          </a>
+        );
+      },
     },
     {
-      title: (
-        <Tooltip title="Percentage of discount depending on the usefulness of the code in the ecosystem">
-          Discount
-        </Tooltip>
+      title: getTitle(
+        'Current difference in value',
+        'Percentage difference between current price of LP token and OLAS minted per LP token',
       ),
-      dataIndex: 'discount',
-      key: 'discount',
-      render: (x) => (
-        <Tag color={COLOR.PRIMARY} key={x}>
-          {`${x}%`}
-        </Tag>
+      render: (record) => {
+        const fullCurrentPriceLp = buildFullCurrentPriceLp(
+          record.currentPriceLp,
+        );
+        const discount = record?.discount || 0;
+        const discountedOlasPerLpToken = getLpTokenWithDiscount(
+          record.priceLP,
+          discount,
+        );
+
+        const projectedChange = round(
+          ((discountedOlasPerLpToken - fullCurrentPriceLp)
+            / fullCurrentPriceLp)
+            * 100,
+          2,
+        );
+
+        if (isNaN(projectedChange)) {
+          return <Text>{NA}</Text>;
+        }
+
+        return (
+          <Text style={{ color: projectedChange > 0 ? 'green' : 'red' }}>
+            {projectedChange > 0 && '+'}
+            {projectedChange}
+            %
+          </Text>
+        );
+      },
+    },
+    {
+      title: getTitle('Matures', 'The vesting time to withdraw OLAS'),
+      dataIndex: 'expiry',
+      key: 'expiry',
+      render: (seconds) => (
+        <a
+          href="https://etherscan.io/address/0x52A043bcebdB2f939BaEF2E8b6F01652290eAB3f#readContract#F9"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          {getFormattedDate(seconds * 1000)}
+        </a>
       ),
     },
     {
-      title: (
-        <Tooltip title="OLAS supply reserved for this bonding program">
-          <span>Supply</span>
-        </Tooltip>
+      title: getTitle(
+        'OLAS Supply',
+        'Remaining OLAS supply reserved for this bonding product',
       ),
       dataIndex: 'supply',
       key: 'supply',
-      render: (x) => `${parseToEth(x)} OLAS`,
+      render: (x, row) => {
+        const supplyLeftInPercent = round(row.supplyLeft * 100, 0);
+        return (
+          <>
+            <a
+              href="https://etherscan.io/address/0x52A043bcebdB2f939BaEF2E8b6F01652290eAB3f#readContract#F9"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              {round(parseToEth(x), 2)}
+            </a>
+            &nbsp;
+            <Tooltip title={`${supplyLeftInPercent}% of supply left`}>
+              <Tag color={supplyLeftInPercent < 6 ? COLOR.RED : COLOR.PRIMARY}>
+                {`${supplyLeftInPercent}%`}
+              </Tag>
+            </Tooltip>
+          </>
+        );
+      },
     },
     {
-      title: (
-        <Tooltip title="The vesting time to withdraw OLAS">
-          <span>Expiry</span>
-        </Tooltip>
-      ),
-      dataIndex: 'expiry',
-      key: 'expiry',
-      render: (seconds) => getFormattedDate(seconds * 1000),
-    },
-    {
-      title: (
-        <Tooltip title="Bond your LP pair to get OLAS at a discount">
-          Bond
-        </Tooltip>
+      title: getTitle(
+        'Initiate Bond',
+        'Bond your LP pair to get OLAS at a discount',
       ),
       dataIndex: 'bondForOlas',
       key: 'bondForOlas',
@@ -93,9 +188,9 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
           type="primary"
           // disbled if there is no supply or if the user is not connected
           disabled={showNoSupply || !acc}
-          onClick={() => onClick(row.token)}
+          onClick={() => onClick(row)}
         >
-          Create Bond
+          Bond
         </Button>
       ),
     },
@@ -116,30 +211,27 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
 export const BondingList = ({ bondingProgramType }) => {
   const { account, chainId } = useHelpers();
   const [isLoading, setIsLoading] = useState(false);
-  const [products, setProducts] = useState([]);
-  const showNoSupply = bondingProgramType === 'allProduct';
+  const [allProducts, setAllProducts] = useState([]); // all products
+  const [filteredProducts, setFilteredProducts] = useState([]); // (active / inactive products)
+  const showNoSupply = bondingProgramType === BONDING_PRODUCTS.ALL;
 
-  // if productToken is `not null`, then open the deposit modal
-  const [productToken, setProductToken] = useState(false);
+  // if productDetails is `not null`, then open the deposit modal
+  const [productDetails, setProductDetails] = useState(null);
 
-  const isActive = bondingProgramType === 'active';
+  const isActive = bondingProgramType === BONDING_PRODUCTS.ACTIVE;
 
-  const getProducts = useCallback(async () => {
+  const getProducts = async () => {
     try {
       setIsLoading(true);
 
       // If bondingProgramType is allProduct, we will get all the products
       // that are not removed
       if (showNoSupply) {
-        const productList = await getAllTheProductsNotRemoved({ chainId });
-        setProducts(productList);
+        const productList = await getAllTheProductsNotRemoved();
+        setAllProducts(productList);
       } else {
-        const productList = await getProductListRequest({
-          account,
-          chainId,
-          isActive,
-        });
-        setProducts(productList);
+        const filteredProductList = await getProductListRequest({ isActive });
+        setFilteredProducts(filteredProductList);
       }
     } catch (error) {
       window.console.error(error);
@@ -147,40 +239,43 @@ export const BondingList = ({ bondingProgramType }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [account, chainId, bondingProgramType]);
+  };
 
   // fetch the bonding list
   useEffect(() => {
-    if (account && chainId) {
-      getProducts();
-      // getTokenName({
-      //   account,
-      //   chainId,
-      // });
-    }
+    getProducts();
   }, [account, chainId, bondingProgramType]);
 
-  const onBondClick = (token) => {
-    setProductToken(token);
+  const onBondClick = (row) => {
+    setProductDetails(row);
+  };
+
+  const onModalClose = () => {
+    setProductDetails(null);
   };
 
   return (
     <>
       <Table
         columns={getColumns(showNoSupply, onBondClick, isActive, account)}
-        dataSource={products}
+        dataSource={showNoSupply ? allProducts : filteredProducts}
         bordered
         loading={isLoading}
         pagination={false}
         scroll={{ x: 400 }}
       />
 
-      {!!productToken && (
+      {!!productDetails && (
         <Deposit
-          productId={products.find((e) => e.token === productToken)?.id}
-          productToken={productToken}
+          productId={productDetails?.id}
+          productToken={productDetails?.token}
+          productLpPrice={getLpTokenWithDiscount(
+            productDetails?.priceLP,
+            productDetails?.discount,
+          )}
+          productSupply={productDetails?.supply}
           getProducts={getProducts}
-          closeModal={() => setProductToken(null)}
+          closeModal={onModalClose}
         />
       )}
     </>

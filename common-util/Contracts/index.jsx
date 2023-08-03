@@ -1,4 +1,5 @@
 import Web3 from 'web3';
+import { ethers } from 'ethers';
 import { getChainId } from '@autonolas/frontend-library';
 import {
   // depository
@@ -33,6 +34,9 @@ import {
   COMPONENT_REGISTRY_ADDRESS_GOERLI,
   COMPONENT_REGISTRY_ADDRESS_MAINNET,
   COMPONENT_REGISTRY_ABI,
+
+  // erc20
+  ERC20_ABI,
 } from 'common-util/AbiAndAddresses';
 import { LOCAL_CHAIN_ID, LOCAL_FORK_ID } from 'util/constants';
 /**
@@ -118,14 +122,22 @@ export const getMyProvider = () => window.MODAL_PROVIDER
   || window.web3?.currentProvider
   || process.env.NEXT_PUBLIC_MAINNET_URL;
 
+export const getEthersProvider = () => {
+  const provider = getMyProvider();
+  if (provider === process.env.NEXT_PUBLIC_MAINNET_URL) {
+    return new ethers.providers.JsonRpcProvider(provider);
+  }
+  return new ethers.providers.Web3Provider(provider);
+};
+
 export const getWeb3Details = () => {
   const web3 = new Web3(getMyProvider());
   const chainId = getChainId() || 1; // default to mainnet
   return { web3, chainId };
 };
 
-export const getDepositoryContract = (p, chainId) => {
-  const web3 = new Web3(p);
+export const getDepositoryContract = () => {
+  const { web3, chainId } = getWeb3Details();
   const contract = new web3.eth.Contract(
     DEPOSITORY_ABI,
     getContractAddress('depository', chainId),
@@ -133,8 +145,8 @@ export const getDepositoryContract = (p, chainId) => {
   return contract;
 };
 
-export const getDispenserContract = (p, chainId) => {
-  const web3 = new Web3(p);
+export const getDispenserContract = () => {
+  const { web3, chainId } = getWeb3Details();
   const contract = new web3.eth.Contract(
     DISPENSER_ABI,
     getContractAddress('dispenser', chainId),
@@ -142,8 +154,8 @@ export const getDispenserContract = (p, chainId) => {
   return contract;
 };
 
-export const getTreasuryContract = (p, chainId) => {
-  const web3 = new Web3(getMyProvider() || p);
+export const getTreasuryContract = () => {
+  const { web3, chainId } = getWeb3Details();
   const contract = new web3.eth.Contract(
     TREASURY_ABI,
     getContractAddress('treasury', chainId),
@@ -151,8 +163,8 @@ export const getTreasuryContract = (p, chainId) => {
   return contract;
 };
 
-export const getTokenomicsContract = (p, chainId) => {
-  const web3 = new Web3(p);
+export const getTokenomicsContract = () => {
+  const { web3, chainId } = getWeb3Details();
   const contract = new web3.eth.Contract(
     TOKENOMICS_ABI,
     getContractAddress('tokenomics', chainId),
@@ -160,9 +172,15 @@ export const getTokenomicsContract = (p, chainId) => {
   return contract;
 };
 
-export const getUniswapV2PairContract = (p, address) => {
-  const web3 = new Web3(p);
+export const getUniswapV2PairContract = (address) => {
+  const { web3 } = getWeb3Details();
   const contract = new web3.eth.Contract(UNISWAP_V2_PAIR_ABI, address);
+  return contract;
+};
+
+export const getErc20Contract = (address) => {
+  const { web3 } = getWeb3Details();
+  const contract = new web3.eth.Contract(ERC20_ABI, address);
   return contract;
 };
 

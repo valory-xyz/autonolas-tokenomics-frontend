@@ -1,19 +1,22 @@
 import { useState, useEffect } from 'react';
 import { Alert, Typography } from 'antd/lib';
+import { isNumber } from 'lodash';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import {
+  getFullFormattedDate,
   notifyError,
   notifySuccess,
   parseToEth,
   parseToWei,
 } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
+import { getLastEpochRequest } from '../DevIncentives/requests';
 import {
   depositServiceDonationRequest,
   getVeOlasThresholdRequest,
   minAcceptedEthRequest,
 } from './requests';
-import { DonateContainer } from './styles';
+import { DonateContainer, EpochStatus } from './styles';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -22,15 +25,19 @@ export const DepositServiceDonation = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [threshold, setThreshold] = useState(0);
   const [minAcceptedEth, setMinAcceptedEth] = useState(0);
+  const [epochDetails, setEpochDetails] = useState(null);
 
   useEffect(() => {
     const getThresholdData = async () => {
       try {
-        const response = await getVeOlasThresholdRequest({ chainId });
+        const response = await getVeOlasThresholdRequest();
         setThreshold(response);
 
-        const minEth = await minAcceptedEthRequest({ chainId });
+        const minEth = await minAcceptedEthRequest();
         setMinAcceptedEth(minEth);
+
+        const epochResponse = await getLastEpochRequest();
+        setEpochDetails(epochResponse);
       } catch (error) {
         window.console.error(error);
         notifyError();
@@ -48,7 +55,6 @@ export const DepositServiceDonation = () => {
 
       const params = {
         account,
-        chainId,
         serviceIds: values.unitIds.map((e) => `${e}`),
         amounts: values.unitTypes.map((e) => parseToWei(e)),
         totalAmount: parseToWei(values.unitTypes.reduce((a, b) => a + b, 0)),
@@ -64,69 +70,81 @@ export const DepositServiceDonation = () => {
     }
   };
 
+  const epochStatusList = [
+    {
+      text: 'Expected end time',
+      value: epochDetails?.nextEpochEndTime
+        ? getFullFormattedDate(epochDetails.nextEpochEndTime * 1000)
+        : '--',
+    },
+    {
+      text: 'Epoch length',
+      value: isNumber(epochDetails?.epochLen)
+        ? `${epochDetails.epochLen / 3600 / 24} days`
+        : '--',
+    },
+    {
+      text: 'Previous epoch end time',
+      value: epochDetails?.prevEpochEndTime
+        ? getFullFormattedDate(epochDetails.prevEpochEndTime * 1000)
+        : '--',
+    },
+  ];
+
   return (
     <DonateContainer>
-      <Title level={2}>Donate</Title>
-      <Paragraph>
-        Show appreciation for the value of an autonomous service by making a
-        donation. The protocol will reward devs who have contributed code for
-        that service.
-      </Paragraph>
+      <div className="donate-section">
+        <Title level={2}>Donate</Title>
+        <Paragraph>
+          Show appreciation for the value of an autonomous service by making a
+          donation. The protocol will reward devs who have contributed code for
+          that service.
+        </Paragraph>
 
-      <Alert
-        showIcon
-        type="info"
-        message={(
-          <>
-            To boost incentives of devs with freshly minted OLAS, you must hold
-            at least&nbsp;
-            <Text strong>{threshold || '--'}</Text>
-            &nbsp;veOLAS. Grab your veOLAS by locking OLAS&nbsp;
-            <a href="https://member.olas.network/" target="_self">
-              here
-            </a>
-            . At least&nbsp;
-            <Text strong>
-              {minAcceptedEth ? parseToEth(minAcceptedEth) : '--'}
-              &nbsp;ETH
-            </Text>
-            &nbsp;of donations is required to trigger boosts.
-          </>
-        )}
-        className="mb-16"
-      />
+        <Alert
+          showIcon
+          type="info"
+          message={(
+            <>
+              To boost rewards of devs with freshly minted OLAS, you must
+              hold at least&nbsp;
+              <Text strong>{threshold || '--'}</Text>
+              &nbsp;veOLAS. Grab your veOLAS by locking OLAS&nbsp;
+              <a href="https://member.olas.network/" target="_self">
+                here
+              </a>
+              . At least&nbsp;
+              <Text strong>
+                {minAcceptedEth ? parseToEth(minAcceptedEth) : '--'}
+                &nbsp;ETH
+              </Text>
+              &nbsp;of donations is required to trigger boosts.
+            </>
+          )}
+          className="mb-16"
+        />
 
-      <DynamicFieldsForm
-        isUnitTypeInput={false}
-        inputOneLabel="Service ID"
-        inputTwoLabel="Amount"
-        buttonText="Add row"
-        submitButtonText="Donate"
-        isLoading={isLoading}
-        onSubmit={onDepositServiceDonationSubmit}
-      />
+        <DynamicFieldsForm
+          isUnitTypeInput={false}
+          inputOneLabel="Service ID"
+          inputTwoLabel="Amount"
+          buttonText="Add row"
+          submitButtonText="Donate"
+          isLoading={isLoading}
+          onSubmit={onDepositServiceDonationSubmit}
+        />
+      </div>
+
+      <div className="last-epoch-section">
+        <Title level={2}>Epoch Status</Title>
+
+        {epochStatusList.map((e, index) => (
+          <EpochStatus key={`epoch-section-${index}`}>
+            <Title level={5}>{`${e.text}:`}</Title>
+            <Paragraph>{e.value}</Paragraph>
+          </EpochStatus>
+        ))}
+      </div>
     </DonateContainer>
   );
 };
-
-/**
- * governance contract
- * token contract
- *
- * eg.
- * standard contract
- * we have olas toke, people can create governace => we can vote for/againt the proposal
- * but I don't have time to go through the => I can delegate my vote to someone else
- * who has time to go through the proposal
- *
- * local - setup
- *
- * bigger question -
- * - how does the proxy works ?
- * - we have token address, if we use the ABI (default erc20 ABI) to interact with the contract
- * (using the AAVE)
- *
- * - get the proxy contract address by actual contract address
- * - we need balanceOf & delegate
- *
- */

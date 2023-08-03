@@ -2,7 +2,18 @@ import styled from 'styled-components';
 import { Layout } from 'antd/lib';
 import { COLOR, MEDIA_QUERY } from '@autonolas/frontend-library';
 
-export const CustomLayout = styled(Layout)``;
+export const CustomLayout = styled(Layout)`
+  ${MEDIA_QUERY.tablet} {
+    .ant-menu.ant-menu-horizontal {
+      width: 100%;
+    }
+  }
+  ${MEDIA_QUERY.mobileL} {
+    .footer-center {
+      display: none;
+    }
+  }
+`;
 
 // HEADER
 export const HeaderContainer = styled.div`
