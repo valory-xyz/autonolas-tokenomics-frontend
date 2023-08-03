@@ -128,7 +128,7 @@ export const DepositServiceDonation = () => {
           isLoading={isLoading}
           isUnitTypeInput={false}
           inputOneLabel="Service ID"
-          inputTwoLabel="Amount"
+          inputTwoLabel="Amount (ETH)"
           buttonText="Add row"
           submitButtonText="Donate"
           onSubmit={onDepositServiceDonationSubmit}

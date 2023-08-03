@@ -85,7 +85,7 @@ export const FormList = ({
                     <Radio value="0">Component</Radio>
                   </Radio.Group>
                 ) : (
-                  <InputNumber min={0} placeholder="Eg. 5" style={inputStyle} />
+                  <InputNumber min={0} placeholder="Eg. 0.065" style={inputStyle} />
                 )}
               </Form.Item>
 
