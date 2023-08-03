@@ -7,11 +7,7 @@ import { remove, round, isNaN } from 'lodash';
 import { COLOR } from '@autonolas/frontend-library';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import { BONDING_PRODUCTS } from 'util/constants';
-import {
-  notifyError,
-  getFormattedDate,
-  parseToEth,
-} from 'common-util/functions';
+import { getFormattedDate, parseToEth } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { NA } from 'common-util/constants';
 import { Deposit } from './Deposit';
@@ -235,7 +231,6 @@ export const BondingList = ({ bondingProgramType }) => {
       }
     } catch (error) {
       window.console.error(error);
-      notifyError();
     } finally {
       setIsLoading(false);
     }
