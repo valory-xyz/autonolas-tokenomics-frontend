@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Typography, Alert } from 'antd/lib';
+import { Typography, Alert, Divider } from 'antd/lib';
+import { COLOR } from '@autonolas/frontend-library';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import { notifySuccess, notifySpecificError } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
@@ -54,6 +55,8 @@ export const ClaimIncentives = () => {
         <></>
       ) : (
         <>
+          <Divider style={{ backgroundColor: COLOR.BORDER_GREY }} />
+
           <Title level={3}>Claim Rewards</Title>
 
           {pauseValue === '1' && (
