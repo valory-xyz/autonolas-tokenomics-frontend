@@ -33,11 +33,18 @@ export const DynamicFieldsForm = ({
 
   const onFinish = async (values) => {
     if (onSubmit) {
-      await onSubmit({
-        unitIds: values.units.map((unit) => unit.unitId),
-        unitTypes: values.units.map((unit) => unit.unitType),
-        address: values.address,
-      });
+      try {
+        await onSubmit({
+          unitIds: values.units.map((unit) => unit.unitId),
+          unitTypes: values.units.map((unit) => unit.unitType),
+          address: values.address,
+        });
+
+        // once form is submitted, reset the form
+        form.resetFields();
+      } catch (error) {
+        window.console.error(error);
+      }
     }
   };
 
