@@ -40,7 +40,6 @@ export const DepositServiceDonation = () => {
         setEpochDetails(epochResponse);
       } catch (error) {
         window.console.error(error);
-        notifyError();
       }
     };
 
