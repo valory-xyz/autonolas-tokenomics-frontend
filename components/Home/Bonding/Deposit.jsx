@@ -162,7 +162,7 @@ export const Deposit = ({
 
           <Form.Item
             className="custom-form-item-tokenAmount"
-            label="LP Token Amount"
+            label="LP Token Amount (ETH)"
             name="tokenAmount"
             rules={[
               { required: true, message: 'Please input a valid amount' },

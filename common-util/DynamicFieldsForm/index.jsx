@@ -18,6 +18,7 @@ export const DynamicFieldsForm = ({
   isLoading,
   submitButtonText,
   onSubmit,
+  canResetOnSubmit,
   dynamicFormType,
 }) => {
   const { account } = useHelpers();
@@ -33,11 +34,19 @@ export const DynamicFieldsForm = ({
 
   const onFinish = async (values) => {
     if (onSubmit) {
-      await onSubmit({
-        unitIds: values.units.map((unit) => unit.unitId),
-        unitTypes: values.units.map((unit) => unit.unitType),
-        address: values.address,
-      });
+      try {
+        await onSubmit({
+          unitIds: values.units.map((unit) => unit.unitId),
+          unitTypes: values.units.map((unit) => unit.unitType),
+          address: values.address,
+        });
+
+        if (canResetOnSubmit) {
+          form.resetFields();
+        }
+      } catch (error) {
+        window.console.error(error);
+      }
     }
   };
 
@@ -97,6 +106,7 @@ DynamicFieldsForm.propTypes = {
   isLoading: PropTypes.bool,
   isUnitTypeInput: PropTypes.bool,
   dynamicFormType: PropTypes.string,
+  canResetOnSubmit: PropTypes.bool,
 };
 
 DynamicFieldsForm.defaultProps = {
@@ -107,4 +117,5 @@ DynamicFieldsForm.defaultProps = {
   isLoading: false,
   isUnitTypeInput: true,
   dynamicFormType: null,
+  canResetOnSubmit: false,
 };
