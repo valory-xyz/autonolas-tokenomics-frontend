@@ -125,13 +125,14 @@ export const DepositServiceDonation = () => {
         />
 
         <DynamicFieldsForm
+          isLoading={isLoading}
           isUnitTypeInput={false}
           inputOneLabel="Service ID"
           inputTwoLabel="Amount"
           buttonText="Add row"
           submitButtonText="Donate"
-          isLoading={isLoading}
           onSubmit={onDepositServiceDonationSubmit}
+          canResetOnSubmit
         />
       </div>
 

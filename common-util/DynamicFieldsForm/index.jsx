@@ -18,6 +18,7 @@ export const DynamicFieldsForm = ({
   isLoading,
   submitButtonText,
   onSubmit,
+  canResetOnSubmit,
   dynamicFormType,
 }) => {
   const { account } = useHelpers();
@@ -40,8 +41,9 @@ export const DynamicFieldsForm = ({
           address: values.address,
         });
 
-        // once form is submitted, reset the form
-        form.resetFields();
+        if (canResetOnSubmit) {
+          form.resetFields();
+        }
       } catch (error) {
         window.console.error(error);
       }
@@ -104,6 +106,7 @@ DynamicFieldsForm.propTypes = {
   isLoading: PropTypes.bool,
   isUnitTypeInput: PropTypes.bool,
   dynamicFormType: PropTypes.string,
+  canResetOnSubmit: PropTypes.bool,
 };
 
 DynamicFieldsForm.defaultProps = {
@@ -114,4 +117,5 @@ DynamicFieldsForm.defaultProps = {
   isLoading: false,
   isUnitTypeInput: true,
   dynamicFormType: null,
+  canResetOnSubmit: false,
 };
