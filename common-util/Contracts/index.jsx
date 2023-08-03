@@ -1,6 +1,5 @@
 import Web3 from 'web3';
 import { ethers } from 'ethers';
-import { getChainId } from '@autonolas/frontend-library';
 import {
   // depository
   DEPOSITORY_ADDRESS_GOERLI,
@@ -38,6 +37,7 @@ import {
   // erc20
   ERC20_ABI,
 } from 'common-util/AbiAndAddresses';
+import { getChainId } from 'common-util/functions';
 import { LOCAL_CHAIN_ID } from 'util/constants';
 
 /**

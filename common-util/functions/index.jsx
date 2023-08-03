@@ -57,6 +57,19 @@ export const notifySuccess = (message = 'Successfull', description = null) => no
   style: { border: `1px solid ${COLOR.PRIMARY}` },
 });
 
+/**
+ * TODO: move to frontend-library
+ */
+export const getChainId = (chainId = null) => {
+  if (typeof window === 'undefined') return chainId;
+  return Number(
+    chainId
+      || window?.CHAIN_ID // this is set in LoginV2.jsx (once wallet is connected)
+      || window?.MODAL_PROVIDER?.chainId // set by web3modal
+      || window?.ethereum?.chainId, // set by metamask (useful when wallet is not connected)
+  );
+};
+
 // create a function to specific error message based on error code
 const getErrorMessage = (error) => {
   if (isObject(error)) {
