@@ -135,7 +135,7 @@ export const IncentivesForThisEpoch = () => {
       <Title level={3}>Check for available rewards</Title>
 
       <Alert
-        message="Note: You must be the owner of each listed unit to see the claimable rewards."
+        message="Note: The specified address must be the owner of all the listed units in order to see the claimable rewards"
         type="info"
         showIcon
       />
