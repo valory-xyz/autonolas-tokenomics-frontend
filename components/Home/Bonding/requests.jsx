@@ -12,7 +12,7 @@ import {
   getErc20Contract,
   getEthersProvider,
 } from 'common-util/Contracts';
-import { getProductValueFromEvent, updateProductDefaultValues } from './requestsHelpers';
+import { getProductValueFromEvent } from './requestsHelpers';
 
 /**
  * fetches the IDF (discount factor) for the product
@@ -149,25 +149,41 @@ const getCurrentLpPriceForProducts = async (productList) => {
   }));
 };
 
-export const getListWithSupplyList = async (list, productEvents) => {
+export const getListWithSupplyList = async (
+  list,
+  createProductEvents,
+  closedProductEvents = [],
+) => {
   const listAfterSupplyLeftCalc = list.map((product) => {
-    const productEvent = productEvents.find(
+    const createProductEvent = createProductEvents.find(
       (event) => event.returnValues.productId === `${product.id}`,
     );
 
-    if (!productEvent) {
-      return { ...product, supplyLeft: 0 };
+    const closeProductEvent = closedProductEvents.find(
+      (event) => event.returnValues.productId === `${product.id}`,
+    );
+
+    // Should not happen but we will warn if it does
+    if (!createProductEvent) {
+      window.console.warn(`Product ${product.id} not found in the event list`);
     }
 
     const eventSupply = Number(
-      ethers.BigNumber.from(productEvent.returnValues.supply).div(ONE_ETH),
+      ethers.BigNumber.from(createProductEvent.returnValues.supply).div(ONE_ETH),
     );
-    const productSupply = Number(
-      ethers.BigNumber.from(product.supply).div(ONE_ETH),
-    );
+    const productSupply = !closeProductEvent
+      ? Number(ethers.BigNumber.from(product.supply).div(ONE_ETH))
+      : Number(
+        ethers.BigNumber.from(closeProductEvent.returnValues.supply).div(
+          ONE_ETH,
+        ),
+      );
     const supplyLeft = productSupply / eventSupply;
+    const priceLP = product.token !== ADDRESS_ZERO
+      ? product.priceLP
+      : createProductEvent?.returnValues?.priceLP || 0;
 
-    return { ...product, supplyLeft };
+    return { ...product, supplyLeft, priceLP };
   });
 
   return listAfterSupplyLeftCalc;
@@ -195,7 +211,8 @@ const getProductDetailsFromIds = ({ productIdList }) => new Promise((resolve, re
           id: productIdList[index],
         }));
 
-        const eventList = await getProductEvents('CreateProduct');
+        const createEventList = await getProductEvents('CreateProduct');
+        const closedEventList = await getProductEvents('CloseProduct');
 
         const listWithLpTokens = await getLpTokenNamesForProducts(
           productList,
@@ -207,7 +224,8 @@ const getProductDetailsFromIds = ({ productIdList }) => new Promise((resolve, re
 
         const listWithSupplyList = await getListWithSupplyList(
           listWithCurrentLpPrice,
-          eventList,
+          createEventList,
+          closedEventList,
         );
 
         resolve(listWithSupplyList);
@@ -218,6 +236,8 @@ const getProductDetailsFromIds = ({ productIdList }) => new Promise((resolve, re
     reject(error);
   }
 });
+
+export const getDepositoryAddress = (chainId) => getContractAddress('depository', chainId);
 
 /**
  * returns all the products that are not removed
@@ -252,7 +272,8 @@ export const getAllTheProductsNotRemoved = async () => new Promise((resolve, rej
             key: index,
           }));
 
-          const eventList = await getProductEvents('CreateProduct');
+          const createEventList = await getProductEvents('CreateProduct');
+          const closedEventList = await getProductEvents('CloseProduct');
 
           const listWithLpTokens = await getLpTokenNamesForProducts(
             productWithIds,
@@ -262,15 +283,10 @@ export const getAllTheProductsNotRemoved = async () => new Promise((resolve, rej
             listWithLpTokens,
           );
 
-          // update priceLp if the address is ADDRESS_ZERO
-          const listWithUpdatedPriceLp = updateProductDefaultValues(
-            listWithCurrentLpPrice,
-            eventList,
-          );
-
           const listWithSupplyList = await getListWithSupplyList(
-            listWithUpdatedPriceLp,
-            eventList,
+            listWithCurrentLpPrice,
+            createEventList,
+            closedEventList,
           );
 
           resolve(listWithSupplyList);

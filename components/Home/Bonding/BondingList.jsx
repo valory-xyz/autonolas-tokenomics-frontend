@@ -7,11 +7,15 @@ import { remove, round, isNaN } from 'lodash';
 import { COLOR } from '@autonolas/frontend-library';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import { BONDING_PRODUCTS } from 'util/constants';
-import { getFormattedDate, parseToEth } from 'common-util/functions';
+import { parseToEth } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { NA } from 'common-util/constants';
 import { Deposit } from './Deposit';
-import { getProductListRequest, getAllTheProductsNotRemoved } from './requests';
+import {
+  getProductListRequest,
+  getAllTheProductsNotRemoved,
+  getDepositoryAddress,
+} from './requests';
 
 const { Text } = Typography;
 
@@ -35,7 +39,13 @@ const getTitle = (title, tooltipDesc) => (
 
 const APY_DESC = 'Denominated in OLAS';
 
-const getColumns = (showNoSupply, onClick, isActive, acc) => {
+const getColumns = (
+  showNoSupply,
+  onClick,
+  isActive,
+  acc,
+  depositoryAddress,
+) => {
   const columns = [
     {
       title: 'ID',
@@ -65,7 +75,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
       key: 'currentPriceLp',
       render: (text) => (
         <a
-          href="https://etherscan.io/address/0x52A043bcebdB2f939BaEF2E8b6F01652290eAB3f#readContract#F6"
+          href={`https://etherscan.io/address/${depositoryAddress}#readContract#F6`}
           rel="noopener noreferrer"
           target="_blank"
         >
@@ -86,7 +96,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
 
         return (
           <a
-            href="https://etherscan.io/address/0x52A043bcebdB2f939BaEF2E8b6F01652290eAB3f#readContract#F9"
+            href={`https://etherscan.io/address/${depositoryAddress}#readContract#F9`}
             rel="noopener noreferrer"
             target="_blank"
           >
@@ -131,20 +141,6 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
       },
     },
     {
-      title: getTitle('Matures', 'The vesting time to withdraw OLAS'),
-      dataIndex: 'expiry',
-      key: 'expiry',
-      render: (seconds) => (
-        <a
-          href="https://etherscan.io/address/0x52A043bcebdB2f939BaEF2E8b6F01652290eAB3f#readContract#F9"
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          {getFormattedDate(seconds * 1000)}
-        </a>
-      ),
-    },
-    {
       title: getTitle(
         'OLAS Supply',
         'Remaining OLAS supply reserved for this bonding product',
@@ -156,7 +152,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
         return (
           <>
             <a
-              href="https://etherscan.io/address/0x52A043bcebdB2f939BaEF2E8b6F01652290eAB3f#readContract#F9"
+              href={`https://etherscan.io/address/${depositoryAddress}#readContract#F9`}
               rel="noopener noreferrer"
               target="_blank"
             >
@@ -215,6 +211,7 @@ export const BondingList = ({ bondingProgramType }) => {
   const [productDetails, setProductDetails] = useState(null);
 
   const isActive = bondingProgramType === BONDING_PRODUCTS.ACTIVE;
+  const depositoryAddress = getDepositoryAddress(chainId);
 
   const getProducts = async () => {
     try {
@@ -223,9 +220,11 @@ export const BondingList = ({ bondingProgramType }) => {
       // If bondingProgramType is allProduct, we will get all the products
       // that are not removed
       if (showNoSupply) {
+        // fetches "all" products
         const productList = await getAllTheProductsNotRemoved();
         setAllProducts(productList);
       } else {
+        // fetches both "active" and "inactive" products
         const filteredProductList = await getProductListRequest({ isActive });
         setFilteredProducts(filteredProductList);
       }
@@ -252,7 +251,13 @@ export const BondingList = ({ bondingProgramType }) => {
   return (
     <>
       <Table
-        columns={getColumns(showNoSupply, onBondClick, isActive, account)}
+        columns={getColumns(
+          showNoSupply,
+          onBondClick,
+          isActive,
+          account,
+          depositoryAddress,
+        )}
         dataSource={showNoSupply ? allProducts : filteredProducts}
         bordered
         loading={isLoading}

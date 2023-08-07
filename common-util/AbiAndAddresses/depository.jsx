@@ -1,4 +1,4 @@
-export const DEPOSITORY_ADDRESS_MAINNET = '0x52A043bcebdB2f939BaEF2E8b6F01652290eAB3f';
+export const DEPOSITORY_ADDRESS_MAINNET = '0xfF8697d8d2998d6AA2e09B405795C6F4BEeB0C81';
 
 export const DEPOSITORY_ADDRESS_GOERLI = '0x7a6ca5BD19EE9182BEe5662008dFF05c60C3A76f';
 
@@ -395,7 +395,7 @@ export const DEPOSITORY_ABI = [
       {
         indexed: true,
         internalType: 'address',
-        name: '_bondCalculator',
+        name: 'bondCalculator',
         type: 'address',
       },
     ],
@@ -415,6 +415,12 @@ export const DEPOSITORY_ABI = [
         indexed: true,
         internalType: 'uint256',
         name: 'productId',
+        type: 'uint256',
+      },
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'supply',
         type: 'uint256',
       },
     ],
@@ -463,7 +469,7 @@ export const DEPOSITORY_ABI = [
       {
         indexed: false,
         internalType: 'uint256',
-        name: 'expiry',
+        name: 'maturity',
         type: 'uint256',
       },
     ],
@@ -500,7 +506,7 @@ export const DEPOSITORY_ABI = [
       {
         indexed: false,
         internalType: 'uint256',
-        name: 'expiry',
+        name: 'vesting',
         type: 'uint256',
       },
     ],
@@ -586,6 +592,19 @@ export const DEPOSITORY_ABI = [
   },
   {
     inputs: [],
+    name: 'VERSION',
+    outputs: [
+      {
+        internalType: 'string',
+        name: '',
+        type: 'string',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
     name: 'bondCalculator',
     outputs: [
       {
@@ -663,7 +682,13 @@ export const DEPOSITORY_ABI = [
       },
     ],
     name: 'close',
-    outputs: [],
+    outputs: [
+      {
+        internalType: 'uint256[]',
+        name: 'closedProductIds',
+        type: 'uint256[]',
+      },
+    ],
     stateMutability: 'nonpayable',
     type: 'function',
   },
@@ -723,7 +748,7 @@ export const DEPOSITORY_ABI = [
       },
       {
         internalType: 'uint256',
-        name: 'expiry',
+        name: 'maturity',
         type: 'uint256',
       },
       {
@@ -862,7 +887,7 @@ export const DEPOSITORY_ABI = [
       },
       {
         internalType: 'uint32',
-        name: 'expiry',
+        name: 'vesting',
         type: 'uint32',
       },
       {
