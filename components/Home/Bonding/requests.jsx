@@ -151,11 +151,11 @@ const getCurrentLpPriceForProducts = async (productList) => {
 
 export const getListWithSupplyList = async (
   list,
-  openProductEvents,
+  createProductEvents,
   closedProductEvents = [],
 ) => {
   const listAfterSupplyLeftCalc = list.map((product) => {
-    const openProductEvent = openProductEvents.find(
+    const createProductEvent = createProductEvents.find(
       (event) => event.returnValues.productId === `${product.id}`,
     );
 
@@ -164,12 +164,12 @@ export const getListWithSupplyList = async (
     );
 
     // Should not happen but we will warn if it does
-    if (!openProductEvent) {
+    if (!createProductEvent) {
       window.console.warn(`Product ${product.id} not found in the event list`);
     }
 
     const eventSupply = Number(
-      ethers.BigNumber.from(openProductEvent.returnValues.supply).div(ONE_ETH),
+      ethers.BigNumber.from(createProductEvent.returnValues.supply).div(ONE_ETH),
     );
     const productSupply = !closeProductEvent
       ? Number(ethers.BigNumber.from(product.supply).div(ONE_ETH))
@@ -181,7 +181,7 @@ export const getListWithSupplyList = async (
     const supplyLeft = productSupply / eventSupply;
     const priceLP = product.token !== ADDRESS_ZERO
       ? product.priceLP
-      : openProductEvent?.returnValues?.priceLP || 0;
+      : createProductEvent?.returnValues?.priceLP || 0;
 
     return { ...product, supplyLeft, priceLP };
   });
@@ -211,7 +211,8 @@ const getProductDetailsFromIds = ({ productIdList }) => new Promise((resolve, re
           id: productIdList[index],
         }));
 
-        const eventList = await getProductEvents('CreateProduct');
+        const createEventList = await getProductEvents('CreateProduct');
+        const closedEventList = await getProductEvents('CloseProduct');
 
         const listWithLpTokens = await getLpTokenNamesForProducts(
           productList,
@@ -223,7 +224,8 @@ const getProductDetailsFromIds = ({ productIdList }) => new Promise((resolve, re
 
         const listWithSupplyList = await getListWithSupplyList(
           listWithCurrentLpPrice,
-          eventList,
+          createEventList,
+          closedEventList,
         );
 
         resolve(listWithSupplyList);
