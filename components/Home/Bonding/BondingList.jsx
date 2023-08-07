@@ -220,9 +220,11 @@ export const BondingList = ({ bondingProgramType }) => {
       // If bondingProgramType is allProduct, we will get all the products
       // that are not removed
       if (showNoSupply) {
+        // fetches "all" products
         const productList = await getAllTheProductsNotRemoved();
         setAllProducts(productList);
       } else {
+        // fetches both "active" and "inactive" products
         const filteredProductList = await getProductListRequest({ isActive });
         setFilteredProducts(filteredProductList);
       }
