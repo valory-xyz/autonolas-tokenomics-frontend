@@ -11,7 +11,11 @@ import { getFormattedDate, parseToEth } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { NA } from 'common-util/constants';
 import { Deposit } from './Deposit';
-import { getProductListRequest, getAllTheProductsNotRemoved } from './requests';
+import {
+  getProductListRequest,
+  getAllTheProductsNotRemoved,
+  getDepositoryAddress,
+} from './requests';
 
 const { Text } = Typography;
 
@@ -35,7 +39,13 @@ const getTitle = (title, tooltipDesc) => (
 
 const APY_DESC = 'Denominated in OLAS';
 
-const getColumns = (showNoSupply, onClick, isActive, acc) => {
+const getColumns = (
+  showNoSupply,
+  onClick,
+  isActive,
+  acc,
+  depositoryAddress,
+) => {
   const columns = [
     {
       title: 'ID',
@@ -65,7 +75,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
       key: 'currentPriceLp',
       render: (text) => (
         <a
-          href="https://etherscan.io/address/0x52A043bcebdB2f939BaEF2E8b6F01652290eAB3f#readContract#F6"
+          href={`https://etherscan.io/address/${depositoryAddress}#readContract#F6`}
           rel="noopener noreferrer"
           target="_blank"
         >
@@ -86,7 +96,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
 
         return (
           <a
-            href="https://etherscan.io/address/0x52A043bcebdB2f939BaEF2E8b6F01652290eAB3f#readContract#F9"
+            href={`https://etherscan.io/address/${depositoryAddress}#readContract#F9`}
             rel="noopener noreferrer"
             target="_blank"
           >
@@ -136,7 +146,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
       key: 'expiry',
       render: (seconds) => (
         <a
-          href="https://etherscan.io/address/0x52A043bcebdB2f939BaEF2E8b6F01652290eAB3f#readContract#F9"
+          href={`https://etherscan.io/address/${depositoryAddress}#readContract#F9`}
           rel="noopener noreferrer"
           target="_blank"
         >
@@ -156,7 +166,7 @@ const getColumns = (showNoSupply, onClick, isActive, acc) => {
         return (
           <>
             <a
-              href="https://etherscan.io/address/0x52A043bcebdB2f939BaEF2E8b6F01652290eAB3f#readContract#F9"
+              href={`https://etherscan.io/address/${depositoryAddress}#readContract#F9`}
               rel="noopener noreferrer"
               target="_blank"
             >
@@ -215,6 +225,7 @@ export const BondingList = ({ bondingProgramType }) => {
   const [productDetails, setProductDetails] = useState(null);
 
   const isActive = bondingProgramType === BONDING_PRODUCTS.ACTIVE;
+  const depositoryAddress = getDepositoryAddress(chainId);
 
   const getProducts = async () => {
     try {
@@ -252,7 +263,13 @@ export const BondingList = ({ bondingProgramType }) => {
   return (
     <>
       <Table
-        columns={getColumns(showNoSupply, onBondClick, isActive, account)}
+        columns={getColumns(
+          showNoSupply,
+          onBondClick,
+          isActive,
+          account,
+          depositoryAddress,
+        )}
         dataSource={showNoSupply ? allProducts : filteredProducts}
         bordered
         loading={isLoading}

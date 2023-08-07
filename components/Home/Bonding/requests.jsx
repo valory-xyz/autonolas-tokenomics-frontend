@@ -219,6 +219,8 @@ const getProductDetailsFromIds = ({ productIdList }) => new Promise((resolve, re
   }
 });
 
+export const getDepositoryAddress = (chainId) => getContractAddress('depository', chainId);
+
 /**
  * returns all the products that are not removed
  * ie. 1. active products,
