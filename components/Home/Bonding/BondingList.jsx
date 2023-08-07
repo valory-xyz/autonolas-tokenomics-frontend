@@ -10,6 +10,7 @@ import { BONDING_PRODUCTS } from 'util/constants';
 import { parseToEth } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { NA } from 'common-util/constants';
+import styled from 'styled-components';
 import { Deposit } from './Deposit';
 import {
   getProductListRequest,
@@ -18,6 +19,15 @@ import {
 } from './requests';
 
 const { Text } = Typography;
+
+const Container = styled.div`
+  .ant-table-thead > tr > th,
+  .ant-table-tbody > tr > td,
+  .ant-table tfoot > tr > th,
+  .ant-table tfoot > tr > td {
+    padding: 16px 10px;
+  }
+`;
 
 const getLpTokenWithDiscount = (lpTokenValue, discount) => {
   const price = Number(parseToEth(lpTokenValue));
@@ -141,6 +151,20 @@ const getColumns = (
       },
     },
     {
+      title: getTitle('Vesting', 'The bond vesting time to withdraw OLAS'),
+      dataIndex: 'vesting',
+      key: 'vesting',
+      render: (seconds) => (
+        <a
+          href={`https://etherscan.io/address/${depositoryAddress}#readContract#F9`}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          {`${seconds / 86400} days`}
+        </a>
+      ),
+    },
+    {
       title: getTitle(
         'OLAS Supply',
         'Remaining OLAS supply reserved for this bonding product',
@@ -249,7 +273,7 @@ export const BondingList = ({ bondingProgramType }) => {
   };
 
   return (
-    <>
+    <Container>
       <Table
         columns={getColumns(
           showNoSupply,
@@ -278,7 +302,7 @@ export const BondingList = ({ bondingProgramType }) => {
           closeModal={onModalClose}
         />
       )}
-    </>
+    </Container>
   );
 };
 
