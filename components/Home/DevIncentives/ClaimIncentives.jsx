@@ -2,7 +2,11 @@ import { useEffect, useState } from 'react';
 import { Typography, Alert, Divider } from 'antd/lib';
 import { COLOR } from '@autonolas/frontend-library';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
-import { notifySuccess, notifySpecificError } from 'common-util/functions';
+import {
+  notifySuccess,
+  notifySpecificError,
+  sortUnitIdsAndTypes,
+} from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { claimOwnerIncentivesRequest, getPausedValueRequest } from './requests';
 
@@ -33,10 +37,14 @@ export const ClaimIncentives = () => {
     try {
       setIsLoading(true);
 
+      const [sortedUnitIds, sortedUnitTypes] = sortUnitIdsAndTypes(
+        values.unitIds,
+        values.unitTypes,
+      );
       const params = {
         account,
-        unitIds: values.unitIds.map((e) => `${e}`),
-        unitTypes: values.unitTypes.map((e) => `${e}`),
+        unitIds: sortedUnitIds.map((e) => `${e}`),
+        unitTypes: sortedUnitTypes.map((e) => `${e}`),
       };
       await claimOwnerIncentivesRequest(params);
 
