@@ -21,5 +21,15 @@ describe('sortUnitIdsAndTypes', () => {
     expect(sortUnitIdsAndTypes(unitIds2, unitTypes2)).toStrictEqual(
       [sortedUnitIds2, sortedUnitTypes2],
     );
+
+    // should sort numbers as well
+    const unitIds3 = [10, 5, 20];
+    const unitTypes3 = [50, 25, 10];
+    const sortedUnitIds3 = [5, 10, 20];
+    const sortedUnitTypes3 = [25, 50, 10];
+
+    expect(sortUnitIdsAndTypes(unitIds3, unitTypes3)).toStrictEqual(
+      [sortedUnitIds3, sortedUnitTypes3],
+    );
   });
 });

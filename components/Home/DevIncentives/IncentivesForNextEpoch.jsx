@@ -90,7 +90,7 @@ export const IncentivesForNextEpoch = () => {
               name="unitId"
               rules={[{ required: true, message: 'Please add unit Id' }]}
             >
-              <InputNumber min={0} className="mr-32" placeholder="Eg. 1" />
+              <InputNumber min={0} className="mr-24" placeholder="Eg. 1" />
             </Form.Item>
 
             <Form.Item>

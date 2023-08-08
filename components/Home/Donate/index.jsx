@@ -8,6 +8,7 @@ import {
   notifySuccess,
   parseToEth,
   parseToWei,
+  sortUnitIdsAndTypes,
 } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { getLastEpochRequest } from '../DevIncentives/requests';
@@ -52,11 +53,16 @@ export const DepositServiceDonation = () => {
     try {
       setIsLoading(true);
 
+      const [sortedUnitIds, sortedUnitTypes] = sortUnitIdsAndTypes(
+        values.unitIds,
+        values.unitTypes,
+      );
+
       const params = {
         account,
-        serviceIds: values.unitIds.map((e) => `${e}`),
-        amounts: values.unitTypes.map((e) => parseToWei(e)),
-        totalAmount: parseToWei(values.unitTypes.reduce((a, b) => a + b, 0)),
+        serviceIds: sortedUnitIds.map((e) => `${e}`),
+        amounts: sortedUnitTypes.map((e) => parseToWei(e)),
+        totalAmount: parseToWei(sortedUnitTypes.reduce((a, b) => a + b, 0)),
       };
       await depositServiceDonationRequest(params);
 
