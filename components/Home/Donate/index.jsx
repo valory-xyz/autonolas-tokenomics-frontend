@@ -4,7 +4,6 @@ import { isNumber } from 'lodash';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import {
   getFullFormattedDate,
-  notifyError,
   notifySuccess,
   parseToEth,
   parseToWei,
@@ -13,7 +12,7 @@ import {
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { getLastEpochRequest } from '../DevIncentives/requests';
 import {
-  getServicesNotTerminatedOrNotDeployed,
+  checkServicesNotTerminatedOrNotDeployed,
   depositServiceDonationRequest,
   getVeOlasThresholdRequest,
   minAcceptedEthRequest,
@@ -67,24 +66,11 @@ export const DepositServiceDonation = () => {
         totalAmount: parseToWei(sortedUnitTypes.reduce((a, b) => a + b, 0)),
       };
 
-      const invalidServices = await getServicesNotTerminatedOrNotDeployed(
-        serviceIds,
-      );
+      await checkServicesNotTerminatedOrNotDeployed(serviceIds);
 
-      if (invalidServices.length === 0) {
-        await depositServiceDonationRequest(params);
-        notifySuccess('Deposited service donation successfully');
-      } else {
-        notifyError(
-          'Provided service IDs are not deployed or terminated:',
-          invalidServices.join(', '),
-        );
-
-        throw new Error('Provided service IDs are not deployed or terminated');
-      }
-    } catch (error) {
-      window.console.error(error);
-      throw error;
+      // deposit only if all services are deployed or terminated
+      await depositServiceDonationRequest(params);
+      notifySuccess('Deposited service donation successfully');
     } finally {
       setIsLoading(false);
     }

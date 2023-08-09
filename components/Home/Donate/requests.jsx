@@ -1,5 +1,5 @@
 import { sendTransaction } from '@autonolas/frontend-library';
-import { parseToEth } from 'common-util/functions';
+import { parseToEth, notifyError } from 'common-util/functions';
 import {
   getTokenomicsContract,
   getTreasuryContract,
@@ -20,7 +20,7 @@ export const getServiceDetails = (id) => new Promise((resolve, reject) => {
     });
 });
 
-export const getServicesNotTerminatedOrNotDeployed = (ids) => new Promise((resolve, reject) => {
+export const checkServicesNotTerminatedOrNotDeployed = (ids) => new Promise((resolve, reject) => {
   const allServiceDetailsPromise = ids.map((id) => getServiceDetails(id));
 
   Promise.all(allServiceDetailsPromise)
@@ -32,7 +32,17 @@ export const getServicesNotTerminatedOrNotDeployed = (ids) => new Promise((resol
         }
       });
 
-      resolve(invalidServiceIds);
+      if (invalidServiceIds.length === 0) {
+        resolve([]);
+      } else {
+        notifyError(
+          'Provided service IDs are not deployed or terminated:',
+          invalidServiceIds.join(', '),
+        );
+        reject(
+          new Error('Provided service IDs are not deployed or terminated'),
+        );
+      }
     })
     .catch((e) => {
       reject(e);
