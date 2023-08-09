@@ -22,6 +22,7 @@ export const FormList = ({
   inputTwoLabel,
   buttonText,
   isUnitTypeInput,
+  showAscendingOrderMessage,
 }) => {
   const screens = useBreakpoint();
   const inputStyle = screens.xs ? { width: '140px' } : { width: 'auto' };
@@ -63,7 +64,7 @@ export const FormList = ({
                   >
                     <InputNumber
                       min={0}
-                      className="mr-32"
+                      className="mr-24"
                       placeholder="Eg. 1"
                       style={inputStyle}
                     />
@@ -85,7 +86,11 @@ export const FormList = ({
                     <Radio value="0">Component</Radio>
                   </Radio.Group>
                 ) : (
-                  <InputNumber min={0} placeholder="Eg. 0.065" style={inputStyle} />
+                  <InputNumber
+                    min={0}
+                    placeholder="Eg. 0.065"
+                    style={inputStyle}
+                  />
                 )}
               </Form.Item>
 
@@ -97,14 +102,16 @@ export const FormList = ({
 
           <Form.ErrorList errors={errors} />
 
-          <div>
-            <Text type="secondary">
-              <QuestionCircleOutlined />
-              &nbsp;
-              {inputOneLabel}
-              &nbsp;should be in ascending order
-            </Text>
-          </div>
+          {showAscendingOrderMessage && (
+            <div>
+              <Text type="secondary">
+                <QuestionCircleOutlined />
+                &nbsp;
+                {inputOneLabel}
+                &nbsp;should be in ascending order
+              </Text>
+            </div>
+          )}
 
           <Form.Item wrapperCol={{ span: 6 }}>
             <Button onClick={() => add()} block icon={<PlusOutlined />}>
@@ -122,4 +129,9 @@ FormList.propTypes = {
   inputTwoLabel: PropTypes.string.isRequired,
   buttonText: PropTypes.string.isRequired,
   isUnitTypeInput: PropTypes.bool.isRequired,
+  showAscendingOrderMessage: PropTypes.bool,
+};
+
+FormList.defaultProps = {
+  showAscendingOrderMessage: false,
 };

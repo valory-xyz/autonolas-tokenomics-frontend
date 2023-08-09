@@ -20,6 +20,7 @@ export const DynamicFieldsForm = ({
   onSubmit,
   canResetOnSubmit,
   dynamicFormType,
+  showAscendingOrderMessage,
 }) => {
   const { account } = useHelpers();
   const [form] = Form.useForm();
@@ -74,6 +75,7 @@ export const DynamicFieldsForm = ({
           inputOneLabel={inputOneLabel}
           inputTwoLabel={inputTwoLabel}
           buttonText={buttonText}
+          showAscendingOrderMessage={showAscendingOrderMessage}
         />
 
         <Form.Item>
@@ -107,6 +109,7 @@ DynamicFieldsForm.propTypes = {
   isUnitTypeInput: PropTypes.bool,
   dynamicFormType: PropTypes.string,
   canResetOnSubmit: PropTypes.bool,
+  showAscendingOrderMessage: PropTypes.bool,
 };
 
 DynamicFieldsForm.defaultProps = {
@@ -118,4 +121,5 @@ DynamicFieldsForm.defaultProps = {
   isUnitTypeInput: true,
   dynamicFormType: null,
   canResetOnSubmit: false,
+  showAscendingOrderMessage: false,
 };

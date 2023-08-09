@@ -33,6 +33,9 @@ const GlobalStyle = createGlobalStyle`
   .mr-12 {
     margin-right: 12px;
   }
+  .mr-24 {
+    margin-right: 24px;
+  }
   .mr-32 {
     margin-right: 32px;
   }

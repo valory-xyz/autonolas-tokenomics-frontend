@@ -9,6 +9,7 @@ import {
   notifySpecificError,
   parseToEth,
   notifyError,
+  sortUnitIdsAndTypes,
 } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { getOwnerIncentivesRequest, getOwnersForUnits } from './requests';
@@ -98,8 +99,17 @@ export const IncentivesForThisEpoch = () => {
             ids,
           );
         } else {
+          const [sortedUnitIds, sortedUnitTypes] = sortUnitIdsAndTypes(
+            unitIds,
+            unitTypes,
+          );
+
           try {
-            const params = { address, unitIds, unitTypes };
+            const params = {
+              address,
+              unitIds: sortedUnitIds,
+              unitTypes: sortedUnitTypes,
+            };
             const response = await getOwnerIncentivesRequest(params);
 
             // set reward and top up for table
