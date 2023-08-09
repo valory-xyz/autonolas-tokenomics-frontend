@@ -13,6 +13,7 @@ import {
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { getLastEpochRequest } from '../DevIncentives/requests';
 import {
+  getServicesNotTerminatedOrNotDeployed,
   depositServiceDonationRequest,
   getVeOlasThresholdRequest,
   minAcceptedEthRequest,
@@ -58,18 +59,30 @@ export const DepositServiceDonation = () => {
         values.unitTypes,
       );
 
+      const serviceIds = sortedUnitIds.map((e) => `${e}`);
       const params = {
         account,
-        serviceIds: sortedUnitIds.map((e) => `${e}`),
+        serviceIds,
         amounts: sortedUnitTypes.map((e) => parseToWei(e)),
         totalAmount: parseToWei(sortedUnitTypes.reduce((a, b) => a + b, 0)),
       };
-      await depositServiceDonationRequest(params);
 
-      notifySuccess('Deposited service donation successfully');
+      const invalidServices = await getServicesNotTerminatedOrNotDeployed(
+        serviceIds,
+      );
+
+      if (invalidServices.length === 0) {
+        await depositServiceDonationRequest(params);
+        notifySuccess('Deposited service donation successfully');
+      } else {
+        notifyError(
+          'Provided service IDs are not deployed or terminated:',
+          invalidServices.join(', '),
+        );
+        throw new Error('Invalid service IDs');
+      }
     } catch (error) {
       window.console.error(error);
-      notifyError();
     } finally {
       setIsLoading(false);
     }
