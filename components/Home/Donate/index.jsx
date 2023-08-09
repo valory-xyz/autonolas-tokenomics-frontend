@@ -79,10 +79,12 @@ export const DepositServiceDonation = () => {
           'Provided service IDs are not deployed or terminated:',
           invalidServices.join(', '),
         );
-        throw new Error('Invalid service IDs');
+
+        throw new Error('Provided service IDs are not deployed or terminated');
       }
     } catch (error) {
       window.console.error(error);
+      throw error;
     } finally {
       setIsLoading(false);
     }
