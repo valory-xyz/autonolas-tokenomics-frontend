@@ -5,4 +5,5 @@ export * from './tokenomics';
 export * from './uniswapV2PairMainnet';
 export * from './agentRegistry';
 export * from './componentRegistry';
+export * from './serviceManager';
 export * from './erc20';

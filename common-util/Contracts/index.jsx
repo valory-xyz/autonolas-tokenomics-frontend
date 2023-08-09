@@ -35,6 +35,11 @@ import {
   COMPONENT_REGISTRY_ADDRESS_MAINNET,
   COMPONENT_REGISTRY_ABI,
 
+  // registries - service
+  SERVICE_REGISTRY_ADDRESS_MAINNET,
+  SERVICE_REGISTRY_ADDRESS_GOERLI,
+  SERVICE_MANAGER_TOKEN_CONTRACT_ABI,
+
   // erc20
   ERC20_ABI,
 } from 'common-util/AbiAndAddresses';
@@ -52,6 +57,7 @@ export const LOCAL_ADDRESSES = {
   AGENT_REGISTRY_ADDRESS_LOCAL: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
   COMPONENT_REGISTRY_ADDRESS_LOCAL:
     '0x5FbDB2315678afecb367f032d93F642f64180aa3',
+  SERVICE_REGISTRY_ADDRESS_LOCAL: '0x36C02dA8a0983159322a80FFE9F24b1acfF8B570',
 };
 
 /**
@@ -106,6 +112,14 @@ export const getContractAddress = (type, chainId) => {
       }
       if (chainId === 5) return COMPONENT_REGISTRY_ADDRESS_GOERLI;
       return COMPONENT_REGISTRY_ADDRESS_MAINNET;
+    }
+
+    case 'service': {
+      if (chainId === LOCAL_CHAIN_ID) {
+        return LOCAL_ADDRESSES.SERVICE_REGISTRY_ADDRESS_LOCAL;
+      }
+      if (chainId === 5) return SERVICE_REGISTRY_ADDRESS_GOERLI;
+      return SERVICE_REGISTRY_ADDRESS_MAINNET;
     }
 
     default:
@@ -199,6 +213,15 @@ export const getComponentContract = () => {
   const contract = new web3.eth.Contract(
     COMPONENT_REGISTRY_ABI,
     getContractAddress('component', chainId),
+  );
+  return contract;
+};
+
+export const getServiceContract = () => {
+  const { web3, chainId } = getWeb3Details();
+  const contract = new web3.eth.Contract(
+    SERVICE_MANAGER_TOKEN_CONTRACT_ABI,
+    getContractAddress('service', chainId),
   );
   return contract;
 };
