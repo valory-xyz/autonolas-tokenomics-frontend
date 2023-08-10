@@ -4,7 +4,6 @@ import { isNumber } from 'lodash';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import {
   getFullFormattedDate,
-  notifyError,
   notifySuccess,
   parseToEth,
   parseToWei,
@@ -13,6 +12,7 @@ import {
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { getLastEpochRequest } from '../DevIncentives/requests';
 import {
+  checkServicesNotTerminatedOrNotDeployed,
   depositServiceDonationRequest,
   getVeOlasThresholdRequest,
   minAcceptedEthRequest,
@@ -58,18 +58,19 @@ export const DepositServiceDonation = () => {
         values.unitTypes,
       );
 
+      const serviceIds = sortedUnitIds.map((e) => `${e}`);
       const params = {
         account,
-        serviceIds: sortedUnitIds.map((e) => `${e}`),
+        serviceIds,
         amounts: sortedUnitTypes.map((e) => parseToWei(e)),
         totalAmount: parseToWei(sortedUnitTypes.reduce((a, b) => a + b, 0)),
       };
-      await depositServiceDonationRequest(params);
 
+      await checkServicesNotTerminatedOrNotDeployed(serviceIds);
+
+      // deposit only if all services are deployed or terminated
+      await depositServiceDonationRequest(params);
       notifySuccess('Deposited service donation successfully');
-    } catch (error) {
-      window.console.error(error);
-      notifyError();
     } finally {
       setIsLoading(false);
     }

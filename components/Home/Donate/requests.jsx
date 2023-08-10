@@ -1,9 +1,53 @@
 import { sendTransaction } from '@autonolas/frontend-library';
-import { parseToEth } from 'common-util/functions';
+import { parseToEth, notifyError } from 'common-util/functions';
 import {
   getTokenomicsContract,
   getTreasuryContract,
+  getServiceContract,
 } from 'common-util/Contracts';
+
+export const getServiceDetails = (id) => new Promise((resolve, reject) => {
+  const contract = getServiceContract();
+
+  contract.methods
+    .getService(id)
+    .call()
+    .then(async (response) => {
+      resolve(response);
+    })
+    .catch((e) => {
+      reject(e);
+    });
+});
+
+export const checkServicesNotTerminatedOrNotDeployed = (ids) => new Promise((resolve, reject) => {
+  const allServiceDetailsPromise = ids.map((id) => getServiceDetails(id));
+
+  Promise.all(allServiceDetailsPromise)
+    .then((allServiceDetails) => {
+      const invalidServiceIds = [];
+      allServiceDetails.forEach((service, index) => {
+        if (service.state !== '4' && service.state !== '5') {
+          invalidServiceIds.push(ids[index]);
+        }
+      });
+
+      if (invalidServiceIds.length === 0) {
+        resolve([]);
+      } else {
+        notifyError(
+          'Provided service IDs are not deployed or terminated:',
+          invalidServiceIds.join(', '),
+        );
+        reject(
+          new Error('Provided service IDs are not deployed or terminated'),
+        );
+      }
+    })
+    .catch((e) => {
+      reject(e);
+    });
+});
 
 export const depositServiceDonationRequest = ({
   account,
