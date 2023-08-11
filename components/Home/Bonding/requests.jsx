@@ -417,7 +417,6 @@ export const bondCalculationRequest = ({ tokenAmount, priceLP }) => new Promise(
     .calculatePayoutOLAS(tokenAmount, priceLP)
     .call()
     .then((response) => {
-      // console.log('response', response);
       resolve(response);
     })
     .catch((e) => {
