@@ -43,8 +43,7 @@ import {
   // erc20
   ERC20_ABI,
 } from 'common-util/AbiAndAddresses';
-import { LOCAL_CHAIN_ID } from 'util/constants';
-
+import { LOCAL_CHAIN_ID, LOCAL_FORK_ID } from 'util/constants';
 /**
  * Addresses fetched when backend connected locally
  * (initDeploy.json in backend repository)
@@ -229,4 +228,5 @@ export const getServiceContract = () => {
 export const rpc = {
   1: process.env.NEXT_PUBLIC_MAINNET_URL,
   5: process.env.NEXT_PUBLIC_GOERLI_URL,
+  [LOCAL_FORK_ID]: 'http://localhost:8545',
 };
