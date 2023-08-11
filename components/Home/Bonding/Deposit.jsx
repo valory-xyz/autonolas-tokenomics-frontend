@@ -133,8 +133,9 @@ export const Deposit = ({
       return '--';
     }
 
+    const tokenAmountWei = BigNumber.from(parseToWei(tokenAmountInputValue));
     const olasPayout = tokenAmountInputValue
-      ? Number(BigNumber.from(productLpPrice).mul(BigNumber.from(tokenAmountInputValue)).div(ONE_ETH))
+      ? Number(BigNumber.from(productLpPrice).mul(tokenAmountWei).div(ONE_ETH).div(ONE_ETH))
       : 0;
     return getCommaSeparatedNumber(olasPayout, 4);
   };
