@@ -11,6 +11,7 @@ import {
   getTokenomicsContract,
   getErc20Contract,
   getEthersProvider,
+  getGenericBondCalculatorContract,
 } from 'common-util/Contracts';
 import { getProductValueFromEvent } from './requestsHelpers';
 
@@ -105,10 +106,8 @@ const getLpTokenName = async (address) => {
  * input: [{ token: '0x', ...others }]
  * output: [{ token: '0x', lpTokenName: 'OLAS-ETH', ...others }]
  */
-const getLpTokenNamesForProducts = async (productList) => {
+const getLpTokenNamesForProducts = async (productList, events) => {
   const lpTokenNamePromiseList = [];
-
-  const events = await getProductEvents('CreateProduct');
 
   for (let i = 0; i < productList.length; i += 1) {
     const result = getLpTokenName(
@@ -216,6 +215,7 @@ const getProductDetailsFromIds = ({ productIdList }) => new Promise((resolve, re
 
         const listWithLpTokens = await getLpTokenNamesForProducts(
           productList,
+          createEventList,
         );
 
         const listWithCurrentLpPrice = await getCurrentLpPriceForProducts(
@@ -277,6 +277,7 @@ export const getAllTheProductsNotRemoved = async () => new Promise((resolve, rej
 
           const listWithLpTokens = await getLpTokenNamesForProducts(
             productWithIds,
+            createEventList,
           );
 
           const listWithCurrentLpPrice = await getCurrentLpPriceForProducts(
@@ -405,6 +406,22 @@ export const getLpBalanceRequest = ({ account, token }) => new Promise((resolve,
     })
     .catch((e) => {
       window.console.log('Error occured on fetching LP balance');
+      reject(e);
+    });
+});
+
+export const bondCalculationRequest = ({ tokenAmount, priceLP }) => new Promise((resolve, reject) => {
+  const contract = getGenericBondCalculatorContract();
+
+  contract.methods
+    .calculatePayoutOLAS(tokenAmount, priceLP)
+    .call()
+    .then((response) => {
+      // console.log('response', response);
+      resolve(response);
+    })
+    .catch((e) => {
+      window.console.log('Error occured on calculating bond');
       reject(e);
     });
 });
