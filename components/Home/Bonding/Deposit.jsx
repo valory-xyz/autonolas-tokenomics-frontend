@@ -18,9 +18,10 @@ import {
   notifyError,
   parseToEth,
   getCommaSeparatedNumber,
+  ONE_ETH,
 } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
-// import { ethers } from 'ethers';
+import { BigNumber } from 'ethers';
 import {
   depositRequest,
   hasSufficientTokenRequest,
@@ -52,7 +53,7 @@ export const Deposit = ({
         token: productToken,
       });
 
-      setLpBalance(parseToEth(lpResponse));
+      setLpBalance(lpResponse);
     }
   }, [account, productToken]);
 
@@ -113,17 +114,22 @@ export const Deposit = ({
   const tokenAmountInputValue = Form.useWatch('tokenAmount', form);
 
   const getRemainingLpSupply = () => {
-    const supplyInEth = parseToEth(productSupply);
-
-    const remainingSupply = supplyInEth / productLpPrice;
-
-    if (remainingSupply < lpBalance) return remainingSupply;
-
+    const supplyInWei = BigNumber.from(productSupply);
+    const remainingSupply = supplyInWei.mul(ONE_ETH).div(productLpPrice);
+    if (remainingSupply.lt(lpBalance)) return remainingSupply;
     return lpBalance;
   };
 
+  const getRemainingLpSupplyInEth = () => {
+    const remainingSupply = getRemainingLpSupply();
+    return parseToEth(remainingSupply);
+  };
+
   const getOlasPayout = () => {
-    if (!tokenAmountInputValue || tokenAmountInputValue > getRemainingLpSupply()) {
+    if (
+      !tokenAmountInputValue
+      || tokenAmountInputValue > getRemainingLpSupplyInEth()
+    ) {
       return '--';
     }
 
@@ -133,6 +139,8 @@ export const Deposit = ({
     return getCommaSeparatedNumber(olasPayout, 4);
   };
 
+  const remainingLpSupplyInEth = getRemainingLpSupplyInEth();
+
   return (
     <>
       <Modal
@@ -140,7 +148,7 @@ export const Deposit = ({
         title="Bond LP tokens for OLAS"
         okText="Bond"
         okButtonProps={{
-          disabled: !account || lpBalance === 0,
+          disabled: !account || lpBalance === BigNumber.from(0),
         }}
         cancelText="Cancel"
         onCancel={closeModal}
@@ -174,7 +182,7 @@ export const Deposit = ({
                       new Error('Please input a valid amount'),
                     );
                   }
-                  if (value > getRemainingLpSupply()) {
+                  if (value > remainingLpSupplyInEth) {
                     return Promise.reject(
                       new Error('Amount cannot be greater than the balance'),
                     );
@@ -190,12 +198,12 @@ export const Deposit = ({
           <div className="mb-8">
             <Text type="secondary">
               LP balance:&nbsp;
-              {getCommaSeparatedNumber(getRemainingLpSupply(), 4)}
+              {getCommaSeparatedNumber(remainingLpSupplyInEth, 4)}
               <Button
                 htmlType="button"
                 type="link"
                 onClick={() => {
-                  form.setFieldsValue({ tokenAmount: getRemainingLpSupply() });
+                  form.setFieldsValue({ tokenAmount: remainingLpSupplyInEth });
                   form.validateFields(['tokenAmount']);
                 }}
                 className="pl-0"
@@ -263,7 +271,7 @@ Deposit.propTypes = {
   productId: PropTypes.string,
   productToken: PropTypes.string,
   productSupply: PropTypes.string,
-  productLpPrice: PropTypes.number,
+  productLpPrice: PropTypes.shape({}),
   closeModal: PropTypes.func,
   getProducts: PropTypes.func,
 };

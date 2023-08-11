@@ -22,6 +22,11 @@ import {
   TOKENOMICS_PROXY_ADDRESS_MAINNET,
   TOKENOMICS_ABI,
 
+  // bond calculator
+  BOND_CALCULATOR_ADDRESS_GOERLI,
+  BOND_CALCULATOR_ADDRESS_MAINNET,
+  BOND_CALCULATOR_ABI,
+
   // uniswap
   UNISWAP_V2_PAIR_ABI,
 
@@ -57,6 +62,7 @@ export const LOCAL_ADDRESSES = {
   COMPONENT_REGISTRY_ADDRESS_LOCAL:
     '0x5FbDB2315678afecb367f032d93F642f64180aa3',
   SERVICE_REGISTRY_ADDRESS_LOCAL: '0x36C02dA8a0983159322a80FFE9F24b1acfF8B570',
+  GENERIC_BOND_CALC_ADDRESS: '0x809d550fca64d94Bd9F66E60752A544199cfAC3D',
 };
 
 /**
@@ -94,6 +100,14 @@ export const getContractAddress = (type, chainId) => {
       }
       if (chainId === 5) return TOKENOMICS_PROXY_ADDRESS_GOERLI;
       return TOKENOMICS_PROXY_ADDRESS_MAINNET;
+    }
+
+    case 'genericBondCalculator': {
+      if (chainId === LOCAL_CHAIN_ID) {
+        return LOCAL_ADDRESSES.GENERIC_BOND_CALC_ADDRESS;
+      }
+      if (chainId === 5) return BOND_CALCULATOR_ADDRESS_GOERLI;
+      return BOND_CALCULATOR_ADDRESS_MAINNET;
     }
 
     // registries
@@ -195,6 +209,15 @@ export const getUniswapV2PairContract = (address) => {
 export const getErc20Contract = (address) => {
   const { web3 } = getWeb3Details();
   const contract = new web3.eth.Contract(ERC20_ABI, address);
+  return contract;
+};
+
+export const getGenericBondCalculatorContract = () => {
+  const { web3, chainId } = getWeb3Details();
+  const contract = new web3.eth.Contract(
+    BOND_CALCULATOR_ABI,
+    getContractAddress('genericBondCalculator', chainId),
+  );
   return contract;
 };
 

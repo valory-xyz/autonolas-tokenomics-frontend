@@ -7,3 +7,4 @@ export * from './agentRegistry';
 export * from './componentRegistry';
 export * from './serviceManager';
 export * from './erc20';
+export * from './bondCalculator';

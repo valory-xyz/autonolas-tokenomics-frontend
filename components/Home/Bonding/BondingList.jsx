@@ -6,11 +6,12 @@ import {
 import { remove, round, isNaN } from 'lodash';
 import { COLOR } from '@autonolas/frontend-library';
 import { QuestionCircleOutlined } from '@ant-design/icons';
+import styled from 'styled-components';
+import { ethers } from 'ethers';
 import { BONDING_PRODUCTS } from 'util/constants';
 import { parseToEth } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { NA } from 'common-util/constants';
-import styled from 'styled-components';
 import { Deposit } from './Deposit';
 import {
   getProductListRequest,
@@ -29,10 +30,21 @@ const Container = styled.div`
   }
 `;
 
+/**
+ *
+ * @param {BigNumber} lpTokenValue
+ * @param {Number} discount
+ * @returns {BigNumber}
+ */
 const getLpTokenWithDiscount = (lpTokenValue, discount) => {
-  const price = Number(parseToEth(lpTokenValue));
-  const discountedPrice = price + (price * discount) / 100;
-  return round(discountedPrice, 2);
+  const price = ethers.BigNumber.from(lpTokenValue);
+  const discountedPrice = price.add(price.mul(discount).div(100));
+  return discountedPrice;
+};
+
+const displayLpTokenWithDiscount = (value) => {
+  const temp = parseToEth(value);
+  return round(temp, 2);
 };
 
 const buildFullCurrentPriceLp = (currentPriceLp) => Number(round(parseToEth(currentPriceLp * 2), 2)) || '--';
@@ -110,7 +122,7 @@ const getColumns = (
             rel="noopener noreferrer"
             target="_blank"
           >
-            {discountedPrice}
+            {displayLpTokenWithDiscount(discountedPrice)}
           </a>
         );
       },
@@ -129,9 +141,12 @@ const getColumns = (
           record.priceLP,
           discount,
         );
+        const roundedDiscountedOlasPerLpToken = displayLpTokenWithDiscount(
+          discountedOlasPerLpToken,
+        );
 
         const projectedChange = round(
-          ((discountedOlasPerLpToken - fullCurrentPriceLp)
+          ((roundedDiscountedOlasPerLpToken - fullCurrentPriceLp)
             / fullCurrentPriceLp)
             * 100,
           2,
