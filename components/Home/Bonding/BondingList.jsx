@@ -289,7 +289,7 @@ export const BondingList = ({ bondingProgramType }) => {
 
   const getProductsDataSource = () => {
     const list = showNoSupply ? allProducts : filteredProducts;
-    return list.filter((x) => !BigNumber.from(x.supply).lt(ONE_ETH.mul(10)));
+    return list.filter((x) => !BigNumber.from(x.supply).lt(ONE_ETH));
   };
 
   return (
