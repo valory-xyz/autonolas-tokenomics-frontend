@@ -134,7 +134,7 @@ export const Deposit = ({
     }
 
     const olasPayout = tokenAmountInputValue
-      ? Number(BigNumber.from(productLpPrice).div(ONE_ETH)) * tokenAmountInputValue
+      ? Number(BigNumber.from(productLpPrice).mul(BigNumber.from(tokenAmountInputValue)).div(ONE_ETH))
       : 0;
     return getCommaSeparatedNumber(olasPayout, 4);
   };
