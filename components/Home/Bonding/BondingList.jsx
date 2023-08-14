@@ -7,9 +7,9 @@ import { remove, round, isNaN } from 'lodash';
 import { COLOR } from '@autonolas/frontend-library';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
-import { BigNumber, ethers } from 'ethers';
+import { ethers } from 'ethers';
 import { BONDING_PRODUCTS } from 'util/constants';
-import { ONE_ETH, parseToEth } from 'common-util/functions';
+import { parseToEth } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { NA } from 'common-util/constants';
 import { Deposit } from './Deposit';
@@ -289,7 +289,7 @@ export const BondingList = ({ bondingProgramType }) => {
 
   const getProductsDataSource = () => {
     const list = showNoSupply ? allProducts : filteredProducts;
-    return list.filter((x) => !BigNumber.from(x.supply).lt(ONE_ETH));
+    return list;
   };
 
   return (
