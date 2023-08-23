@@ -54,7 +54,7 @@
     "eslint-plugin-react": "^7.19.0",
     "eslint-plugin-react-hooks": "^3.0.0",
     "jest": "^27.3.1",
-    "node-fetch": "^3.3.2"
+    "node-fetch": "2"
   },
   "jest": {
     "projects": [

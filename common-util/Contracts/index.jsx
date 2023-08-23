@@ -21,22 +21,22 @@ import {
   UNISWAP_V2_PAIR_ABI,
 
   // registries - agent
-  AGENT_REGISTRY.addresses[5],
-  AGENT_REGISTRY.addresses[1],
+  AGENT_REGISTRY,
   AGENT_REGISTRY_ABI,
 
   // registries - component
-  COMPONENT_REGISTRY.addresses[5],
-  COMPONENT_REGISTRY.addresses[1],
+  COMPONENT_REGISTRY,
   COMPONENT_REGISTRY_ABI,
 
   // registries - service
-  SERVICE_REGISTRY.addresses[1],
-  SERVICE_REGISTRY.addresses[5],
+  SERVICE_REGISTRY,
   SERVICE_MANAGER_TOKEN_CONTRACT_ABI,
 
   // erc20
   ERC20_ABI,
+
+  // tokenomics proxy
+  TOKENOMICS_PROXY, // TODO: missing
 } from 'common-util/AbiAndAddresses';
 import { LOCAL_CHAIN_ID, LOCAL_FORK_ID } from 'util/constants';
 /**

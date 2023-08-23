@@ -1,15 +1,19 @@
+/* eslint-disable no-await-in-loop */
 /* eslint-disable jest/no-conditional-expect */
-import { DEPOSITORY, DISPENSER, TREASURY, TOKENOMICS, BOND_CALCULATOR } from 'common-util/AbiAndAddresses';
+import {
+  DEPOSITORY, DISPENSER, TREASURY, TOKENOMICS, BOND_CALCULATOR,
+} from 'common-util/AbiAndAddresses';
+
+const fetch = require('node-fetch');
 
 describe('test-chains/TestChains.jsx', () => {
   it('check contract addresses and ABIs', async () => {
-    //expect.hasAssertions();
+    expect.hasAssertions();
     const localArtifacts = [DEPOSITORY, DISPENSER, TREASURY, TOKENOMICS, BOND_CALCULATOR];
-
-    const fetch = require('node-fetch');
 
     // Registries repository
     const registriesRepo = 'https://raw.githubusercontent.com/valory-xyz/autonolas-tokenomics/main/';
+
     // Fetch the actual config
     let response = await fetch(`${registriesRepo}docs/configuration.json`);
     const parsedConfig = await response.json();
@@ -28,9 +32,9 @@ describe('test-chains/TestChains.jsx', () => {
             const localABI = JSON.stringify(localArtifacts[k].abi);
 
             // Get up-to-date remote contract artifact and its ABI
-            if (contracts[j].name === "TokenomicsProxy") {
+            if (contracts[j].name === 'TokenomicsProxy') {
               // In case of a Tokenomics contract, fetch its implementation
-              response = await fetch(registriesRepo + contracts[j-1].artifact);
+              response = await fetch(registriesRepo + contracts[j - 1].artifact);
             } else {
               response = await fetch(registriesRepo + contracts[j].artifact);
             }
