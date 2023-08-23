@@ -1,8 +1,10 @@
-export const DEPOSITORY_ADDRESS_MAINNET = '0xfF8697d8d2998d6AA2e09B405795C6F4BEeB0C81';
-
-export const DEPOSITORY_ADDRESS_GOERLI = '0x5FDc466f4A7547c876eF40CD30fFA2A89F1EcDE7';
-
-export const DEPOSITORY_ABI = [
+export const DEPOSITORY = {
+  contractName: 'Depository',
+  addresses: {
+    1: '0xfF8697d8d2998d6AA2e09B405795C6F4BEeB0C81',
+    5: '0x5FDc466f4A7547c876eF40CD30fFA2A89F1EcDE7',
+  },
+abi: [
   {
     inputs: [
       {
@@ -1022,4 +1024,5 @@ export const DEPOSITORY_ABI = [
     stateMutability: 'view',
     type: 'function',
   },
-];
+]
+};

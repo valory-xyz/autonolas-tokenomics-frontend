@@ -1,8 +1,10 @@
-export const BOND_CALCULATOR_ADDRESS_MAINNET = '0x1521918961bDBC9Ed4C67a7103D5999e4130E6CB';
-
-export const BOND_CALCULATOR_ADDRESS_GOERLI = '0x77290FF625fc576f465D0256F6a12Ce4480a5b8a';
-
-export const BOND_CALCULATOR_ABI = [
+export const BOND_CALCULATOR = {
+  contractName: 'GenericBondCalculator',
+  addresses: {
+    1: '0x1521918961bDBC9Ed4C67a7103D5999e4130E6CB',
+    5: '0x77290FF625fc576f465D0256F6a12Ce4480a5b8a',
+  },
+abi: [
   {
     inputs: [
       {
@@ -130,4 +132,5 @@ export const BOND_CALCULATOR_ABI = [
     stateMutability: 'view',
     type: 'function',
   },
-];
+]
+};

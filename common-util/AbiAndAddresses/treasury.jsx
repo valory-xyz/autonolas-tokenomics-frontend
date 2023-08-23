@@ -1,8 +1,10 @@
-export const TREASURY_ADDRESS_MAINNET = '0xa0DA53447C0f6C4987964d8463da7e6628B30f82';
-
-export const TREASURY_ADDRESS_GOERLI = '0x7bedCA17D29e53C8062d10902a6219F8d1E3B9B5';
-
-export const TREASURY_ABI = [
+export const TREASURY = {
+  contractName: 'Treasury',
+  addresses: {
+    1: '0xa0DA53447C0f6C4987964d8463da7e6628B30f82',
+    5: '0x7bedCA17D29e53C8062d10902a6219F8d1E3B9B5',
+  },
+abi: [
   {
     inputs: [
       {
@@ -1033,4 +1035,5 @@ export const TREASURY_ABI = [
     stateMutability: 'payable',
     type: 'receive',
   },
-];
+]
+};

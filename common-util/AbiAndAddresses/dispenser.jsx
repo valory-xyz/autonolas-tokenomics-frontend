@@ -1,8 +1,10 @@
-export const DISPENSER_ADDRESS_MAINNET = '0xeED0000fE94d7cfeF4Dc0CA86a223f0F603A61B8';
-
-export const DISPENSER_ADDRESS_GOERLI = '0xeDd71796B90eaCc56B074C39BAC90ED2Ca6D93Ee';
-
-export const DISPENSER_ABI = [
+export const DISPENSER = {
+  contractName: 'Dispenser',
+  addresses: {
+    1: '0xeED0000fE94d7cfeF4Dc0CA86a223f0F603A61B8',
+    5: '0xeDd71796B90eaCc56B074C39BAC90ED2Ca6D93Ee',
+  },
+abi: [
   {
     inputs: [
       {
@@ -542,4 +544,5 @@ export const DISPENSER_ABI = [
     stateMutability: 'view',
     type: 'function',
   },
-];
+]
+};

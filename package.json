@@ -9,8 +9,8 @@
     "@ant-design/icons": "^5.0.1",
     "@autonolas/frontend-library": "^0.3.16",
     "@ethersproject/providers": "^5.6.8",
-    "@walletconnect/web3-provider": "^1.7.8",
     "@wagmi/core": "^1.0.5",
+    "@walletconnect/web3-provider": "^1.7.8",
     "@web3modal/ethereum": "^2.4.1",
     "@web3modal/react": "^2.4.1",
     "@zeit/next-css": "^1.0.1",
@@ -53,7 +53,8 @@
     "eslint-plugin-jsx-a11y": "^6.2.3",
     "eslint-plugin-react": "^7.19.0",
     "eslint-plugin-react-hooks": "^3.0.0",
-    "jest": "^27.3.1"
+    "jest": "^27.3.1",
+    "node-fetch": "^3.3.2"
   },
   "jest": {
     "projects": [

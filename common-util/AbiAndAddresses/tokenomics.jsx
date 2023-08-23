@@ -1,8 +1,10 @@
-export const TOKENOMICS_PROXY_ADDRESS_MAINNET = '0xc096362fa6f4A4B1a9ea68b1043416f3381ce300';
-
-export const TOKENOMICS_PROXY_ADDRESS_GOERLI = '0x10100e74b7F706222F8A7C0be9FC7Ae1717Ad8B2';
-
-export const TOKENOMICS_ABI = [
+export const TOKENOMICS = {
+  contractName: 'TokenomicsProxy',
+  addresses: {
+    1: '0xc096362fa6f4A4B1a9ea68b1043416f3381ce300',
+    5: '0x10100e74b7F706222F8A7C0be9FC7Ae1717Ad8B2',
+  },
+abi: [
   {
     inputs: [],
     stateMutability: 'nonpayable',
@@ -1797,4 +1799,5 @@ export const TOKENOMICS_ABI = [
     stateMutability: 'view',
     type: 'function',
   },
-];
+]
+};
