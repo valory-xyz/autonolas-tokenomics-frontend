@@ -34,9 +34,6 @@ import {
 
   // erc20
   ERC20_ABI,
-
-  // tokenomics proxy
-  TOKENOMICS_PROXY, // TODO: missing
 } from 'common-util/AbiAndAddresses';
 import { LOCAL_CHAIN_ID, LOCAL_FORK_ID } from 'util/constants';
 /**
@@ -88,8 +85,8 @@ export const getContractAddress = (type, chainId) => {
       if (chainId === LOCAL_CHAIN_ID) {
         return LOCAL_ADDRESSES.TOKENOMICS_PROXY_ADDRESS_LOCAL;
       }
-      if (chainId === 5) return TOKENOMICS_PROXY.addresses[5];
-      return TOKENOMICS_PROXY.addresses[1];
+      if (chainId === 5) return TOKENOMICS.addresses[5];
+      return TOKENOMICS.addresses[1];
     }
 
     case 'genericBondCalculator': {
