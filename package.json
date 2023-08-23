@@ -3,7 +3,8 @@
     "dev": "next",
     "build": "CI= next build",
     "start": "next start",
-    "lint": "eslint ./"
+    "lint": "eslint ./",
+    "test": "jest"
   },
   "dependencies": {
     "@ant-design/icons": "^5.0.1",
