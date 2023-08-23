@@ -3,46 +3,33 @@ import { ethers } from 'ethers';
 import { getChainId } from '@autonolas/frontend-library';
 import {
   // depository
-  DEPOSITORY_ADDRESS_GOERLI,
-  DEPOSITORY_ADDRESS_MAINNET,
-  DEPOSITORY_ABI,
+  DEPOSITORY,
 
   // dispensers
-  DISPENSER_ADDRESS_GOERLI,
-  DISPENSER_ADDRESS_MAINNET,
-  DISPENSER_ABI,
+  DISPENSER,
 
   // treasury
-  TREASURY_ADDRESS_GOERLI,
-  TREASURY_ADDRESS_MAINNET,
-  TREASURY_ABI,
+  TREASURY,
 
   // tokenomics
-  TOKENOMICS_PROXY_ADDRESS_GOERLI,
-  TOKENOMICS_PROXY_ADDRESS_MAINNET,
-  TOKENOMICS_ABI,
+  TOKENOMICS,
 
   // bond calculator
-  BOND_CALCULATOR_ADDRESS_GOERLI,
-  BOND_CALCULATOR_ADDRESS_MAINNET,
-  BOND_CALCULATOR_ABI,
+  BOND_CALCULATOR,
 
   // uniswap
   UNISWAP_V2_PAIR_ABI,
 
   // registries - agent
-  AGENT_REGISTRY_ADDRESS_GOERLI,
-  AGENT_REGISTRY_ADDRESS_MAINNET,
+  AGENT_REGISTRY,
   AGENT_REGISTRY_ABI,
 
   // registries - component
-  COMPONENT_REGISTRY_ADDRESS_GOERLI,
-  COMPONENT_REGISTRY_ADDRESS_MAINNET,
+  COMPONENT_REGISTRY,
   COMPONENT_REGISTRY_ABI,
 
   // registries - service
-  SERVICE_REGISTRY_ADDRESS_MAINNET,
-  SERVICE_REGISTRY_ADDRESS_GOERLI,
+  SERVICE_REGISTRY,
   SERVICE_MANAGER_TOKEN_CONTRACT_ABI,
 
   // erc20
@@ -74,40 +61,40 @@ export const getContractAddress = (type, chainId) => {
       if (chainId === LOCAL_CHAIN_ID) {
         return LOCAL_ADDRESSES.DISPENSER_ADDRESS_LOCAL;
       }
-      if (chainId === 5) return DISPENSER_ADDRESS_GOERLI;
-      return DISPENSER_ADDRESS_MAINNET;
+      if (chainId === 5) return DISPENSER.addresses[5];
+      return DISPENSER.addresses[1];
     }
 
     case 'depository': {
       if (chainId === LOCAL_CHAIN_ID) {
         return LOCAL_ADDRESSES.DEPOSITORY_ADDRESS_LOCAL;
       }
-      if (chainId === 5) return DEPOSITORY_ADDRESS_GOERLI;
-      return DEPOSITORY_ADDRESS_MAINNET;
+      if (chainId === 5) return DEPOSITORY.addresses[5];
+      return DEPOSITORY.addresses[1];
     }
 
     case 'treasury': {
       if (chainId === LOCAL_CHAIN_ID) {
         return LOCAL_ADDRESSES.TREASURY_ADDRESS_LOCAL;
       }
-      if (chainId === 5) return TREASURY_ADDRESS_GOERLI;
-      return TREASURY_ADDRESS_MAINNET;
+      if (chainId === 5) return TREASURY.addresses[5];
+      return TREASURY.addresses[1];
     }
 
     case 'tokenomics': {
       if (chainId === LOCAL_CHAIN_ID) {
         return LOCAL_ADDRESSES.TOKENOMICS_PROXY_ADDRESS_LOCAL;
       }
-      if (chainId === 5) return TOKENOMICS_PROXY_ADDRESS_GOERLI;
-      return TOKENOMICS_PROXY_ADDRESS_MAINNET;
+      if (chainId === 5) return TOKENOMICS.addresses[5];
+      return TOKENOMICS.addresses[1];
     }
 
     case 'genericBondCalculator': {
       if (chainId === LOCAL_CHAIN_ID) {
         return LOCAL_ADDRESSES.GENERIC_BOND_CALC_ADDRESS;
       }
-      if (chainId === 5) return BOND_CALCULATOR_ADDRESS_GOERLI;
-      return BOND_CALCULATOR_ADDRESS_MAINNET;
+      if (chainId === 5) return BOND_CALCULATOR.addresses[5];
+      return BOND_CALCULATOR.addresses[1];
     }
 
     // registries
@@ -115,24 +102,24 @@ export const getContractAddress = (type, chainId) => {
       if (chainId === LOCAL_CHAIN_ID) {
         return LOCAL_ADDRESSES.AGENT_REGISTRY_ADDRESS_LOCAL;
       }
-      if (chainId === 5) return AGENT_REGISTRY_ADDRESS_GOERLI;
-      return AGENT_REGISTRY_ADDRESS_MAINNET;
+      if (chainId === 5) return AGENT_REGISTRY.addresses[5];
+      return AGENT_REGISTRY.addresses[1];
     }
 
     case 'component': {
       if (chainId === LOCAL_CHAIN_ID) {
         return LOCAL_ADDRESSES.COMPONENT_REGISTRY_ADDRESS_LOCAL;
       }
-      if (chainId === 5) return COMPONENT_REGISTRY_ADDRESS_GOERLI;
-      return COMPONENT_REGISTRY_ADDRESS_MAINNET;
+      if (chainId === 5) return COMPONENT_REGISTRY.addresses[5];
+      return COMPONENT_REGISTRY.addresses[1];
     }
 
     case 'service': {
       if (chainId === LOCAL_CHAIN_ID) {
         return LOCAL_ADDRESSES.SERVICE_REGISTRY_ADDRESS_LOCAL;
       }
-      if (chainId === 5) return SERVICE_REGISTRY_ADDRESS_GOERLI;
-      return SERVICE_REGISTRY_ADDRESS_MAINNET;
+      if (chainId === 5) return SERVICE_REGISTRY.addresses[5];
+      return SERVICE_REGISTRY.addresses[1];
     }
 
     default:
@@ -167,7 +154,7 @@ export const getWeb3Details = () => {
 export const getDepositoryContract = () => {
   const { web3, chainId } = getWeb3Details();
   const contract = new web3.eth.Contract(
-    DEPOSITORY_ABI,
+    DEPOSITORY.abi,
     getContractAddress('depository', chainId),
   );
   return contract;
@@ -176,7 +163,7 @@ export const getDepositoryContract = () => {
 export const getDispenserContract = () => {
   const { web3, chainId } = getWeb3Details();
   const contract = new web3.eth.Contract(
-    DISPENSER_ABI,
+    DISPENSER.abi,
     getContractAddress('dispenser', chainId),
   );
   return contract;
@@ -185,7 +172,7 @@ export const getDispenserContract = () => {
 export const getTreasuryContract = () => {
   const { web3, chainId } = getWeb3Details();
   const contract = new web3.eth.Contract(
-    TREASURY_ABI,
+    TREASURY.abi,
     getContractAddress('treasury', chainId),
   );
   return contract;
@@ -194,7 +181,7 @@ export const getTreasuryContract = () => {
 export const getTokenomicsContract = () => {
   const { web3, chainId } = getWeb3Details();
   const contract = new web3.eth.Contract(
-    TOKENOMICS_ABI,
+    TOKENOMICS.abi,
     getContractAddress('tokenomics', chainId),
   );
   return contract;
@@ -215,7 +202,7 @@ export const getErc20Contract = (address) => {
 export const getGenericBondCalculatorContract = () => {
   const { web3, chainId } = getWeb3Details();
   const contract = new web3.eth.Contract(
-    BOND_CALCULATOR_ABI,
+    BOND_CALCULATOR.abi,
     getContractAddress('genericBondCalculator', chainId),
   );
   return contract;
