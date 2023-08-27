@@ -21,19 +21,13 @@ import {
   UNISWAP_V2_PAIR_ABI,
 
   // registries - agent
-  AGENT_REGISTRY_ADDRESS_GOERLI,
-  AGENT_REGISTRY_ADDRESS_MAINNET,
-  AGENT_REGISTRY_ABI,
+  AGENT_REGISTRY,
 
   // registries - component
-  COMPONENT_REGISTRY_ADDRESS_GOERLI,
-  COMPONENT_REGISTRY_ADDRESS_MAINNET,
-  COMPONENT_REGISTRY_ABI,
+  COMPONENT_REGISTRY,
 
   // registries - service
-  SERVICE_REGISTRY_ADDRESS_GOERLI,
-  SERVICE_REGISTRY_ADDRESS_MAINNET,
-  SERVICE_MANAGER_TOKEN_CONTRACT_ABI,
+  SERVICE_REGISTRY,
 
   // erc20
   ERC20_ABI,
@@ -105,24 +99,24 @@ export const getContractAddress = (type, chainId) => {
       if (chainId === LOCAL_CHAIN_ID) {
         return LOCAL_ADDRESSES.AGENT_REGISTRY_ADDRESS_LOCAL;
       }
-      if (chainId === 5) return AGENT_REGISTRY_ADDRESS_GOERLI;
-      return AGENT_REGISTRY_ADDRESS_MAINNET;
+      if (chainId === 5) return AGENT_REGISTRY.addresses[5];
+      return AGENT_REGISTRY.addresses[1];
     }
 
     case 'component': {
       if (chainId === LOCAL_CHAIN_ID) {
         return LOCAL_ADDRESSES.COMPONENT_REGISTRY_ADDRESS_LOCAL;
       }
-      if (chainId === 5) return COMPONENT_REGISTRY_ADDRESS_GOERLI;
-      return COMPONENT_REGISTRY_ADDRESS_MAINNET;
+      if (chainId === 5) return COMPONENT_REGISTRY.addresses[5];
+      return COMPONENT_REGISTRY.addresses[1];
     }
 
     case 'service': {
       if (chainId === LOCAL_CHAIN_ID) {
         return LOCAL_ADDRESSES.SERVICE_REGISTRY_ADDRESS_LOCAL;
       }
-      if (chainId === 5) return SERVICE_REGISTRY_ADDRESS_GOERLI;
-      return SERVICE_REGISTRY_ADDRESS_MAINNET;
+      if (chainId === 5) return SERVICE_REGISTRY.addresses[5];
+      return SERVICE_REGISTRY.addresses[1];
     }
 
     default:
@@ -214,7 +208,7 @@ export const getGenericBondCalculatorContract = () => {
 export const getAgentContract = () => {
   const { web3, chainId } = getWeb3Details();
   const contract = new web3.eth.Contract(
-    AGENT_REGISTRY_ABI,
+    AGENT_REGISTRY.abi,
     getContractAddress('agent', chainId),
   );
   return contract;
@@ -223,7 +217,7 @@ export const getAgentContract = () => {
 export const getComponentContract = () => {
   const { web3, chainId } = getWeb3Details();
   const contract = new web3.eth.Contract(
-    COMPONENT_REGISTRY_ABI,
+    COMPONENT_REGISTRY.abi,
     getContractAddress('component', chainId),
   );
   return contract;
@@ -232,7 +226,7 @@ export const getComponentContract = () => {
 export const getServiceContract = () => {
   const { web3, chainId } = getWeb3Details();
   const contract = new web3.eth.Contract(
-    SERVICE_MANAGER_TOKEN_CONTRACT_ABI,
+    SERVICE_REGISTRY.abi,
     getContractAddress('service', chainId),
   );
   return contract;
