@@ -21,15 +21,18 @@ import {
   UNISWAP_V2_PAIR_ABI,
 
   // registries - agent
-  AGENT_REGISTRY,
+  AGENT_REGISTRY_ADDRESS_GOERLI,
+  AGENT_REGISTRY_ADDRESS_MAINNET,
   AGENT_REGISTRY_ABI,
 
   // registries - component
-  COMPONENT_REGISTRY,
+  COMPONENT_REGISTRY_ADDRESS_GOERLI,
+  COMPONENT_REGISTRY_ADDRESS_MAINNET,
   COMPONENT_REGISTRY_ABI,
 
   // registries - service
-  SERVICE_REGISTRY,
+  SERVICE_REGISTRY_ADDRESS_GOERLI,
+  SERVICE_REGISTRY_ADDRESS_MAINNET,
   SERVICE_MANAGER_TOKEN_CONTRACT_ABI,
 
   // erc20
@@ -102,24 +105,24 @@ export const getContractAddress = (type, chainId) => {
       if (chainId === LOCAL_CHAIN_ID) {
         return LOCAL_ADDRESSES.AGENT_REGISTRY_ADDRESS_LOCAL;
       }
-      if (chainId === 5) return AGENT_REGISTRY.addresses[5];
-      return AGENT_REGISTRY.addresses[1];
+      if (chainId === 5) return AGENT_REGISTRY_ADDRESS_GOERLI;
+      return AGENT_REGISTRY_ADDRESS_MAINNET;
     }
 
     case 'component': {
       if (chainId === LOCAL_CHAIN_ID) {
         return LOCAL_ADDRESSES.COMPONENT_REGISTRY_ADDRESS_LOCAL;
       }
-      if (chainId === 5) return COMPONENT_REGISTRY.addresses[5];
-      return COMPONENT_REGISTRY.addresses[1];
+      if (chainId === 5) return COMPONENT_REGISTRY_ADDRESS_GOERLI;
+      return COMPONENT_REGISTRY_ADDRESS_MAINNET;
     }
 
     case 'service': {
       if (chainId === LOCAL_CHAIN_ID) {
         return LOCAL_ADDRESSES.SERVICE_REGISTRY_ADDRESS_LOCAL;
       }
-      if (chainId === 5) return SERVICE_REGISTRY.addresses[5];
-      return SERVICE_REGISTRY.addresses[1];
+      if (chainId === 5) return SERVICE_REGISTRY_ADDRESS_GOERLI;
+      return SERVICE_REGISTRY_ADDRESS_MAINNET;
     }
 
     default:
