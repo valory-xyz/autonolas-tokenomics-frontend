@@ -1,8 +1,10 @@
-export const SERVICE_REGISTRY_ADDRESS_MAINNET = '0x48b6af7B12C71f09e2fC8aF4855De4Ff54e775cA';
-
-export const SERVICE_REGISTRY_ADDRESS_GOERLI = '0x1cEe30D08943EB58EFF84DD1AB44a6ee6FEff63a';
-
-export const SERVICE_MANAGER_TOKEN_CONTRACT_ABI = [
+export const SERVICE_REGISTRY = {
+  contractName: 'ServiceRegistry',
+  addresses: {
+    1: '0x48b6af7B12C71f09e2fC8aF4855De4Ff54e775cA',
+    5: '0x1cEe30D08943EB58EFF84DD1AB44a6ee6FEff63a',
+  },
+  abi: [
   {
     inputs: [
       {
@@ -1980,4 +1982,5 @@ export const SERVICE_MANAGER_TOKEN_CONTRACT_ABI = [
     stateMutability: 'nonpayable',
     type: 'function',
   },
-];
+]
+};

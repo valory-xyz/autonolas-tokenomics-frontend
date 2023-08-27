@@ -1,8 +1,10 @@
-export const COMPONENT_REGISTRY_ADDRESS_MAINNET = '0x15bd56669F57192a97dF41A2aa8f4403e9491776';
-
-export const COMPONENT_REGISTRY_ADDRESS_GOERLI = '0x7Fd1F4b764fA41d19fe3f63C85d12bf64d2bbf68';
-
-export const COMPONENT_REGISTRY_ABI = [
+export const COMPONENT_REGISTRY = {
+  contractName: 'ComponentRegistry',
+  addresses: {
+    1: '0x15bd56669F57192a97dF41A2aa8f4403e9491776',
+    5: '0x7Fd1F4b764fA41d19fe3f63C85d12bf64d2bbf68',
+  },
+  abi: [
   {
     inputs: [
       {
@@ -1174,4 +1176,5 @@ export const COMPONENT_REGISTRY_ABI = [
     stateMutability: 'nonpayable',
     type: 'function',
   },
-];
+]
+};

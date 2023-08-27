@@ -1,8 +1,10 @@
-export const AGENT_REGISTRY_ADDRESS_MAINNET = '0x2F1f7D38e4772884b88f3eCd8B6b9faCdC319112';
-
-export const AGENT_REGISTRY_ADDRESS_GOERLI = '0xEB5638eefE289691EcE01943f768EDBF96258a80';
-
-export const AGENT_REGISTRY_ABI = [
+export const AGENT_REGISTRY = {
+  contractName: 'AgentRegistry',
+  addresses: {
+    1: '0x2F1f7D38e4772884b88f3eCd8B6b9faCdC319112',
+    5: '0xEB5638eefE289691EcE01943f768EDBF96258a80',
+  },
+  abi: [
   {
     inputs: [
       {
@@ -1211,4 +1213,5 @@ export const AGENT_REGISTRY_ABI = [
     stateMutability: 'nonpayable',
     type: 'function',
   },
-];
+]
+};
