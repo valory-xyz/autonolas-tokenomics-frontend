@@ -102,24 +102,24 @@ export const getContractAddress = (type, chainId) => {
       if (chainId === LOCAL_CHAIN_ID) {
         return LOCAL_ADDRESSES.AGENT_REGISTRY_ADDRESS_LOCAL;
       }
-      if (chainId === 5) return AGENT_REGISTRY.addresses[5];
-      return AGENT_REGISTRY.addresses[1];
+      if (chainId === 5) return AGENT_REGISTRY_ADDRESS_GOERLI;
+      return AGENT_REGISTRY_ADDRESS_MAINNET;
     }
 
     case 'component': {
       if (chainId === LOCAL_CHAIN_ID) {
         return LOCAL_ADDRESSES.COMPONENT_REGISTRY_ADDRESS_LOCAL;
       }
-      if (chainId === 5) return COMPONENT_REGISTRY.addresses[5];
-      return COMPONENT_REGISTRY.addresses[1];
+      if (chainId === 5) return COMPONENT_REGISTRY_ADDRESS_GOERLI;
+      return COMPONENT_REGISTRY_ADDRESS_MAINNET;
     }
 
     case 'service': {
       if (chainId === LOCAL_CHAIN_ID) {
         return LOCAL_ADDRESSES.SERVICE_REGISTRY_ADDRESS_LOCAL;
       }
-      if (chainId === 5) return SERVICE_REGISTRY.addresses[5];
-      return SERVICE_REGISTRY.addresses[1];
+      if (chainId === 5) return SERVICE_REGISTRY_ADDRESS_GOERLI;
+      return SERVICE_REGISTRY_ADDRESS_MAINNET;
     }
 
     default:
