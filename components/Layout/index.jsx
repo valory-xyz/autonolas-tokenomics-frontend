@@ -45,22 +45,11 @@ const NavigationBar = ({ children }) => {
           selectedKeys={[selectedMenu]}
           onClick={handleMenuItemClick}
           items={[
-            {
-              key: 'donate',
-              label: 'Donate',
-            },
-            {
-              key: 'dev-incentives',
-              label: 'Developer Rewards',
-            },
-            {
-              key: 'bonding-products',
-              label: 'Bonding Products',
-            },
-            {
-              key: 'my-bonds',
-              label: 'My Bonds',
-            },
+            { key: 'donate', label: 'Donate' },
+            { key: 'dev-incentives', label: 'Developer Rewards' },
+            { key: 'bonding-products', label: 'Bonding Products' },
+            { key: 'my-bonds', label: 'My Bonds' },
+            { key: 'docs', label: 'Docs' },
           ]}
         />
         <Login />
