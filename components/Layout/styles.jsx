@@ -15,7 +15,6 @@ export const CustomLayout = styled(Layout)`
   }
 `;
 
-// HEADER
 export const HeaderContainer = styled.div`
   display: flex;
   justify-content: space-between;
@@ -93,5 +92,13 @@ export const ContractsInfoContainer = styled.div`
   }
   img {
     margin-right: 8px;
+  }
+`;
+
+export const DocsLink = styled.div`
+  svg {
+    width: 12px;
+    margin-left: 4px;
+    margin-bottom: -1px;
   }
 `;
