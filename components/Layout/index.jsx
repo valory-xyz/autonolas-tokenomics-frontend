@@ -25,7 +25,14 @@ const NavigationBar = ({ children }) => {
   }, [pathname]);
 
   const handleMenuItemClick = ({ key }) => {
-    router.push(`/${key}`);
+    if (key === 'docs') {
+      window.open(
+        'https://docs.autonolas.network/protocol/tokenomics/',
+        '_blank',
+      );
+    } else {
+      router.push(`/${key}`);
+    }
     setSelectedMenu(key);
   };
 
