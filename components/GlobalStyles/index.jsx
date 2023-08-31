@@ -14,7 +14,7 @@ const GlobalStyle = createGlobalStyle`
     box-sizing: border-box;
   }
   body {
-    padding: 1rem;
+    padding: 0;
   }
 
   background-size: 100%;
@@ -74,11 +74,11 @@ const GlobalStyle = createGlobalStyle`
     display: flex;
     align-items: center;
     position: fixed;
-    top: 0;
     z-index: 1;
-    width: calc(100% - 32px);
-    padding: 0 24px;
-    height: 80px;
+    width: 100%;
+    height: 64px;
+    line-height: 64px;
+    padding: 0 2rem;
     .ant-menu {
       flex: 1;
       &.ant-menu-horizontal {
@@ -92,6 +92,12 @@ const GlobalStyle = createGlobalStyle`
         font-weight: bold;
       }
     }
+  }
+
+  /* navigation header menu */
+  .ant-menu-horizontal:not(.ant-menu-dark) > .ant-menu-item,
+  .ant-menu-horizontal:not(.ant-menu-dark) > .ant-menu-submenu {
+    padding: 0 16px;
   }
 
   /* tabs */

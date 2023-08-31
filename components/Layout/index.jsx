@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
 import { Layout, Menu } from 'antd/lib';
+import { ExportOutlined } from '@ant-design/icons';
 import PropTypes from 'prop-types';
 import Login from '../Login';
 import Footer from './Footer';
-import { CustomLayout, Logo } from './styles';
+import { CustomLayout, Logo, DocsLink } from './styles';
 
 const LogoSvg = dynamic(() => import('common-util/SVGs/logo'));
 
@@ -25,8 +26,15 @@ const NavigationBar = ({ children }) => {
   }, [pathname]);
 
   const handleMenuItemClick = ({ key }) => {
-    router.push(`/${key}`);
-    setSelectedMenu(key);
+    if (key === 'docs') {
+      window.open(
+        'https://docs.autonolas.network/protocol/tokenomics/',
+        '_blank',
+      );
+    } else {
+      router.push(`/${key}`);
+      setSelectedMenu(key);
+    }
   };
 
   return (
@@ -45,21 +53,18 @@ const NavigationBar = ({ children }) => {
           selectedKeys={[selectedMenu]}
           onClick={handleMenuItemClick}
           items={[
+            { key: 'donate', label: 'Donate' },
+            { key: 'dev-incentives', label: 'Developer Rewards' },
+            { key: 'bonding-products', label: 'Bonding Products' },
+            { key: 'my-bonds', label: 'My Bonds' },
             {
-              key: 'donate',
-              label: 'Donate',
-            },
-            {
-              key: 'dev-incentives',
-              label: 'Developer Rewards',
-            },
-            {
-              key: 'bonding-products',
-              label: 'Bonding Products',
-            },
-            {
-              key: 'my-bonds',
-              label: 'My Bonds',
+              key: 'docs',
+              label: (
+                <DocsLink>
+                  Docs
+                  <ExportOutlined />
+                </DocsLink>
+              ),
             },
           ]}
         />

@@ -14,6 +14,8 @@ import { ContractsInfoContainer } from './styles';
 
 const { useBreakpoint } = Grid;
 
+const PATHS_NOT_TO_SHOW = ['/docs', '/disclaimer'];
+
 const ContractInfo = () => {
   const chainId = useSelector((state) => state?.setup?.chainId);
 
@@ -94,19 +96,23 @@ const ContractInfo = () => {
 
   return (
     <ContractsInfoContainer>
-      <img
-        alt="Etherscan link"
-        width={18}
-        height={18}
-        src="/images/etherscan-logo.svg"
-      />
-      <span>Contracts</span>
-      &nbsp;•&nbsp;
-      {getContractInfo(textOne, addressOne)}
-      {textTwo && addressTwo && (
+      {!PATHS_NOT_TO_SHOW.includes(pathname) && (
         <>
+          <img
+            alt="Etherscan link"
+            width={18}
+            height={18}
+            src="/images/etherscan-logo.svg"
+          />
+          <span>Contracts</span>
           &nbsp;•&nbsp;
-          {getContractInfo(textTwo, addressTwo)}
+          {getContractInfo(textOne, addressOne)}
+          {textTwo && addressTwo && (
+            <>
+              &nbsp;•&nbsp;
+              {getContractInfo(textTwo, addressTwo)}
+            </>
+          )}
         </>
       )}
     </ContractsInfoContainer>
