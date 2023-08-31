@@ -32,8 +32,8 @@ const NavigationBar = ({ children }) => {
       );
     } else {
       router.push(`/${key}`);
+      setSelectedMenu(key);
     }
-    setSelectedMenu(key);
   };
 
   return (
