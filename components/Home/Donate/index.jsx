@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { ethers } from 'ethers';
 import { Alert, Typography } from 'antd/lib';
 import { isNumber } from 'lodash';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
@@ -59,11 +60,18 @@ export const DepositServiceDonation = () => {
       );
 
       const serviceIds = sortedUnitIds.map((e) => `${e}`);
+      const amounts = sortedUnitTypes.map((e) => parseToWei(e));
+      const totalAmount = amounts
+        .reduce(
+          (a, b) => ethers.BigNumber.from(a).add(ethers.BigNumber.from(b)),
+          ethers.BigNumber.from(0),
+        )
+        .toString();
       const params = {
         account,
         serviceIds,
-        amounts: sortedUnitTypes.map((e) => parseToWei(e)),
-        totalAmount: parseToWei(sortedUnitTypes.reduce((a, b) => a + b, 0)),
+        amounts,
+        totalAmount,
       };
 
       await checkServicesNotTerminatedOrNotDeployed(serviceIds);
