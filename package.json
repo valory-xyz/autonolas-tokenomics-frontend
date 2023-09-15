@@ -54,10 +54,5 @@
     "jest-environment-jsdom": "^29.6.4",
     "redux-mock-store": "^1.5.4",
     "node-fetch": "2"
-  },
-  "jest": {
-    "projects": [
-      "../jest.config.js"
-    ]
   }
 }
