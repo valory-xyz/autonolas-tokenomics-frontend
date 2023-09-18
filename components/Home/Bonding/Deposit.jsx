@@ -2,13 +2,7 @@ import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { isNil } from 'lodash';
 import {
-  Form,
-  InputNumber,
-  Modal,
-  Alert,
-  Button,
-  Typography,
-  Tag,
+  Form, InputNumber, Modal, Alert, Button, Typography, Tag,
 } from 'antd';
 import { COLOR } from '@autonolas/frontend-library';
 
@@ -46,14 +40,18 @@ export const Deposit = ({
   const [isApproveModalVisible, setIsApproveModalVisible] = useState(false);
   const [lpBalance, setLpBalance] = useState(0);
 
-  useEffect(async () => {
-    if (account) {
+  useEffect(() => {
+    const getData = async () => {
       const lpResponse = await getLpBalanceRequest({
         account,
         token: productToken,
       });
 
       setLpBalance(lpResponse);
+    };
+
+    if (account) {
+      getData();
     }
   }, [account, productToken]);
 

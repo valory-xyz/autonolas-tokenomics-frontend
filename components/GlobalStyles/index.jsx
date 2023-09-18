@@ -173,10 +173,6 @@ const GlobalStyle = createGlobalStyle`
       margin-left: 2rem;
       border: 1px solid ${COLOR.BORDER_GREY};
       padding: 2px 16px;
-      .ant-radio {
-        display: inline-block;
-        top: 2px;
-      }
     }
   }
 

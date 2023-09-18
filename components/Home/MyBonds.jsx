@@ -75,8 +75,8 @@ export const MyBonds = () => {
   };
 
   // on load, get the list of bonds & set the maturity type radio button
-  useEffect(async () => {
-    if (account && chainId) {
+  useEffect(() => {
+    const getData = async () => {
       try {
         setIsLoading(true);
 
@@ -94,6 +94,10 @@ export const MyBonds = () => {
       } finally {
         setIsLoading(false);
       }
+    };
+
+    if (account && chainId) {
+      getData();
     }
   }, [account, chainId]);
 
