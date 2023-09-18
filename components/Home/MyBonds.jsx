@@ -4,10 +4,15 @@ import {
 } from 'antd';
 import { round } from 'lodash';
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
-import { COLOR, notifyError, notifySuccess } from '@autonolas/frontend-library';
+import {
+  COLOR,
+  notifyError,
+  notifySuccess,
+  getFormattedDate,
+} from '@autonolas/frontend-library';
 
 import { useHelpers } from 'common-util/hooks/useHelpers';
-import { getFormattedDate, parseToEth } from 'common-util/functions';
+import { parseToEth } from 'common-util/functions';
 import { getAllBondsRequest, redeemRequest } from './requests';
 
 const { Title } = Typography;

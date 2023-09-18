@@ -5,14 +5,14 @@ import { isNil } from 'lodash';
 import {
   Form, InputNumber, Modal, Alert, Button, Typography, Tag,
 } from 'antd';
-import { COLOR, notifyError, notifySuccess } from '@autonolas/frontend-library';
-
 import {
-  parseToWei,
-  parseToEth,
+  COLOR,
+  notifyError,
+  notifySuccess,
   getCommaSeparatedNumber,
-  ONE_ETH,
-} from 'common-util/functions';
+} from '@autonolas/frontend-library';
+
+import { parseToWei, parseToEth, ONE_ETH } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import {
   depositRequest,

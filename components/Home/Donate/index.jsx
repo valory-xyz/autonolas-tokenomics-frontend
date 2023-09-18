@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { Alert, Typography } from 'antd';
 import { isNumber } from 'lodash';
-
-import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import {
   getFullFormattedDate,
   notifySuccess,
+} from '@autonolas/frontend-library';
+
+import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
+import {
   parseToEth,
   parseToWei,
   sortUnitIdsAndTypes,
