@@ -1,4 +1,6 @@
 import Web3 from 'web3';
+
+import { LOCAL_CHAIN_ID, LOCAL_FORK_ID } from 'util/constants';
 import {
   DEPOSITORY,
   DISPENSER,
@@ -12,7 +14,6 @@ import {
   ERC20_ABI,
 } from 'common-util/AbiAndAddresses';
 import { getChainId, getProvider } from 'common-util/functions';
-import { LOCAL_CHAIN_ID, LOCAL_FORK_ID } from 'util/constants';
 
 /**
  * Addresses fetched when backend connected locally
@@ -36,7 +37,6 @@ const LOCAL_ADDRESSES = {
 const getWeb3Details = () => {
   const web3 = new Web3(getProvider());
   const chainId = getChainId();
-
   return { web3, chainId };
 };
 

@@ -1,7 +1,6 @@
 import dayjs from 'dayjs';
 import { isNil } from 'lodash';
-
-import { NA } from 'common-util/constants';
+import { NA } from '@autonolas/frontend-library';
 
 // TODO move to autonolas-frontend-library
 

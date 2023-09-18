@@ -5,14 +5,13 @@ import {
   Button, Table, Tag, Tooltip, Typography,
 } from 'antd';
 import { remove, round, isNaN } from 'lodash';
-import { COLOR, notifyError } from '@autonolas/frontend-library';
+import { COLOR, notifyError, NA } from '@autonolas/frontend-library';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
 
 import { BONDING_PRODUCTS } from 'util/constants';
 import { parseToEth } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
-import { NA } from 'common-util/constants';
 import { Deposit } from './Deposit';
 import {
   getProductListRequest,
