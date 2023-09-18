@@ -9,7 +9,7 @@ import {
   Col,
   Grid,
   Table,
-} from 'antd/lib';
+} from 'antd';
 import { notifyError } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { getMapUnitIncentivesRequest } from './requests';

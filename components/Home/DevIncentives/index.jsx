@@ -1,4 +1,5 @@
-import { Typography } from 'antd/lib';
+import { Typography } from 'antd';
+
 import { ClaimIncentives } from './ClaimIncentives';
 import { IncentivesForThisEpoch } from './IncentivesForThisEpoch';
 import { IncentivesForNextEpoch } from './IncentivesForNextEpoch';

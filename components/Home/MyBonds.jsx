@@ -1,12 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
-  Typography,
-  Radio,
-  Table,
-  Button,
-  ConfigProvider,
-  Empty,
-} from 'antd/lib';
+  Typography, Radio, Table, Button, ConfigProvider, Empty,
+} from 'antd';
 import { round } from 'lodash';
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { COLOR } from '@autonolas/frontend-library';

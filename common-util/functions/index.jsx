@@ -1,8 +1,9 @@
 import { ethers } from 'ethers';
 import dayjs from 'dayjs';
-import { notification } from 'antd/lib';
+import { notification } from 'antd';
 import { isNil, isObject } from 'lodash';
 import { COLOR } from '@autonolas/frontend-library';
+
 import { NA } from 'common-util/constants';
 
 /**

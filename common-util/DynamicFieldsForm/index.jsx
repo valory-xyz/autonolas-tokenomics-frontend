@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import {
   Button, Form, Typography, Input,
-} from 'antd/lib';
+} from 'antd';
 import { FORM_TYPES } from 'util/constants';
 import { useEffect } from 'react';
 import { useHelpers } from '../hooks/useHelpers';

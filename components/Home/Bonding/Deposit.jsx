@@ -9,7 +9,7 @@ import {
   Button,
   Typography,
   Tag,
-} from 'antd/lib';
+} from 'antd';
 import { COLOR } from '@autonolas/frontend-library';
 
 import {

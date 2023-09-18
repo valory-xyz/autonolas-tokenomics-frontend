@@ -1,17 +1,18 @@
-import Head from "next/head";
-import { createWrapper } from "next-redux-wrapper";
-import { ConfigProvider } from "antd";
-import PropTypes from "prop-types";
+import Head from 'next/head';
+import { createWrapper } from 'next-redux-wrapper';
+import { ConfigProvider } from 'antd';
+import PropTypes from 'prop-types';
 
 /** wagmi config */
-import { WagmiConfig as WagmiConfigProvider } from "wagmi";
-import { wagmiConfig } from "common-util/Login/config";
+import { WagmiConfig as WagmiConfigProvider } from 'wagmi';
+import { wagmiConfig } from 'common-util/Login/config';
 
 /** antd theme config */
-import Layout from "components/Layout";
-import GlobalStyle from "components/GlobalStyles";
-import { THEME_CONFIG } from "@autonolas/frontend-library";
-import initStore from "../store";
+import Layout from 'components/Layout';
+import GlobalStyle from 'components/GlobalStyles';
+import { THEME_CONFIG } from '@autonolas/frontend-library';
+import initStore from '../store';
+
 const MyApp = ({ Component, pageProps }) => (
   <>
     <GlobalStyle />

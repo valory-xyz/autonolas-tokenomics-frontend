@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import {
   Button, Table, Tag, Tooltip, Typography,
-} from 'antd/lib';
+} from 'antd';
 import { remove, round, isNaN } from 'lodash';
 import { COLOR } from '@autonolas/frontend-library';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
 import { ethers } from 'ethers';
+
 import { BONDING_PRODUCTS } from 'util/constants';
 import { parseToEth } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import styled from 'styled-components';
-import { Typography, Radio } from 'antd/lib';
+import { Typography, Radio } from 'antd';
+
 import { BONDING_PRODUCTS } from 'util/constants';
 import { BondingList } from './Bonding/BondingList';
 

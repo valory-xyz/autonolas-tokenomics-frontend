@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { Alert, Typography } from 'antd/lib';
+import { Alert, Typography } from 'antd';
 import { isNumber } from 'lodash';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import {

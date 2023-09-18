@@ -7,7 +7,7 @@ import {
   Radio,
   Typography,
   Grid,
-} from 'antd/lib';
+} from 'antd';
 import {
   MinusCircleOutlined,
   PlusOutlined,

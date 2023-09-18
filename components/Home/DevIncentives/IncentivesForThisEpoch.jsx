@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import {
   Row, Col, Table, Typography, Alert,
-} from 'antd/lib';
+} from 'antd';
 import { round, toLower } from 'lodash';
+
 import { FORM_TYPES, UNIT_TYPES } from 'util/constants';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import {

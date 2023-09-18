@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Alert, Button, Typography } from 'antd/lib';
+import { Alert, Button, Typography } from 'antd';
+
 import { notifySpecificError, notifySuccess } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { canShowCheckpoint, checkpointRequest } from './requests';

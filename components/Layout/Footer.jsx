@@ -1,14 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { useRouter } from 'next/router';
-import { Grid } from 'antd/lib';
+import { Grid } from 'antd';
 import Link from 'next/link';
-import {
-  Footer as CommonFooter,
-  getChainId,
-  isGoerli,
-} from '@autonolas/frontend-library';
+import { Footer as CommonFooter, isGoerli } from '@autonolas/frontend-library';
+
 import { getContractAddress } from 'common-util/Contracts';
+import { useHelpers } from 'common-util/hooks/useHelpers';
 import Socials from './Socials';
 import { ContractsInfoContainer } from './styles';
 
@@ -17,54 +13,40 @@ const { useBreakpoint } = Grid;
 const PATHS_NOT_TO_SHOW = ['/docs', '/disclaimer'];
 
 const ContractInfo = () => {
-  const chainId = useSelector((state) => state?.setup?.chainId);
-
+  const { chainId } = useHelpers();
   const router = useRouter();
-
-  const [addressChainId, setAddressChainId] = useState(chainId);
   const { pathname } = router;
 
-  // if chainId changes, update the chainId required for address
-  useEffect(() => {
-    setAddressChainId(chainId);
-  }, [chainId]);
-
-  useEffect(() => {
-    if (!addressChainId) {
-      setAddressChainId(getChainId());
-    }
-  }, []);
-
-  if (!addressChainId) return <ContractsInfoContainer />;
+  if (!chainId) return <ContractsInfoContainer />;
 
   const getCurrentPageAddresses = () => {
     if (pathname === '/' || (pathname || '').includes('donate')) {
       return {
         textOne: 'Treasury',
-        addressOne: getContractAddress('treasury', addressChainId),
+        addressOne: getContractAddress('treasury', chainId),
       };
     }
 
     if ((pathname || '').includes('dev-incentives')) {
       return {
         textOne: 'Tokenomics',
-        addressOne: getContractAddress('tokenomics', addressChainId),
+        addressOne: getContractAddress('tokenomics', chainId),
         textTwo: 'Dispenser',
-        addressTwo: getContractAddress('dispenser', addressChainId),
+        addressTwo: getContractAddress('dispenser', chainId),
       };
     }
 
     if ((pathname || '').includes('bonding-products')) {
       return {
         textOne: 'Depository',
-        addressOne: getContractAddress('depository', addressChainId),
+        addressOne: getContractAddress('depository', chainId),
       };
     }
 
     if ((pathname || '').includes('my-bonds')) {
       return {
         textOne: 'Depository',
-        addressOne: getContractAddress('depository', addressChainId),
+        addressOne: getContractAddress('depository', chainId),
       };
     }
 
@@ -72,7 +54,7 @@ const ContractInfo = () => {
   };
 
   const getEtherscanLink = (address) => {
-    if (isGoerli(addressChainId)) {
+    if (isGoerli(chainId)) {
       return `https://goerli.etherscan.io/address/${address}`;
     }
     return `https://etherscan.io/address/${address}`;
