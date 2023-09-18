@@ -16,6 +16,14 @@ const GlobalStyle = createGlobalStyle`
   body {
     padding: 0;
   }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin-top: 0;
+  }
 
   background-size: 100%;
   background-color: ${COLOR.WHITE};
@@ -50,14 +58,6 @@ const GlobalStyle = createGlobalStyle`
   }
   .align-right {
     text-align: right;
-  }
-  .walletconnect-modal__base {
-    .walletconnect-modal__mobile__toggle a {
-      /* color: ${COLOR.WALLECT_CONNECT_BLUE} !important; */
-    }
-  }
-  .ant-alert {
-    border-radius: 5px;
   }
   .show-only-sm {
     display: none;

@@ -21,7 +21,7 @@ import {
   getLpBalanceRequest,
 } from './requests';
 
-const { Text, Title } = Typography;
+const { Text } = Typography;
 const fullWidth = { width: '100%' };
 
 export const Deposit = ({
@@ -173,11 +173,10 @@ export const Deposit = ({
           name="create_bond_form"
           layout="vertical"
           autoComplete="off"
+          className="mt-16"
         >
           <Tag color={COLOR.PRIMARY} className="deposit-tag">
-            <Title level={5} className="m-0">
-              {`Bonding Product ID: ${productId}`}
-            </Title>
+            <Text>{`Bonding Product ID: ${productId}`}</Text>
           </Tag>
 
           <Form.Item

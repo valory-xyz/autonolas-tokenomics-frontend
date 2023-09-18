@@ -1,5 +1,5 @@
+/* eslint-disable jest/no-conditional-in-test */
 /* eslint-disable no-await-in-loop */
-/* eslint-disable jest/no-conditional-expect */
 import {
   DEPOSITORY, DISPENSER, TREASURY, TOKENOMICS, BOND_CALCULATOR,
 } from 'common-util/AbiAndAddresses';
