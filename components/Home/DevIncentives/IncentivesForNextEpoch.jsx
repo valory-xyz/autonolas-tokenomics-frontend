@@ -70,7 +70,7 @@ export const IncentivesForNextEpoch = () => {
         <Col lg={14} xs={24}>
           <Form
             form={form}
-            name="dynamic_form_complex"
+            name="dynamic_form_complex_incentives"
             onFinish={onFinish}
             layout="inline"
             autoComplete="off"

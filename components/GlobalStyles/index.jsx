@@ -1,4 +1,4 @@
-import styled, { createGlobalStyle } from 'styled-components';
+import { createGlobalStyle } from 'styled-components';
 import { MEDIA_QUERY, COLOR } from '@autonolas/frontend-library';
 
 const ANTD_COLOR = {
@@ -220,14 +220,3 @@ const GlobalStyle = createGlobalStyle`
 `;
 
 export default GlobalStyle;
-
-export const Ellipsis = styled.span`
-  max-width: 100px;
-  display: inline-block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  ${MEDIA_QUERY.tablet} {
-    max-width: 200px;
-  }
-`;

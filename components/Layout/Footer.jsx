@@ -1,7 +1,10 @@
 import { useRouter } from 'next/router';
 import { Grid } from 'antd';
 import Link from 'next/link';
-import { Footer as CommonFooter, isGoerli } from '@autonolas/frontend-library';
+import {
+  Footer as CommonFooter,
+  getExplorerURL,
+} from '@autonolas/frontend-library';
 
 import { getContractAddress } from 'common-util/Contracts';
 import { useHelpers } from 'common-util/hooks/useHelpers';
@@ -53,17 +56,10 @@ const ContractInfo = () => {
     return { textOne: null, addressOne: null };
   };
 
-  const getEtherscanLink = (address) => {
-    if (isGoerli(chainId)) {
-      return `https://goerli.etherscan.io/address/${address}`;
-    }
-    return `https://etherscan.io/address/${address}`;
-  };
-
   const getContractInfo = (text, addressToPoint) => (
     <div className="registry-contract">
       <a
-        href={getEtherscanLink(addressToPoint)}
+        href={`${getExplorerURL(chainId)}/address/${addressToPoint}`}
         target="_blank"
         rel="noopener noreferrer"
       >

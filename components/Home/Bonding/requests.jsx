@@ -1,5 +1,4 @@
 import { ethers } from 'ethers';
-import { getChainId } from '@autonolas/frontend-library';
 
 import { OLAS_ADDRESS } from 'util/constants';
 import {
@@ -8,6 +7,7 @@ import {
   ONE_ETH,
   getEthersProvider,
   sendTransaction,
+  getChainId,
 } from 'common-util/functions';
 import {
   getContractAddress,
