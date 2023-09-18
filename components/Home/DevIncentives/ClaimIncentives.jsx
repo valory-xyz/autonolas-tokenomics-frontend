@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Typography, Alert, Divider } from 'antd';
 import { COLOR } from '@autonolas/frontend-library';
+
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import {
   notifySuccess,

@@ -1,7 +1,39 @@
 import { ethers } from 'ethers';
-import { notification } from 'antd';
 import { isObject } from 'lodash';
-import { COLOR } from '@autonolas/frontend-library';
+import {
+  notifyError,
+  getProvider as getProviderFn,
+  getEthersProvider as getEthersProviderFn,
+  getChainId as getChainIdFn,
+  getChainIdOrDefaultToMainnet as getChainIdOrDefaultToMainnetFn,
+  getIsValidChainId as getIsValidChainIdFn,
+  sendTransaction as sendTransactionFn,
+} from '@autonolas/frontend-library';
+
+import { RPC_URLS } from 'common-util/Contracts';
+import { SUPPORTED_CHAINS } from 'common-util/Login';
+
+/**
+ * re-usable functions
+ */
+
+export const getProvider = () => getProviderFn(SUPPORTED_CHAINS, RPC_URLS);
+
+export const getEthersProvider = () => getEthersProviderFn(SUPPORTED_CHAINS, RPC_URLS);
+
+export const getIsValidChainId = (chainId) => getIsValidChainIdFn(SUPPORTED_CHAINS, chainId);
+
+export const getChainIdOrDefaultToMainnet = (chainId) => {
+  const x = getChainIdOrDefaultToMainnetFn(SUPPORTED_CHAINS, chainId);
+  return x;
+};
+
+export const getChainId = (chainId = null) => getChainIdFn(SUPPORTED_CHAINS, chainId);
+
+export const sendTransaction = (fn, account) => sendTransactionFn(fn, account, {
+  supportedChains: SUPPORTED_CHAINS,
+  rpcUrls: RPC_URLS,
+});
 
 /**
  * https://docs.ethers.org/v5/api/utils/constants/#constants-MaxUint256
@@ -22,21 +54,6 @@ export const parseToEth = (amount) => (amount ? ethers.utils.formatEther(`${amou
  * multiplies the amount by 10^18
  */
 export const parseToWei = (amount) => ethers.utils.parseUnits(`${amount}`, 18).toString();
-
-export const notifyError = (
-  message = 'Some error occured',
-  description = null,
-) => notification.error({
-  message,
-  description,
-  style: { border: `1px solid ${COLOR.PRIMARY}` },
-});
-
-export const notifySuccess = (message = 'Successfull', description = null) => notification.success({
-  message,
-  description,
-  style: { border: `1px solid ${COLOR.PRIMARY}` },
-});
 
 // create a function to specific error message based on error code
 const getErrorMessage = (error) => {

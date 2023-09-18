@@ -3,10 +3,20 @@ import PropTypes from 'prop-types';
 import { Grid } from 'antd';
 import { Web3Modal, Web3Button, Web3NetworkSwitch } from '@web3modal/react';
 import { useAccount, useNetwork, useBalance } from 'wagmi';
-import { COLOR } from '@autonolas/frontend-library';
+import styled from 'styled-components';
+import { COLOR, MEDIA_QUERY } from '@autonolas/frontend-library';
 
 import { projectId, ethereumClient } from './config';
-import { LoginContainer } from './styles';
+
+const LoginContainer = styled.div`
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+  line-height: normal;
+  ${MEDIA_QUERY.mobileL} {
+    margin-top: 0.5rem;
+  }
+`;
 
 const { useBreakpoint } = Grid;
 

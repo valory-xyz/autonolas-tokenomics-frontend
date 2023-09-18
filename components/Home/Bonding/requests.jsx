@@ -1,16 +1,20 @@
-/* eslint-disable no-underscore-dangle */
 /* eslint-disable max-len */
 import { ethers } from 'ethers';
 import { getChainId, sendTransaction } from '@autonolas/frontend-library';
+
 import { OLAS_ADDRESS } from 'util/constants';
-import { MAX_AMOUNT, ADDRESS_ZERO, ONE_ETH } from 'common-util/functions';
+import {
+  MAX_AMOUNT,
+  ADDRESS_ZERO,
+  ONE_ETH,
+  getEthersProvider,
+} from 'common-util/functions';
 import {
   getContractAddress,
   getDepositoryContract,
   getUniswapV2PairContract,
   getTokenomicsContract,
   getErc20Contract,
-  getEthersProvider,
   getGenericBondCalculatorContract,
 } from 'common-util/Contracts';
 import { getProductValueFromEvent } from './requestsHelpers';
