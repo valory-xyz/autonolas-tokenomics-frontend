@@ -1,5 +1,6 @@
-import { sendTransaction } from '@autonolas/frontend-library';
-import { parseToEth, notifyError } from 'common-util/functions';
+import { sendTransaction, notifyError } from '@autonolas/frontend-library';
+
+import { parseToEth } from 'common-util/functions';
 import {
   getTokenomicsContract,
   getTreasuryContract,

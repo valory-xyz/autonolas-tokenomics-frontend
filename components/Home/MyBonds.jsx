@@ -4,14 +4,10 @@ import {
 } from 'antd';
 import { round } from 'lodash';
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
-import { COLOR } from '@autonolas/frontend-library';
+import { COLOR, notifyError, notifySuccess } from '@autonolas/frontend-library';
+
 import { useHelpers } from 'common-util/hooks/useHelpers';
-import {
-  getFormattedDate,
-  notifyError,
-  notifySuccess,
-  parseToEth,
-} from 'common-util/functions';
+import { getFormattedDate, parseToEth } from 'common-util/functions';
 import { getAllBondsRequest, redeemRequest } from './requests';
 
 const { Title } = Typography;
@@ -118,7 +114,7 @@ export const MyBonds = () => {
       await getBondsListHelper();
     } catch (error) {
       window.console.error(error);
-      notifyError();
+      notifyError('Error while redeeming');
     }
   };
 

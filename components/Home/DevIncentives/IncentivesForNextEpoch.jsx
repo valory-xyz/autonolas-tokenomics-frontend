@@ -10,7 +10,8 @@ import {
   Grid,
   Table,
 } from 'antd';
-import { notifyError } from 'common-util/functions';
+import { notifyError } from '@autonolas/frontend-library';
+
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { getMapUnitIncentivesRequest } from './requests';
 import { MapPendingIncentivesContainer } from './styles';
@@ -51,7 +52,7 @@ export const IncentivesForNextEpoch = () => {
       setPendingIncentives([response]);
     } catch (error) {
       window.console.error(error);
-      notifyError();
+      notifyError('Error while fetching incentives');
     } finally {
       setIsLoading(false);
     }

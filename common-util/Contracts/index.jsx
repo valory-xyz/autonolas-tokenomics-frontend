@@ -2,37 +2,19 @@ import Web3 from 'web3';
 import { ethers } from 'ethers';
 import { getChainId } from '@autonolas/frontend-library';
 import {
-  // depository
   DEPOSITORY,
-
-  // dispensers
   DISPENSER,
-
-  // treasury
   TREASURY,
-
-  // tokenomics
   TOKENOMICS,
-
-  // bond calculator
   BOND_CALCULATOR,
-
-  // uniswap
   UNISWAP_V2_PAIR_ABI,
-
-  // registries - agent
   AGENT_REGISTRY,
-
-  // registries - component
   COMPONENT_REGISTRY,
-
-  // registries - service
   SERVICE_REGISTRY,
-
-  // erc20
   ERC20_ABI,
 } from 'common-util/AbiAndAddresses';
 import { LOCAL_CHAIN_ID, LOCAL_FORK_ID } from 'util/constants';
+
 /**
  * Addresses fetched when backend connected locally
  * (initDeploy.json in backend repository)

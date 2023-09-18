@@ -4,12 +4,10 @@ import { isNil } from 'lodash';
 import {
   Form, InputNumber, Modal, Alert, Button, Typography, Tag,
 } from 'antd';
-import { COLOR } from '@autonolas/frontend-library';
+import { COLOR, notifyError, notifySuccess } from '@autonolas/frontend-library';
 
 import {
   parseToWei,
-  notifySuccess,
-  notifyError,
   parseToEth,
   getCommaSeparatedNumber,
   ONE_ETH,

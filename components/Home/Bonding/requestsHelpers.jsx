@@ -1,5 +1,6 @@
-/* eslint-disable max-len */
-import { ADDRESS_ZERO, notifyError } from 'common-util/functions';
+import { notifyError } from '@autonolas/frontend-library';
+
+import { ADDRESS_ZERO } from 'common-util/functions';
 
 export const getProductValueFromEvent = (product, events, keyName) => {
   if ((events || []).length === 0) {

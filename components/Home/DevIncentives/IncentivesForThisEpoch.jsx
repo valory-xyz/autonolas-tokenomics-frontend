@@ -3,13 +3,13 @@ import {
   Row, Col, Table, Typography, Alert,
 } from 'antd';
 import { round, toLower } from 'lodash';
+import { notifyError } from '@autonolas/frontend-library';
 
 import { FORM_TYPES, UNIT_TYPES } from 'util/constants';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import {
   notifySpecificError,
   parseToEth,
-  notifyError,
   sortUnitIdsAndTypes,
 } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
