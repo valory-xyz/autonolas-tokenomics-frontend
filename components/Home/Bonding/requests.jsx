@@ -1,6 +1,5 @@
-/* eslint-disable max-len */
 import { ethers } from 'ethers';
-import { getChainId, sendTransaction } from '@autonolas/frontend-library';
+import { getChainId } from '@autonolas/frontend-library';
 
 import { OLAS_ADDRESS } from 'util/constants';
 import {
@@ -8,6 +7,7 @@ import {
   ADDRESS_ZERO,
   ONE_ETH,
   getEthersProvider,
+  sendTransaction,
 } from 'common-util/functions';
 import {
   getContractAddress,
@@ -22,41 +22,24 @@ import { getProductValueFromEvent } from './requestsHelpers';
 /**
  * fetches the IDF (discount factor) for the product
  */
-const getLastIDFRequest = () => new Promise((resolve, reject) => {
+const getLastIDFRequest = async () => {
   const contract = getTokenomicsContract();
+  const lastIdfResponse = await contract.methods.getLastIDF().call();
 
-  contract.methods
-    .getLastIDF()
-    .call()
-    .then((lastIdfResponse) => {
-      /**
-         * 1 ETH = 1e18
-         * discount = (lastIDF - 1 ETH) / 1 ETH
-         */
-      const firstDiv = Number(lastIdfResponse) - Number(ONE_ETH);
-      const discount = ((firstDiv * 1.0) / Number(ONE_ETH)) * 100;
-      resolve(discount);
-    })
-    .catch((e) => {
-      window.console.log('Error occured on getting last IDF');
-      reject(e);
-    });
-});
+  /**
+   * 1 ETH = 1e18
+   * discount = (lastIDF - 1 ETH) / 1 ETH
+   */
+  const firstDiv = Number(lastIdfResponse) - Number(ONE_ETH);
+  const discount = ((firstDiv * 1.0) / Number(ONE_ETH)) * 100;
+  return discount;
+};
 
-const getBondingProgramsRequest = ({ isActive }) => new Promise((resolve, reject) => {
+const getBondingProgramsRequest = async ({ isActive }) => {
   const contract = getDepositoryContract();
-
-  contract.methods
-    .getProducts(isActive)
-    .call()
-    .then((response) => {
-      resolve(response);
-    })
-    .catch((e) => {
-      window.console.log('Error on fetching the list');
-      reject(e);
-    });
-});
+  const response = await contract.methods.getProducts(isActive).call();
+  return response;
+};
 
 /**
  * returns events for the product creation
@@ -132,7 +115,6 @@ const getCurrentLpPriceForProducts = async (productList) => {
   const contract = getDepositoryContract();
 
   const currentLpPricePromiseList = [];
-
   for (let i = 0; i < productList.length; i += 1) {
     if (productList[i].token === ADDRESS_ZERO) {
       currentLpPricePromiseList.push(0);
@@ -156,90 +138,77 @@ export const getListWithSupplyList = async (
   list,
   createProductEvents,
   closedProductEvents = [],
-) => {
-  const listAfterSupplyLeftCalc = list.map((product) => {
-    const createProductEvent = createProductEvents.find(
-      (event) => event.returnValues.productId === `${product.id}`,
+) => list.map((product) => {
+  const createProductEvent = createProductEvents.find(
+    (event) => event.returnValues.productId === `${product.id}`,
+  );
+
+  const closeProductEvent = closedProductEvents.find(
+    (event) => event.returnValues.productId === `${product.id}`,
+  );
+
+  // Should not happen but we will warn if it does
+  if (!createProductEvent) {
+    window.console.warn(`Product ${product.id} not found in the event list`);
+  }
+
+  const eventSupply = Number(
+    ethers.BigNumber.from(createProductEvent.returnValues.supply).div(ONE_ETH),
+  );
+  const productSupply = !closeProductEvent
+    ? Number(ethers.BigNumber.from(product.supply).div(ONE_ETH))
+    : Number(
+      ethers.BigNumber.from(closeProductEvent.returnValues.supply).div(
+        ONE_ETH,
+      ),
     );
+  const supplyLeft = productSupply / eventSupply;
+  const priceLP = product.token !== ADDRESS_ZERO
+    ? product.priceLP
+    : createProductEvent?.returnValues?.priceLP || 0;
 
-    const closeProductEvent = closedProductEvents.find(
-      (event) => event.returnValues.productId === `${product.id}`,
-    );
-
-    // Should not happen but we will warn if it does
-    if (!createProductEvent) {
-      window.console.warn(`Product ${product.id} not found in the event list`);
-    }
-
-    const eventSupply = Number(
-      ethers.BigNumber.from(createProductEvent.returnValues.supply).div(ONE_ETH),
-    );
-    const productSupply = !closeProductEvent
-      ? Number(ethers.BigNumber.from(product.supply).div(ONE_ETH))
-      : Number(
-        ethers.BigNumber.from(closeProductEvent.returnValues.supply).div(
-          ONE_ETH,
-        ),
-      );
-    const supplyLeft = productSupply / eventSupply;
-    const priceLP = product.token !== ADDRESS_ZERO
-      ? product.priceLP
-      : createProductEvent?.returnValues?.priceLP || 0;
-
-    return { ...product, supplyLeft, priceLP };
-  });
-
-  return listAfterSupplyLeftCalc;
-};
+  return { ...product, supplyLeft, priceLP };
+});
 
 /**
  *
  */
-const getProductDetailsFromIds = ({ productIdList }) => new Promise((resolve, reject) => {
+const getProductDetailsFromIds = async ({ productIdList }) => {
   const contract = getDepositoryContract();
 
-  try {
-    const allListPromise = [];
-
-    for (let i = 0; i < productIdList.length; i += 1) {
-      const id = productIdList[i];
-      const allListResult = contract.methods.mapBondProducts(id).call();
-      allListPromise.push(allListResult);
-    }
-
-    Promise.all(allListPromise)
-      .then(async (response) => {
-        const productList = response.map((product, index) => ({
-          ...product,
-          id: productIdList[index],
-        }));
-
-        const createEventList = await getProductEvents('CreateProduct');
-        const closedEventList = await getProductEvents('CloseProduct');
-
-        const listWithLpTokens = await getLpTokenNamesForProducts(
-          productList,
-          createEventList,
-        );
-
-        const listWithCurrentLpPrice = await getCurrentLpPriceForProducts(
-          listWithLpTokens,
-        );
-
-        const listWithSupplyList = await getListWithSupplyList(
-          listWithCurrentLpPrice,
-          createEventList,
-          closedEventList,
-        );
-
-        resolve(listWithSupplyList);
-      })
-      .catch((e) => reject(e));
-  } catch (error) {
-    window.console.log('Error on fetching bonding program details details');
-    reject(error);
+  const allListPromise = [];
+  for (let i = 0; i < productIdList.length; i += 1) {
+    const id = productIdList[i];
+    const allListResult = contract.methods.mapBondProducts(id).call();
+    allListPromise.push(allListResult);
   }
-});
+
+  const response = await Promise.all(allListPromise);
+  const productList = response.map((product, index) => ({
+    ...product,
+    id: productIdList[index],
+  }));
+
+  const createEventList = await getProductEvents('CreateProduct');
+  const closedEventList = await getProductEvents('CloseProduct');
+
+  const listWithLpTokens = await getLpTokenNamesForProducts(
+    productList,
+    createEventList,
+  );
+
+  const listWithCurrentLpPrice = await getCurrentLpPriceForProducts(
+    listWithLpTokens,
+  );
+
+  const listWithSupplyList = await getListWithSupplyList(
+    listWithCurrentLpPrice,
+    createEventList,
+    closedEventList,
+  );
+
+  return listWithSupplyList;
+};
 
 export const getDepositoryAddress = (chainId) => getContractAddress('depository', chainId);
 
@@ -249,182 +218,127 @@ export const getDepositoryAddress = (chainId) => getContractAddress('depository'
  *     2. inactive products,
  *     3. 0 supply + active + inactive (combination of 1, 2, 3)
  */
-export const getAllTheProductsNotRemoved = async () => new Promise((resolve, reject) => {
+export const getAllTheProductsNotRemoved = async () => {
   const contract = getDepositoryContract();
-  contract.methods
-    .productCounter()
-    .call()
-    .then(async (productsList) => {
-      const allListPromise = [];
+  const productsList = await contract.methods.productCounter().call();
 
-      for (let i = 0; i < productsList; i += 1) {
-        const id = `${i}`;
-        const result = contract.methods.mapBondProducts(id).call();
-        allListPromise.push(result);
-      }
+  const allListPromise = [];
+  for (let i = 0; i < productsList; i += 1) {
+    const id = `${i}`;
+    const result = contract.methods.mapBondProducts(id).call();
+    allListPromise.push(result);
+  }
 
-      // discount factor is same for all the products
-      const discount = await getLastIDFRequest();
+  // discount factor is same for all the products
+  const discount = await getLastIDFRequest();
 
-      Promise.all(allListPromise)
-        .then(async (response) => {
-          // add id & discount to the product
-          const productWithIds = response.map((product, index) => ({
-            ...product,
-            discount,
-            id: index,
-            key: index,
-          }));
+  const response = await Promise.all(allListPromise);
+  // add id & discount to the product
+  const productWithIds = response.map((product, index) => ({
+    ...product,
+    discount,
+    id: index,
+    key: index,
+  }));
 
-          const createEventList = await getProductEvents('CreateProduct');
-          const closedEventList = await getProductEvents('CloseProduct');
+  const createEventList = await getProductEvents('CreateProduct');
+  const closedEventList = await getProductEvents('CloseProduct');
 
-          const listWithLpTokens = await getLpTokenNamesForProducts(
-            productWithIds,
-            createEventList,
-          );
+  const listWithLpTokens = await getLpTokenNamesForProducts(
+    productWithIds,
+    createEventList,
+  );
 
-          const listWithCurrentLpPrice = await getCurrentLpPriceForProducts(
-            listWithLpTokens,
-          );
+  const listWithCurrentLpPrice = await getCurrentLpPriceForProducts(
+    listWithLpTokens,
+  );
 
-          const listWithSupplyList = await getListWithSupplyList(
-            listWithCurrentLpPrice,
-            createEventList,
-            closedEventList,
-          );
+  const listWithSupplyList = await getListWithSupplyList(
+    listWithCurrentLpPrice,
+    createEventList,
+    closedEventList,
+  );
 
-          resolve(listWithSupplyList);
-        })
-        .catch((e) => reject(e));
-    })
-    .catch((e) => {
-      window.console.log('Error on fetching products');
-      reject(e);
-    });
-});
+  return listWithSupplyList;
+};
 
 /**
  * fetches product list based on the active/inactive status
  */
 export const getProductListRequest = async ({ isActive }) => {
-  try {
-    const productIdList = await getBondingProgramsRequest({ isActive });
-    const response = await getProductDetailsFromIds({ productIdList });
-    const discount = await getLastIDFRequest(); // discount factor is same for all the products
+  const productIdList = await getBondingProgramsRequest({ isActive });
+  const response = await getProductDetailsFromIds({ productIdList });
+  const discount = await getLastIDFRequest(); // discount factor is same for all the products
 
-    const productList = response.map((product, index) => ({
-      id: productIdList[index],
-      key: productIdList[index],
-      discount,
-      ...product,
-    }));
+  const productList = response.map((product, index) => ({
+    id: productIdList[index],
+    key: productIdList[index],
+    discount,
+    ...product,
+  }));
 
-    return productList;
-  } catch (error) {
-    window.console.error(error);
-    throw new Error(error);
-  }
+  return productList;
 };
 
-export const hasSufficientTokenRequest = ({
+export const hasSufficientTokenRequest = async ({
   account,
   chainId,
   token: productToken,
   tokenAmount,
-}) => new Promise((resolve, reject) => {
+}) => {
   const contract = getUniswapV2PairContract(productToken);
-
   const treasuryAddress = getContractAddress('treasury', chainId);
-
-  contract.methods
+  const response = await contract.methods
     .allowance(account, treasuryAddress)
-    .call()
-    .then((response) => {
-      // if allowance is greater than or equal to token amount
-      // then user has sufficient token
-      const hasEnoughAllowance = ethers.BigNumber.from(response).gte(
-        ethers.BigNumber.from(tokenAmount),
-      );
-      resolve(hasEnoughAllowance);
-    })
-    .catch((e) => {
-      window.console.log(
-        `Error occured on fetching allowance for the product token ${productToken}`,
-      );
-      reject(e);
-    });
-});
+    .call();
+
+  // if allowance is greater than or equal to token amount
+  // then user has sufficient token
+  const hasEnoughAllowance = ethers.BigNumber.from(response).gte(
+    ethers.BigNumber.from(tokenAmount),
+  );
+  return hasEnoughAllowance;
+};
 
 /**
  * Approves the treasury contract to spend the token
  */
-export const approveRequest = ({ account, chainId, token }) => new Promise((resolve, reject) => {
+export const approveRequest = async ({ account, chainId, token }) => {
   const contract = getUniswapV2PairContract(token);
-
   const treasuryAddress = getContractAddress('treasury', chainId);
 
   const fn = contract.methods
     .approve(treasuryAddress, MAX_AMOUNT)
     .send({ from: account });
 
-  sendTransaction(fn, account)
-    .then((response) => {
-      resolve(response);
-    })
-    .catch((e) => {
-      window.console.log('Error occured on approving OLAS');
-      reject(e);
-    });
-});
+  const response = await sendTransaction(fn, account);
+  return response;
+};
 
 /**
  * Deposits the token
  */
-export const depositRequest = ({ account, productId, tokenAmount }) => new Promise((resolve, reject) => {
+export const depositRequest = async ({ account, productId, tokenAmount }) => {
   const contract = getDepositoryContract();
 
   const fn = contract.methods
     .deposit(productId, tokenAmount)
     .send({ from: account });
 
-  sendTransaction(fn, account)
-    .then((response) => {
-      resolve(response?.transactionHash);
-    })
-    .catch((e) => {
-      window.console.log('Error occured on depositing');
-      reject(e);
-    });
-});
+  const response = await sendTransaction(fn, account);
+  return response?.transactionHash;
+};
 
-export const getLpBalanceRequest = ({ account, token }) => new Promise((resolve, reject) => {
+export const getLpBalanceRequest = async ({ account, token }) => {
   const contract = getUniswapV2PairContract(token);
+  const response = await contract.methods.balanceOf(account).call();
+  return response.toString();
+};
 
-  contract.methods
-    .balanceOf(account)
-    .call()
-    .then((response) => {
-      // convert big number to string
-      resolve(response.toString());
-    })
-    .catch((e) => {
-      window.console.log('Error occured on fetching LP balance');
-      reject(e);
-    });
-});
-
-export const bondCalculationRequest = ({ tokenAmount, priceLP }) => new Promise((resolve, reject) => {
+export const bondCalculationRequest = async ({ tokenAmount, priceLP }) => {
   const contract = getGenericBondCalculatorContract();
-
-  contract.methods
+  const response = await contract.methods
     .calculatePayoutOLAS(tokenAmount, priceLP)
-    .call()
-    .then((response) => {
-      resolve(response);
-    })
-    .catch((e) => {
-      window.console.log('Error occured on calculating bond');
-      reject(e);
-    });
-});
+    .call();
+  return response;
+};

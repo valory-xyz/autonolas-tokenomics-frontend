@@ -1,99 +1,83 @@
-import { sendTransaction, notifyError } from '@autonolas/frontend-library';
+import { notifyError } from '@autonolas/frontend-library';
 
-import { parseToEth } from 'common-util/functions';
+import { parseToEth, sendTransaction } from 'common-util/functions';
 import {
   getTokenomicsContract,
   getTreasuryContract,
   getServiceContract,
 } from 'common-util/Contracts';
 
-export const getServiceDetails = (id) => new Promise((resolve, reject) => {
+export const getServiceDetails = async (id) => {
   const contract = getServiceContract();
+  const response = await contract.methods.getService(id).call();
+  return response;
+};
 
-  contract.methods
-    .getService(id)
-    .call()
-    .then(async (response) => {
-      resolve(response);
-    })
-    .catch((e) => {
-      reject(e);
-    });
-});
-
-export const checkServicesNotTerminatedOrNotDeployed = (ids) => new Promise((resolve, reject) => {
+export const checkServicesNotTerminatedOrNotDeployed = async (ids) => {
   const allServiceDetailsPromise = ids.map((id) => getServiceDetails(id));
 
-  Promise.all(allServiceDetailsPromise)
-    .then((allServiceDetails) => {
-      const invalidServiceIds = [];
-      allServiceDetails.forEach((service, index) => {
-        if (service.state !== '4' && service.state !== '5') {
-          invalidServiceIds.push(ids[index]);
-        }
-      });
-
-      if (invalidServiceIds.length === 0) {
-        resolve([]);
-      } else {
-        notifyError(
-          'Provided service IDs are not deployed or terminated:',
-          invalidServiceIds.join(', '),
-        );
-        reject(
-          new Error('Provided service IDs are not deployed or terminated'),
-        );
+  try {
+    const allServiceDetails = await Promise.all(allServiceDetailsPromise);
+    const invalidServiceIds = [];
+    allServiceDetails.forEach((service, index) => {
+      if (service.state !== '4' && service.state !== '5') {
+        invalidServiceIds.push(ids[index]);
       }
-    })
-    .catch((e) => {
-      reject(e);
     });
-});
+    if (invalidServiceIds.length === 0) {
+      return [];
+    }
 
-export const depositServiceDonationRequest = ({
+    notifyError(
+      'Provided service IDs are not deployed or terminated',
+      invalidServiceIds.join(', '),
+    );
+  } catch (error) {
+    notifyError('Error on checking service status');
+    throw error;
+  }
+
+  return [];
+};
+
+export const depositServiceDonationRequest = async ({
   account,
   serviceIds,
   amounts,
   totalAmount,
-}) => new Promise((resolve, reject) => {
+}) => {
   const contract = getTreasuryContract();
+  try {
+    const fn = contract.methods
+      .depositServiceDonationsETH(serviceIds, amounts)
+      .send({ from: account, value: totalAmount });
 
-  const fn = contract.methods
-    .depositServiceDonationsETH(serviceIds, amounts)
-    .send({ from: account, value: totalAmount });
+    const response = await sendTransaction(fn, account);
+    return response?.transactionHash;
+  } catch (error) {
+    notifyError('Error occured on depositing service donation');
+    throw error;
+  }
+};
 
-  sendTransaction(fn, account)
-    .then((response) => resolve(response?.transactionHash))
-    .catch((e) => {
-      window.console.log('Error occured on depositing service donation');
-      reject(e);
-    });
-});
-
-export const minAcceptedEthRequest = () => new Promise((resolve, reject) => {
+export const minAcceptedEthRequest = async () => {
   const contract = getTreasuryContract();
+  try {
+    const response = await contract.methods.minAcceptedETH().call();
+    return response;
+  } catch (error) {
+    notifyError('Error on fetching min accepted ETH');
+    throw error;
+  }
+};
 
-  contract.methods
-    .minAcceptedETH()
-    .call()
-    .then((response) => resolve(response))
-    .catch((e) => {
-      window.console.log('Error occured on fetching min accepted ETH');
-      reject(e);
-    });
-});
-
-export const getVeOlasThresholdRequest = () => new Promise((resolve, reject) => {
+export const getVeOlasThresholdRequest = async () => {
   const contract = getTokenomicsContract();
-
-  contract.methods
-    .veOLASThreshold()
-    .call()
-    .then((response) => {
-      resolve(parseToEth(response));
-    })
-    .catch((e) => {
-      window.console.log('Error occured on fetching veOLAS threshold');
-      reject(e);
-    });
-});
+  try {
+    const response = await contract.methods.veOLASThreshold().call();
+    return parseToEth(response);
+  } catch (error) {
+    notifyError('Error on fetching veOLAS threshold');
+    throw error;
+  }
+};

@@ -51,8 +51,8 @@ export const IncentivesForNextEpoch = () => {
       });
       setPendingIncentives([response]);
     } catch (error) {
-      window.console.error(error);
-      notifyError('Error while fetching incentives');
+      notifyError('Error on fetching incentives');
+      console.error(error);
     } finally {
       setIsLoading(false);
     }

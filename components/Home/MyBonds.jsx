@@ -113,8 +113,8 @@ export const MyBonds = () => {
       setSelectedBondIds([]);
       await getBondsListHelper();
     } catch (error) {
-      window.console.error(error);
       notifyError('Error while redeeming');
+      console.error(error);
     }
   };
 

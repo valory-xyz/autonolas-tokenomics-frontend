@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
+import { ethers } from 'ethers';
 import PropTypes from 'prop-types';
 import {
   Button, Table, Tag, Tooltip, Typography,
 } from 'antd';
 import { remove, round, isNaN } from 'lodash';
-import { COLOR } from '@autonolas/frontend-library';
+import { COLOR, notifyError } from '@autonolas/frontend-library';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
-import { ethers } from 'ethers';
 
 import { BONDING_PRODUCTS } from 'util/constants';
 import { parseToEth } from 'common-util/functions';
@@ -60,8 +60,6 @@ const getTitle = (title, tooltipDesc) => (
   </Tooltip>
 );
 
-const APY_DESC = 'Denominated in OLAS';
-
 const getColumns = (
   showNoSupply,
   onClick,
@@ -70,11 +68,7 @@ const getColumns = (
   depositoryAddress,
 ) => {
   const columns = [
-    {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-    },
+    { title: 'ID', dataIndex: 'id', key: 'id' },
     {
       title: getTitle(
         'LP Token',
@@ -93,7 +87,7 @@ const getColumns = (
       ),
     },
     {
-      title: getTitle('Current Price of LP Token', APY_DESC),
+      title: getTitle('Current Price of LP Token', 'Denominated in OLAS'),
       dataIndex: 'currentPriceLp',
       key: 'currentPriceLp',
       render: (text) => (
@@ -269,7 +263,8 @@ export const BondingList = ({ bondingProgramType }) => {
         setFilteredProducts(filteredProductList);
       }
     } catch (error) {
-      window.console.error(error);
+      console.error(error);
+      notifyError('Error while fetching products');
     } finally {
       setIsLoading(false);
     }
@@ -288,11 +283,6 @@ export const BondingList = ({ bondingProgramType }) => {
     setProductDetails(null);
   };
 
-  const getProductsDataSource = () => {
-    const list = showNoSupply ? allProducts : filteredProducts;
-    return list;
-  };
-
   return (
     <Container>
       <Table
@@ -303,7 +293,7 @@ export const BondingList = ({ bondingProgramType }) => {
           account,
           depositoryAddress,
         )}
-        dataSource={getProductsDataSource()}
+        dataSource={showNoSupply ? allProducts : filteredProducts}
         bordered
         loading={isLoading}
         pagination={false}

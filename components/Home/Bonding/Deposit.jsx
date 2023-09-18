@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { BigNumber } from 'ethers';
 import PropTypes from 'prop-types';
 import { isNil } from 'lodash';
 import {
@@ -13,7 +14,6 @@ import {
   ONE_ETH,
 } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
-import { BigNumber } from 'ethers';
 import {
   depositRequest,
   hasSufficientTokenRequest,
@@ -40,12 +40,17 @@ export const Deposit = ({
 
   useEffect(() => {
     const getData = async () => {
-      const lpResponse = await getLpBalanceRequest({
-        account,
-        token: productToken,
-      });
+      try {
+        const lpResponse = await getLpBalanceRequest({
+          account,
+          token: productToken,
+        });
 
-      setLpBalance(lpResponse);
+        setLpBalance(lpResponse);
+      } catch (error) {
+        notifyError('Error occured on fetching LP balance');
+        console.error(error);
+      }
     };
 
     if (account) {
@@ -84,19 +89,24 @@ export const Deposit = ({
       .validateFields()
       .then(async (values) => {
         // check allowance of the product ID and open approve modal if not approved
-        const hasSufficientAllowance = await hasSufficientTokenRequest({
-          account,
-          chainId,
-          token: productToken,
-          tokenAmount: parseToWei(values.tokenAmount),
-        });
-
-        // if allowance in lower than the amount to be deposited, then needs approval
-        // eg. If user is depositing 10 OLAS and the allowance is 5, then open the approve modal
-        if (hasSufficientAllowance) {
-          await depositHelper();
-        } else {
-          setIsApproveModalVisible(true);
+        try {
+          const hasSufficientAllowance = await hasSufficientTokenRequest({
+            account,
+            chainId,
+            token: productToken,
+            tokenAmount: parseToWei(values.tokenAmount),
+          });
+          // if allowance in lower than the amount to be deposited, then needs approval
+          // eg. If user is depositing 10 OLAS and the allowance is 5, then open the approve modal
+          if (hasSufficientAllowance) {
+            await depositHelper();
+          } else {
+            setIsApproveModalVisible(true);
+          }
+        } catch (error) {
+          notifyError(
+            `Error occured on fetching allowance for the product token ${productToken}`,
+          );
         }
       })
       .catch((info) => {
@@ -254,7 +264,7 @@ export const Deposit = ({
                 } catch (error) {
                   window.console.error(error);
                   setIsApproveModalVisible(false);
-                  notifyError();
+                  notifyError('Error while approving OLAS');
                 } finally {
                   setIsLoading(false);
                 }

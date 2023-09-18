@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Typography, Alert, Divider } from 'antd';
-import { COLOR } from '@autonolas/frontend-library';
+import { COLOR, notifySuccess } from '@autonolas/frontend-library';
 
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import {
-  notifySuccess,
   notifySpecificError,
   sortUnitIdsAndTypes,
 } from 'common-util/functions';
@@ -25,7 +24,7 @@ export const ClaimIncentives = () => {
         setPausedValue(value);
       } catch (error) {
         notifySpecificError(error);
-        window.console.error(error);
+        console.error(error);
       }
     };
 
