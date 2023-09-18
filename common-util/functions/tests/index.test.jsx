@@ -1,4 +1,5 @@
-import { sortUnitIdsAndTypes } from './index';
+/* eslint-disable jest/no-disabled-tests */
+import { sortUnitIdsAndTypes } from '../utils';
 
 describe('sortUnitIdsAndTypes', () => {
   it('should sort unitIds and the same index sort should be applied to unitTypes', () => {

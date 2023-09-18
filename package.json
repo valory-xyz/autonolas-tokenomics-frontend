@@ -25,8 +25,8 @@
     "react-dom": "^18.2.0",
     "react-redux": "^8.1.2",
     "redux": "^4.2.1",
-    "redux-thunk": "^2.4.2",
     "redux-mock-store": "^1.5.4",
+    "redux-thunk": "^2.4.2",
     "styled-components": "^6.0.7",
     "viem": "^0.3.35",
     "wagmi": "^1.4.1",
@@ -52,7 +52,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "jest": "^29.6.4",
     "jest-environment-jsdom": "^29.6.4",
-    "redux-mock-store": "^1.5.4",
-    "node-fetch": "2"
+    "node-fetch": "2",
+    "redux-mock-store": "^1.5.4"
   }
 }
