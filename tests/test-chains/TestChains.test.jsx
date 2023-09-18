@@ -3,8 +3,7 @@
 import {
   DEPOSITORY, DISPENSER, TREASURY, TOKENOMICS, BOND_CALCULATOR,
 } from 'common-util/AbiAndAddresses';
-
-const fetch = require('node-fetch');
+import fetch from 'node-fetch';
 
 describe('test-chains/TestChains.jsx', () => {
   it('check contract addresses and ABIs', async () => {
