@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { Alert, Typography } from 'antd/lib';
 import { isNumber } from 'lodash';
+
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import {
   getFullFormattedDate,
@@ -11,7 +12,11 @@ import {
   sortUnitIdsAndTypes,
 } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
-import { getLastEpochRequest } from '../DevIncentives/requests';
+import { NA } from 'common-util/constants';
+import {
+  getEpochCounter,
+  getLastEpochRequest,
+} from '../DevIncentives/requests';
 import {
   checkServicesNotTerminatedOrNotDeployed,
   depositServiceDonationRequest,
@@ -27,6 +32,7 @@ export const DepositServiceDonation = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [threshold, setThreshold] = useState(0);
   const [minAcceptedEth, setMinAcceptedEth] = useState(0);
+  const [epochCounter, setEpochCounter] = useState(null);
   const [epochDetails, setEpochDetails] = useState(null);
 
   useEffect(() => {
@@ -40,6 +46,9 @@ export const DepositServiceDonation = () => {
 
         const epochResponse = await getLastEpochRequest();
         setEpochDetails(epochResponse);
+
+        const epochCtr = await getEpochCounter();
+        setEpochCounter(epochCtr);
       } catch (error) {
         window.console.error(error);
       }
@@ -89,23 +98,23 @@ export const DepositServiceDonation = () => {
       text: 'Expected end time',
       value: epochDetails?.nextEpochEndTime
         ? getFullFormattedDate(epochDetails.nextEpochEndTime * 1000)
-        : '--',
+        : NA,
     },
     {
       text: 'Epoch length',
       value: isNumber(epochDetails?.epochLen)
         ? `${epochDetails.epochLen / 3600 / 24} days`
-        : '--',
+        : NA,
     },
     {
       text: 'Previous epoch end time',
       value: epochDetails?.prevEpochEndTime
         ? getFullFormattedDate(epochDetails.prevEpochEndTime * 1000)
-        : '--',
+        : NA,
     },
     {
       text: 'Epoch counter',
-      value: '10',
+      value: epochCounter || NA,
     },
   ];
 
@@ -126,14 +135,14 @@ export const DepositServiceDonation = () => {
             <>
               To boost rewards of devs with freshly minted OLAS, you must hold
               at least&nbsp;
-              <Text strong>{threshold || '--'}</Text>
+              <Text strong>{threshold || NA}</Text>
               &nbsp;veOLAS. Grab your veOLAS by locking OLAS&nbsp;
               <a href="https://member.olas.network/" target="_self">
                 here
               </a>
               . At least&nbsp;
               <Text strong>
-                {minAcceptedEth ? parseToEth(minAcceptedEth) : '--'}
+                {minAcceptedEth ? parseToEth(minAcceptedEth) : NA}
                 &nbsp;ETH
               </Text>
               &nbsp;of donations is required to trigger boosts.
