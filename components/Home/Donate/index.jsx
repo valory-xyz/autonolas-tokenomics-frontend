@@ -103,6 +103,10 @@ export const DepositServiceDonation = () => {
         ? getFullFormattedDate(epochDetails.prevEpochEndTime * 1000)
         : '--',
     },
+    {
+      text: 'Epoch counter',
+      value: '10',
+    },
   ];
 
   return (
