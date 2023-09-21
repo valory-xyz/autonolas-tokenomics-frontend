@@ -175,6 +175,7 @@ export const getListWithSupplyList = async (
  */
 const getProductDetailsFromIds = async ({ productIdList }) => {
   const contract = getDepositoryContract();
+  console.log({ contract });
 
   const allListPromise = [];
   for (let i = 0; i < productIdList.length; i += 1) {
@@ -183,14 +184,20 @@ const getProductDetailsFromIds = async ({ productIdList }) => {
     allListPromise.push(allListResult);
   }
 
+  console.log({ allListPromise });
   const response = await Promise.all(allListPromise);
+  console.log({ response });
   const productList = response.map((product, index) => ({
     ...product,
     id: productIdList[index],
   }));
 
+  console.log({ productList });
+
   const createEventList = await getProductEvents('CreateProduct');
   const closedEventList = await getProductEvents('CloseProduct');
+
+  console.log({ createEventList, closedEventList });
 
   const listWithLpTokens = await getLpTokenNamesForProducts(
     productList,
@@ -220,6 +227,7 @@ export const getDepositoryAddress = (chainId) => getContractAddress('depository'
  */
 export const getAllTheProductsNotRemoved = async () => {
   const contract = getDepositoryContract();
+  console.log(contract);
   const productsList = await contract.methods.productCounter().call();
 
   const allListPromise = [];
@@ -266,6 +274,7 @@ export const getAllTheProductsNotRemoved = async () => {
  * fetches product list based on the active/inactive status
  */
 export const getProductListRequest = async ({ isActive }) => {
+  console.log('getProductListRequest');
   const productIdList = await getBondingProgramsRequest({ isActive });
   const response = await getProductDetailsFromIds({ productIdList });
   const discount = await getLastIDFRequest(); // discount factor is same for all the products

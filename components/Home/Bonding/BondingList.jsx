@@ -271,6 +271,7 @@ export const BondingList = ({ bondingProgramType }) => {
 
   // fetch the bonding list
   useEffect(() => {
+    console.log(chainId);
     getProducts();
   }, [account, chainId, bondingProgramType]);
 
