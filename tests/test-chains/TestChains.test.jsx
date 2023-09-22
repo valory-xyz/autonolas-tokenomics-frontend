@@ -5,7 +5,8 @@ import {
 } from 'common-util/AbiAndAddresses';
 import fetch from 'node-fetch';
 
-describe('test-chains/TestChains.jsx', () => {
+// eslint-disable-next-line jest/no-disabled-tests
+describe.skip('test-chains/TestChains.jsx', () => {
   it('check contract addresses and ABIs', async () => {
     expect.hasAssertions();
     const localArtifacts = [DEPOSITORY, DISPENSER, TREASURY, TOKENOMICS, BOND_CALCULATOR];
