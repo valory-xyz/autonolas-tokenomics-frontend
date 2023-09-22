@@ -61,6 +61,27 @@ const getTitle = (title, tooltipDesc) => (
 
 const APY_DESC = 'Denominated in OLAS';
 
+const getCurrentDifferenceInValue = (record) => {
+  const fullCurrentPriceLp = buildFullCurrentPriceLp(record.currentPriceLp);
+  const discount = record?.discount || 0;
+  const discountedOlasPerLpToken = getLpTokenWithDiscount(
+    record.priceLP,
+    discount,
+  );
+  const roundedDiscountedOlasPerLpToken = displayLpTokenWithDiscount(
+    discountedOlasPerLpToken,
+  );
+
+  const projectedChange = round(
+    ((roundedDiscountedOlasPerLpToken - fullCurrentPriceLp)
+      / fullCurrentPriceLp)
+      * 100,
+    2,
+  );
+
+  return projectedChange;
+};
+
 const getColumns = (
   showNoSupply,
   onClick,
@@ -133,24 +154,7 @@ const getColumns = (
         'Percentage difference between current price of LP token and OLAS minted per LP token',
       ),
       render: (record) => {
-        const fullCurrentPriceLp = buildFullCurrentPriceLp(
-          record.currentPriceLp,
-        );
-        const discount = record?.discount || 0;
-        const discountedOlasPerLpToken = getLpTokenWithDiscount(
-          record.priceLP,
-          discount,
-        );
-        const roundedDiscountedOlasPerLpToken = displayLpTokenWithDiscount(
-          discountedOlasPerLpToken,
-        );
-
-        const projectedChange = round(
-          ((roundedDiscountedOlasPerLpToken - fullCurrentPriceLp)
-            / fullCurrentPriceLp)
-            * 100,
-          2,
-        );
+        const { projectedChange } = record;
 
         if (isNaN(projectedChange)) {
           return <Text>{NA}</Text>;
@@ -289,7 +293,16 @@ export const BondingList = ({ bondingProgramType }) => {
 
   const getProductsDataSource = () => {
     const list = showNoSupply ? allProducts : filteredProducts;
-    return list;
+    const updatedList = list.map((e) => ({
+      ...e,
+      projectedChange: getCurrentDifferenceInValue(e),
+    }));
+    const sortedList = updatedList.sort((a, b) => {
+      if (isNaN(a.projectedChange)) return 1;
+      if (isNaN(b.projectedChange)) return -1;
+      return b.projectedChange - a.projectedChange;
+    });
+    return sortedList;
   };
 
   return (
