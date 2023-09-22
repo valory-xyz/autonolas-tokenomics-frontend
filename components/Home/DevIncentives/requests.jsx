@@ -72,7 +72,7 @@ export const checkpointRequest = async ({ account }) => {
   return response;
 };
 
-const getEpochCounter = async () => {
+export const getEpochCounter = async () => {
   const contract = getTokenomicsContract();
   const response = await contract.methods.epochCounter().call();
   return parseInt(response, 10);

@@ -1,11 +1,6 @@
 import { createGlobalStyle } from 'styled-components';
 import { MEDIA_QUERY, COLOR } from '@autonolas/frontend-library';
 
-const ANTD_COLOR = {
-  whiteColor: '#fff',
-  borderColor: '#f0f0f0',
-};
-
 // const GlobalStyles = styled.div`
 const GlobalStyle = createGlobalStyle`
   *,
@@ -108,7 +103,7 @@ const GlobalStyle = createGlobalStyle`
       border-color: transparent !important;
     }
     > .ant-tabs-nav .ant-tabs-tab-active {
-      border-bottom-color: ${ANTD_COLOR.borderColor};
+      border-bottom-color: ${COLOR.GREY_3};
       background-color: ${COLOR.GREY_1};
       .ant-tabs-tab-btn {
         color: ${COLOR.BLACK};

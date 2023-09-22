@@ -74,9 +74,9 @@ const NavigationBar = ({ children }) => {
       </Header>
 
       <Content className="site-layout">
-        {chainId ? (
-          <div className="site-layout-background">{children}</div>
-        ) : null}
+        <div className="site-layout-background">
+          {chainId ? children : null}
+        </div>
       </Content>
 
       <Footer />

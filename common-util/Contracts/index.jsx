@@ -1,6 +1,7 @@
 import Web3 from 'web3';
 
 import { LOCAL_CHAIN_ID, LOCAL_FORK_ID } from 'util/constants';
+import { getChainId, getProvider } from 'common-util/functions';
 import {
   DEPOSITORY,
   DISPENSER,
@@ -13,7 +14,6 @@ import {
   SERVICE_REGISTRY,
   ERC20_ABI,
 } from 'common-util/AbiAndAddresses';
-import { getChainId, getProvider } from 'common-util/functions';
 
 /**
  * Addresses fetched when backend connected locally
