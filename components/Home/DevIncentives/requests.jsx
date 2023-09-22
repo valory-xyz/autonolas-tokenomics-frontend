@@ -87,7 +87,7 @@ export const checkpointRequest = ({ account }) => new Promise((resolve, reject) 
     });
 });
 
-const getEpochCounter = () => new Promise((resolve, reject) => {
+export const getEpochCounter = () => new Promise((resolve, reject) => {
   const contract = getTokenomicsContract();
 
   contract.methods
