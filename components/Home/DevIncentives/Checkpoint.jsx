@@ -36,14 +36,13 @@ export const Checkpoint = () => {
       setIsLoading(true);
 
       await checkpointRequest({ account });
-
       notifySuccess('Checkpoint called successfully');
 
       // check if checkpoint is visible again
       await getIfCheckpointVisible();
     } catch (error) {
       notifySpecificError(error);
-      window.console.error(error);
+      console.error(error);
     } finally {
       setIsLoading(false);
     }

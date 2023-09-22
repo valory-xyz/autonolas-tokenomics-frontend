@@ -78,7 +78,7 @@ export const Deposit = ({
       form.resetFields();
     } catch (error) {
       notifyError('Error while depositing');
-      window.console.error(error);
+      console.error(error);
     } finally {
       setIsLoading(false);
     }

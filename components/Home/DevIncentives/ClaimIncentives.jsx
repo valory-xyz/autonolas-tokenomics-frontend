@@ -28,9 +28,7 @@ export const ClaimIncentives = () => {
       }
     };
 
-    if (account) {
-      getData();
-    }
+    if (account) getData();
   }, [account]);
 
   const onClaimIncentivesSubmit = async (values) => {
@@ -46,12 +44,12 @@ export const ClaimIncentives = () => {
         unitIds: sortedUnitIds.map((e) => `${e}`),
         unitTypes: sortedUnitTypes.map((e) => `${e}`),
       };
-      await claimOwnerIncentivesRequest(params);
 
+      await claimOwnerIncentivesRequest(params);
       notifySuccess('Rewards claimed');
     } catch (error) {
       notifySpecificError(error);
-      window.console.error(error);
+      console.error(error);
     } finally {
       setIsLoading(false);
     }

@@ -126,7 +126,7 @@ export const IncentivesForThisEpoch = () => {
             setRewardAndTopUp([]);
             notifySpecificError(error);
 
-            window.console.error(error);
+            console.error(error);
           } finally {
             setIsLoading(false);
           }
@@ -134,7 +134,7 @@ export const IncentivesForThisEpoch = () => {
       })
       .catch((ownersForUnitsError) => {
         notifyError('Error occured on fetching owners for units');
-        window.console.error(ownersForUnitsError);
+        console.error(ownersForUnitsError);
       })
       .finally(() => {
         setIsLoading(false);
