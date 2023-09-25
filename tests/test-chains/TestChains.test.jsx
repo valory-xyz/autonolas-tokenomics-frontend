@@ -9,7 +9,6 @@ import {
 } from 'common-util/AbiAndAddresses';
 import fetch from 'node-fetch';
 
-// const fetch = require('node-fetch');
 const localArtifacts = [
   DEPOSITORY,
   DISPENSER,
@@ -18,12 +17,10 @@ const localArtifacts = [
   BOND_CALCULATOR,
 ];
 
-// // Registries repository
+// Registries repository
 const registriesRepo = 'https://raw.githubusercontent.com/valory-xyz/autonolas-tokenomics/main/';
 
-/* eslint-disable-next-line jest/no-commented-out-tests */
 describe('test-chains/TestChains.jsx', () => {
-  /* eslint-disable-next-line jest/no-commented-out-tests */
   it('check contract addresses and ABIs', async () => {
     expect.hasAssertions();
 
