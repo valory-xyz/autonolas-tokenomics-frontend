@@ -1,7 +1,5 @@
 {
   "compilerOptions": {
-    "module": "esnext",
-    "moduleResolution": "node",
     "baseUrl": ".",
     "sourceMap": true,
     "paths": {
@@ -14,5 +12,5 @@
   },
   "exclude": [
     "node_modules"
-  ],
+  ]
 }

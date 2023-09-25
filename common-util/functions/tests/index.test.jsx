@@ -1,3 +1,4 @@
+import React from 'react';
 import { sortUnitIdsAndTypes } from '../utils';
 
 describe('sortUnitIdsAndTypes', () => {
