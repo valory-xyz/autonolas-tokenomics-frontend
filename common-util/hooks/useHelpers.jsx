@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { setChainId } from 'store/setup/actions';
-import { getChainId } from '../functions';
+import { getChainId, getIsValidChainId } from '../functions';
 
 export const useHelpers = () => {
   const dispatch = useDispatch();
@@ -23,5 +23,6 @@ export const useHelpers = () => {
   return {
     chainId,
     account,
+    isValidChainId: getIsValidChainId(chainId),
   };
 };

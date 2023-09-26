@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
+import PropTypes from 'prop-types';
 import { Layout, Menu } from 'antd';
 import { ExportOutlined } from '@ant-design/icons';
-import PropTypes from 'prop-types';
+import { getNetworkName, useScreen } from '@autonolas/frontend-library';
 
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import Login from '../Login';
@@ -16,7 +17,9 @@ const { Header, Content } = Layout;
 
 const NavigationBar = ({ children }) => {
   const router = useRouter();
-  const { chainId } = useHelpers();
+  const { chainId, isValidChainId } = useHelpers();
+  const { isMobile } = useScreen();
+
   const [selectedMenu, setSelectedMenu] = useState([]);
 
   // to set default menu on first render
@@ -45,7 +48,11 @@ const NavigationBar = ({ children }) => {
         <div className="column-1">
           <Logo data-testid="tokenomics-logo">
             <LogoSvg />
-            <span>Tokenomics</span>
+            <span>
+              {isValidChainId && !isMobile
+                ? `Tokenomics on ${getNetworkName(chainId)}`
+                : 'Tokenomics'}
+            </span>
           </Logo>
         </div>
 
