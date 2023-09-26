@@ -1,4 +1,3 @@
-/* eslint-disable jest/no-disabled-tests */
 import { sortUnitIdsAndTypes } from '../utils';
 
 describe('sortUnitIdsAndTypes', () => {
