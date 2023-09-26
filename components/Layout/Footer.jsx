@@ -6,7 +6,7 @@ import {
   getExplorerURL,
 } from '@autonolas/frontend-library';
 
-import { getContractAddress } from 'common-util/Contracts';
+import { ADDRESSES } from 'common-util/Contracts';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import Socials from './Socials';
 import { ContractsInfoContainer } from './styles';
@@ -26,30 +26,30 @@ const ContractInfo = () => {
     if (pathname === '/' || (pathname || '').includes('donate')) {
       return {
         textOne: 'Treasury',
-        addressOne: getContractAddress('treasury', chainId),
+        addressOne: ADDRESSES[chainId].treasury,
       };
     }
 
     if ((pathname || '').includes('dev-incentives')) {
       return {
         textOne: 'Tokenomics',
-        addressOne: getContractAddress('tokenomics', chainId),
+        addressOne: ADDRESSES[chainId].tokenomics,
         textTwo: 'Dispenser',
-        addressTwo: getContractAddress('dispenser', chainId),
+        addressTwo: ADDRESSES[chainId].dispenser,
       };
     }
 
     if ((pathname || '').includes('bonding-products')) {
       return {
         textOne: 'Depository',
-        addressOne: getContractAddress('depository', chainId),
+        addressOne: ADDRESSES[chainId].depository,
       };
     }
 
     if ((pathname || '').includes('my-bonds')) {
       return {
         textOne: 'Depository',
-        addressOne: getContractAddress('depository', chainId),
+        addressOne: ADDRESSES[chainId].depository,
       };
     }
 

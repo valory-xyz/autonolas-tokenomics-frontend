@@ -15,20 +15,37 @@ import {
   ERC20_ABI,
 } from 'common-util/AbiAndAddresses';
 
-/**
- * Addresses fetched when backend connected locally
- * (initDeploy.json in backend repository)
- */
-const LOCAL_ADDRESSES = {
-  DEPOSITORY_ADDRESS_LOCAL: '0x4c5859f0F772848b2D91F1D83E2Fe57935348029',
-  DISPENSER_ADDRESS_LOCAL: '0x1291Be112d480055DaFd8a610b7d1e203891C274',
-  TREASURY_ADDRESS_LOCAL: '0x36C02dA8a0983159322a80FFE9F24b1acfF8B570',
-  TOKENOMICS_PROXY_ADDRESS_LOCAL: '0x5eb3Bc0a489C5A8288765d2336659EbCA68FCd00',
-  AGENT_REGISTRY_ADDRESS_LOCAL: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
-  COMPONENT_REGISTRY_ADDRESS_LOCAL:
-    '0x5FbDB2315678afecb367f032d93F642f64180aa3',
-  SERVICE_REGISTRY_ADDRESS_LOCAL: '0x36C02dA8a0983159322a80FFE9F24b1acfF8B570',
-  GENERIC_BOND_CALC_ADDRESS: '0x809d550fca64d94Bd9F66E60752A544199cfAC3D',
+export const ADDRESSES = {
+  1: {
+    dispenser: DISPENSER.addresses[1],
+    depository: DEPOSITORY.addresses[1],
+    treasury: TREASURY.addresses[1],
+    tokenomics: TOKENOMICS.addresses[1],
+    genericBondCalculator: BOND_CALCULATOR.addresses[1],
+    agent: AGENT_REGISTRY.addresses[1],
+    component: COMPONENT_REGISTRY.addresses[1],
+    service: SERVICE_REGISTRY.addresses[1],
+  },
+  5: {
+    dispenser: DISPENSER.addresses[5],
+    depository: DEPOSITORY.addresses[5],
+    treasury: TREASURY.addresses[5],
+    tokenomics: TOKENOMICS.addresses[5],
+    genericBondCalculator: BOND_CALCULATOR.addresses[5],
+    agent: AGENT_REGISTRY.addresses[5],
+    component: COMPONENT_REGISTRY.addresses[5],
+    service: SERVICE_REGISTRY.addresses[5],
+  },
+  [LOCAL_CHAIN_ID]: {
+    dispenser: '0x4c5859f0F772848b2D91F1D83E2Fe57935348029',
+    depository: '0x1291Be112d480055DaFd8a610b7d1e203891C274',
+    treasury: '0x36C02dA8a0983159322a80FFE9F24b1acfF8B570',
+    tokenomics: '0x5eb3Bc0a489C5A8288765d2336659EbCA68FCd00',
+    genericBondCalculator: '0x809d550fca64d94Bd9F66E60752A544199cfAC3D',
+    agent: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
+    component: '0x5FbDB2315678afecb367f032d93F642f64180aa3',
+    service: '0x36C02dA8a0983159322a80FFE9F24b1acfF8B570',
+  },
 };
 
 /**
@@ -51,114 +68,27 @@ const getContract = (abi, contractAddress) => {
   return contract;
 };
 
-/**
- * Returns contract address based on type and chainId.
- */
-export const getContractAddress = (type, chainId) => {
-  switch (type) {
-    case 'dispenser': {
-      if (chainId === LOCAL_CHAIN_ID) {
-        return LOCAL_ADDRESSES.DISPENSER_ADDRESS_LOCAL;
-      }
-      if (chainId === 5) return DISPENSER.addresses[5];
-      return DISPENSER.addresses[1];
-    }
-
-    case 'depository': {
-      if (chainId === LOCAL_CHAIN_ID) {
-        return LOCAL_ADDRESSES.DEPOSITORY_ADDRESS_LOCAL;
-      }
-      if (chainId === 5) return DEPOSITORY.addresses[5];
-      return DEPOSITORY.addresses[1];
-    }
-
-    case 'treasury': {
-      if (chainId === LOCAL_CHAIN_ID) {
-        return LOCAL_ADDRESSES.TREASURY_ADDRESS_LOCAL;
-      }
-      if (chainId === 5) return TREASURY.addresses[5];
-      return TREASURY.addresses[1];
-    }
-
-    case 'tokenomics': {
-      if (chainId === LOCAL_CHAIN_ID) {
-        return LOCAL_ADDRESSES.TOKENOMICS_PROXY_ADDRESS_LOCAL;
-      }
-      if (chainId === 5) return TOKENOMICS.addresses[5];
-      return TOKENOMICS.addresses[1];
-    }
-
-    case 'genericBondCalculator': {
-      if (chainId === LOCAL_CHAIN_ID) {
-        return LOCAL_ADDRESSES.GENERIC_BOND_CALC_ADDRESS;
-      }
-      if (chainId === 5) return BOND_CALCULATOR.addresses[5];
-      return BOND_CALCULATOR.addresses[1];
-    }
-
-    // registries
-    case 'agent': {
-      if (chainId === LOCAL_CHAIN_ID) {
-        return LOCAL_ADDRESSES.AGENT_REGISTRY_ADDRESS_LOCAL;
-      }
-      if (chainId === 5) return AGENT_REGISTRY.addresses[5];
-      return AGENT_REGISTRY.addresses[1];
-    }
-
-    case 'component': {
-      if (chainId === LOCAL_CHAIN_ID) {
-        return LOCAL_ADDRESSES.COMPONENT_REGISTRY_ADDRESS_LOCAL;
-      }
-      if (chainId === 5) return COMPONENT_REGISTRY.addresses[5];
-      return COMPONENT_REGISTRY.addresses[1];
-    }
-
-    case 'service': {
-      if (chainId === LOCAL_CHAIN_ID) {
-        return LOCAL_ADDRESSES.SERVICE_REGISTRY_ADDRESS_LOCAL;
-      }
-      if (chainId === 5) return SERVICE_REGISTRY.addresses[5];
-      return SERVICE_REGISTRY.addresses[1];
-    }
-
-    default:
-      throw new Error('Invalid contract type');
-  }
-};
-
 export const getDepositoryContract = () => {
   const { chainId } = getWeb3Details();
-  const contract = getContract(
-    DEPOSITORY.abi,
-    getContractAddress('depository', chainId),
-  );
+  const contract = getContract(DEPOSITORY.abi, ADDRESSES[chainId].depository);
   return contract;
 };
 
 export const getDispenserContract = () => {
   const { chainId } = getWeb3Details();
-  const contract = getContract(
-    DISPENSER.abi,
-    getContractAddress('dispenser', chainId),
-  );
+  const contract = getContract(DISPENSER.abi, ADDRESSES[chainId].dispenser);
   return contract;
 };
 
 export const getTreasuryContract = () => {
   const { chainId } = getWeb3Details();
-  const contract = getContract(
-    TREASURY.abi,
-    getContractAddress('treasury', chainId),
-  );
+  const contract = getContract(TREASURY.abi, ADDRESSES[chainId].treasury);
   return contract;
 };
 
 export const getTokenomicsContract = () => {
   const { chainId } = getWeb3Details();
-  const contract = getContract(
-    TOKENOMICS.abi,
-    getContractAddress('tokenomics', chainId),
-  );
+  const contract = getContract(TOKENOMICS.abi, ADDRESSES[chainId].tokenomics);
   return contract;
 };
 
@@ -176,17 +106,14 @@ export const getGenericBondCalculatorContract = () => {
   const { chainId } = getWeb3Details();
   const contract = getContract(
     BOND_CALCULATOR.abi,
-    getContractAddress('genericBondCalculator', chainId),
+    ADDRESSES[chainId].genericBondCalculator,
   );
   return contract;
 };
 
 export const getAgentContract = () => {
   const { chainId } = getWeb3Details();
-  const contract = getContract(
-    AGENT_REGISTRY.abi,
-    getContractAddress('agent', chainId),
-  );
+  const contract = getContract(AGENT_REGISTRY.abi, ADDRESSES[chainId].agent);
   return contract;
 };
 
@@ -194,7 +121,7 @@ export const getComponentContract = () => {
   const { chainId } = getWeb3Details();
   const contract = getContract(
     COMPONENT_REGISTRY.abi,
-    getContractAddress('component', chainId),
+    ADDRESSES[chainId].component,
   );
   return contract;
 };
@@ -203,7 +130,7 @@ export const getServiceContract = () => {
   const { chainId } = getWeb3Details();
   const contract = getContract(
     SERVICE_REGISTRY.abi,
-    getContractAddress('service', chainId),
+    ADDRESSES[chainId].service,
   );
   return contract;
 };

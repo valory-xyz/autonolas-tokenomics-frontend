@@ -10,12 +10,12 @@ import {
   getChainId,
 } from 'common-util/functions';
 import {
-  getContractAddress,
   getDepositoryContract,
   getUniswapV2PairContract,
   getTokenomicsContract,
   getErc20Contract,
   getGenericBondCalculatorContract,
+  ADDRESSES,
 } from 'common-util/Contracts';
 import { getProductValueFromEvent } from './requestsHelpers';
 
@@ -153,7 +153,9 @@ export const getListWithSupplyList = async (
   }
 
   const eventSupply = Number(
-    ethers.BigNumber.from(createProductEvent.returnValues.supply).div(ONE_ETH),
+    ethers.BigNumber.from(createProductEvent.returnValues.supply).div(
+      ONE_ETH,
+    ),
   );
   const productSupply = !closeProductEvent
     ? Number(ethers.BigNumber.from(product.supply).div(ONE_ETH))
@@ -209,8 +211,6 @@ const getProductDetailsFromIds = async ({ productIdList }) => {
 
   return listWithSupplyList;
 };
-
-export const getDepositoryAddress = (chainId) => getContractAddress('depository', chainId);
 
 /**
  * returns all the products that are not removed
@@ -287,7 +287,7 @@ export const hasSufficientTokenRequest = async ({
   tokenAmount,
 }) => {
   const contract = getUniswapV2PairContract(productToken);
-  const treasuryAddress = getContractAddress('treasury', chainId);
+  const treasuryAddress = ADDRESSES[chainId].treasury;
   const response = await contract.methods
     .allowance(account, treasuryAddress)
     .call();
@@ -305,7 +305,7 @@ export const hasSufficientTokenRequest = async ({
  */
 export const approveRequest = async ({ account, chainId, token }) => {
   const contract = getUniswapV2PairContract(token);
-  const treasuryAddress = getContractAddress('treasury', chainId);
+  const treasuryAddress = ADDRESSES[chainId].treasury;
 
   const fn = contract.methods
     .approve(treasuryAddress, MAX_AMOUNT)

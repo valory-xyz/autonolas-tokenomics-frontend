@@ -12,12 +12,9 @@ import styled from 'styled-components';
 import { BONDING_PRODUCTS } from 'util/constants';
 import { parseToEth } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
+import { ADDRESSES } from 'common-util/Contracts';
 import { Deposit } from './Deposit';
-import {
-  getProductListRequest,
-  getAllTheProductsNotRemoved,
-  getDepositoryAddress,
-} from './requests';
+import { getProductListRequest, getAllTheProductsNotRemoved } from './requests';
 
 const { Text } = Typography;
 
@@ -248,7 +245,7 @@ export const BondingList = ({ bondingProgramType }) => {
   const [productDetails, setProductDetails] = useState(null);
 
   const isActive = bondingProgramType === BONDING_PRODUCTS.ACTIVE;
-  const depositoryAddress = getDepositoryAddress(chainId);
+  const depositoryAddress = ADDRESSES[chainId].depository;
 
   const getProducts = async () => {
     try {
