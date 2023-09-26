@@ -80,16 +80,23 @@ export const getProductEvents = async (eventName) => {
  */
 const getLpTokenName = async (address) => {
   try {
-    const contract = getUniswapV2PairContract(address);
+    let contract = getUniswapV2PairContract(address);
+    let chainId = 1;
+
+    const {origAddress, chainId} = getAddressOnGnosis(address); // map from ETH address to the Gnosis address
+    if(origAddress !== undefined) {
+        // only applicable for the gnosis chain bridged LP now
+        contract = getUniswapV2PairContract(gnosisAddress, chainId == 100);
+    }
 
     let token0 = await contract.methods.token0().call();
     const token1 = await contract.methods.token1().call();
 
-    if (token0 === OLAS_ADDRESS) {
-      token0 = token1;
-    }
+     if (token0 === OLAS_ADDRESS[chainId]) {
+       token0 = token1;
+     }
 
-    const erc20Contract = getErc20Contract(token0);
+    const erc20Contract = getErc20Contract(token0, chainId);
     const tokenSymbol = await erc20Contract.methods.symbol().call();
 
     return `OLAS-${tokenSymbol}`;

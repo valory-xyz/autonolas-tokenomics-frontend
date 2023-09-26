@@ -96,6 +96,9 @@ const getColumns = (
       key: 'id',
     },
     {
+      // The token needs to distinguish between the one on the ETH mainnet and the mirrored one from other mainnets,
+      // const {origAddress, chainId} = getAddressOnGnosis(address); if origAddress is not zero, it needs to
+      // get its correct URL for statistics: if ETH: "https://v2.info.uniswap.org/pair/", otherwise another correspoingURL
       title: getTitle(
         'LP Token',
         'Uniswap v2 LP token address enabled by the Treasury',
