@@ -36,6 +36,9 @@ export const ADDRESSES = {
     component: COMPONENT_REGISTRY.addresses[5],
     service: SERVICE_REGISTRY.addresses[5],
   },
+  100: {
+    // gnosis
+  },
   [LOCAL_CHAIN_ID]: {
     dispenser: '0x4c5859f0F772848b2D91F1D83E2Fe57935348029',
     depository: '0x1291Be112d480055DaFd8a610b7d1e203891C274',
