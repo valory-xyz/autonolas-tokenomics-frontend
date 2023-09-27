@@ -13,7 +13,10 @@ import {
   COMPONENT_REGISTRY,
   SERVICE_REGISTRY,
   ERC20_ABI,
+  GNOSIS_BRIDGE_PROXY,
 } from 'common-util/AbiAndAddresses';
+
+const OLAS_ADDRESS = '0x0001A500A6B18995B03f44bb040A5fFc28E45CB0';
 
 export const ADDRESSES = {
   1: {
@@ -25,6 +28,7 @@ export const ADDRESSES = {
     agent: AGENT_REGISTRY.addresses[1],
     component: COMPONENT_REGISTRY.addresses[1],
     service: SERVICE_REGISTRY.addresses[1],
+    olasAddress: OLAS_ADDRESS,
   },
   5: {
     dispenser: DISPENSER.addresses[5],
@@ -35,9 +39,11 @@ export const ADDRESSES = {
     agent: AGENT_REGISTRY.addresses[5],
     component: COMPONENT_REGISTRY.addresses[5],
     service: SERVICE_REGISTRY.addresses[5],
+    olasAddress: OLAS_ADDRESS, // TODO: if this correct for goerli?
   },
   100: {
-    // gnosis
+    // TODO: what needs to be added here? @kupermind
+    olasAddress: OLAS_ADDRESS, // TODO: what's the address for gnosis
   },
   [LOCAL_CHAIN_ID]: {
     dispenser: '0x4c5859f0F772848b2D91F1D83E2Fe57935348029',
@@ -96,7 +102,13 @@ export const getTokenomicsContract = () => {
 };
 
 export const getUniswapV2PairContract = (address) => {
-  const contract = getContract(UNISWAP_V2_PAIR_ABI, address);
+  const { chainId } = getWeb3Details();
+
+  // TODO: check if this is correct @kupermind
+  const contract = getContract(
+    chainId === 1 ? UNISWAP_V2_PAIR_ABI : GNOSIS_BRIDGE_PROXY,
+    address,
+  );
   return contract;
 };
 

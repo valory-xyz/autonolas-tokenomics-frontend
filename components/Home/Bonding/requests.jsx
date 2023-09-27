@@ -1,6 +1,5 @@
 import { ethers } from 'ethers';
 
-import { OLAS_ADDRESS } from 'util/constants';
 import {
   MAX_AMOUNT,
   ADDRESS_ZERO,
@@ -17,6 +16,7 @@ import {
   getGenericBondCalculatorContract,
   ADDRESSES,
 } from 'common-util/Contracts';
+import { memoize } from 'lodash';
 import { getProductValueFromEvent } from './requestsHelpers';
 
 /**
@@ -59,20 +59,34 @@ export const getProductEvents = async (eventName) => {
   return events;
 };
 
+// TODO: fix this
+const getAddressOnGnosis = (address) => {
+  const { chainId } = getChainId();
+  // TODO: @kupermind - what needs to done here
+  const gnosisAddress = address;
+  return { originAddress: gnosisAddress, chainId };
+};
+
 /**
  * fetches the lp token name for the product
  * @example
- * input: '0x'
+ * input: '0xADDRESS'
  * output: 'OLAS-ETH'
  */
 const getLpTokenName = async (address) => {
   try {
-    const contract = getUniswapV2PairContract(address);
+    const chainId = getChainId();
+
+    // TODO: map from ETH address to the Gnosis address
+    const { originAddress } = getAddressOnGnosis(address);
+
+    // TODO: check if this is correct @kupermind
+    const contract = getUniswapV2PairContract(originAddress);
 
     let token0 = await contract.methods.token0().call();
     const token1 = await contract.methods.token1().call();
 
-    if (token0 === OLAS_ADDRESS) {
+    if (token0 === ADDRESSES[chainId].olasAddress) {
       token0 = token1;
     }
 
@@ -88,6 +102,11 @@ const getLpTokenName = async (address) => {
 };
 
 /**
+ * memoized version of getLpTokenName to avoid multiple calls
+ */
+const memoizedLpTokenName = memoize(getLpTokenName);
+
+/**
  * fetches the lp token name for the product
  * @example
  * input: [{ token: '0x', ...others }]
@@ -97,7 +116,7 @@ const getLpTokenNamesForProducts = async (productList, events) => {
   const lpTokenNamePromiseList = [];
 
   for (let i = 0; i < productList.length; i += 1) {
-    const result = getLpTokenName(
+    const result = memoizedLpTokenName(
       getProductValueFromEvent(productList[i], events, 'token'),
     );
     lpTokenNamePromiseList.push(result);
