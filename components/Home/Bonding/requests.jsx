@@ -1,4 +1,5 @@
 import { ethers } from 'ethers';
+import { memoize } from 'lodash';
 
 import { OLAS_ADDRESS } from 'util/constants';
 import {
@@ -88,6 +89,12 @@ const getLpTokenName = async (address) => {
 };
 
 /**
+ * memoized version of `getLpTokenName` to avoid multiple calls
+ * and load the same data from cache
+ */
+const memoizedLpTokenName = memoize(getLpTokenName);
+
+/**
  * fetches the lp token name for the product
  * @example
  * input: [{ token: '0x', ...others }]
@@ -97,7 +104,7 @@ const getLpTokenNamesForProducts = async (productList, events) => {
   const lpTokenNamePromiseList = [];
 
   for (let i = 0; i < productList.length; i += 1) {
-    const result = getLpTokenName(
+    const result = memoizedLpTokenName(
       getProductValueFromEvent(productList[i], events, 'token'),
     );
     lpTokenNamePromiseList.push(result);
