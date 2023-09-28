@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
+import PropTypes from 'prop-types';
 import { Layout, Menu } from 'antd';
 import { ExportOutlined } from '@ant-design/icons';
-import PropTypes from 'prop-types';
 
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import Login from '../Login';
@@ -17,6 +17,7 @@ const { Header, Content } = Layout;
 const NavigationBar = ({ children }) => {
   const router = useRouter();
   const { chainId } = useHelpers();
+
   const [selectedMenu, setSelectedMenu] = useState([]);
 
   // to set default menu on first render

@@ -5,7 +5,6 @@ import {
   setUserAccount,
   setUserBalance,
   setErrorMessage,
-  setChainId,
   setLogout,
 } from 'store/setup/actions';
 import { LoginV2 as LoginComponent } from 'common-util/Login';
@@ -24,12 +23,6 @@ const Login = () => {
       dispatch(setLogout());
     }
   }, [address]);
-
-  useEffect(() => {
-    if (chain?.id) {
-      dispatch(setChainId(chain.id));
-    }
-  }, [chain?.id]);
 
   const onConnect = (response) => {
     dispatch(setUserAccount(response.address));
