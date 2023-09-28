@@ -49,7 +49,7 @@ export const Logo = styled.div`
   max-width: 248px;
   margin-left: 0.5rem;
   margin-right: 1.5rem;
-  font-size: 26px;
+  font-size: 34px;
   color: ${COLOR.PRIMARY};
   cursor: pointer;
   svg {

@@ -46,9 +46,7 @@ const NavigationBar = ({ children }) => {
         <div className="column-1">
           <Logo data-testid="tokenomics-logo">
             <LogoSvg />
-            <span>
-              Tokenomics
-            </span>
+            <span>Tokenomics</span>
           </Logo>
         </div>
 
