@@ -17,7 +17,7 @@ const MyApp = ({ Component, pageProps }) => (
   <>
     <GlobalStyle />
     <Head>
-      <title>Autonolas Tokenomics</title>
+      <title>Olas Tokenomics</title>
       <meta name="title" content="Olas Tokenomics" />
     </Head>
     <ConfigProvider theme={THEME_CONFIG}>
