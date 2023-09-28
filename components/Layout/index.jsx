@@ -4,7 +4,6 @@ import dynamic from 'next/dynamic';
 import PropTypes from 'prop-types';
 import { Layout, Menu } from 'antd';
 import { ExportOutlined } from '@ant-design/icons';
-import { getNetworkName, useScreen } from '@autonolas/frontend-library';
 
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import Login from '../Login';
@@ -17,8 +16,7 @@ const { Header, Content } = Layout;
 
 const NavigationBar = ({ children }) => {
   const router = useRouter();
-  const { chainId, isValidChainId } = useHelpers();
-  const { isMobile } = useScreen();
+  const { chainId } = useHelpers();
 
   const [selectedMenu, setSelectedMenu] = useState([]);
 
@@ -49,9 +47,7 @@ const NavigationBar = ({ children }) => {
           <Logo data-testid="tokenomics-logo">
             <LogoSvg />
             <span>
-              {isValidChainId && !isMobile
-                ? `Tokenomics on ${getNetworkName(chainId)}`
-                : 'Tokenomics'}
+              Tokenomics
             </span>
           </Logo>
         </div>
