@@ -8,6 +8,7 @@ import {
   getChainIdOrDefaultToMainnet as getChainIdOrDefaultToMainnetFn,
   getIsValidChainId as getIsValidChainIdFn,
   sendTransaction as sendTransactionFn,
+  LOCAL_FORK_ID,
 } from '@autonolas/frontend-library';
 
 import { RPC_URLS } from 'common-util/Contracts';
@@ -28,7 +29,13 @@ export const getChainIdOrDefaultToMainnet = (chainId) => {
   return x;
 };
 
-export const getChainId = (chainId = null) => getChainIdFn(SUPPORTED_CHAINS, chainId);
+export const getChainId = (chainId = null) => {
+  if (process.env.NEXT_PUBLIC_IS_CONNECTED_TO_LOCAL === 'true') {
+    window.console.warn('Using LOCAL_FORK_ID as chainId');
+    return LOCAL_FORK_ID;
+  }
+  return getChainIdFn(SUPPORTED_CHAINS, chainId);
+};
 
 export const sendTransaction = (fn, account) => sendTransactionFn(fn, account, {
   supportedChains: SUPPORTED_CHAINS,
