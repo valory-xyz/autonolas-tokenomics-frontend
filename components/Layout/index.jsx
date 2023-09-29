@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
-import { Layout, Menu } from 'antd/lib';
-import { ExportOutlined } from '@ant-design/icons';
 import PropTypes from 'prop-types';
+import { Layout, Menu } from 'antd';
+import { ExportOutlined } from '@ant-design/icons';
+
+import { useHelpers } from 'common-util/hooks/useHelpers';
 import Login from '../Login';
 import Footer from './Footer';
 import { CustomLayout, Logo, DocsLink } from './styles';
@@ -14,16 +16,17 @@ const { Header, Content } = Layout;
 
 const NavigationBar = ({ children }) => {
   const router = useRouter();
-  const { pathname } = router;
+  const { chainId } = useHelpers();
+
   const [selectedMenu, setSelectedMenu] = useState([]);
 
   // to set default menu on first render
   useEffect(() => {
-    if (pathname) {
-      const name = pathname.split('/')[1];
+    if (router.pathname) {
+      const name = router.pathname.split('/')[1];
       setSelectedMenu(name || 'veolas');
     }
-  }, [pathname]);
+  }, [router.pathname]);
 
   const handleMenuItemClick = ({ key }) => {
     if (key === 'docs') {
@@ -72,7 +75,9 @@ const NavigationBar = ({ children }) => {
       </Header>
 
       <Content className="site-layout">
-        <div className="site-layout-background">{children}</div>
+        <div className="site-layout-background">
+          {chainId ? children : null}
+        </div>
       </Content>
 
       <Footer />

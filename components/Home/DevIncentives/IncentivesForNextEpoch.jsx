@@ -9,8 +9,9 @@ import {
   Col,
   Grid,
   Table,
-} from 'antd/lib';
-import { notifyError } from 'common-util/functions';
+} from 'antd';
+import { notifyError } from '@autonolas/frontend-library';
+
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { getMapUnitIncentivesRequest } from './requests';
 import { MapPendingIncentivesContainer } from './styles';
@@ -50,8 +51,8 @@ export const IncentivesForNextEpoch = () => {
       });
       setPendingIncentives([response]);
     } catch (error) {
-      window.console.error(error);
-      notifyError();
+      notifyError('Error on fetching incentives');
+      console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -69,7 +70,7 @@ export const IncentivesForNextEpoch = () => {
         <Col lg={14} xs={24}>
           <Form
             form={form}
-            name="dynamic_form_complex"
+            name="dynamic_form_complex_incentives"
             onFinish={onFinish}
             layout="inline"
             autoComplete="off"

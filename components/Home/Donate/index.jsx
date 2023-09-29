@@ -1,18 +1,20 @@
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { Alert, Typography } from 'antd/lib';
+import { Alert, Typography } from 'antd';
 import { isNumber } from 'lodash';
-
-import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import {
   getFullFormattedDate,
   notifySuccess,
+  NA,
+} from '@autonolas/frontend-library';
+
+import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
+import {
   parseToEth,
   parseToWei,
   sortUnitIdsAndTypes,
 } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
-import { NA } from 'common-util/constants';
 import {
   getEpochCounter,
   getLastEpochRequest,
@@ -83,11 +85,17 @@ export const DepositServiceDonation = () => {
         totalAmount,
       };
 
-      await checkServicesNotTerminatedOrNotDeployed(serviceIds);
+      const invalidServices = await checkServicesNotTerminatedOrNotDeployed(
+        serviceIds,
+      );
 
       // deposit only if all services are deployed or terminated
-      await depositServiceDonationRequest(params);
-      notifySuccess('Deposited service donation successfully');
+      if (invalidServices.length === 0) {
+        await depositServiceDonationRequest(params);
+        notifySuccess('Deposited service donation successfully');
+      }
+    } catch (e) {
+      console.error(e);
     } finally {
       setIsLoading(false);
     }

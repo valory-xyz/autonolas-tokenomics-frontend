@@ -1,27 +1,19 @@
 import { useEffect, useState } from 'react';
+import { BigNumber } from 'ethers';
 import PropTypes from 'prop-types';
 import { isNil } from 'lodash';
 import {
-  Form,
-  InputNumber,
-  Modal,
-  Alert,
-  Button,
-  Typography,
-  Tag,
-} from 'antd/lib';
-import { COLOR } from '@autonolas/frontend-library';
-
+  Form, InputNumber, Modal, Alert, Button, Typography, Tag,
+} from 'antd';
 import {
-  parseToWei,
-  notifySuccess,
+  COLOR,
   notifyError,
-  parseToEth,
+  notifySuccess,
   getCommaSeparatedNumber,
-  ONE_ETH,
-} from 'common-util/functions';
+} from '@autonolas/frontend-library';
+
+import { parseToWei, parseToEth, ONE_ETH } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
-import { BigNumber } from 'ethers';
 import {
   depositRequest,
   hasSufficientTokenRequest,
@@ -29,7 +21,7 @@ import {
   getLpBalanceRequest,
 } from './requests';
 
-const { Text, Title } = Typography;
+const { Text } = Typography;
 const fullWidth = { width: '100%' };
 
 export const Deposit = ({
@@ -46,14 +38,23 @@ export const Deposit = ({
   const [isApproveModalVisible, setIsApproveModalVisible] = useState(false);
   const [lpBalance, setLpBalance] = useState(0);
 
-  useEffect(async () => {
-    if (account) {
-      const lpResponse = await getLpBalanceRequest({
-        account,
-        token: productToken,
-      });
+  useEffect(() => {
+    const getData = async () => {
+      try {
+        const lpResponse = await getLpBalanceRequest({
+          account,
+          token: productToken,
+        });
 
-      setLpBalance(lpResponse);
+        setLpBalance(lpResponse);
+      } catch (error) {
+        notifyError('Error occured on fetching LP balance');
+        console.error(error);
+      }
+    };
+
+    if (account) {
+      getData();
     }
   }, [account, productToken]);
 
@@ -77,7 +78,7 @@ export const Deposit = ({
       form.resetFields();
     } catch (error) {
       notifyError('Error while depositing');
-      window.console.error(error);
+      console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -88,19 +89,24 @@ export const Deposit = ({
       .validateFields()
       .then(async (values) => {
         // check allowance of the product ID and open approve modal if not approved
-        const hasSufficientAllowance = await hasSufficientTokenRequest({
-          account,
-          chainId,
-          token: productToken,
-          tokenAmount: parseToWei(values.tokenAmount),
-        });
-
-        // if allowance in lower than the amount to be deposited, then needs approval
-        // eg. If user is depositing 10 OLAS and the allowance is 5, then open the approve modal
-        if (hasSufficientAllowance) {
-          await depositHelper();
-        } else {
-          setIsApproveModalVisible(true);
+        try {
+          const hasSufficientAllowance = await hasSufficientTokenRequest({
+            account,
+            chainId,
+            token: productToken,
+            tokenAmount: parseToWei(values.tokenAmount),
+          });
+          // if allowance in lower than the amount to be deposited, then needs approval
+          // eg. If user is depositing 10 OLAS and the allowance is 5, then open the approve modal
+          if (hasSufficientAllowance) {
+            await depositHelper();
+          } else {
+            setIsApproveModalVisible(true);
+          }
+        } catch (error) {
+          notifyError(
+            `Error occured on fetching allowance for the product token ${productToken}`,
+          );
         }
       })
       .catch((info) => {
@@ -167,11 +173,10 @@ export const Deposit = ({
           name="create_bond_form"
           layout="vertical"
           autoComplete="off"
+          className="mt-16"
         >
           <Tag color={COLOR.PRIMARY} className="deposit-tag">
-            <Title level={5} className="m-0">
-              {`Bonding Product ID: ${productId}`}
-            </Title>
+            <Text>{`Bonding Product ID: ${productId}`}</Text>
           </Tag>
 
           <Form.Item
@@ -258,7 +263,7 @@ export const Deposit = ({
                 } catch (error) {
                   window.console.error(error);
                   setIsApproveModalVisible(false);
-                  notifyError();
+                  notifyError('Error while approving OLAS');
                 } finally {
                   setIsLoading(false);
                 }

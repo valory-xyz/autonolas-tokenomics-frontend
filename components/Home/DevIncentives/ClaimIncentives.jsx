@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Typography, Alert, Divider } from 'antd/lib';
-import { COLOR } from '@autonolas/frontend-library';
+import { Typography, Alert, Divider } from 'antd';
+import { COLOR, notifySuccess } from '@autonolas/frontend-library';
+
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import {
-  notifySuccess,
   notifySpecificError,
   sortUnitIdsAndTypes,
 } from 'common-util/functions';
@@ -24,13 +24,11 @@ export const ClaimIncentives = () => {
         setPausedValue(value);
       } catch (error) {
         notifySpecificError(error);
-        window.console.error(error);
+        console.error(error);
       }
     };
 
-    if (account) {
-      getData();
-    }
+    if (account) getData();
   }, [account]);
 
   const onClaimIncentivesSubmit = async (values) => {
@@ -46,12 +44,12 @@ export const ClaimIncentives = () => {
         unitIds: sortedUnitIds.map((e) => `${e}`),
         unitTypes: sortedUnitTypes.map((e) => `${e}`),
       };
-      await claimOwnerIncentivesRequest(params);
 
+      await claimOwnerIncentivesRequest(params);
       notifySuccess('Rewards claimed');
     } catch (error) {
       notifySpecificError(error);
-      window.console.error(error);
+      console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -59,9 +57,7 @@ export const ClaimIncentives = () => {
 
   return (
     <>
-      {pauseValue === '0' ? (
-        <></>
-      ) : (
+      {pauseValue === '0' ? null : (
         <>
           <Divider style={{ backgroundColor: COLOR.BORDER_GREY }} />
 
@@ -85,13 +81,11 @@ export const ClaimIncentives = () => {
           )}
 
           {pauseValue === '2' && (
-            <>
-              <Alert
-                message="Note: Rewards claiming is currently paused and will resume once the governance unpauses withdrawals."
-                type="info"
-                showIcon
-              />
-            </>
+            <Alert
+              message="Note: Rewards claiming is currently paused and will resume once the governance unpauses withdrawals."
+              type="info"
+              showIcon
+            />
           )}
         </>
       )}

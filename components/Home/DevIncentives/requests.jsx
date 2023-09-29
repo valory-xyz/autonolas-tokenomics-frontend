@@ -1,7 +1,11 @@
-/* eslint-disable max-len */
-import { sendTransaction } from '@autonolas/frontend-library';
+import { notifyError } from '@autonolas/frontend-library';
+
 import { UNIT_TYPES } from 'util/constants';
-import { getBlockTimestamp, parseToEth } from 'common-util/functions';
+import {
+  getBlockTimestamp,
+  parseToEth,
+  sendTransaction,
+} from 'common-util/functions';
 import {
   getDispenserContract,
   getTokenomicsContract,
@@ -13,7 +17,7 @@ import {
 /**
  * fetches the owners of the units
  */
-export const getOwnersForUnits = ({ unitIds, unitTypes }) => new Promise((resolve, reject) => {
+export const getOwnersForUnits = async ({ unitIds, unitTypes }) => {
   const ownersList = [];
 
   const agentContract = getAgentContract();
@@ -30,122 +34,67 @@ export const getOwnersForUnits = ({ unitIds, unitTypes }) => new Promise((resolv
     }
   }
 
-  Promise.all(ownersList)
-    .then(async (list) => {
-      const results = await Promise.all(list.map((e) => e));
-      resolve(results);
-    })
-    .catch((e) => {
-      reject(e);
-    });
-});
+  const list = await Promise.all(ownersList);
+  const results = await Promise.all(list.map((e) => e));
+  return results;
+};
 
-export const getOwnerIncentivesRequest = ({ address, unitTypes, unitIds }) => new Promise((resolve, reject) => {
+export const getOwnerIncentivesRequest = async ({
+  address,
+  unitTypes,
+  unitIds,
+}) => {
   const contract = getTokenomicsContract();
-
-  contract.methods
+  const response = await contract.methods
     .getOwnerIncentives(address, unitTypes, unitIds)
-    .call()
-    .then((response) => {
-      resolve(response);
-    })
-    .catch((e) => {
-      window.console.log('Error occured on fetching owner incentives');
-      reject(e);
-    });
-});
+    .call();
+  return response;
+};
 
-export const claimOwnerIncentivesRequest = ({ account, unitTypes, unitIds }) => new Promise((resolve, reject) => {
+export const claimOwnerIncentivesRequest = async ({
+  account,
+  unitTypes,
+  unitIds,
+}) => {
   const contract = getDispenserContract();
-
   const fn = contract.methods
     .claimOwnerIncentives(unitTypes, unitIds)
     .send({ from: account });
 
-  sendTransaction(fn, account)
-    .then((response) => {
-      resolve(response?.transactionHash);
-    })
-    .catch((e) => {
-      window.console.log('Error occured on claiming incentives');
-      reject(e);
-    });
-});
+  const response = await sendTransaction(fn, account);
+  return response?.transactionHash;
+};
 
-export const checkpointRequest = ({ account }) => new Promise((resolve, reject) => {
+export const checkpointRequest = async ({ account }) => {
   const contract = getTokenomicsContract();
-
   const fn = contract.methods.checkpoint().send({ from: account });
+  const response = await sendTransaction(fn, account);
+  return response;
+};
 
-  sendTransaction(fn, account)
-    .then((response) => {
-      resolve(response);
-    })
-    .catch((e) => {
-      window.console.log('Error occured on checkpoint');
-      reject(e);
-    });
-});
-
-export const getEpochCounter = () => new Promise((resolve, reject) => {
+export const getEpochCounter = async () => {
   const contract = getTokenomicsContract();
+  const response = await contract.methods.epochCounter().call();
+  return parseInt(response, 10);
+};
 
-  contract.methods
-    .epochCounter()
-    .call()
-    .then((response) => {
-      resolve(parseInt(response, 10));
-    })
-    .catch((e) => {
-      window.console.log('Error occured on fetching epoch counter');
-      reject(e);
-    });
-});
-
-const getEpochTokenomics = ({ lastPoint }) => new Promise((resolve, reject) => {
+const getEpochTokenomics = async ({ lastPoint }) => {
   const contract = getTokenomicsContract();
+  const response = await contract.methods.mapEpochTokenomics(lastPoint).call();
+  return response;
+};
 
-  contract.methods
-    .mapEpochTokenomics(lastPoint)
-    .call()
-    .then((response) => {
-      resolve(response);
-    })
-    .catch((e) => {
-      window.console.log('Error occured on fetching epoch tokenomics');
-      reject(e);
-    });
-});
-
-const getUnitPointReq = ({ lastPoint, num }) => new Promise((resolve, reject) => {
+const getUnitPointReq = async ({ lastPoint, num }) => {
   const contract = getTokenomicsContract();
+  const response = await contract.methods.getUnitPoint(lastPoint, num).call();
+  return response;
+};
 
-  contract.methods
-    .getUnitPoint(lastPoint, num)
-    .call()
-    .then((response) => {
-      resolve(response);
-    })
-    .catch((e) => {
-      window.console.log('Error occured on fetching epoch');
-      reject(e);
-    });
-});
-
-const getEpochLength = () => new Promise((resolve, reject) => {
+const getEpochLength = async () => {
   const contract = getTokenomicsContract();
-
-  contract.methods
-    .epochLen()
-    .call()
-    .then((response) => {
-      resolve(parseInt(response, 10));
-    })
-    .catch((e) => {
-      window.console.log('Error occured on fetching epoch');
-      reject(e);
-    });
-});
+  const response = await contract.methods.epochLen().call();
+  return parseInt(response, 10);
+};
 
 export const canShowCheckpoint = async () => {
   try {
@@ -168,89 +117,75 @@ export const canShowCheckpoint = async () => {
   return false;
 };
 
-export const getMapUnitIncentivesRequest = ({ unitType, unitId }) => new Promise((resolve, reject) => {
+export const getMapUnitIncentivesRequest = async ({ unitType, unitId }) => {
   const contract = getTokenomicsContract();
 
-  contract.methods
+  const response = await contract.methods
     .mapUnitIncentives(unitType, unitId)
-    .call()
-    .then(async (response) => {
-      const currentEpochCounter = await getEpochCounter();
+    .call();
 
-      // Get the unit points of the last epoch
-      const componentInfo = await getUnitPointReq({
-        lastPoint: currentEpochCounter,
-        num: 0,
-      });
+  const currentEpochCounter = await getEpochCounter();
 
-      const agentInfo = await getUnitPointReq({
-        lastPoint: currentEpochCounter,
-        num: 1,
-      });
+  // Get the unit points of the last epoch
+  const componentInfo = await getUnitPointReq({
+    lastPoint: currentEpochCounter,
+    num: 0,
+  });
 
-      const { pendingRelativeReward, pendingRelativeTopUp, lastEpoch } = response;
+  const agentInfo = await getUnitPointReq({
+    lastPoint: currentEpochCounter,
+    num: 1,
+  });
 
-      // if the current epoch is the last epoch, calculate the incentives
-      if (currentEpochCounter === lastEpoch) {
-        const {
-          rewardUnitFraction: aRewardFraction,
-          topUpUnitFraction: aTopupFraction,
-        } = agentInfo;
-        const {
-          rewardUnitFraction: cRewardFraction,
-          topUpUnitFraction: cTopupFraction,
-        } = componentInfo;
+  const { pendingRelativeReward, pendingRelativeTopUp, lastEpoch } = response;
 
-        /**
-           * for unitType agent(0) & component(1),
-           * the below formula is used to calculate the incentives
-           */
-        const componentPendingReward = (parseToEth(pendingRelativeReward) * cRewardFraction) / 100;
-        const agentPendingReward = (parseToEth(pendingRelativeReward) * aRewardFraction) / 100;
-        const componentPendingTopUp = (parseToEth(pendingRelativeTopUp) * cTopupFraction) / 100;
-        const agentPendingTopUp = (parseToEth(pendingRelativeTopUp) * aTopupFraction) / 100;
+  // if the current epoch is the last epoch, calculate the incentives
+  if (currentEpochCounter === lastEpoch) {
+    const {
+      rewardUnitFraction: aRewardFraction,
+      topUpUnitFraction: aTopupFraction,
+    } = agentInfo;
+    const {
+      rewardUnitFraction: cRewardFraction,
+      topUpUnitFraction: cTopupFraction,
+    } = componentInfo;
 
-        resolve({
-          pendingRelativeReward:
-              unitType === UNIT_TYPES.COMPONENT
-                ? componentPendingReward
-                : agentPendingReward,
-          pendingRelativeTopUp:
-              unitType === UNIT_TYPES.COMPONENT
-                ? componentPendingTopUp
-                : agentPendingTopUp,
-          id: '0',
-          key: '0',
-        });
-      } else {
-        resolve({
-          pendingRelativeReward: 0,
-          pendingRelativeTopUp: 0,
-          id: '0',
-          key: '0',
-        });
-      }
-    })
-    .catch((e) => {
-      window.console.log('Error occured on fetching map unit incentives');
-      reject(e);
-    });
-});
+    /**
+     * for unitType agent(0) & component(1),
+     * the below formula is used to calculate the incentives
+     */
+    const componentPendingReward = (parseToEth(pendingRelativeReward) * cRewardFraction) / 100;
+    const agentPendingReward = (parseToEth(pendingRelativeReward) * aRewardFraction) / 100;
+    const componentPendingTopUp = (parseToEth(pendingRelativeTopUp) * cTopupFraction) / 100;
+    const agentPendingTopUp = (parseToEth(pendingRelativeTopUp) * aTopupFraction) / 100;
 
-export const getPausedValueRequest = () => new Promise((resolve, reject) => {
+    return {
+      pendingRelativeReward:
+        unitType === UNIT_TYPES.COMPONENT
+          ? componentPendingReward
+          : agentPendingReward,
+      pendingRelativeTopUp:
+        unitType === UNIT_TYPES.COMPONENT
+          ? componentPendingTopUp
+          : agentPendingTopUp,
+      id: '0',
+      key: '0',
+    };
+  }
+
+  return {
+    pendingRelativeReward: 0,
+    pendingRelativeTopUp: 0,
+    id: '0',
+    key: '0',
+  };
+};
+
+export const getPausedValueRequest = async () => {
   const contract = getTreasuryContract();
-
-  contract.methods
-    .paused()
-    .call()
-    .then((response) => {
-      resolve(response);
-    })
-    .catch((e) => {
-      window.console.log('Error occured on fetching is paused');
-      reject(e);
-    });
-});
+  const response = await contract.methods.paused().call();
+  return response;
+};
 
 export const getLastEpochRequest = async () => {
   try {
@@ -265,8 +200,7 @@ export const getLastEpochRequest = async () => {
 
     return { epochLen, prevEpochEndTime, nextEpochEndTime };
   } catch (error) {
-    window.console.log('Error occured on fetching last epoch');
-    console.error(error);
-    return null;
+    notifyError('Error on fetching last epoch');
+    throw error;
   }
 };

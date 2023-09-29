@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Alert, Button, Typography } from 'antd/lib';
-import { notifySpecificError, notifySuccess } from 'common-util/functions';
+import { Alert, Button, Typography } from 'antd';
+import { notifySuccess } from '@autonolas/frontend-library';
+
+import { notifySpecificError } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { canShowCheckpoint, checkpointRequest } from './requests';
 import { CheckpointContainer } from './styles';
@@ -34,14 +36,13 @@ export const Checkpoint = () => {
       setIsLoading(true);
 
       await checkpointRequest({ account });
-
       notifySuccess('Checkpoint called successfully');
 
       // check if checkpoint is visible again
       await getIfCheckpointVisible();
     } catch (error) {
       notifySpecificError(error);
-      window.console.error(error);
+      console.error(error);
     } finally {
       setIsLoading(false);
     }

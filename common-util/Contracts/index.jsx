@@ -1,239 +1,148 @@
 import Web3 from 'web3';
-import { ethers } from 'ethers';
-import { getChainId } from '@autonolas/frontend-library';
+import { LOCAL_FORK_ID } from '@autonolas/frontend-library';
+
+import { LOCAL_CHAIN_ID } from 'util/constants';
+import { getChainId, getProvider } from 'common-util/functions';
 import {
-  // depository
   DEPOSITORY,
-
-  // dispensers
   DISPENSER,
-
-  // treasury
   TREASURY,
-
-  // tokenomics
   TOKENOMICS,
-
-  // bond calculator
   BOND_CALCULATOR,
-
-  // uniswap
   UNISWAP_V2_PAIR_ABI,
-
-  // registries - agent
   AGENT_REGISTRY,
-
-  // registries - component
   COMPONENT_REGISTRY,
-
-  // registries - service
   SERVICE_REGISTRY,
-
-  // erc20
   ERC20_ABI,
 } from 'common-util/AbiAndAddresses';
-import { LOCAL_CHAIN_ID, LOCAL_FORK_ID } from 'util/constants';
-/**
- * Addresses fetched when backend connected locally
- * (initDeploy.json in backend repository)
- */
-export const LOCAL_ADDRESSES = {
-  DEPOSITORY_ADDRESS_LOCAL: '0x4c5859f0F772848b2D91F1D83E2Fe57935348029',
-  DISPENSER_ADDRESS_LOCAL: '0x1291Be112d480055DaFd8a610b7d1e203891C274',
-  TREASURY_ADDRESS_LOCAL: '0x36C02dA8a0983159322a80FFE9F24b1acfF8B570',
-  TOKENOMICS_PROXY_ADDRESS_LOCAL: '0x5eb3Bc0a489C5A8288765d2336659EbCA68FCd00',
-  AGENT_REGISTRY_ADDRESS_LOCAL: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
-  COMPONENT_REGISTRY_ADDRESS_LOCAL:
-    '0x5FbDB2315678afecb367f032d93F642f64180aa3',
-  SERVICE_REGISTRY_ADDRESS_LOCAL: '0x36C02dA8a0983159322a80FFE9F24b1acfF8B570',
-  GENERIC_BOND_CALC_ADDRESS: '0x809d550fca64d94Bd9F66E60752A544199cfAC3D',
+
+const LOCAL_ADDRESSES = {
+  dispenser: '0x4c5859f0F772848b2D91F1D83E2Fe57935348029',
+  depository: '0x1291Be112d480055DaFd8a610b7d1e203891C274',
+  treasury: '0x36C02dA8a0983159322a80FFE9F24b1acfF8B570',
+  tokenomics: '0x5eb3Bc0a489C5A8288765d2336659EbCA68FCd00',
+  genericBondCalculator: '0x809d550fca64d94Bd9F66E60752A544199cfAC3D',
+  agent: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
+  component: '0x5FbDB2315678afecb367f032d93F642f64180aa3',
+  service: '0x36C02dA8a0983159322a80FFE9F24b1acfF8B570',
+};
+
+const MAINNET_ADDRESSES = {
+  dispenser: DISPENSER.addresses[1],
+  depository: DEPOSITORY.addresses[1],
+  treasury: TREASURY.addresses[1],
+  tokenomics: TOKENOMICS.addresses[1],
+  genericBondCalculator: BOND_CALCULATOR.addresses[1],
+  agent: AGENT_REGISTRY.addresses[1],
+  component: COMPONENT_REGISTRY.addresses[1],
+  service: SERVICE_REGISTRY.addresses[1],
+};
+
+export const ADDRESSES = {
+  1: MAINNET_ADDRESSES,
+  5: {
+    dispenser: DISPENSER.addresses[5],
+    depository: DEPOSITORY.addresses[5],
+    treasury: TREASURY.addresses[5],
+    tokenomics: TOKENOMICS.addresses[5],
+    genericBondCalculator: BOND_CALCULATOR.addresses[5],
+    agent: AGENT_REGISTRY.addresses[5],
+    component: COMPONENT_REGISTRY.addresses[5],
+    service: SERVICE_REGISTRY.addresses[5],
+  },
+  [LOCAL_CHAIN_ID]: LOCAL_ADDRESSES,
+  [LOCAL_FORK_ID]: MAINNET_ADDRESSES,
 };
 
 /**
- * Returns contract address based on type and chainId.
+ * returns the web3 details
  */
-export const getContractAddress = (type, chainId) => {
-  switch (type) {
-    case 'dispenser': {
-      if (chainId === LOCAL_CHAIN_ID) {
-        return LOCAL_ADDRESSES.DISPENSER_ADDRESS_LOCAL;
-      }
-      if (chainId === 5) return DISPENSER.addresses[5];
-      return DISPENSER.addresses[1];
-    }
-
-    case 'depository': {
-      if (chainId === LOCAL_CHAIN_ID) {
-        return LOCAL_ADDRESSES.DEPOSITORY_ADDRESS_LOCAL;
-      }
-      if (chainId === 5) return DEPOSITORY.addresses[5];
-      return DEPOSITORY.addresses[1];
-    }
-
-    case 'treasury': {
-      if (chainId === LOCAL_CHAIN_ID) {
-        return LOCAL_ADDRESSES.TREASURY_ADDRESS_LOCAL;
-      }
-      if (chainId === 5) return TREASURY.addresses[5];
-      return TREASURY.addresses[1];
-    }
-
-    case 'tokenomics': {
-      if (chainId === LOCAL_CHAIN_ID) {
-        return LOCAL_ADDRESSES.TOKENOMICS_PROXY_ADDRESS_LOCAL;
-      }
-      if (chainId === 5) return TOKENOMICS.addresses[5];
-      return TOKENOMICS.addresses[1];
-    }
-
-    case 'genericBondCalculator': {
-      if (chainId === LOCAL_CHAIN_ID) {
-        return LOCAL_ADDRESSES.GENERIC_BOND_CALC_ADDRESS;
-      }
-      if (chainId === 5) return BOND_CALCULATOR.addresses[5];
-      return BOND_CALCULATOR.addresses[1];
-    }
-
-    // registries
-    case 'agent': {
-      if (chainId === LOCAL_CHAIN_ID) {
-        return LOCAL_ADDRESSES.AGENT_REGISTRY_ADDRESS_LOCAL;
-      }
-      if (chainId === 5) return AGENT_REGISTRY.addresses[5];
-      return AGENT_REGISTRY.addresses[1];
-    }
-
-    case 'component': {
-      if (chainId === LOCAL_CHAIN_ID) {
-        return LOCAL_ADDRESSES.COMPONENT_REGISTRY_ADDRESS_LOCAL;
-      }
-      if (chainId === 5) return COMPONENT_REGISTRY.addresses[5];
-      return COMPONENT_REGISTRY.addresses[1];
-    }
-
-    case 'service': {
-      if (chainId === LOCAL_CHAIN_ID) {
-        return LOCAL_ADDRESSES.SERVICE_REGISTRY_ADDRESS_LOCAL;
-      }
-      if (chainId === 5) return SERVICE_REGISTRY.addresses[5];
-      return SERVICE_REGISTRY.addresses[1];
-    }
-
-    default:
-      throw new Error('Invalid contract type');
-  }
-};
-
-/**
- * web3 provider =
- * - wallect-connect provider or
- * - currentProvider by metamask or
- * - fallback to remote mainnet [remote node provider](https://web3js.readthedocs.io/en/v1.7.5/web3.html#example-remote-node-provider)
- */
-export const getMyProvider = () => window.MODAL_PROVIDER
-  || window.web3?.currentProvider
-  || process.env.NEXT_PUBLIC_MAINNET_URL;
-
-export const getEthersProvider = () => {
-  const provider = getMyProvider();
-  if (provider === process.env.NEXT_PUBLIC_MAINNET_URL) {
-    return new ethers.providers.JsonRpcProvider(provider);
-  }
-  return new ethers.providers.Web3Provider(provider);
-};
-
-export const getWeb3Details = () => {
-  const web3 = new Web3(getMyProvider());
-  const chainId = getChainId() || 1; // default to mainnet
+const getWeb3Details = () => {
+  const web3 = new Web3(getProvider());
+  const chainId = getChainId();
   return { web3, chainId };
 };
 
+/**
+ * returns the contract instance
+ * @param {Array} abi - abi of the contract
+ * @param {String} contractAddress - address of the contract
+ */
+const getContract = (abi, contractAddress) => {
+  const { web3 } = getWeb3Details();
+  const contract = new web3.eth.Contract(abi, contractAddress);
+  return contract;
+};
+
 export const getDepositoryContract = () => {
-  const { web3, chainId } = getWeb3Details();
-  const contract = new web3.eth.Contract(
-    DEPOSITORY.abi,
-    getContractAddress('depository', chainId),
-  );
+  const { chainId } = getWeb3Details();
+  const contract = getContract(DEPOSITORY.abi, ADDRESSES[chainId].depository);
   return contract;
 };
 
 export const getDispenserContract = () => {
-  const { web3, chainId } = getWeb3Details();
-  const contract = new web3.eth.Contract(
-    DISPENSER.abi,
-    getContractAddress('dispenser', chainId),
-  );
+  const { chainId } = getWeb3Details();
+  const contract = getContract(DISPENSER.abi, ADDRESSES[chainId].dispenser);
   return contract;
 };
 
 export const getTreasuryContract = () => {
-  const { web3, chainId } = getWeb3Details();
-  const contract = new web3.eth.Contract(
-    TREASURY.abi,
-    getContractAddress('treasury', chainId),
-  );
+  const { chainId } = getWeb3Details();
+  const contract = getContract(TREASURY.abi, ADDRESSES[chainId].treasury);
   return contract;
 };
 
 export const getTokenomicsContract = () => {
-  const { web3, chainId } = getWeb3Details();
-  const contract = new web3.eth.Contract(
-    TOKENOMICS.abi,
-    getContractAddress('tokenomics', chainId),
-  );
+  const { chainId } = getWeb3Details();
+  const contract = getContract(TOKENOMICS.abi, ADDRESSES[chainId].tokenomics);
   return contract;
 };
 
 export const getUniswapV2PairContract = (address) => {
-  const { web3 } = getWeb3Details();
-  const contract = new web3.eth.Contract(UNISWAP_V2_PAIR_ABI, address);
+  const contract = getContract(UNISWAP_V2_PAIR_ABI, address);
   return contract;
 };
 
 export const getErc20Contract = (address) => {
-  const { web3 } = getWeb3Details();
-  const contract = new web3.eth.Contract(ERC20_ABI, address);
+  const contract = getContract(ERC20_ABI, address);
   return contract;
 };
 
 export const getGenericBondCalculatorContract = () => {
-  const { web3, chainId } = getWeb3Details();
-  const contract = new web3.eth.Contract(
+  const { chainId } = getWeb3Details();
+  const contract = getContract(
     BOND_CALCULATOR.abi,
-    getContractAddress('genericBondCalculator', chainId),
+    ADDRESSES[chainId].genericBondCalculator,
   );
   return contract;
 };
 
 export const getAgentContract = () => {
-  const { web3, chainId } = getWeb3Details();
-  const contract = new web3.eth.Contract(
-    AGENT_REGISTRY.abi,
-    getContractAddress('agent', chainId),
-  );
+  const { chainId } = getWeb3Details();
+  const contract = getContract(AGENT_REGISTRY.abi, ADDRESSES[chainId].agent);
   return contract;
 };
 
 export const getComponentContract = () => {
-  const { web3, chainId } = getWeb3Details();
-  const contract = new web3.eth.Contract(
+  const { chainId } = getWeb3Details();
+  const contract = getContract(
     COMPONENT_REGISTRY.abi,
-    getContractAddress('component', chainId),
+    ADDRESSES[chainId].component,
   );
   return contract;
 };
 
 export const getServiceContract = () => {
-  const { web3, chainId } = getWeb3Details();
-  const contract = new web3.eth.Contract(
+  const { chainId } = getWeb3Details();
+  const contract = getContract(
     SERVICE_REGISTRY.abi,
-    getContractAddress('service', chainId),
+    ADDRESSES[chainId].service,
   );
   return contract;
 };
 
-export const rpc = {
+export const RPC_URLS = {
   1: process.env.NEXT_PUBLIC_MAINNET_URL,
   5: process.env.NEXT_PUBLIC_GOERLI_URL,
-  [LOCAL_FORK_ID]: 'http://localhost:8545',
+  [LOCAL_FORK_ID]: 'http://127.0.0.1:8545',
 };

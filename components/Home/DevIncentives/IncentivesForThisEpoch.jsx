@@ -1,14 +1,15 @@
 import { useState } from 'react';
 import {
   Row, Col, Table, Typography, Alert,
-} from 'antd/lib';
+} from 'antd';
 import { round, toLower } from 'lodash';
+import { notifyError } from '@autonolas/frontend-library';
+
 import { FORM_TYPES, UNIT_TYPES } from 'util/constants';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import {
   notifySpecificError,
   parseToEth,
-  notifyError,
   sortUnitIdsAndTypes,
 } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
@@ -125,7 +126,7 @@ export const IncentivesForThisEpoch = () => {
             setRewardAndTopUp([]);
             notifySpecificError(error);
 
-            window.console.error(error);
+            console.error(error);
           } finally {
             setIsLoading(false);
           }
@@ -133,7 +134,7 @@ export const IncentivesForThisEpoch = () => {
       })
       .catch((ownersForUnitsError) => {
         notifyError('Error occured on fetching owners for units');
-        window.console.error(ownersForUnitsError);
+        console.error(ownersForUnitsError);
       })
       .finally(() => {
         setIsLoading(false);

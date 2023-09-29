@@ -1,22 +1,18 @@
 import { useEffect, useState } from 'react';
 import {
-  Typography,
-  Radio,
-  Table,
-  Button,
-  ConfigProvider,
-  Empty,
-} from 'antd/lib';
+  Typography, Radio, Table, Button, ConfigProvider, Empty,
+} from 'antd';
 import { round } from 'lodash';
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
-import { COLOR } from '@autonolas/frontend-library';
-import { useHelpers } from 'common-util/hooks/useHelpers';
 import {
-  getFormattedDate,
+  COLOR,
   notifyError,
   notifySuccess,
-  parseToEth,
-} from 'common-util/functions';
+  getFormattedDate,
+} from '@autonolas/frontend-library';
+
+import { useHelpers } from 'common-util/hooks/useHelpers';
+import { parseToEth } from 'common-util/functions';
 import { getAllBondsRequest, redeemRequest } from './requests';
 
 const { Title } = Typography;
@@ -80,8 +76,8 @@ export const MyBonds = () => {
   };
 
   // on load, get the list of bonds & set the maturity type radio button
-  useEffect(async () => {
-    if (account && chainId) {
+  useEffect(() => {
+    const getData = async () => {
       try {
         setIsLoading(true);
 
@@ -99,6 +95,10 @@ export const MyBonds = () => {
       } finally {
         setIsLoading(false);
       }
+    };
+
+    if (account && chainId) {
+      getData();
     }
   }, [account, chainId]);
 
@@ -118,8 +118,8 @@ export const MyBonds = () => {
       setSelectedBondIds([]);
       await getBondsListHelper();
     } catch (error) {
-      window.console.error(error);
-      notifyError();
+      notifyError('Error while redeeming');
+      console.error(error);
     }
   };
 

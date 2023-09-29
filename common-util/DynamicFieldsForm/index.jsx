@@ -1,14 +1,22 @@
+import { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import {
   Button, Form, Typography, Input,
-} from 'antd/lib';
+} from 'antd';
+import styled from 'styled-components';
+
 import { FORM_TYPES } from 'util/constants';
-import { useEffect } from 'react';
 import { useHelpers } from '../hooks/useHelpers';
 import { FormList } from './FormList';
-import { DynamicFormContainer } from './styles';
 
 const { Text } = Typography;
+
+export const DynamicFormContainer = styled.div`
+  max-width: 700px;
+  .ant-input-number {
+    width: 200px;
+  }
+`;
 
 export const DynamicFieldsForm = ({
   isUnitTypeInput,

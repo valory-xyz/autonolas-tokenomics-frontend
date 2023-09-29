@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { Layout } from 'antd/lib';
+import { Layout } from 'antd';
 import { COLOR, MEDIA_QUERY } from '@autonolas/frontend-library';
 
 export const CustomLayout = styled(Layout)`
@@ -43,18 +43,22 @@ export const HeaderContainer = styled.div`
 `;
 
 export const Logo = styled.div`
-  max-width: 248px;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: left;
+  max-width: 248px;
   margin-left: 0.5rem;
   margin-right: 1.5rem;
   font-size: 34px;
   color: ${COLOR.PRIMARY};
+  cursor: pointer;
+  svg {
+    flex: 60px;
+  }
   span {
     margin-left: 1rem;
     font-weight: bold;
+    line-height: 1.2;
   }
 `;
 

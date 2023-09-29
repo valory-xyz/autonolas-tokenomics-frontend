@@ -1,5 +1,4 @@
-/* eslint-disable max-len */
-import { sendTransaction } from '@autonolas/frontend-library';
+import { sendTransaction } from 'common-util/functions';
 import { getDepositoryContract } from 'common-util/Contracts';
 
 export const getBondInfoRequest = async (bondList) => {
@@ -28,54 +27,43 @@ export const getBondInfoRequest = async (bondList) => {
 /**
  * Bonding functionalities
  */
-export const getBondsRequest = ({ account, isActive: isBondMatured }) => new Promise((resolve, reject) => {
+export const getBondsRequest = async ({ account, isActive: isBondMatured }) => {
   const contract = getDepositoryContract();
 
-  contract.methods
+  const response = await contract.methods
     .getBonds(account, isBondMatured)
-    .call()
-    .then(async (response) => {
-      const { bondIds } = response;
-      const allListPromise = [];
-      const idsList = [];
+    .call();
 
-      for (let i = 0; i < bondIds.length; i += 1) {
-        const id = `${bondIds[i]}`;
-        const result = contract.methods.getBondStatus(id).call();
+  const { bondIds } = response;
+  const allListPromise = [];
+  const idsList = [];
 
-        allListPromise.push(result);
-        idsList.push(id);
-      }
+  for (let i = 0; i < bondIds.length; i += 1) {
+    const id = `${bondIds[i]}`;
+    const result = contract.methods.getBondStatus(id).call();
 
-      Promise.all(allListPromise)
-        .then(async (allListResponse) => {
-          const bondsListWithDetails = allListResponse.map((bond, index) => ({
-            ...bond,
-            bondId: idsList[index],
-            key: idsList[index],
-          }));
+    allListPromise.push(result);
+    idsList.push(id);
+  }
 
-          /**
-             * backend returns all the bonds if "isBondMatured = false",
-             * hence we need to filter out if the bonds are matured or not
-             */
-          const filteredBonds = isBondMatured
-            ? bondsListWithDetails
-            : bondsListWithDetails.filter((bond) => !bond.matured);
+  const allListResponse = await Promise.all(allListPromise);
+  const bondsListWithDetails = allListResponse.map((bond, index) => ({
+    ...bond,
+    bondId: idsList[index],
+    key: idsList[index],
+  }));
 
-          const bondsWithMaturityDate = await getBondInfoRequest(
-            filteredBonds,
-          );
+  /**
+   * backend returns all the bonds if "isBondMatured = false",
+   * hence we need to filter out if the bonds are matured or not
+   */
+  const filteredBonds = isBondMatured
+    ? bondsListWithDetails
+    : bondsListWithDetails.filter((bond) => !bond.matured);
 
-          resolve(bondsWithMaturityDate);
-        })
-        .catch((e) => reject(e));
-    })
-    .catch((e) => {
-      window.console.log('Error on fetching bonds');
-      reject(e);
-    });
-});
+  const bondsWithMaturityDate = await getBondInfoRequest(filteredBonds);
+  return bondsWithMaturityDate;
+};
 
 export const getAllBondsRequest = async ({ account }) => {
   const maturedBonds = await getBondsRequest({ account, isActive: true });
@@ -83,31 +71,9 @@ export const getAllBondsRequest = async ({ account }) => {
   return { maturedBonds, nonMaturedBonds };
 };
 
-export const redeemRequest = ({ account, bondIds }) => new Promise((resolve, reject) => {
+export const redeemRequest = async ({ account, bondIds }) => {
   const contract = getDepositoryContract();
-
   const fn = contract.methods.redeem(bondIds).send({ from: account });
-
-  sendTransaction(fn, account)
-    .then((response) => resolve(response?.transactionHash))
-    .catch((e) => {
-      window.console.log(`Error occured on redeeming bonds: ${bondIds}`);
-      reject(e);
-    });
-});
-
-/**
- *
- * DONATE Page
- * Donate to service
- * - Make sure the exists before deposit - check it using `exists` method
- *
- * INCENTIVES Page
- * - Add a button, take "SERVICE ID" as input & ouput "AGENT IDs" and "COMPONENT IDs"
- * - Get the agentIds and componentIds of the service using
- * getUnitIdsOfService(IRegistry.UnitType unitType, uint256 serviceId) - ServiceRegistry
- *
- * CLAIM
- * - Make sure the user is the owner of the unit Id before checking/fetching the incentives
- *
- */
+  const response = await sendTransaction(fn, account);
+  return response?.transactionHash;
+};

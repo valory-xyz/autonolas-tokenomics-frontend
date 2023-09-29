@@ -1,23 +1,20 @@
 import { useEffect, useState } from 'react';
+import { ethers } from 'ethers';
 import PropTypes from 'prop-types';
 import {
   Button, Table, Tag, Tooltip, Typography,
-} from 'antd/lib';
+} from 'antd';
 import { remove, round, isNaN } from 'lodash';
-import { COLOR } from '@autonolas/frontend-library';
+import { COLOR, notifyError, NA } from '@autonolas/frontend-library';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
-import { ethers } from 'ethers';
+
 import { BONDING_PRODUCTS } from 'util/constants';
 import { parseToEth } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
-import { NA } from 'common-util/constants';
+import { ADDRESSES } from 'common-util/Contracts';
 import { Deposit } from './Deposit';
-import {
-  getProductListRequest,
-  getAllTheProductsNotRemoved,
-  getDepositoryAddress,
-} from './requests';
+import { getProductListRequest, getAllTheProductsNotRemoved } from './requests';
 
 const { Text } = Typography;
 
@@ -59,8 +56,6 @@ const getTitle = (title, tooltipDesc) => (
   </Tooltip>
 );
 
-const APY_DESC = 'Denominated in OLAS';
-
 const getCurrentDifferenceInValue = (record) => {
   const fullCurrentPriceLp = buildFullCurrentPriceLp(record.currentPriceLp);
   const discount = record?.discount || 0;
@@ -90,11 +85,7 @@ const getColumns = (
   depositoryAddress,
 ) => {
   const columns = [
-    {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-    },
+    { title: 'ID', dataIndex: 'id', key: 'id' },
     {
       title: getTitle(
         'LP Token',
@@ -113,7 +104,7 @@ const getColumns = (
       ),
     },
     {
-      title: getTitle('Current Price of LP Token', APY_DESC),
+      title: getTitle('Current Price of LP Token', 'Denominated in OLAS'),
       dataIndex: 'currentPriceLp',
       key: 'currentPriceLp',
       render: (text) => (
@@ -254,7 +245,7 @@ export const BondingList = ({ bondingProgramType }) => {
   const [productDetails, setProductDetails] = useState(null);
 
   const isActive = bondingProgramType === BONDING_PRODUCTS.ACTIVE;
-  const depositoryAddress = getDepositoryAddress(chainId);
+  const depositoryAddress = ADDRESSES[chainId].depository;
 
   const getProducts = async () => {
     try {
@@ -272,7 +263,8 @@ export const BondingList = ({ bondingProgramType }) => {
         setFilteredProducts(filteredProductList);
       }
     } catch (error) {
-      window.console.error(error);
+      notifyError('Error while fetching products');
+      console.error(error);
     } finally {
       setIsLoading(false);
     }

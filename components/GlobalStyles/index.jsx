@@ -1,10 +1,5 @@
-import styled, { createGlobalStyle } from 'styled-components';
+import { createGlobalStyle } from 'styled-components';
 import { MEDIA_QUERY, COLOR } from '@autonolas/frontend-library';
-
-const ANTD_COLOR = {
-  whiteColor: '#fff',
-  borderColor: '#f0f0f0',
-};
 
 // const GlobalStyles = styled.div`
 const GlobalStyle = createGlobalStyle`
@@ -13,8 +8,19 @@ const GlobalStyle = createGlobalStyle`
   :before {
     box-sizing: border-box;
   }
-  body {
-    padding: 0;
+  body,
+  html {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin-top: 0;
   }
 
   background-size: 100%;
@@ -50,14 +56,6 @@ const GlobalStyle = createGlobalStyle`
   }
   .align-right {
     text-align: right;
-  }
-  .walletconnect-modal__base {
-    .walletconnect-modal__mobile__toggle a {
-      /* color: ${COLOR.WALLECT_CONNECT_BLUE} !important; */
-    }
-  }
-  .ant-alert {
-    border-radius: 5px;
   }
   .show-only-sm {
     display: none;
@@ -108,7 +106,7 @@ const GlobalStyle = createGlobalStyle`
       border-color: transparent !important;
     }
     > .ant-tabs-nav .ant-tabs-tab-active {
-      border-bottom-color: ${ANTD_COLOR.borderColor};
+      border-bottom-color: ${COLOR.GREY_3};
       background-color: ${COLOR.GREY_1};
       .ant-tabs-tab-btn {
         color: ${COLOR.BLACK};
@@ -173,10 +171,6 @@ const GlobalStyle = createGlobalStyle`
       margin-left: 2rem;
       border: 1px solid ${COLOR.BORDER_GREY};
       padding: 2px 16px;
-      .ant-radio {
-        display: inline-block;
-        top: 2px;
-      }
     }
   }
 
@@ -224,14 +218,3 @@ const GlobalStyle = createGlobalStyle`
 `;
 
 export default GlobalStyle;
-
-export const Ellipsis = styled.span`
-  max-width: 100px;
-  display: inline-block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  ${MEDIA_QUERY.tablet} {
-    max-width: 200px;
-  }
-`;
