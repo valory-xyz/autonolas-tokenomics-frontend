@@ -85,11 +85,17 @@ export const DepositServiceDonation = () => {
         totalAmount,
       };
 
-      await checkServicesNotTerminatedOrNotDeployed(serviceIds);
+      const invalidServices = await checkServicesNotTerminatedOrNotDeployed(
+        serviceIds,
+      );
 
       // deposit only if all services are deployed or terminated
-      await depositServiceDonationRequest(params);
-      notifySuccess('Deposited service donation successfully');
+      if (invalidServices.length === 0) {
+        await depositServiceDonationRequest(params);
+        notifySuccess('Deposited service donation successfully');
+      }
+    } catch (e) {
+      console.error(e);
     } finally {
       setIsLoading(false);
     }
