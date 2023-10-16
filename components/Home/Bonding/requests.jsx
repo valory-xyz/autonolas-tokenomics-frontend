@@ -1,5 +1,6 @@
 import { ethers } from 'ethers';
 import { memoize } from 'lodash';
+import { BalancerSDK, Network } from '@balancer-labs/sdk';
 
 import {
   MAX_AMOUNT,
@@ -17,6 +18,7 @@ import {
   getGenericBondCalculatorContract,
   ADDRESSES,
   LP_PAIRS,
+  getWeightPoolContract,
 } from 'common-util/Contracts';
 import { getProductValueFromEvent } from './requestsHelpers';
 
@@ -69,7 +71,8 @@ export const getProductEvents = async (eventName) => {
  *  chainId,
  *  originAddress,
  *  dex,
- *  name // OLAS-ETH (only key used in the UI for now, rest will be used later)
+ *  name // OLAS-ETH (only key used in the UI for now, rest will be used later),
+ * poolId
  * }
  */
 const getLpTokenDetails = memoize(async (address) => {
@@ -97,6 +100,7 @@ const getLpTokenDetails = memoize(async (address) => {
     name: `OLAS-${tokenSymbol}`,
     originAddress: address,
     dex: 'uniswap',
+    poolId: null,
   };
 });
 
@@ -141,6 +145,52 @@ const getLpTokenNamesForProducts = async (productList, events) => {
   }));
 };
 
+// const getCurrentPriceBalancer = async (addressPassed) => {
+//   // TODO:
+//   const {
+//     chainId, originAddress, poolId,
+//   } = await getLpTokenDetails(
+//     addressPassed,
+//   );
+
+//   const contract = getWeightPoolContract(originAddress);
+
+//   current_supply = pool_contract.functions.totalSupply().call();
+//   _, balances, _ = vault_contract.functions.getPoolTokens(pool_id).call();
+//   reserve_token0, reserve_token1 = balances;
+//   currentPrice = reserve_token0 * 10 ** 18 * 2 / current_supply;
+//   IDF;
+
+//   return currentPrice;
+// };
+
+const getCurrentPriceBalancer = async (addressPassed) => {
+  const {
+    chainId, originAddress, poolId,
+  } = await getLpTokenDetails(
+    addressPassed,
+  );
+
+  const balancerConfig = {
+    network: chainId,
+    // network: Network.GNOSIS,
+    rpcUrl: process.env.NEXT_PUBLIC_GNOSIS_URL,
+
+  };
+  const balancer = new BalancerSDK(balancerConfig);
+  // console.log(balancer);
+  // return balancer;
+
+  const pool = await balancer.pools.find(poolId);
+  const totalSupply = pool.totalShares;
+  let reservesOLAS = pool.tokens[0].balance * 1.0;
+  if (pool.tokens[0].address !== originAddress) {
+    reservesOLAS = pool.tokens[1].balance * 1.0;
+  }
+  const priceLP = (reservesOLAS * 10 ** 18 * 2) / totalSupply;
+  return priceLP;
+};
+
 const getCurrentLpPriceForProducts = async (productList) => {
   const contract = getDepositoryContract();
 
@@ -149,10 +199,33 @@ const getCurrentLpPriceForProducts = async (productList) => {
     if (productList[i].token === ADDRESS_ZERO) {
       currentLpPricePromiseList.push(0);
     } else {
-      const currentLpPricePromise = contract.methods
-        .getCurrentPriceLP(productList[i].token)
-        .call();
-      currentLpPricePromiseList.push(currentLpPricePromise);
+      const { chainId, originAddress, dex } = await getLpTokenDetails(
+        productList[i].token,
+      );
+
+      // TODO:
+      if (chainId === 1 || chainId === 5) {
+        const currentLpPricePromise = contract.methods
+          .getCurrentPriceLP(productList[i].token)
+          .call();
+        currentLpPricePromiseList.push(currentLpPricePromise);
+      } else {
+        let currentLpPricePromise = null;
+        // if (dex === 'uniswap') {
+        //   currentLpPricePromise = contract.methods
+        //     .getCurrentPriceUniswap(originAddress)
+        //     .call();
+        //   currentLpPricePromiseList.push(currentLpPricePromise);
+        // } else
+        if (dex === 'balancer') {
+          currentLpPricePromise = getCurrentPriceBalancer(originAddress);
+          currentLpPricePromiseList.push(currentLpPricePromise);
+        } else {
+          throw new Error('Dex not supported');
+        }
+
+        currentLpPricePromiseList.push(currentLpPricePromise);
+      }
     }
   }
 
