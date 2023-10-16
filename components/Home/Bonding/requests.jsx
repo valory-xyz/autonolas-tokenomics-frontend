@@ -72,7 +72,7 @@ export const getProductEvents = async (eventName) => {
  *  name // OLAS-ETH (only key used in the UI for now, rest will be used later)
  * }
  */
-const getLpTokenDetails = async (address) => {
+const getLpTokenDetails = memoize(async (address) => {
   const chainId = getChainId();
 
   const currentLpPairDetails = Object.keys(LP_PAIRS).find(
@@ -98,7 +98,7 @@ const getLpTokenDetails = async (address) => {
     originAddress: address,
     dex: 'uniswap',
   };
-};
+});
 
 /**
  * fetches the LP token name for the product
@@ -106,7 +106,7 @@ const getLpTokenDetails = async (address) => {
  * input: '0xADDRESS'
  * output: 'OLAS-ETH'
  */
-const getLpTokenName = async (address) => {
+const getLpTokenName = memoize(async (address) => {
   try {
     const { name } = await getLpTokenDetails(address);
     return name;
@@ -115,13 +115,7 @@ const getLpTokenName = async (address) => {
     console.error(error);
     return null;
   }
-};
-
-/**
- * memoized version of `getLpTokenName` to avoid multiple calls
- * and load the same data from cache
- */
-const memoizedLpTokenName = memoize(getLpTokenName);
+});
 
 /**
  * fetches the LP token name for the product list
@@ -133,7 +127,7 @@ const getLpTokenNamesForProducts = async (productList, events) => {
   const lpTokenNamePromiseList = [];
 
   for (let i = 0; i < productList.length; i += 1) {
-    const result = memoizedLpTokenName(
+    const result = getLpTokenName(
       getProductValueFromEvent(productList[i], events, 'token'),
     );
     lpTokenNamePromiseList.push(result);
