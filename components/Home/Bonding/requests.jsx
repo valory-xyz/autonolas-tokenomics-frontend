@@ -78,9 +78,6 @@ const getLpTokenDetails = async (address) => {
   const currentLpPairDetails = Object.keys(LP_PAIRS).find(
     (key) => LP_PAIRS[key] === address,
   );
-
-  // console.log({ chainId, currentLpPairDetails });
-
   if (currentLpPairDetails) {
     return { ...currentLpPairDetails };
   }
@@ -94,7 +91,6 @@ const getLpTokenDetails = async (address) => {
     token0 === ADDRESSES[chainId].olasAddress ? token1 : token0,
   );
   const tokenSymbol = await erc20Contract.methods.symbol().call();
-  // console.log({ token0, token1, tokenSymbol });
 
   return {
     chainId,
@@ -105,7 +101,7 @@ const getLpTokenDetails = async (address) => {
 };
 
 /**
- * fetches the lp token name for the product
+ * fetches the LP token name for the product
  * @example
  * input: '0xADDRESS'
  * output: 'OLAS-ETH'
@@ -115,7 +111,7 @@ const getLpTokenName = async (address) => {
     const { name } = await getLpTokenDetails(address);
     return name;
   } catch (error) {
-    window.console.log('Error on fetching lp token name');
+    window.console.log('Error on fetching LP token name');
     console.error(error);
     return null;
   }
@@ -128,7 +124,7 @@ const getLpTokenName = async (address) => {
 const memoizedLpTokenName = memoize(getLpTokenName);
 
 /**
- * fetches the lp token name for the product
+ * fetches the LP token name for the product list
  * @example
  * input: [{ token: '0x', ...others }]
  * output: [{ token: '0x', lpTokenName: 'OLAS-ETH', ...others }]
