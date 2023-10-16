@@ -92,7 +92,7 @@ const getColumns = (
      *
      * const { originAddress, chainId } = getAddressOnGnosis(address);
      * if originAddress is not zero, it needs to get its correct URL for statistics:
-     * if ETH: "https://v2.info.uniswap.org/pair/", otherwise another correspoingURL
+     * if ETH: "https://v2.info.uniswap.org/pair/", otherwise another corresponding URL
      */
     {
       title: getTitle(

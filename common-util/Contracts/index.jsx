@@ -14,7 +14,6 @@ import {
   COMPONENT_REGISTRY,
   SERVICE_REGISTRY,
   ERC20_ABI,
-  GNOSIS_BRIDGE_PROXY,
 } from 'common-util/AbiAndAddresses';
 
 const OLAS_ADDRESS = '0x0001A500A6B18995B03f44bb040A5fFc28E45CB0';
@@ -107,11 +106,9 @@ export const getTokenomicsContract = () => {
 };
 
 export const getUniswapV2PairContract = (address) => {
-  const { chainId } = getWeb3Details();
-
   // TODO: check if this is correct @kupermind
   const contract = getContract(
-    chainId === 1 ? UNISWAP_V2_PAIR_ABI : GNOSIS_BRIDGE_PROXY,
+    UNISWAP_V2_PAIR_ABI,
     address,
   );
   return contract;
