@@ -1,4 +1,5 @@
 import { ethers } from 'ethers';
+import { memoize } from 'lodash';
 
 import {
   MAX_AMOUNT,
@@ -16,7 +17,6 @@ import {
   getGenericBondCalculatorContract,
   ADDRESSES,
 } from 'common-util/Contracts';
-import { memoize } from 'lodash';
 import { getProductValueFromEvent } from './requestsHelpers';
 
 /**
@@ -102,7 +102,8 @@ const getLpTokenName = async (address) => {
 };
 
 /**
- * memoized version of getLpTokenName to avoid multiple calls
+ * memoized version of `getLpTokenName` to avoid multiple calls
+ * and load the same data from cache
  */
 const memoizedLpTokenName = memoize(getLpTokenName);
 

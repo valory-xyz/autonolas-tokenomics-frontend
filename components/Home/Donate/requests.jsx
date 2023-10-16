@@ -15,10 +15,10 @@ export const getServiceDetails = async (id) => {
 
 export const checkServicesNotTerminatedOrNotDeployed = async (ids) => {
   const allServiceDetailsPromise = ids.map((id) => getServiceDetails(id));
+  const invalidServiceIds = [];
 
   try {
     const allServiceDetails = await Promise.all(allServiceDetailsPromise);
-    const invalidServiceIds = [];
     allServiceDetails.forEach((service, index) => {
       if (service.state !== '4' && service.state !== '5') {
         invalidServiceIds.push(ids[index]);
@@ -37,7 +37,7 @@ export const checkServicesNotTerminatedOrNotDeployed = async (ids) => {
     throw error;
   }
 
-  return [];
+  return invalidServiceIds;
 };
 
 export const depositServiceDonationRequest = async ({
