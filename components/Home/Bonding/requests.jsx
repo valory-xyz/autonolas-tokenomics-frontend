@@ -16,6 +16,7 @@ import {
   getErc20Contract,
   getGenericBondCalculatorContract,
   ADDRESSES,
+  LP_PAIRS,
 } from 'common-util/Contracts';
 import { getProductValueFromEvent } from './requestsHelpers';
 
@@ -59,12 +60,45 @@ export const getProductEvents = async (eventName) => {
   return events;
 };
 
-// TODO: fix this
-const getAddressOnGnosis = (address) => {
-  const { chainId } = getChainId();
-  // TODO: @kupermind - what needs to done here
-  const gnosisAddress = address;
-  return { originAddress: gnosisAddress, chainId };
+/**
+ * detials of the LP token
+ * @returns {Object} {
+ *  chainId,
+ *  originAddress,
+ *  dex,
+ *  name // OLAS-ETH (only key used in the UI for now, rest will be used later)
+ * }
+ */
+const getLpTokenDetails = async (address) => {
+  const chainId = getChainId();
+
+  const currentLpPairDetails = Object.keys(LP_PAIRS).find(
+    (key) => LP_PAIRS[key] === address,
+  );
+
+  // console.log({ chainId, currentLpPairDetails });
+
+  if (currentLpPairDetails) {
+    return { ...currentLpPairDetails };
+  }
+
+  // if the address is not in the LP_PAIRS list
+  // then it's a uniswap pair
+  const contract = getUniswapV2PairContract(address);
+  const token0 = await contract.methods.token0().call();
+  const token1 = await contract.methods.token1().call();
+  const erc20Contract = getErc20Contract(
+    token0 === ADDRESSES[chainId].olasAddress ? token1 : token0,
+  );
+  const tokenSymbol = await erc20Contract.methods.symbol().call();
+  // console.log({ token0, token1, tokenSymbol });
+
+  return {
+    chainId,
+    name: `OLAS-${tokenSymbol}`,
+    originAddress: address,
+    dex: 'uniswap',
+  };
 };
 
 /**
@@ -75,25 +109,8 @@ const getAddressOnGnosis = (address) => {
  */
 const getLpTokenName = async (address) => {
   try {
-    const chainId = getChainId();
-
-    // TODO: map from ETH address to the Gnosis address
-    const { originAddress } = getAddressOnGnosis(address);
-
-    // TODO: check if this is correct @kupermind
-    const contract = getUniswapV2PairContract(originAddress);
-
-    let token0 = await contract.methods.token0().call();
-    const token1 = await contract.methods.token1().call();
-
-    if (token0 === ADDRESSES[chainId].olasAddress) {
-      token0 = token1;
-    }
-
-    const erc20Contract = getErc20Contract(token0);
-    const tokenSymbol = await erc20Contract.methods.symbol().call();
-
-    return `OLAS-${tokenSymbol}`;
+    const { name } = await getLpTokenDetails(address);
+    return name;
   } catch (error) {
     window.console.log('Error on fetching lp token name');
     console.error(error);

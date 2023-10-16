@@ -18,6 +18,15 @@ import {
 
 const OLAS_ADDRESS = '0x0001A500A6B18995B03f44bb040A5fFc28E45CB0';
 
+export const LP_PAIRS = {
+  '0x27df632fd0dcf191C418c803801D521cd579F18e': {
+    chainId: 100,
+    name: 'OLAS-WXDAI',
+    pairAddress: '0x79C872Ed3Acb3fc5770dd8a0cD9Cd5dB3B3Ac985',
+    dex: 'balancer',
+  },
+};
+
 const LOCAL_ADDRESSES = {
   dispenser: '0x4c5859f0F772848b2D91F1D83E2Fe57935348029',
   depository: '0x1291Be112d480055DaFd8a610b7d1e203891C274',
@@ -107,10 +116,7 @@ export const getTokenomicsContract = () => {
 
 export const getUniswapV2PairContract = (address) => {
   // TODO: check if this is correct @kupermind
-  const contract = getContract(
-    UNISWAP_V2_PAIR_ABI,
-    address,
-  );
+  const contract = getContract(UNISWAP_V2_PAIR_ABI, address);
   return contract;
 };
 
