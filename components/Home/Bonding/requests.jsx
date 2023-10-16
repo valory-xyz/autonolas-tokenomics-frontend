@@ -61,7 +61,10 @@ export const getProductEvents = async (eventName) => {
 };
 
 /**
- * detials of the LP token
+ * Fetches detials of the LP token.
+ * The token needs to distinguish between the one on the ETH mainnet
+ * and the mirrored one from other mainnets.
+ *
  * @returns {Object} {
  *  chainId,
  *  originAddress,

@@ -36,6 +36,7 @@ const LOCAL_ADDRESSES = {
   agent: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
   component: '0x5FbDB2315678afecb367f032d93F642f64180aa3',
   service: '0x36C02dA8a0983159322a80FFE9F24b1acfF8B570',
+  olasAddress: OLAS_ADDRESS,
 };
 
 const MAINNET_ADDRESSES = {
@@ -47,6 +48,7 @@ const MAINNET_ADDRESSES = {
   agent: AGENT_REGISTRY.addresses[1],
   component: COMPONENT_REGISTRY.addresses[1],
   service: SERVICE_REGISTRY.addresses[1],
+  olasAddress: OLAS_ADDRESS,
 };
 
 export const ADDRESSES = {
@@ -63,8 +65,8 @@ export const ADDRESSES = {
     olasAddress: OLAS_ADDRESS, // TODO: if this correct for goerli?
   },
   100: {
-    // TODO: what needs to be added here? @kupermind
-    olasAddress: OLAS_ADDRESS, // TODO: what's the address for gnosis
+    // TODO: what needs to be added here? Is it the same as MAINNET_ADDRESSES @kupermind
+    olasAddress: OLAS_ADDRESS, // TODO: if this correct for gnosis?
   },
   [LOCAL_CHAIN_ID]: LOCAL_ADDRESSES,
   [LOCAL_FORK_ID]: MAINNET_ADDRESSES,
@@ -115,7 +117,6 @@ export const getTokenomicsContract = () => {
 };
 
 export const getUniswapV2PairContract = (address) => {
-  // TODO: check if this is correct @kupermind
   const contract = getContract(UNISWAP_V2_PAIR_ABI, address);
   return contract;
 };

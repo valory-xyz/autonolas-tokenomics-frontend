@@ -86,14 +86,6 @@ const getColumns = (
 ) => {
   const columns = [
     { title: 'ID', dataIndex: 'id', key: 'id' },
-    /**
-     * The token needs to distinguish between the one on the ETH mainnet
-     * and the mirrored one from other mainnets,
-     *
-     * const { originAddress, chainId } = getAddressOnGnosis(address);
-     * if originAddress is not zero, it needs to get its correct URL for statistics:
-     * if ETH: "https://v2.info.uniswap.org/pair/", otherwise another corresponding URL
-     */
     {
       title: getTitle(
         'LP Token',
