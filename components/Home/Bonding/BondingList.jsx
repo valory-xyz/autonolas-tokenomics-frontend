@@ -94,11 +94,7 @@ const getColumns = (
       dataIndex: 'lpTokenName',
       key: 'lpTokenName',
       render: (x, data) => (
-        <a
-          href={`https://v2.info.uniswap.org/pair/${data.token}`}
-          target="_blank"
-          rel="noreferrer"
-        >
+        <a href={data.lpTokenLink} target="_blank" rel="noreferrer">
           {x}
         </a>
       ),

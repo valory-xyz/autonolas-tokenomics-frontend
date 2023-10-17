@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 import { memoize } from 'lodash';
-import { BalancerSDK, Network } from '@balancer-labs/sdk';
+/* eslint-disable-next-line import/no-extraneous-dependencies */
+import { BalancerSDK } from '@balancer-labs/sdk';
 
 import {
   MAX_AMOUNT,
@@ -18,7 +19,6 @@ import {
   getGenericBondCalculatorContract,
   ADDRESSES,
   LP_PAIRS,
-  getWeightPoolContract,
 } from 'common-util/Contracts';
 import { getProductValueFromEvent } from './requestsHelpers';
 
@@ -105,23 +105,6 @@ const getLpTokenDetails = memoize(async (address) => {
 });
 
 /**
- * fetches the LP token name for the product
- * @example
- * input: '0xADDRESS'
- * output: 'OLAS-ETH'
- */
-const getLpTokenName = memoize(async (address) => {
-  try {
-    const { name } = await getLpTokenDetails(address);
-    return name;
-  } catch (error) {
-    window.console.log('Error on fetching LP token name');
-    console.error(error);
-    return null;
-  }
-});
-
-/**
  * fetches the LP token name for the product list
  * @example
  * input: [{ token: '0x', ...others }]
@@ -131,43 +114,38 @@ const getLpTokenNamesForProducts = async (productList, events) => {
   const lpTokenNamePromiseList = [];
 
   for (let i = 0; i < productList.length; i += 1) {
-    const result = getLpTokenName(
+    const result = getLpTokenDetails(
       getProductValueFromEvent(productList[i], events, 'token'),
     );
     lpTokenNamePromiseList.push(result);
   }
 
-  const lpTokenNameList = await Promise.all(lpTokenNamePromiseList);
+  const lpTokenDetailsList = await Promise.all(lpTokenNamePromiseList);
 
-  return productList.map((component, index) => ({
-    ...component,
-    lpTokenName: lpTokenNameList[index],
-  }));
+  return productList.map((component, index) => {
+    const { name, poolId, chainId } = lpTokenDetailsList[index];
+    const getLpTokenLink = () => {
+      if (lpTokenDetailsList[index].dex === 'uniswap') {
+        return `https://v2.info.uniswap.org/pair${component.token}`;
+      }
+
+      if (lpTokenDetailsList[index].dex === 'balancer' && chainId === 100) {
+        return `https://app.balancer.fi/#/gnosis-chain/pool/${poolId}`;
+      }
+
+      return new Error('Dex not supported');
+    };
+
+    return {
+      ...component,
+      lpTokenName: name,
+      lpTokenLink: getLpTokenLink(),
+    };
+  });
 };
 
-// const getCurrentPriceBalancer = async (addressPassed) => {
-//   // TODO:
-//   const {
-//     chainId, originAddress, poolId,
-//   } = await getLpTokenDetails(
-//     addressPassed,
-//   );
-
-//   const contract = getWeightPoolContract(originAddress);
-
-//   current_supply = pool_contract.functions.totalSupply().call();
-//   _, balances, _ = vault_contract.functions.getPoolTokens(pool_id).call();
-//   reserve_token0, reserve_token1 = balances;
-//   currentPrice = reserve_token0 * 10 ** 18 * 2 / current_supply;
-//   IDF;
-
-//   return currentPrice;
-// };
-
 const getCurrentPriceBalancer = async (addressPassed) => {
-  const {
-    chainId, originAddress, poolId,
-  } = await getLpTokenDetails(
+  const { chainId, originAddress, poolId } = await getLpTokenDetails(
     addressPassed,
   );
 
@@ -175,7 +153,6 @@ const getCurrentPriceBalancer = async (addressPassed) => {
     network: chainId,
     // network: Network.GNOSIS,
     rpcUrl: process.env.NEXT_PUBLIC_GNOSIS_URL,
-
   };
   const balancer = new BalancerSDK(balancerConfig);
   // console.log(balancer);
@@ -199,6 +176,7 @@ const getCurrentLpPriceForProducts = async (productList) => {
     if (productList[i].token === ADDRESS_ZERO) {
       currentLpPricePromiseList.push(0);
     } else {
+      // eslint-disable-next-line no-await-in-loop
       const { chainId, originAddress, dex } = await getLpTokenDetails(
         productList[i].token,
       );

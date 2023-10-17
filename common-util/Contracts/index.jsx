@@ -14,7 +14,6 @@ import {
   COMPONENT_REGISTRY,
   SERVICE_REGISTRY,
   ERC20_ABI,
-  WEIGHTED_POOLS,
 } from 'common-util/AbiAndAddresses';
 
 export const LP_PAIRS = {
@@ -157,11 +156,6 @@ export const getServiceContract = () => {
     SERVICE_REGISTRY.abi,
     ADDRESSES[chainId].service,
   );
-  return contract;
-};
-
-export const getWeightPoolContract = (address) => {
-  const contract = getContract(WEIGHTED_POOLS, address);
   return contract;
 };
 
