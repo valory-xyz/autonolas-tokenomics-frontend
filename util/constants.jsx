@@ -16,3 +16,8 @@ export const BONDING_PRODUCTS = {
   INACTIVE: 'inactive',
   ALL: 'allProduct',
 };
+
+export const DEX = {
+  UNISWAP: 'uniswap',
+  BALANCER: 'balancer',
+};

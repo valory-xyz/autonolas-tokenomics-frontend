@@ -10,6 +10,7 @@ import {
   getEthersProvider,
   sendTransaction,
   getChainId,
+  isL1Network,
 } from 'common-util/functions';
 import {
   getDepositoryContract,
@@ -18,9 +19,20 @@ import {
   getErc20Contract,
   getGenericBondCalculatorContract,
   ADDRESSES,
-  LP_PAIRS,
+  RPC_URLS,
 } from 'common-util/Contracts';
+import { DEX } from 'util/constants';
 import { getProductValueFromEvent } from './requestsHelpers';
+
+const LP_PAIRS = {
+  '0x27df632fd0dcf191C418c803801D521cd579F18e': {
+    chainId: 100,
+    name: 'OLAS-WXDAI',
+    pairAddress: '0x79C872Ed3Acb3fc5770dd8a0cD9Cd5dB3B3Ac985',
+    dex: DEX.BALANCER,
+    poolId: '0x79c872ed3acb3fc5770dd8a0cd9cd5db3b3ac985000200000000000000000067',
+  },
+};
 
 /**
  * fetches the IDF (discount factor) for the product
@@ -99,7 +111,7 @@ const getLpTokenDetails = memoize(async (address) => {
     chainId,
     name: `OLAS-${tokenSymbol}`,
     originAddress: address,
-    dex: 'uniswap',
+    dex: DEX.UNISWAP,
     poolId: null,
   };
 });
@@ -128,11 +140,11 @@ const getLpTokenNamesForProducts = async (productList, events) => {
   return productList.map((component, index) => {
     const { name, poolId, chainId } = lpTokenDetailsList[index];
     const getLpTokenLink = () => {
-      if (lpTokenDetailsList[index].dex === 'uniswap') {
+      if (lpTokenDetailsList[index].dex === DEX.UNISWAP) {
         return `https://v2.info.uniswap.org/pair${component.token}`;
       }
 
-      if (lpTokenDetailsList[index].dex === 'balancer' && chainId === 100) {
+      if (lpTokenDetailsList[index].dex === DEX.BALANCER && chainId === 100) {
         return `https://app.balancer.fi/#/gnosis-chain/pool/${poolId}`;
       }
 
@@ -141,11 +153,11 @@ const getLpTokenNamesForProducts = async (productList, events) => {
 
     const getCurrentPriceLpLink = () => {
       const depositoryAddress = ADDRESSES[chainId].depository;
-      if (lpTokenDetailsList[index].dex === 'uniswap') {
+      if (lpTokenDetailsList[index].dex === DEX.UNISWAP) {
         return `https://etherscan.io/address/${depositoryAddress}#readContract#F7`;
       }
 
-      if (lpTokenDetailsList[index].dex === 'balancer' && chainId === 100) {
+      if (lpTokenDetailsList[index].dex === DEX.BALANCER && chainId === 100) {
         return `https://gnosisscan.io/address/${ADDRESSES[chainId].balancerVault}#readContract#F10`;
       }
 
@@ -168,19 +180,15 @@ const getCurrentPriceBalancer = async (addressPassed) => {
 
   const balancerConfig = {
     network: chainId,
-    // network: Network.GNOSIS,
-    rpcUrl: process.env.NEXT_PUBLIC_GNOSIS_URL,
+    rpcUrl: RPC_URLS[chainId],
   };
   const balancer = new BalancerSDK(balancerConfig);
-  // console.log(balancer);
-  // return balancer;
 
   const pool = await balancer.pools.find(poolId);
   const totalSupply = pool.totalShares;
-  let reservesOLAS = pool.tokens[0].balance * 1.0;
-  if (pool.tokens[0].address !== originAddress) {
-    reservesOLAS = pool.tokens[1].balance * 1.0;
-  }
+  const reservesOLAS = (pool.tokens[0].address !== originAddress
+    ? pool.tokens[1].balance
+    : pool.tokens[0].balance) * 1.0;
   const priceLP = (reservesOLAS * 10 ** 18 * 2) / totalSupply;
   return priceLP;
 };
@@ -198,29 +206,27 @@ const getCurrentLpPriceForProducts = async (productList) => {
         productList[i].token,
       );
 
-      // TODO:
-      if (chainId === 1 || chainId === 5) {
+      if (isL1Network(chainId)) {
         const currentLpPricePromise = contract.methods
           .getCurrentPriceLP(productList[i].token)
           .call();
         currentLpPricePromiseList.push(currentLpPricePromise);
       } else {
-        let currentLpPricePromise = null;
-        // Note: It could be uniswap for other chains hence this if case.
-        // if (dex === 'uniswap') {
+        let currentLpPrice = null;
+        // NOTE: It could be uniswap for other chains hence this if case.
+        // (commented for now)
+        // if (dex === DEX.UNISWAP) {
         //   currentLpPricePromise = contract.methods
         //     .getCurrentPriceUniswap(originAddress)
         //     .call();
         //   currentLpPricePromiseList.push(currentLpPricePromise);
         // } else
-        if (dex === 'balancer') {
-          currentLpPricePromise = getCurrentPriceBalancer(originAddress);
-          currentLpPricePromiseList.push(currentLpPricePromise);
+        if (dex === DEX.BALANCER) {
+          currentLpPrice = getCurrentPriceBalancer(originAddress);
+          currentLpPricePromiseList.push(currentLpPrice);
         } else {
           throw new Error('Dex not supported');
         }
-
-        currentLpPricePromiseList.push(currentLpPricePromise);
       }
     }
   }
