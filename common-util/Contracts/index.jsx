@@ -53,8 +53,8 @@ export const ADDRESSES = {
     service: SERVICE_REGISTRY.addresses[5],
     olasAddress: '0xEdfc28215B1Eb6eb0be426f1f529cf691A5C2400',
   },
+  // NOTE: Except 1 & 5 other addresses are used for LP pairs
   100: {
-    // TODO: what needs to be added here? Is it the same as MAINNET_ADDRESSES @kupermind
     olasAddress: '0xcE11e14225575945b8E6Dc0D4F2dD4C570f79d9f',
     balancerVault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
   },

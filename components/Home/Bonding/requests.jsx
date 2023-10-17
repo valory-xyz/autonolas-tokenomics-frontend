@@ -1,6 +1,5 @@
 import { ethers } from 'ethers';
 import { memoize } from 'lodash';
-/* eslint-disable-next-line import/no-extraneous-dependencies */
 import { BalancerSDK } from '@balancer-labs/sdk';
 
 import {
@@ -25,12 +24,14 @@ import { DEX } from 'util/constants';
 import { getProductValueFromEvent } from './requestsHelpers';
 
 const LP_PAIRS = {
+  // gnosis-chain
   '0x27df632fd0dcf191C418c803801D521cd579F18e': {
-    chainId: 100,
+    lpChainId: 100,
     name: 'OLAS-WXDAI',
     pairAddress: '0x79C872Ed3Acb3fc5770dd8a0cD9Cd5dB3B3Ac985',
     dex: DEX.BALANCER,
-    poolId: '0x79c872ed3acb3fc5770dd8a0cd9cd5db3b3ac985000200000000000000000067',
+    poolId:
+      '0x79c872ed3acb3fc5770dd8a0cd9cd5db3b3ac985000200000000000000000067',
   },
 };
 
@@ -80,11 +81,11 @@ export const getProductEvents = async (eventName) => {
  * and the mirrored one from other mainnets.
  *
  * @returns {Object} {
- *  chainId,
+ *  lpChainId,
  *  originAddress,
  *  dex,
- *  name // OLAS-ETH (only key used in the UI for now, rest will be used later),
- * poolId
+ *  name,
+ *  poolId
  * }
  */
 const getLpTokenDetails = memoize(async (address) => {
@@ -93,12 +94,14 @@ const getLpTokenDetails = memoize(async (address) => {
   const currentLpPairDetails = Object.keys(LP_PAIRS).find(
     (key) => LP_PAIRS[key] === address,
   );
+
+  // if the address is in the LP_PAIRS list (for now, just gnosis-chain)
   if (currentLpPairDetails) {
     return { ...currentLpPairDetails };
   }
 
   // if the address is not in the LP_PAIRS list
-  // then it's a uniswap pair
+  // (mainnet and goerli)
   const contract = getUniswapV2PairContract(address);
   const token0 = await contract.methods.token0().call();
   const token1 = await contract.methods.token1().call();
@@ -108,7 +111,7 @@ const getLpTokenDetails = memoize(async (address) => {
   const tokenSymbol = await erc20Contract.methods.symbol().call();
 
   return {
-    chainId,
+    lpChainId: chainId,
     name: `OLAS-${tokenSymbol}`,
     originAddress: address,
     dex: DEX.UNISWAP,
@@ -131,20 +134,21 @@ const getLpTokenNamesForProducts = async (productList, events) => {
       events,
       'token',
     );
-    const result = getLpTokenDetails(tokenAddress);
-    lpTokenNamePromiseList.push(result);
+    const tokenDetailsPromise = getLpTokenDetails(tokenAddress);
+    lpTokenNamePromiseList.push(tokenDetailsPromise);
   }
 
   const lpTokenDetailsList = await Promise.all(lpTokenNamePromiseList);
 
   return productList.map((component, index) => {
-    const { name, poolId, chainId } = lpTokenDetailsList[index];
+    const { name, poolId, lpChainId } = lpTokenDetailsList[index];
+
     const getLpTokenLink = () => {
       if (lpTokenDetailsList[index].dex === DEX.UNISWAP) {
         return `https://v2.info.uniswap.org/pair${component.token}`;
       }
 
-      if (lpTokenDetailsList[index].dex === DEX.BALANCER && chainId === 100) {
+      if (lpTokenDetailsList[index].dex === DEX.BALANCER && lpChainId === 100) {
         return `https://app.balancer.fi/#/gnosis-chain/pool/${poolId}`;
       }
 
@@ -152,13 +156,13 @@ const getLpTokenNamesForProducts = async (productList, events) => {
     };
 
     const getCurrentPriceLpLink = () => {
-      const depositoryAddress = ADDRESSES[chainId].depository;
       if (lpTokenDetailsList[index].dex === DEX.UNISWAP) {
+        const depositoryAddress = ADDRESSES[lpChainId].depository;
         return `https://etherscan.io/address/${depositoryAddress}#readContract#F7`;
       }
 
-      if (lpTokenDetailsList[index].dex === DEX.BALANCER && chainId === 100) {
-        return `https://gnosisscan.io/address/${ADDRESSES[chainId].balancerVault}#readContract#F10`;
+      if (lpTokenDetailsList[index].dex === DEX.BALANCER && lpChainId === 100) {
+        return `https://gnosisscan.io/address/${ADDRESSES[lpChainId].balancerVault}#readContract#F10`;
       }
 
       return new Error('Dex not supported');
@@ -174,13 +178,13 @@ const getLpTokenNamesForProducts = async (productList, events) => {
 };
 
 const getCurrentPriceBalancer = async (addressPassed) => {
-  const { chainId, originAddress, poolId } = await getLpTokenDetails(
+  const { lpChainId, originAddress, poolId } = await getLpTokenDetails(
     addressPassed,
   );
 
   const balancerConfig = {
-    network: chainId,
-    rpcUrl: RPC_URLS[chainId],
+    network: lpChainId,
+    rpcUrl: RPC_URLS[lpChainId],
   };
   const balancer = new BalancerSDK(balancerConfig);
 
@@ -201,12 +205,12 @@ const getCurrentLpPriceForProducts = async (productList) => {
     if (productList[i].token === ADDRESS_ZERO) {
       currentLpPricePromiseList.push(0);
     } else {
-      // eslint-disable-next-line no-await-in-loop
-      const { chainId, originAddress, dex } = await getLpTokenDetails(
+      /* eslint-disable-next-line no-await-in-loop */
+      const { lpChainId, originAddress, dex } = await getLpTokenDetails(
         productList[i].token,
       );
 
-      if (isL1Network(chainId)) {
+      if (isL1Network(lpChainId)) {
         const currentLpPricePromise = contract.methods
           .getCurrentPriceLP(productList[i].token)
           .call();
@@ -372,7 +376,6 @@ export const getAllTheProductsNotRemoved = async () => {
  */
 export const getProductListRequest = async ({ isActive }) => {
   const productIdList = await getBondingProgramsRequest({ isActive });
-  // const ex = [...productIdList, 100];
   const response = await getProductDetailsFromIds({ productIdList });
   const discount = await getLastIDFRequest(); // discount factor is same for all the products
 
@@ -382,25 +385,6 @@ export const getProductListRequest = async ({ isActive }) => {
     discount,
     ...product,
   }));
-
-  // console.log({ productList });
-
-  // NOTE: random product Id for testing
-  // productList.push({
-  //   id: '100',
-  //   key: '100',
-  //   discount: 2,
-  //   priceLP: '86251681600680378492',
-  //   vesting: '1814400',
-  //   token: '0x27df632fd0dcf191C418c803801D521cd579F18e',
-  //   supply: '14894577668024172888390',
-  //   lpTokenName: 'OLAS-WETH',
-  //   lpTokenLink:
-  //     'https://v2.info.uniswap.org/pair0x09D1d767eDF8Fa23A64C51fa559E0688E526812F',
-  //   currentPriceLp: '99541138073815146660',
-  //   supplyLeft: 0.186175,
-  // });
-
   return productList;
 };
 
