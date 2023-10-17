@@ -1,7 +1,8 @@
 import { ethers } from 'ethers';
-import { memoize } from 'lodash';
 import { BalancerSDK } from '@balancer-labs/sdk';
+import { memoize } from 'lodash';
 
+import { DEX } from 'util/constants';
 import {
   MAX_AMOUNT,
   ADDRESS_ZERO,
@@ -10,6 +11,7 @@ import {
   sendTransaction,
   getChainId,
   isL1Network,
+  parseToWei,
 } from 'common-util/functions';
 import {
   getDepositoryContract,
@@ -20,7 +22,6 @@ import {
   ADDRESSES,
   RPC_URLS,
 } from 'common-util/Contracts';
-import { DEX } from 'util/constants';
 import { getProductValueFromEvent } from './requestsHelpers';
 
 const LP_PAIRS = {
@@ -120,7 +121,7 @@ const getLpTokenDetails = memoize(async (address) => {
 });
 
 /**
- * fetches the LP token name for the product list
+ * Fetches the LP token name for the product list
  * @example
  * input: [{ token: '0x', ...others }]
  * output: [{ token: '0x', lpTokenName: 'OLAS-ETH', ...others }]
@@ -182,10 +183,7 @@ const getCurrentPriceBalancer = async (addressPassed) => {
     addressPassed,
   );
 
-  const balancerConfig = {
-    network: lpChainId,
-    rpcUrl: RPC_URLS[lpChainId],
-  };
+  const balancerConfig = { network: lpChainId, rpcUrl: RPC_URLS[lpChainId] };
   const balancer = new BalancerSDK(balancerConfig);
 
   const pool = await balancer.pools.find(poolId);
@@ -193,7 +191,10 @@ const getCurrentPriceBalancer = async (addressPassed) => {
   const reservesOLAS = (pool.tokens[0].address !== originAddress
     ? pool.tokens[1].balance
     : pool.tokens[0].balance) * 1.0;
-  const priceLP = (reservesOLAS * 10 ** 18 * 2) / totalSupply;
+  const priceLP = ethers.BigNumber.from(parseToWei(reservesOLAS))
+    .mul(2)
+    .div(ethers.BigNumber.from(totalSupply))
+    .toString();
   return priceLP;
 };
 
@@ -385,6 +386,7 @@ export const getProductListRequest = async ({ isActive }) => {
     discount,
     ...product,
   }));
+
   return productList;
 };
 
