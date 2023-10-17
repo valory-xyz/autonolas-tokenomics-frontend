@@ -114,9 +114,12 @@ const getLpTokenNamesForProducts = async (productList, events) => {
   const lpTokenNamePromiseList = [];
 
   for (let i = 0; i < productList.length; i += 1) {
-    const result = getLpTokenDetails(
-      getProductValueFromEvent(productList[i], events, 'token'),
+    const tokenAddress = getProductValueFromEvent(
+      productList[i],
+      events,
+      'token',
     );
+    const result = getLpTokenDetails(tokenAddress);
     lpTokenNamePromiseList.push(result);
   }
 
@@ -136,10 +139,24 @@ const getLpTokenNamesForProducts = async (productList, events) => {
       return new Error('Dex not supported');
     };
 
+    const getCurrentPriceLpLink = () => {
+      const depositoryAddress = ADDRESSES[chainId].depository;
+      if (lpTokenDetailsList[index].dex === 'uniswap') {
+        return `https://etherscan.io/address/${depositoryAddress}#readContract#F7`;
+      }
+
+      if (lpTokenDetailsList[index].dex === 'balancer' && chainId === 100) {
+        return `https://gnosisscan.io/address/${ADDRESSES[chainId].balancerVault}#readContract#F10`;
+      }
+
+      return new Error('Dex not supported');
+    };
+
     return {
       ...component,
       lpTokenName: name,
       lpTokenLink: getLpTokenLink(),
+      currentPriceLpLink: getCurrentPriceLpLink(),
     };
   });
 };
@@ -189,6 +206,7 @@ const getCurrentLpPriceForProducts = async (productList) => {
         currentLpPricePromiseList.push(currentLpPricePromise);
       } else {
         let currentLpPricePromise = null;
+        // Note: It could be uniswap for other chains hence this if case.
         // if (dex === 'uniswap') {
         //   currentLpPricePromise = contract.methods
         //     .getCurrentPriceUniswap(originAddress)
@@ -348,6 +366,7 @@ export const getAllTheProductsNotRemoved = async () => {
  */
 export const getProductListRequest = async ({ isActive }) => {
   const productIdList = await getBondingProgramsRequest({ isActive });
+  // const ex = [...productIdList, 100];
   const response = await getProductDetailsFromIds({ productIdList });
   const discount = await getLastIDFRequest(); // discount factor is same for all the products
 
@@ -357,6 +376,24 @@ export const getProductListRequest = async ({ isActive }) => {
     discount,
     ...product,
   }));
+
+  // console.log({ productList });
+
+  // NOTE: random product Id for testing
+  // productList.push({
+  //   id: '100',
+  //   key: '100',
+  //   discount: 2,
+  //   priceLP: '86251681600680378492',
+  //   vesting: '1814400',
+  //   token: '0x27df632fd0dcf191C418c803801D521cd579F18e',
+  //   supply: '14894577668024172888390',
+  //   lpTokenName: 'OLAS-WETH',
+  //   lpTokenLink:
+  //     'https://v2.info.uniswap.org/pair0x09D1d767eDF8Fa23A64C51fa559E0688E526812F',
+  //   currentPriceLp: '99541138073815146660',
+  //   supplyLeft: 0.186175,
+  // });
 
   return productList;
 };

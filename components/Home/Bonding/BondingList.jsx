@@ -87,10 +87,7 @@ const getColumns = (
   const columns = [
     { title: 'ID', dataIndex: 'id', key: 'id' },
     {
-      title: getTitle(
-        'LP Token',
-        'Uniswap v2 LP token address enabled by the Treasury',
-      ),
+      title: getTitle('LP Token', 'LP token address enabled by the Treasury'),
       dataIndex: 'lpTokenName',
       key: 'lpTokenName',
       render: (x, data) => (
@@ -103,9 +100,9 @@ const getColumns = (
       title: getTitle('Current Price of LP Token', 'Denominated in OLAS'),
       dataIndex: 'currentPriceLp',
       key: 'currentPriceLp',
-      render: (text) => (
+      render: (text, details) => (
         <a
-          href={`https://etherscan.io/address/${depositoryAddress}#readContract#F6`}
+          href={details.currentPriceLpLink}
           rel="noopener noreferrer"
           target="_blank"
         >
@@ -126,7 +123,7 @@ const getColumns = (
 
         return (
           <a
-            href={`https://etherscan.io/address/${depositoryAddress}#readContract#F9`}
+            href={`https://etherscan.io/address/${depositoryAddress}#readContract#F10`}
             rel="noopener noreferrer"
             target="_blank"
           >
@@ -162,7 +159,7 @@ const getColumns = (
       key: 'vesting',
       render: (seconds) => (
         <a
-          href={`https://etherscan.io/address/${depositoryAddress}#readContract#F9`}
+          href={`https://etherscan.io/address/${depositoryAddress}#readContract#F10`}
           rel="noopener noreferrer"
           target="_blank"
         >
@@ -182,7 +179,7 @@ const getColumns = (
         return (
           <>
             <a
-              href={`https://etherscan.io/address/${depositoryAddress}#readContract#F9`}
+              href={`https://etherscan.io/address/${depositoryAddress}#readContract#F10`}
               rel="noopener noreferrer"
               target="_blank"
             >
