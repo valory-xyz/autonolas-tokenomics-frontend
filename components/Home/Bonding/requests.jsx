@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import { BalancerSDK } from '@balancer-labs/sdk';
-import { memoize } from 'lodash';
+import { get, memoize } from 'lodash';
 
 import { DEX } from 'util/constants';
 import {
@@ -11,7 +11,6 @@ import {
   sendTransaction,
   getChainId,
   isL1Network,
-  parseToWei,
 } from 'common-util/functions';
 import {
   getDepositoryContract,
@@ -28,8 +27,9 @@ const LP_PAIRS = {
   // gnosis-chain
   '0x27df632fd0dcf191C418c803801D521cd579F18e': {
     lpChainId: 100,
+    // lpChainId: LOCAL_FORK_ID,
     name: 'OLAS-WXDAI',
-    pairAddress: '0x79C872Ed3Acb3fc5770dd8a0cD9Cd5dB3B3Ac985',
+    originAddress: '0x79C872Ed3Acb3fc5770dd8a0cD9Cd5dB3B3Ac985',
     dex: DEX.BALANCER,
     poolId:
       '0x79c872ed3acb3fc5770dd8a0cd9cd5db3b3ac985000200000000000000000067',
@@ -61,20 +61,20 @@ const getBondingProgramsRequest = async ({ isActive }) => {
 /**
  * returns events for the product creation
  */
-export const getProductEvents = async (eventName) => {
+export const getProductEvents = memoize(async (eventName) => {
   const contract = getDepositoryContract();
 
   const provider = getEthersProvider();
   const block = await provider.getBlock('latest');
 
-  const oldestBlock = (getChainId() || 1) >= 100000 ? 10 : 1000000;
+  const oldestBlock = (getChainId() || 1) >= 100000 ? 50 : 1000000;
   const events = contract.getPastEvents(eventName, {
     fromBlock: block.number - oldestBlock,
     toBlock: block.number,
   });
 
   return events;
-};
+});
 
 /**
  * Fetches detials of the LP token.
@@ -93,19 +93,21 @@ const getLpTokenDetails = memoize(async (address) => {
   const chainId = getChainId();
 
   const currentLpPairDetails = Object.keys(LP_PAIRS).find(
-    (key) => LP_PAIRS[key] === address,
+    (key) => key === address,
   );
 
   // if the address is in the LP_PAIRS list (for now, just gnosis-chain)
   if (currentLpPairDetails) {
-    return { ...currentLpPairDetails };
+    return { ...LP_PAIRS[address] };
   }
 
   // if the address is not in the LP_PAIRS list
   // (mainnet and goerli)
   const contract = getUniswapV2PairContract(address);
+
   const token0 = await contract.methods.token0().call();
   const token1 = await contract.methods.token1().call();
+
   const erc20Contract = getErc20Contract(
     token0 === ADDRESSES[chainId].olasAddress ? token1 : token0,
   );
@@ -169,6 +171,8 @@ const getLpTokenNamesForProducts = async (productList, events) => {
       return new Error('Dex not supported');
     };
 
+    console.log(getLpTokenLink(), getCurrentPriceLpLink());
+
     return {
       ...component,
       lpTokenName: name,
@@ -178,10 +182,12 @@ const getLpTokenNamesForProducts = async (productList, events) => {
   });
 };
 
-const getCurrentPriceBalancer = async (addressPassed) => {
+const getCurrentPriceBalancer = async (tokenAddress) => {
   const { lpChainId, originAddress, poolId } = await getLpTokenDetails(
-    addressPassed,
+    tokenAddress,
   );
+
+  console.log({ lpChainId, originAddress, poolId });
 
   const balancerConfig = { network: lpChainId, rpcUrl: RPC_URLS[lpChainId] };
   const balancer = new BalancerSDK(balancerConfig);
@@ -191,10 +197,7 @@ const getCurrentPriceBalancer = async (addressPassed) => {
   const reservesOLAS = (pool.tokens[0].address !== originAddress
     ? pool.tokens[1].balance
     : pool.tokens[0].balance) * 1.0;
-  const priceLP = ethers.BigNumber.from(parseToWei(reservesOLAS))
-    .mul(2)
-    .div(ethers.BigNumber.from(totalSupply))
-    .toString();
+  const priceLP = (reservesOLAS * 10 ** 18 * 2) / totalSupply;
   return priceLP;
 };
 
@@ -203,6 +206,8 @@ const getCurrentLpPriceForProducts = async (productList) => {
 
   const currentLpPricePromiseList = [];
   for (let i = 0; i < productList.length; i += 1) {
+    // console.log({ product: productList[i] });
+
     if (productList[i].token === ADDRESS_ZERO) {
       currentLpPricePromiseList.push(0);
     } else {
@@ -211,10 +216,15 @@ const getCurrentLpPriceForProducts = async (productList) => {
         productList[i].token,
       );
 
+      // console.log({ lpChainId, dex });
+
       if (isL1Network(lpChainId)) {
         const currentLpPricePromise = contract.methods
           .getCurrentPriceLP(productList[i].token)
           .call();
+
+        // console.log({ currentLpPricePromise });
+
         currentLpPricePromiseList.push(currentLpPricePromise);
       } else {
         let currentLpPrice = null;
@@ -227,16 +237,26 @@ const getCurrentLpPriceForProducts = async (productList) => {
         //   currentLpPricePromiseList.push(currentLpPricePromise);
         // } else
         if (dex === DEX.BALANCER) {
-          currentLpPrice = getCurrentPriceBalancer(originAddress);
+          console.log('HI - 1');
+          currentLpPrice = getCurrentPriceBalancer(
+            productList[i].token,
+            originAddress,
+          );
           currentLpPricePromiseList.push(currentLpPrice);
+          console.log('HI - 222', { currentLpPrice, originAddress });
         } else {
-          throw new Error('Dex not supported');
+          console.error('Dex not supported');
+          // throw new Error('Dex not supported');
         }
       }
     }
+
+    // console.log('=========');
   }
 
   const resolvedList = await Promise.all(currentLpPricePromiseList);
+
+  console.log({ resolvedList });
 
   return productList.map((component, index) => ({
     ...component,
@@ -249,6 +269,8 @@ export const getListWithSupplyList = async (
   createProductEvents,
   closedProductEvents = [],
 ) => list.map((product) => {
+  console.log({ createProductEvents, closedProductEvents });
+
   const createProductEvent = createProductEvents.find(
     (event) => event.returnValues.productId === `${product.id}`,
   );
@@ -261,6 +283,8 @@ export const getListWithSupplyList = async (
   if (!createProductEvent) {
     window.console.warn(`Product ${product.id} not found in the event list`);
   }
+
+  console.log({ createProductEvent });
 
   const eventSupply = Number(
     ethers.BigNumber.from(createProductEvent.returnValues.supply).div(
@@ -287,9 +311,10 @@ export const getListWithSupplyList = async (
  */
 const getProductDetailsFromIds = async ({ productIdList }) => {
   const contract = getDepositoryContract();
+  console.log(productIdList);
 
   const allListPromise = [];
-  for (let i = 0; i < productIdList.length; i += 1) {
+  for (let i = 16; i < productIdList.length; i += 1) {
     const id = productIdList[i];
     const allListResult = contract.methods.mapBondProducts(id).call();
     allListPromise.push(allListResult);
@@ -301,20 +326,22 @@ const getProductDetailsFromIds = async ({ productIdList }) => {
     id: productIdList[index],
   }));
 
+  console.log({ productList });
+
+  const listWithCurrentLpPrice = await getCurrentLpPriceForProducts(
+    productList,
+  );
+
   const createEventList = await getProductEvents('CreateProduct');
   const closedEventList = await getProductEvents('CloseProduct');
 
   const listWithLpTokens = await getLpTokenNamesForProducts(
-    productList,
+    listWithCurrentLpPrice,
     createEventList,
   );
 
-  const listWithCurrentLpPrice = await getCurrentLpPriceForProducts(
-    listWithLpTokens,
-  );
-
   const listWithSupplyList = await getListWithSupplyList(
-    listWithCurrentLpPrice,
+    listWithLpTokens,
     createEventList,
     closedEventList,
   );
@@ -331,6 +358,7 @@ const getProductDetailsFromIds = async ({ productIdList }) => {
 export const getAllTheProductsNotRemoved = async () => {
   const contract = getDepositoryContract();
   const productsList = await contract.methods.productCounter().call();
+  console.log({ productsList });
 
   const allListPromise = [];
   for (let i = 0; i < productsList; i += 1) {
@@ -350,6 +378,9 @@ export const getAllTheProductsNotRemoved = async () => {
     id: index,
     key: index,
   }));
+
+  // console.log({ productsList, productWithIds });
+  // return productWithIds;
 
   const createEventList = await getProductEvents('CreateProduct');
   const closedEventList = await getProductEvents('CloseProduct');
@@ -377,6 +408,8 @@ export const getAllTheProductsNotRemoved = async () => {
  */
 export const getProductListRequest = async ({ isActive }) => {
   const productIdList = await getBondingProgramsRequest({ isActive });
+  console.log({ productIdList });
+
   const response = await getProductDetailsFromIds({ productIdList });
   const discount = await getLastIDFRequest(); // discount factor is same for all the products
 
