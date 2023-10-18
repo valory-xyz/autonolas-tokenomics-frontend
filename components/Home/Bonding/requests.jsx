@@ -11,7 +11,6 @@ import {
   sendTransaction,
   getChainId,
   isL1Network,
-  parseToWei,
 } from 'common-util/functions';
 import {
   getDepositoryContract,
@@ -29,7 +28,7 @@ const LP_PAIRS = {
   '0x27df632fd0dcf191C418c803801D521cd579F18e': {
     lpChainId: 100,
     name: 'OLAS-WXDAI',
-    pairAddress: '0x79C872Ed3Acb3fc5770dd8a0cD9Cd5dB3B3Ac985',
+    originAddress: '0x79C872Ed3Acb3fc5770dd8a0cD9Cd5dB3B3Ac985',
     dex: DEX.BALANCER,
     poolId:
       '0x79c872ed3acb3fc5770dd8a0cd9cd5db3b3ac985000200000000000000000067',
@@ -61,20 +60,20 @@ const getBondingProgramsRequest = async ({ isActive }) => {
 /**
  * returns events for the product creation
  */
-export const getProductEvents = async (eventName) => {
+export const getProductEvents = memoize(async (eventName) => {
   const contract = getDepositoryContract();
 
   const provider = getEthersProvider();
   const block = await provider.getBlock('latest');
 
-  const oldestBlock = (getChainId() || 1) >= 100000 ? 10 : 1000000;
+  const oldestBlock = (getChainId() || 1) >= 100000 ? 50 : 1000000;
   const events = contract.getPastEvents(eventName, {
     fromBlock: block.number - oldestBlock,
     toBlock: block.number,
   });
 
   return events;
-};
+});
 
 /**
  * Fetches detials of the LP token.
@@ -93,12 +92,12 @@ const getLpTokenDetails = memoize(async (address) => {
   const chainId = getChainId();
 
   const currentLpPairDetails = Object.keys(LP_PAIRS).find(
-    (key) => LP_PAIRS[key] === address,
+    (key) => key === address,
   );
 
   // if the address is in the LP_PAIRS list (for now, just gnosis-chain)
   if (currentLpPairDetails) {
-    return { ...currentLpPairDetails };
+    return { ...LP_PAIRS[address] };
   }
 
   // if the address is not in the LP_PAIRS list
@@ -178,9 +177,9 @@ const getLpTokenNamesForProducts = async (productList, events) => {
   });
 };
 
-const getCurrentPriceBalancer = async (addressPassed) => {
+const getCurrentPriceBalancer = async (tokenAddress) => {
   const { lpChainId, originAddress, poolId } = await getLpTokenDetails(
-    addressPassed,
+    tokenAddress,
   );
 
   const balancerConfig = { network: lpChainId, rpcUrl: RPC_URLS[lpChainId] };
@@ -191,10 +190,7 @@ const getCurrentPriceBalancer = async (addressPassed) => {
   const reservesOLAS = (pool.tokens[0].address !== originAddress
     ? pool.tokens[1].balance
     : pool.tokens[0].balance) * 1.0;
-  const priceLP = ethers.BigNumber.from(parseToWei(reservesOLAS))
-    .mul(2)
-    .div(ethers.BigNumber.from(totalSupply))
-    .toString();
+  const priceLP = (reservesOLAS * 10 ** 18 * 2) / totalSupply;
   return priceLP;
 };
 
@@ -207,9 +203,7 @@ const getCurrentLpPriceForProducts = async (productList) => {
       currentLpPricePromiseList.push(0);
     } else {
       /* eslint-disable-next-line no-await-in-loop */
-      const { lpChainId, originAddress, dex } = await getLpTokenDetails(
-        productList[i].token,
-      );
+      const { lpChainId, dex } = await getLpTokenDetails(productList[i].token);
 
       if (isL1Network(lpChainId)) {
         const currentLpPricePromise = contract.methods
@@ -227,7 +221,7 @@ const getCurrentLpPriceForProducts = async (productList) => {
         //   currentLpPricePromiseList.push(currentLpPricePromise);
         // } else
         if (dex === DEX.BALANCER) {
-          currentLpPrice = getCurrentPriceBalancer(originAddress);
+          currentLpPrice = getCurrentPriceBalancer(productList[i].token);
           currentLpPricePromiseList.push(currentLpPrice);
         } else {
           throw new Error('Dex not supported');
@@ -301,20 +295,20 @@ const getProductDetailsFromIds = async ({ productIdList }) => {
     id: productIdList[index],
   }));
 
+  const listWithCurrentLpPrice = await getCurrentLpPriceForProducts(
+    productList,
+  );
+
   const createEventList = await getProductEvents('CreateProduct');
   const closedEventList = await getProductEvents('CloseProduct');
 
   const listWithLpTokens = await getLpTokenNamesForProducts(
-    productList,
+    listWithCurrentLpPrice,
     createEventList,
   );
 
-  const listWithCurrentLpPrice = await getCurrentLpPriceForProducts(
-    listWithLpTokens,
-  );
-
   const listWithSupplyList = await getListWithSupplyList(
-    listWithCurrentLpPrice,
+    listWithLpTokens,
     createEventList,
     closedEventList,
   );
