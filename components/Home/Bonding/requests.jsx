@@ -27,7 +27,6 @@ const LP_PAIRS = {
   // gnosis-chain
   '0x27df632fd0dcf191C418c803801D521cd579F18e': {
     lpChainId: 100,
-    // lpChainId: LOCAL_FORK_ID,
     name: 'OLAS-WXDAI',
     originAddress: '0x79C872Ed3Acb3fc5770dd8a0cD9Cd5dB3B3Ac985',
     dex: DEX.BALANCER,
@@ -104,10 +103,8 @@ const getLpTokenDetails = memoize(async (address) => {
   // if the address is not in the LP_PAIRS list
   // (mainnet and goerli)
   const contract = getUniswapV2PairContract(address);
-
   const token0 = await contract.methods.token0().call();
   const token1 = await contract.methods.token1().call();
-
   const erc20Contract = getErc20Contract(
     token0 === ADDRESSES[chainId].olasAddress ? token1 : token0,
   );
@@ -206,9 +203,7 @@ const getCurrentLpPriceForProducts = async (productList) => {
       currentLpPricePromiseList.push(0);
     } else {
       /* eslint-disable-next-line no-await-in-loop */
-      const { lpChainId, originAddress, dex } = await getLpTokenDetails(
-        productList[i].token,
-      );
+      const { lpChainId, dex } = await getLpTokenDetails(productList[i].token);
 
       if (isL1Network(lpChainId)) {
         const currentLpPricePromise = contract.methods
@@ -226,10 +221,7 @@ const getCurrentLpPriceForProducts = async (productList) => {
         //   currentLpPricePromiseList.push(currentLpPricePromise);
         // } else
         if (dex === DEX.BALANCER) {
-          currentLpPrice = getCurrentPriceBalancer(
-            productList[i].token,
-            originAddress,
-          );
+          currentLpPrice = getCurrentPriceBalancer(productList[i].token);
           currentLpPricePromiseList.push(currentLpPrice);
         } else {
           throw new Error('Dex not supported');
@@ -379,7 +371,6 @@ export const getAllTheProductsNotRemoved = async () => {
  */
 export const getProductListRequest = async ({ isActive }) => {
   const productIdList = await getBondingProgramsRequest({ isActive });
-
   const response = await getProductDetailsFromIds({ productIdList });
   const discount = await getLastIDFRequest(); // discount factor is same for all the products
 
