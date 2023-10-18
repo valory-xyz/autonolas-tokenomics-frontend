@@ -353,9 +353,6 @@ export const getAllTheProductsNotRemoved = async () => {
     key: index,
   }));
 
-  // console.log({ productsList, productWithIds });
-  // return productWithIds;
-
   const createEventList = await getProductEvents('CreateProduct');
   const closedEventList = await getProductEvents('CloseProduct');
 
@@ -381,9 +378,7 @@ export const getAllTheProductsNotRemoved = async () => {
  * fetches product list based on the active/inactive status
  */
 export const getProductListRequest = async ({ isActive }) => {
-  const productIdListTemp = await getBondingProgramsRequest({ isActive });
-  const productIdList = [productIdListTemp[productIdListTemp.length - 1]];
-  console.log({ productIdList });
+  const productIdList = await getBondingProgramsRequest({ isActive });
 
   const response = await getProductDetailsFromIds({ productIdList });
   const discount = await getLastIDFRequest(); // discount factor is same for all the products
