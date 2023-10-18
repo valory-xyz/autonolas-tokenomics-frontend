@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import { BalancerSDK } from '@balancer-labs/sdk';
-import { get, memoize } from 'lodash';
+import { memoize } from 'lodash';
 
 import { DEX } from 'util/constants';
 import {
@@ -171,8 +171,6 @@ const getLpTokenNamesForProducts = async (productList, events) => {
       return new Error('Dex not supported');
     };
 
-    console.log(getLpTokenLink(), getCurrentPriceLpLink());
-
     return {
       ...component,
       lpTokenName: name,
@@ -186,8 +184,6 @@ const getCurrentPriceBalancer = async (tokenAddress) => {
   const { lpChainId, originAddress, poolId } = await getLpTokenDetails(
     tokenAddress,
   );
-
-  console.log({ lpChainId, originAddress, poolId });
 
   const balancerConfig = { network: lpChainId, rpcUrl: RPC_URLS[lpChainId] };
   const balancer = new BalancerSDK(balancerConfig);
@@ -206,8 +202,6 @@ const getCurrentLpPriceForProducts = async (productList) => {
 
   const currentLpPricePromiseList = [];
   for (let i = 0; i < productList.length; i += 1) {
-    // console.log({ product: productList[i] });
-
     if (productList[i].token === ADDRESS_ZERO) {
       currentLpPricePromiseList.push(0);
     } else {
@@ -216,15 +210,10 @@ const getCurrentLpPriceForProducts = async (productList) => {
         productList[i].token,
       );
 
-      // console.log({ lpChainId, dex });
-
       if (isL1Network(lpChainId)) {
         const currentLpPricePromise = contract.methods
           .getCurrentPriceLP(productList[i].token)
           .call();
-
-        // console.log({ currentLpPricePromise });
-
         currentLpPricePromiseList.push(currentLpPricePromise);
       } else {
         let currentLpPrice = null;
@@ -237,26 +226,19 @@ const getCurrentLpPriceForProducts = async (productList) => {
         //   currentLpPricePromiseList.push(currentLpPricePromise);
         // } else
         if (dex === DEX.BALANCER) {
-          console.log('HI - 1');
           currentLpPrice = getCurrentPriceBalancer(
             productList[i].token,
             originAddress,
           );
           currentLpPricePromiseList.push(currentLpPrice);
-          console.log('HI - 222', { currentLpPrice, originAddress });
         } else {
-          console.error('Dex not supported');
-          // throw new Error('Dex not supported');
+          throw new Error('Dex not supported');
         }
       }
     }
-
-    // console.log('=========');
   }
 
   const resolvedList = await Promise.all(currentLpPricePromiseList);
-
-  console.log({ resolvedList });
 
   return productList.map((component, index) => ({
     ...component,
@@ -269,8 +251,6 @@ export const getListWithSupplyList = async (
   createProductEvents,
   closedProductEvents = [],
 ) => list.map((product) => {
-  console.log({ createProductEvents, closedProductEvents });
-
   const createProductEvent = createProductEvents.find(
     (event) => event.returnValues.productId === `${product.id}`,
   );
@@ -283,8 +263,6 @@ export const getListWithSupplyList = async (
   if (!createProductEvent) {
     window.console.warn(`Product ${product.id} not found in the event list`);
   }
-
-  console.log({ createProductEvent });
 
   const eventSupply = Number(
     ethers.BigNumber.from(createProductEvent.returnValues.supply).div(
@@ -311,10 +289,9 @@ export const getListWithSupplyList = async (
  */
 const getProductDetailsFromIds = async ({ productIdList }) => {
   const contract = getDepositoryContract();
-  console.log(productIdList);
 
   const allListPromise = [];
-  for (let i = 16; i < productIdList.length; i += 1) {
+  for (let i = 0; i < productIdList.length; i += 1) {
     const id = productIdList[i];
     const allListResult = contract.methods.mapBondProducts(id).call();
     allListPromise.push(allListResult);
@@ -325,8 +302,6 @@ const getProductDetailsFromIds = async ({ productIdList }) => {
     ...product,
     id: productIdList[index],
   }));
-
-  console.log({ productList });
 
   const listWithCurrentLpPrice = await getCurrentLpPriceForProducts(
     productList,
@@ -358,7 +333,6 @@ const getProductDetailsFromIds = async ({ productIdList }) => {
 export const getAllTheProductsNotRemoved = async () => {
   const contract = getDepositoryContract();
   const productsList = await contract.methods.productCounter().call();
-  console.log({ productsList });
 
   const allListPromise = [];
   for (let i = 0; i < productsList; i += 1) {
@@ -407,7 +381,8 @@ export const getAllTheProductsNotRemoved = async () => {
  * fetches product list based on the active/inactive status
  */
 export const getProductListRequest = async ({ isActive }) => {
-  const productIdList = await getBondingProgramsRequest({ isActive });
+  const productIdListTemp = await getBondingProgramsRequest({ isActive });
+  const productIdList = [productIdListTemp[productIdListTemp.length - 1]];
   console.log({ productIdList });
 
   const response = await getProductDetailsFromIds({ productIdList });
