@@ -4,7 +4,9 @@ import Web3 from 'web3';
 import PropTypes from 'prop-types';
 import { Grid } from 'antd';
 import { Web3Modal, Web3Button, Web3NetworkSwitch } from '@web3modal/react';
-import { useAccount, useNetwork, useBalance } from 'wagmi';
+import {
+  useAccount, useNetwork, useBalance, useDisconnect,
+} from 'wagmi';
 import styled from 'styled-components';
 import { COLOR, MEDIA_QUERY } from '@autonolas/frontend-library';
 
@@ -13,6 +15,7 @@ import {
   getChainId,
   getChainIdOrDefaultToMainnet,
 } from 'common-util/functions';
+import ofacSanctionedAddresses from '../../data/ofac-sanctioned-addresses.json';
 import { projectId, ethereumClient } from './config';
 
 const LoginContainer = styled.div`
@@ -36,6 +39,7 @@ export const LoginV2 = ({
   const { address } = useAccount();
   const { chain } = useNetwork();
   const { data } = useBalance({ address });
+  const { disconnect } = useDisconnect();
 
   const chainId = chain?.id;
 
@@ -58,7 +62,11 @@ export const LoginV2 = ({
 
   const { connector } = useAccount({
     onConnect: ({ address: currentAddress }) => {
-      if (onConnectCb) {
+      // if the connected address is in the OFAC list, do not connect the wallet
+      // (ie disconnect the wallet immediately)
+      if (ofacSanctionedAddresses.includes(currentAddress)) {
+        disconnect();
+      } else if (onConnectCb) {
         onConnectCb({
           address: address || currentAddress,
           balance: data?.formatted,
