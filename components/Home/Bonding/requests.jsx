@@ -1,7 +1,8 @@
 import { ethers } from 'ethers';
+import { BalancerSDK } from '@balancer-labs/sdk';
 import { memoize } from 'lodash';
 
-import { OLAS_ADDRESS } from 'util/constants';
+import { DEX } from 'util/constants';
 import {
   MAX_AMOUNT,
   ADDRESS_ZERO,
@@ -9,6 +10,7 @@ import {
   getEthersProvider,
   sendTransaction,
   getChainId,
+  isL1Network,
 } from 'common-util/functions';
 import {
   getDepositoryContract,
@@ -17,8 +19,21 @@ import {
   getErc20Contract,
   getGenericBondCalculatorContract,
   ADDRESSES,
+  RPC_URLS,
 } from 'common-util/Contracts';
 import { getProductValueFromEvent } from './requestsHelpers';
+
+const LP_PAIRS = {
+  // gnosis-chain
+  '0x27df632fd0dcf191C418c803801D521cd579F18e': {
+    lpChainId: 100,
+    name: 'OLAS-WXDAI',
+    originAddress: '0x79C872Ed3Acb3fc5770dd8a0cD9Cd5dB3B3Ac985',
+    dex: DEX.BALANCER,
+    poolId:
+      '0x79c872ed3acb3fc5770dd8a0cd9cd5db3b3ac985000200000000000000000067',
+  },
+};
 
 /**
  * fetches the IDF (discount factor) for the product
@@ -45,57 +60,67 @@ const getBondingProgramsRequest = async ({ isActive }) => {
 /**
  * returns events for the product creation
  */
-export const getProductEvents = async (eventName) => {
+export const getProductEvents = memoize(async (eventName) => {
   const contract = getDepositoryContract();
 
   const provider = getEthersProvider();
   const block = await provider.getBlock('latest');
 
-  const oldestBlock = (getChainId() || 1) >= 100000 ? 10 : 1000000;
+  const oldestBlock = (getChainId() || 1) >= 100000 ? 50 : 1000000;
   const events = contract.getPastEvents(eventName, {
     fromBlock: block.number - oldestBlock,
     toBlock: block.number,
   });
 
   return events;
-};
+});
 
 /**
- * fetches the lp token name for the product
- * @example
- * input: '0x'
- * output: 'OLAS-ETH'
+ * Fetches detials of the LP token.
+ * The token needs to distinguish between the one on the ETH mainnet
+ * and the mirrored one from other mainnets.
+ *
+ * @returns {Object} {
+ *  lpChainId,
+ *  originAddress,
+ *  dex,
+ *  name,
+ *  poolId
+ * }
  */
-const getLpTokenName = async (address) => {
-  try {
-    const contract = getUniswapV2PairContract(address);
+const getLpTokenDetails = memoize(async (address) => {
+  const chainId = getChainId();
 
-    let token0 = await contract.methods.token0().call();
-    const token1 = await contract.methods.token1().call();
+  const currentLpPairDetails = Object.keys(LP_PAIRS).find(
+    (key) => key === address,
+  );
 
-    if (token0 === OLAS_ADDRESS) {
-      token0 = token1;
-    }
-
-    const erc20Contract = getErc20Contract(token0);
-    const tokenSymbol = await erc20Contract.methods.symbol().call();
-
-    return `OLAS-${tokenSymbol}`;
-  } catch (error) {
-    window.console.log('Error on fetching lp token name');
-    console.error(error);
-    return null;
+  // if the address is in the LP_PAIRS list (for now, just gnosis-chain)
+  if (currentLpPairDetails) {
+    return { ...LP_PAIRS[address] };
   }
-};
+
+  // if the address is not in the LP_PAIRS list
+  // (mainnet and goerli)
+  const contract = getUniswapV2PairContract(address);
+  const token0 = await contract.methods.token0().call();
+  const token1 = await contract.methods.token1().call();
+  const erc20Contract = getErc20Contract(
+    token0 === ADDRESSES[chainId].olasAddress ? token1 : token0,
+  );
+  const tokenSymbol = await erc20Contract.methods.symbol().call();
+
+  return {
+    lpChainId: chainId,
+    name: `OLAS-${tokenSymbol}`,
+    originAddress: address,
+    dex: DEX.UNISWAP,
+    poolId: null,
+  };
+});
 
 /**
- * memoized version of `getLpTokenName` to avoid multiple calls
- * and load the same data from cache
- */
-const memoizedLpTokenName = memoize(getLpTokenName);
-
-/**
- * fetches the lp token name for the product
+ * Fetches the LP token name for the product list
  * @example
  * input: [{ token: '0x', ...others }]
  * output: [{ token: '0x', lpTokenName: 'OLAS-ETH', ...others }]
@@ -104,18 +129,69 @@ const getLpTokenNamesForProducts = async (productList, events) => {
   const lpTokenNamePromiseList = [];
 
   for (let i = 0; i < productList.length; i += 1) {
-    const result = memoizedLpTokenName(
-      getProductValueFromEvent(productList[i], events, 'token'),
+    const tokenAddress = getProductValueFromEvent(
+      productList[i],
+      events,
+      'token',
     );
-    lpTokenNamePromiseList.push(result);
+    const tokenDetailsPromise = getLpTokenDetails(tokenAddress);
+    lpTokenNamePromiseList.push(tokenDetailsPromise);
   }
 
-  const lpTokenNameList = await Promise.all(lpTokenNamePromiseList);
+  const lpTokenDetailsList = await Promise.all(lpTokenNamePromiseList);
 
-  return productList.map((component, index) => ({
-    ...component,
-    lpTokenName: lpTokenNameList[index],
-  }));
+  return productList.map((component, index) => {
+    const { name, poolId, lpChainId } = lpTokenDetailsList[index];
+
+    const getLpTokenLink = () => {
+      if (lpTokenDetailsList[index].dex === DEX.UNISWAP) {
+        return `https://v2.info.uniswap.org/pair${component.token}`;
+      }
+
+      if (lpTokenDetailsList[index].dex === DEX.BALANCER && lpChainId === 100) {
+        return `https://app.balancer.fi/#/gnosis-chain/pool/${poolId}`;
+      }
+
+      return new Error('Dex not supported');
+    };
+
+    const getCurrentPriceLpLink = () => {
+      if (lpTokenDetailsList[index].dex === DEX.UNISWAP) {
+        const depositoryAddress = ADDRESSES[lpChainId].depository;
+        return `https://etherscan.io/address/${depositoryAddress}#readContract#F7`;
+      }
+
+      if (lpTokenDetailsList[index].dex === DEX.BALANCER && lpChainId === 100) {
+        return `https://gnosisscan.io/address/${ADDRESSES[lpChainId].balancerVault}#readContract#F10`;
+      }
+
+      return new Error('Dex not supported');
+    };
+
+    return {
+      ...component,
+      lpTokenName: name,
+      lpTokenLink: getLpTokenLink(),
+      currentPriceLpLink: getCurrentPriceLpLink(),
+    };
+  });
+};
+
+const getCurrentPriceBalancer = async (tokenAddress) => {
+  const { lpChainId, originAddress, poolId } = await getLpTokenDetails(
+    tokenAddress,
+  );
+
+  const balancerConfig = { network: lpChainId, rpcUrl: RPC_URLS[lpChainId] };
+  const balancer = new BalancerSDK(balancerConfig);
+
+  const pool = await balancer.pools.find(poolId);
+  const totalSupply = pool.totalShares;
+  const reservesOLAS = (pool.tokens[0].address !== originAddress
+    ? pool.tokens[1].balance
+    : pool.tokens[0].balance) * 1.0;
+  const priceLP = (reservesOLAS * 10 ** 18 * 2) / totalSupply;
+  return priceLP;
 };
 
 const getCurrentLpPriceForProducts = async (productList) => {
@@ -126,10 +202,31 @@ const getCurrentLpPriceForProducts = async (productList) => {
     if (productList[i].token === ADDRESS_ZERO) {
       currentLpPricePromiseList.push(0);
     } else {
-      const currentLpPricePromise = contract.methods
-        .getCurrentPriceLP(productList[i].token)
-        .call();
-      currentLpPricePromiseList.push(currentLpPricePromise);
+      /* eslint-disable-next-line no-await-in-loop */
+      const { lpChainId, dex } = await getLpTokenDetails(productList[i].token);
+
+      if (isL1Network(lpChainId)) {
+        const currentLpPricePromise = contract.methods
+          .getCurrentPriceLP(productList[i].token)
+          .call();
+        currentLpPricePromiseList.push(currentLpPricePromise);
+      } else {
+        let currentLpPrice = null;
+        // NOTE: It could be uniswap for other chains hence this if case.
+        // (commented for now)
+        // if (dex === DEX.UNISWAP) {
+        //   currentLpPricePromise = contract.methods
+        //     .getCurrentPriceUniswap(originAddress)
+        //     .call();
+        //   currentLpPricePromiseList.push(currentLpPricePromise);
+        // } else
+        if (dex === DEX.BALANCER) {
+          currentLpPrice = getCurrentPriceBalancer(productList[i].token);
+          currentLpPricePromiseList.push(currentLpPrice);
+        } else {
+          throw new Error('Dex not supported');
+        }
+      }
     }
   }
 
@@ -198,20 +295,20 @@ const getProductDetailsFromIds = async ({ productIdList }) => {
     id: productIdList[index],
   }));
 
+  const listWithCurrentLpPrice = await getCurrentLpPriceForProducts(
+    productList,
+  );
+
   const createEventList = await getProductEvents('CreateProduct');
   const closedEventList = await getProductEvents('CloseProduct');
 
   const listWithLpTokens = await getLpTokenNamesForProducts(
-    productList,
+    listWithCurrentLpPrice,
     createEventList,
   );
 
-  const listWithCurrentLpPrice = await getCurrentLpPriceForProducts(
-    listWithLpTokens,
-  );
-
   const listWithSupplyList = await getListWithSupplyList(
-    listWithCurrentLpPrice,
+    listWithLpTokens,
     createEventList,
     closedEventList,
   );

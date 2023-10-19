@@ -25,6 +25,7 @@ const LOCAL_ADDRESSES = {
   agent: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
   component: '0x5FbDB2315678afecb367f032d93F642f64180aa3',
   service: '0x36C02dA8a0983159322a80FFE9F24b1acfF8B570',
+  olasAddress: 'TODO', // TODO: run docker and get this address
 };
 
 const MAINNET_ADDRESSES = {
@@ -36,6 +37,7 @@ const MAINNET_ADDRESSES = {
   agent: AGENT_REGISTRY.addresses[1],
   component: COMPONENT_REGISTRY.addresses[1],
   service: SERVICE_REGISTRY.addresses[1],
+  olasAddress: '0x0001A500A6B18995B03f44bb040A5fFc28E45CB0',
 };
 
 export const ADDRESSES = {
@@ -49,6 +51,12 @@ export const ADDRESSES = {
     agent: AGENT_REGISTRY.addresses[5],
     component: COMPONENT_REGISTRY.addresses[5],
     service: SERVICE_REGISTRY.addresses[5],
+    olasAddress: '0xEdfc28215B1Eb6eb0be426f1f529cf691A5C2400',
+  },
+  // NOTE: Except 1 & 5 other addresses are used for LP pairs
+  100: {
+    olasAddress: '0xcE11e14225575945b8E6Dc0D4F2dD4C570f79d9f',
+    balancerVault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
   },
   [LOCAL_CHAIN_ID]: LOCAL_ADDRESSES,
   [LOCAL_FORK_ID]: MAINNET_ADDRESSES,
@@ -144,5 +152,6 @@ export const getServiceContract = () => {
 export const RPC_URLS = {
   1: process.env.NEXT_PUBLIC_MAINNET_URL,
   5: process.env.NEXT_PUBLIC_GOERLI_URL,
+  100: process.env.NEXT_PUBLIC_GNOSIS_URL,
   [LOCAL_FORK_ID]: 'http://127.0.0.1:8545',
 };

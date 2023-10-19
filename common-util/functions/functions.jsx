@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import { ethers } from 'ethers';
 import { isObject } from 'lodash';
 import {
@@ -14,31 +15,31 @@ import {
 import { RPC_URLS } from 'common-util/Contracts';
 import { SUPPORTED_CHAINS } from 'common-util/Login';
 
+const getSupportedChains = () => (process.env.NEXT_PUBLIC_IS_CONNECTED_TO_LOCAL === 'true'
+  ? [...SUPPORTED_CHAINS, { id: LOCAL_FORK_ID }]
+  : SUPPORTED_CHAINS);
+
 /**
  * re-usable functions
  */
 
-export const getProvider = () => getProviderFn(SUPPORTED_CHAINS, RPC_URLS);
+export const getProvider = () => getProviderFn(getSupportedChains(), RPC_URLS);
 
-export const getEthersProvider = () => getEthersProviderFn(SUPPORTED_CHAINS, RPC_URLS);
+export const getEthersProvider = () => getEthersProviderFn(getSupportedChains(), RPC_URLS);
 
-export const getIsValidChainId = (chainId) => getIsValidChainIdFn(SUPPORTED_CHAINS, chainId);
+export const getIsValidChainId = (chainId) => getIsValidChainIdFn(getSupportedChains(), chainId);
 
-export const getChainIdOrDefaultToMainnet = (chainId) => {
-  const x = getChainIdOrDefaultToMainnetFn(SUPPORTED_CHAINS, chainId);
-  return x;
-};
+export const getChainIdOrDefaultToMainnet = (chainId) => getChainIdOrDefaultToMainnetFn(getSupportedChains(), chainId);
 
 export const getChainId = (chainId = null) => {
   if (process.env.NEXT_PUBLIC_IS_CONNECTED_TO_LOCAL === 'true') {
-    window.console.warn('Using LOCAL_FORK_ID as chainId');
     return LOCAL_FORK_ID;
   }
-  return getChainIdFn(SUPPORTED_CHAINS, chainId);
+  return getChainIdFn(getSupportedChains(), chainId);
 };
 
 export const sendTransaction = (fn, account) => sendTransactionFn(fn, account, {
-  supportedChains: SUPPORTED_CHAINS,
+  supportedChains: getSupportedChains(),
   rpcUrls: RPC_URLS,
 });
 
@@ -102,3 +103,5 @@ export const getBlockTimestamp = async (block = 'latest') => {
   const temp = await window?.WEB3_PROVIDER.eth.getBlock(block);
   return temp.timestamp * 1;
 };
+
+export const isL1Network = (chainId) => chainId === 1 || chainId === 5 || chainId === LOCAL_FORK_ID;
