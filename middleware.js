@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
+import ofacSanctionedCounties from './data/ofac-sanctioned-countries.json';
 
-const invalidCounties = ['IN'];
+const invalidCounties = Object.values((ofacSanctionedCounties));
 
 /**
  * Middleware to validate the country and address based on OFAC and other legal requirements
