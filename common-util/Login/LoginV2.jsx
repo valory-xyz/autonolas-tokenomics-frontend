@@ -14,7 +14,7 @@ import { setChainId, setUserBalance } from 'store/setup/actions';
 import {
   getChainId,
   getChainIdOrDefaultToMainnet,
-  isAddressSantioned,
+  isAddressProhibited,
 } from 'common-util/functions';
 import { projectId, ethereumClient } from './config';
 
@@ -42,7 +42,7 @@ export const LoginV2 = ({
   const chainId = chain?.id;
   const { address, connector } = useAccount({
     onConnect: ({ address: currentAddress }) => {
-      if (isAddressSantioned(currentAddress)) {
+      if (isAddressProhibited(currentAddress)) {
         disconnect();
       } else if (onConnectCb) {
         onConnectCb({
@@ -129,7 +129,7 @@ export const LoginV2 = ({
       }
     };
 
-    if (connector && !isAddressSantioned(address)) {
+    if (connector && !isAddressProhibited(address)) {
       getData();
     }
   }, [connector]);
