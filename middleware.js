@@ -8,7 +8,7 @@ const prohibitedCountriesCode = Object.values(prohibitedCountries);
  *
  * @param {NextRequest} request
  */
-export default function validateCountyMiddleware(request) {
+export default function validateCountryMiddleware(request) {
   const country = request.geo?.country;
 
   if (prohibitedCountriesCode.includes(country)) {

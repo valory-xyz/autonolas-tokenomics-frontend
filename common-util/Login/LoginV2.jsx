@@ -134,6 +134,14 @@ export const LoginV2 = ({
     }
   }, [connector]);
 
+  // Disconnect if the address is prohibited
+  useEffect(() => {
+    if (address && isAddressProhibited(address)) {
+      disconnect();
+      if (onDisconnectCb) onDisconnectCb();
+    }
+  }, [address]);
+
   const screens = useBreakpoint();
 
   return (
