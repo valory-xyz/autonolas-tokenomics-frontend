@@ -42,7 +42,6 @@ export const LoginV2 = ({
   const chainId = chain?.id;
   const { address, connector } = useAccount({
     onConnect: ({ address: currentAddress }) => {
-      // console.log('isAddressSantioned', isAddressSantioned(currentAddress));
       if (isAddressSantioned(currentAddress)) {
         disconnect();
       } else if (onConnectCb) {
@@ -58,19 +57,19 @@ export const LoginV2 = ({
     },
   });
 
-  const { data } = useBalance({ address });
-
+  // Update the balance
+  const { data: balance } = useBalance({ address });
   useEffect(() => {
-    if (data?.formatted) {
-      dispatch(setUserBalance(data.formatted));
+    if (balance?.formatted) {
+      dispatch(setUserBalance(balance.formatted));
     }
-  }, [data?.formatted]);
+  }, [balance?.formatted]);
 
   useEffect(() => {
     // if chainId is undefined, the wallet is not connected & default to mainnet
     if (chainId === undefined) {
       /**
-       * wait for 100ms to get the chainId & set it to redux to avoid race condition
+       * wait for 0ms to get the chainId & set it to redux to avoid race condition
        * and dependent components are loaded once the chainId is set
        */
       setTimeout(() => {
@@ -135,16 +134,7 @@ export const LoginV2 = ({
     }
   }, [connector]);
 
-  // console.log('address', address);
-
   const screens = useBreakpoint();
-
-  // Wallet connect shows the address when any address is connected
-  // and takes few seconds to disconnect. Hence, if the address is sanctioned
-  // 1. hide the login button
-  // 2. then the address becomes `null`
-  // 3. shows the login button again
-  // if (address && isAddressSantioned(address)) return null;
 
   return (
     <LoginContainer>
