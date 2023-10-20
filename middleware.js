@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import ofacSanctionedCounties from './data/ofac-sanctioned-countries.json';
+import ofacSanctionedCounties from './data/prohibited-countries.json';
 
 const invalidCounties = Object.values(ofacSanctionedCounties);
 

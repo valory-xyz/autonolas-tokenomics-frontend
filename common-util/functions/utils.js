@@ -1,5 +1,5 @@
 import { toLower } from 'lodash';
-import ofacSanctionedAddresses from '../../data/ofac-sanctioned-addresses.json';
+import ofacSanctionedAddresses from '../../data/prohibited-addresses.json';
 
 /**
  * - unitIds and unitTypes are arrays of same length
