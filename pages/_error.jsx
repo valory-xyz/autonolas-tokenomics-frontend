@@ -1,33 +1,42 @@
 'use client';
 
-import { Button, Typography } from 'antd';
+import { Typography } from 'antd';
 import PropTypes from 'prop-types';
 
 import { useEffect } from 'react';
 
-export const Error = ({ error, reset }) => {
+export const Error = ({ message, statusCode }) => {
   useEffect(() => {
-    console.error(error);
-  }, [error]);
+    console.error(
+      statusCode
+        ? `An error ${statusCode} occurred on server`
+        : 'An error occurred on client',
+    );
+  }, [statusCode, message]);
 
   return (
     <div>
-      <Typography.Title level={2}>Something went wrong!</Typography.Title>
-      <Button
-        onClick={reset} // Attempt to recover by trying to re-render the segment
-      >
-        Try again
-      </Button>
+      <Typography.Title level={2}>{message}</Typography.Title>
     </div>
   );
 };
 
+Error.getInitialProps = ({ response, error }) => {
+  const getStatusCode = () => {
+    if (response) return response.statusCode;
+    if (error) return error.statusCode;
+    return 404;
+  };
+
+  return { error: { message: error.message, statusCode: getStatusCode() } };
+};
+
 Error.propTypes = {
-  error: PropTypes.shape({ message: PropTypes.string }),
-  reset: PropTypes.func,
+  message: PropTypes.string,
+  statusCode: PropTypes.number,
 };
 
 Error.defaultProps = {
-  error: null,
-  reset: () => {},
+  message: 'Something went wrong!',
+  statusCode: 404,
 };
