@@ -187,10 +187,14 @@ const getCurrentPriceBalancer = async (tokenAddress) => {
 
   const pool = await balancer.pools.find(poolId);
   const totalSupply = pool.totalShares;
-  const reservesOLAS = (pool.tokens[0].address !== originAddress
-    ? pool.tokens[1].balance
-    : pool.tokens[0].balance) * 1.0;
-  const priceLP = (reservesOLAS * 10 ** 18 * 2) / totalSupply;
+  const reservesOLAS = pool.tokens[0].balance * 1.0;
+    // TODO: ADDRESSES[lpChainId].olasAddress is capital, .address is small
+    //(pool.tokens[0].address !== ADDRESSES[lpChainId].olasAddress
+    //? pool.tokens[1].balance
+    //: pool.tokens[0].balance) * 1.0;
+
+    // TODO: where do we multiply the price by 2? somewhere after?
+  const priceLP = (reservesOLAS * 10 ** 18) / totalSupply;
   return priceLP;
 };
 
