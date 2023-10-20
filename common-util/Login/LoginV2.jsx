@@ -62,11 +62,7 @@ export const LoginV2 = ({
 
   const { connector } = useAccount({
     onConnect: ({ address: currentAddress }) => {
-      // if the connected address is in the OFAC list, do not connect the wallet
-      // (ie disconnect the wallet immediately)
-      if (ofacSanctionedAddresses.includes(currentAddress)) {
-        disconnect();
-      } else if (onConnectCb) {
+      if (onConnectCb) {
         onConnectCb({
           address: address || currentAddress,
           balance: data?.formatted,
@@ -128,6 +124,14 @@ export const LoginV2 = ({
 
     getData();
   }, [connector]);
+
+  // if the connected address is in the OFAC blocked list,
+  // do not connect the wallet. (ie disconnect the wallet immediately)
+  useEffect(() => {
+    if (ofacSanctionedAddresses.includes(address)) {
+      disconnect();
+    }
+  }, [address]);
 
   const screens = useBreakpoint();
 
