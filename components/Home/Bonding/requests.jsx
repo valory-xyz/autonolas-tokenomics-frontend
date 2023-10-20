@@ -178,7 +178,7 @@ const getLpTokenNamesForProducts = async (productList, events) => {
 };
 
 const getCurrentPriceBalancer = async (tokenAddress) => {
-  const { lpChainId, originAddress, poolId } = await getLpTokenDetails(
+  const { lpChainId, poolId } = await getLpTokenDetails(
     tokenAddress,
   );
 
@@ -188,12 +188,12 @@ const getCurrentPriceBalancer = async (tokenAddress) => {
   const pool = await balancer.pools.find(poolId);
   const totalSupply = pool.totalShares;
   const reservesOLAS = pool.tokens[0].balance * 1.0;
-    // TODO: ADDRESSES[lpChainId].olasAddress is capital, .address is small
-    //(pool.tokens[0].address !== ADDRESSES[lpChainId].olasAddress
-    //? pool.tokens[1].balance
-    //: pool.tokens[0].balance) * 1.0;
+  // TODO: ADDRESSES[lpChainId].olasAddress is capital, .address is small
+  //(pool.tokens[0].address !== ADDRESSES[lpChainId].olasAddress
+  //? pool.tokens[1].balance
+  //: pool.tokens[0].balance) * 1.0;
 
-    // TODO: where do we multiply the price by 2? somewhere after?
+  // TODO: where do we multiply the price by 2? somewhere after?
   const priceLP = (reservesOLAS * 10 ** 18) / totalSupply;
   return priceLP;
 };
