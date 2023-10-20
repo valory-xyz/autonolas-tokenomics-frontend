@@ -8,6 +8,7 @@ import {
   setLogout,
 } from 'store/setup/actions';
 import { LoginV2 } from 'common-util/Login';
+// import { isAddressSantioned } from 'common-util/functions';
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -16,12 +17,14 @@ const Login = () => {
   const { data } = useBalance({ address, chainId: chain?.id });
 
   useEffect(() => {
+    // if (!isAddressSantioned(address)) {
     if (address) {
       dispatch(setUserAccount(address));
       dispatch(setUserBalance(data?.formatted));
     } else {
       dispatch(setLogout());
     }
+    // }
   }, [address]);
 
   const onConnect = (response) => {

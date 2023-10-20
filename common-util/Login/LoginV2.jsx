@@ -10,12 +10,12 @@ import {
 import styled from 'styled-components';
 import { COLOR, MEDIA_QUERY } from '@autonolas/frontend-library';
 
-import { setChainId } from 'store/setup/actions';
+import { setChainId, setUserBalance } from 'store/setup/actions';
 import {
   getChainId,
   getChainIdOrDefaultToMainnet,
+  isAddressSantioned,
 } from 'common-util/functions';
-import ofacSanctionedAddresses from '../../data/ofac-sanctioned-addresses.json';
 import { projectId, ethereumClient } from './config';
 
 const LoginContainer = styled.div`
@@ -36,12 +36,35 @@ export const LoginV2 = ({
   theme = 'light',
 }) => {
   const dispatch = useDispatch();
-  const { address } = useAccount();
-  const { chain } = useNetwork();
-  const { data } = useBalance({ address });
   const { disconnect } = useDisconnect();
+  const { chain } = useNetwork();
 
   const chainId = chain?.id;
+  const { address, connector } = useAccount({
+    onConnect: ({ address: currentAddress }) => {
+      // console.log('isAddressSantioned', isAddressSantioned(currentAddress));
+      if (isAddressSantioned(currentAddress)) {
+        disconnect();
+      } else if (onConnectCb) {
+        onConnectCb({
+          address: address || currentAddress,
+          balance: null,
+          chainId,
+        });
+      }
+    },
+    onDisconnect() {
+      if (onDisconnectCb) onDisconnectCb();
+    },
+  });
+
+  const { data } = useBalance({ address });
+
+  useEffect(() => {
+    if (data?.formatted) {
+      dispatch(setUserBalance(data.formatted));
+    }
+  }, [data?.formatted]);
 
   useEffect(() => {
     // if chainId is undefined, the wallet is not connected & default to mainnet
@@ -59,21 +82,6 @@ export const LoginV2 = ({
       dispatch(setChainId(tempChainId));
     }
   }, [chainId]);
-
-  const { connector } = useAccount({
-    onConnect: ({ address: currentAddress }) => {
-      if (onConnectCb) {
-        onConnectCb({
-          address: address || currentAddress,
-          balance: data?.formatted,
-          chainId,
-        });
-      }
-    },
-    onDisconnect() {
-      if (onDisconnectCb) onDisconnectCb();
-    },
-  });
 
   useEffect(() => {
     const getData = async () => {
@@ -122,18 +130,21 @@ export const LoginV2 = ({
       }
     };
 
-    getData();
+    if (connector && !isAddressSantioned(address)) {
+      getData();
+    }
   }, [connector]);
 
-  // if the connected address is in the OFAC blocked list,
-  // do not connect the wallet. (ie disconnect the wallet immediately)
-  useEffect(() => {
-    if (ofacSanctionedAddresses.includes(address)) {
-      disconnect();
-    }
-  }, [address]);
+  // console.log('address', address);
 
   const screens = useBreakpoint();
+
+  // Wallet connect shows the address when any address is connected
+  // and takes few seconds to disconnect. Hence, if the address is sanctioned
+  // 1. hide the login button
+  // 2. then the address becomes `null`
+  // 3. shows the login button again
+  // if (address && isAddressSantioned(address)) return null;
 
   return (
     <LoginContainer>
