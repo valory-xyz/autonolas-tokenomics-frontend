@@ -11,7 +11,9 @@ const invalidCounties = Object.values((ofacSanctionedCounties));
 export default function validateCountyMiddleware(request) {
   const country = request.geo?.country;
 
-  if (invalidCounties.includes(country)) {
+  console.log(request.geo);
+
+  if (!country || invalidCounties.includes(country)) {
     return NextResponse.error('Blocked for legal reasons', { status: 451 });
   }
 
