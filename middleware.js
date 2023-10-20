@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import ofacSanctionedCounties from './data/ofac-sanctioned-countries.json';
 
-const invalidCounties = Object.values((ofacSanctionedCounties));
+const invalidCounties = Object.values(ofacSanctionedCounties);
 
 /**
  * Middleware to validate the country and address based on OFAC and other legal requirements
@@ -11,9 +11,7 @@ const invalidCounties = Object.values((ofacSanctionedCounties));
 export default function validateCountyMiddleware(request) {
   const country = request.geo?.country;
 
-  console.log(request.geo);
-
-  if (!country || invalidCounties.includes(country)) {
+  if (invalidCounties.includes(country)) {
     return NextResponse.error('Blocked for legal reasons', { status: 451 });
   }
 
