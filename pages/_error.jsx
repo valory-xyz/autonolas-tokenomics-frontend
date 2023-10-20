@@ -5,7 +5,7 @@ import PropTypes from 'prop-types';
 
 import { useEffect } from 'react';
 
-export const Error = ({ message, statusCode }) => {
+const Error = ({ message, statusCode }) => {
   useEffect(() => {
     console.error(
       statusCode
@@ -40,3 +40,5 @@ Error.defaultProps = {
   message: 'Something went wrong!',
   statusCode: 404,
 };
+
+export default Error;
