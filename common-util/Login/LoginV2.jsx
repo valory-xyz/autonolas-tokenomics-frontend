@@ -8,7 +8,7 @@ import {
   useAccount, useNetwork, useBalance, useDisconnect,
 } from 'wagmi';
 import styled from 'styled-components';
-import { COLOR, MEDIA_QUERY } from '@autonolas/frontend-library';
+import { COLOR, MEDIA_QUERY, notifyError } from '@autonolas/frontend-library';
 
 import { setChainId, setUserBalance } from 'store/setup/actions';
 import {
@@ -138,6 +138,21 @@ export const LoginV2 = ({
   useEffect(() => {
     if (address && isAddressProhibited(address)) {
       disconnect();
+
+      // throw an error
+      notifyError(
+        <>
+          Cannot connect – address is on&nbsp;
+          <a
+            rel="noreferrer"
+            href="https://www.treasury.gov/ofac/downloads/sdnlist.pdf"
+            target="_blank"
+          >
+            OFAC SDN list
+          </a>
+        </>,
+      );
+
       if (onDisconnectCb) onDisconnectCb();
     }
   }, [address]);
