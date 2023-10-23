@@ -7,7 +7,7 @@ import {
   setErrorMessage,
   setLogout,
 } from 'store/setup/actions';
-import { LoginV2 as LoginComponent } from 'common-util/Login';
+import { LoginV2 } from 'common-util/Login';
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -39,7 +39,7 @@ const Login = () => {
 
   return (
     <div>
-      <LoginComponent
+      <LoginV2
         onConnect={onConnect}
         onDisconnect={onDisconnect}
         onError={onError}
