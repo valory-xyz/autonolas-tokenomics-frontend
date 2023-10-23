@@ -100,6 +100,8 @@ const getLpTokenDetails = memoize(async (address) => {
     return { ...LP_PAIRS[address] };
   }
 
+  window.console.warn('LP pair not found in the LP_PAIRS list');
+
   // if the address is not in the LP_PAIRS list
   // (mainnet and goerli)
   const contract = getUniswapV2PairContract(address);
@@ -178,14 +180,19 @@ const getLpTokenNamesForProducts = async (productList, events) => {
 };
 
 const getCurrentPriceBalancer = async (tokenAddress) => {
-  const { lpChainId, poolId } = await getLpTokenDetails(
-    tokenAddress,
-  );
+  const { lpChainId, poolId } = await getLpTokenDetails(tokenAddress);
 
   const balancerConfig = { network: lpChainId, rpcUrl: RPC_URLS[lpChainId] };
   const balancer = new BalancerSDK(balancerConfig);
 
   const pool = await balancer.pools.find(poolId);
+
+  if (!pool) {
+    throw new Error(
+      `Pool not found on Balancer for poolId: ${poolId} and chainId: ${lpChainId}.`,
+    );
+  }
+
   const totalSupply = pool.totalShares;
   const reservesOLAS = pool.tokens[0].balance * 1.0;
   // TODO: ADDRESSES[lpChainId].olasAddress is capital, .address is small
