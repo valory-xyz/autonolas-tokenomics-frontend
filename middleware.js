@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
-import { isCountryProhibited } from '@autonolas/frontend-library';
+import { prohibitedCountries } from '@autonolas/frontend-library';
+
+const prohibitedCountriesCode = Object.values(prohibitedCountries);
 
 /**
  * Middleware to validate the country
@@ -8,8 +10,9 @@ import { isCountryProhibited } from '@autonolas/frontend-library';
  */
 export default function validateCountryMiddleware(request) {
   const country = request.geo?.country;
+  console.log(prohibitedCountriesCode);
 
-  if (isCountryProhibited(country)) {
+  if (prohibitedCountriesCode.includes(country)) {
     return NextResponse.error('Blocked for legal reasons', { status: 451 });
   }
 
