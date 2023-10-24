@@ -5,12 +5,12 @@ import {
   Button, Table, Tag, Tooltip, Typography,
 } from 'antd';
 import { remove, round, isNaN } from 'lodash';
-import { COLOR, notifyError, NA } from '@autonolas/frontend-library';
+import { COLOR, NA } from '@autonolas/frontend-library';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
 
 import { BONDING_PRODUCTS } from 'util/constants';
-import { parseToEth } from 'common-util/functions';
+import { notifySpecificError, parseToEth } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { ADDRESSES } from 'common-util/Contracts';
 import { Deposit } from './Deposit';
@@ -257,8 +257,8 @@ export const BondingList = ({ bondingProgramType }) => {
       }
     } catch (error) {
       const errorMessage = typeof error?.message === 'string' ? error.message : null;
-      notifyError('Error while fetching products', errorMessage);
-      console.error(error);
+      notifySpecificError('Error while fetching products', errorMessage);
+      console.error(error, errorMessage);
     } finally {
       setIsLoading(false);
     }
