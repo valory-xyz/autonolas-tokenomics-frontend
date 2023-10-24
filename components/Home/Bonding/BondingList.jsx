@@ -256,7 +256,8 @@ export const BondingList = ({ bondingProgramType }) => {
         setFilteredProducts(filteredProductList);
       }
     } catch (error) {
-      notifyError('Error while fetching products');
+      const errorMessage = typeof error?.message === 'string' ? error.message : null;
+      notifyError('Error while fetching products', errorMessage);
       console.error(error);
     } finally {
       setIsLoading(false);
