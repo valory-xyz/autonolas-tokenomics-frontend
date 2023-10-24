@@ -4,14 +4,17 @@ import Web3 from 'web3';
 import PropTypes from 'prop-types';
 import { Grid } from 'antd';
 import { Web3Modal, Web3Button, Web3NetworkSwitch } from '@web3modal/react';
-import { useAccount, useNetwork, useBalance } from 'wagmi';
+import {
+  useAccount, useNetwork, useBalance, useDisconnect,
+} from 'wagmi';
 import styled from 'styled-components';
-import { COLOR, MEDIA_QUERY } from '@autonolas/frontend-library';
+import { COLOR, MEDIA_QUERY, notifyError } from '@autonolas/frontend-library';
 
-import { setChainId } from 'store/setup/actions';
+import { setChainId, setUserBalance } from 'store/setup/actions';
 import {
   getChainId,
   getChainIdOrDefaultToMainnet,
+  isAddressProhibited,
 } from 'common-util/functions';
 import { projectId, ethereumClient } from './config';
 
@@ -33,17 +36,40 @@ export const LoginV2 = ({
   theme = 'light',
 }) => {
   const dispatch = useDispatch();
-  const { address } = useAccount();
+  const { disconnect } = useDisconnect();
   const { chain } = useNetwork();
-  const { data } = useBalance({ address });
 
   const chainId = chain?.id;
+  const { address, connector } = useAccount({
+    onConnect: ({ address: currentAddress }) => {
+      if (isAddressProhibited(currentAddress)) {
+        disconnect();
+      } else if (onConnectCb) {
+        onConnectCb({
+          address: address || currentAddress,
+          balance: null,
+          chainId,
+        });
+      }
+    },
+    onDisconnect() {
+      if (onDisconnectCb) onDisconnectCb();
+    },
+  });
+
+  // Update the balance
+  const { data: balance } = useBalance({ address });
+  useEffect(() => {
+    if (balance?.formatted) {
+      dispatch(setUserBalance(balance.formatted));
+    }
+  }, [balance?.formatted]);
 
   useEffect(() => {
     // if chainId is undefined, the wallet is not connected & default to mainnet
     if (chainId === undefined) {
       /**
-       * wait for 100ms to get the chainId & set it to redux to avoid race condition
+       * wait for 0ms to get the chainId & set it to redux to avoid race condition
        * and dependent components are loaded once the chainId is set
        */
       setTimeout(() => {
@@ -55,21 +81,6 @@ export const LoginV2 = ({
       dispatch(setChainId(tempChainId));
     }
   }, [chainId]);
-
-  const { connector } = useAccount({
-    onConnect: ({ address: currentAddress }) => {
-      if (onConnectCb) {
-        onConnectCb({
-          address: address || currentAddress,
-          balance: data?.formatted,
-          chainId,
-        });
-      }
-    },
-    onDisconnect() {
-      if (onDisconnectCb) onDisconnectCb();
-    },
-  });
 
   useEffect(() => {
     const getData = async () => {
@@ -118,8 +129,33 @@ export const LoginV2 = ({
       }
     };
 
-    getData();
+    if (connector && !isAddressProhibited(address)) {
+      getData();
+    }
   }, [connector]);
+
+  // Disconnect if the address is prohibited
+  useEffect(() => {
+    if (address && isAddressProhibited(address)) {
+      disconnect();
+
+      // throw an error
+      notifyError(
+        <>
+          Cannot connect – address is on&nbsp;
+          <a
+            rel="noreferrer"
+            href="https://www.treasury.gov/ofac/downloads/sdnlist.pdf"
+            target="_blank"
+          >
+            OFAC SDN list
+          </a>
+        </>,
+      );
+
+      if (onDisconnectCb) onDisconnectCb();
+    }
+  }, [address]);
 
   const screens = useBreakpoint();
 
