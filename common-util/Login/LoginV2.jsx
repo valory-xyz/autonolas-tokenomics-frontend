@@ -8,13 +8,18 @@ import {
   useAccount, useNetwork, useBalance, useDisconnect,
 } from 'wagmi';
 import styled from 'styled-components';
-import { COLOR, MEDIA_QUERY, notifyError } from '@autonolas/frontend-library';
+import {
+  COLOR,
+  CannotConnectAddressOfacError,
+  MEDIA_QUERY,
+  isAddressProhibited,
+  notifyError,
+} from '@autonolas/frontend-library';
 
 import { setChainId, setUserBalance } from 'store/setup/actions';
 import {
   getChainId,
   getChainIdOrDefaultToMainnet,
-  isAddressProhibited,
 } from 'common-util/functions';
 import { projectId, ethereumClient } from './config';
 
@@ -138,21 +143,7 @@ export const LoginV2 = ({
   useEffect(() => {
     if (address && isAddressProhibited(address)) {
       disconnect();
-
-      // throw an error
-      notifyError(
-        <>
-          Cannot connect – address is on&nbsp;
-          <a
-            rel="noreferrer"
-            href="https://www.treasury.gov/ofac/downloads/sdnlist.pdf"
-            target="_blank"
-          >
-            OFAC SDN list
-          </a>
-        </>,
-      );
-
+      notifyError(<CannotConnectAddressOfacError />);
       if (onDisconnectCb) onDisconnectCb();
     }
   }, [address]);
