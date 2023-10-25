@@ -1,4 +1,5 @@
-import { PROHIBITED_COUNTRIES } from '@autonolas/frontend-library';
+import { toLower } from 'lodash';
+import prohibitedAddresses from '../../data/prohibited-addresses.json';
 
 /**
  * - unitIds and unitTypes are arrays of same length
@@ -10,6 +11,7 @@ export const sortUnitIdsAndTypes = (unitIds, unitTypes) => {
   return [sortedUnitIds, sortedUnitTypes];
 };
 
-export const isCountryProhibited = (country) => PROHIBITED_COUNTRIES.includes(country);
-
-export const PROHIBITED_COUNTRIES_LIST = { ...PROHIBITED_COUNTRIES };
+export const isAddressProhibited = (address) => {
+  const addresses = prohibitedAddresses.map((e) => toLower(e));
+  return addresses.includes(toLower(address));
+};
