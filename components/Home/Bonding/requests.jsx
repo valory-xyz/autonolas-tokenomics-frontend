@@ -186,7 +186,6 @@ const getCurrentPriceBalancerFn = async (tokenAddress) => {
 
   const balancerConfig = { network: lpChainId, rpcUrl: RPC_URLS[lpChainId] };
   const balancer = new BalancerSDK(balancerConfig);
-
   const pool = await balancer.pools.find(poolId);
 
   if (!pool) {
@@ -206,7 +205,10 @@ const getCurrentPriceBalancerFn = async (tokenAddress) => {
   const priceLP = (reservesOLAS * 10 ** 18) / totalSupply;
   return priceLP;
 };
-const getCurrentPriceBalancer = memoize(getCurrentPriceBalancerFn, (token) => token);
+const getCurrentPriceBalancer = memoize(
+  getCurrentPriceBalancerFn,
+  (token) => token,
+);
 
 const getCurrentLpPriceForProducts = async (productList) => {
   const contract = getDepositoryContract();
@@ -257,12 +259,12 @@ export const getListWithSupplyList = async (
   createProductEvents,
   closedProductEvents = [],
 ) => list.map((product) => {
-  const createProductEvent = createProductEvents.find(
-    (event) => event.returnValues.productId === `${product.id}`,
+  const createProductEvent = createProductEvents?.find(
+    (event) => event?.returnValues?.productId === `${product.id}`,
   );
 
-  const closeProductEvent = closedProductEvents.find(
-    (event) => event.returnValues.productId === `${product.id}`,
+  const closeProductEvent = closedProductEvents?.find(
+    (event) => event?.returnValues?.productId === `${product.id}`,
   );
 
   // Should not happen but we will warn if it does
