@@ -74,7 +74,7 @@ const getProductEventsFn = async (eventName) => {
 
   return events;
 };
-const getProductEvents = memoize(getProductEventsFn, (eventName) => eventName);
+const getProductEvents = memoize(getProductEventsFn);
 
 /**
  * Fetches detials of the LP token.
