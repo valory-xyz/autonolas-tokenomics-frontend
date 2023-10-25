@@ -121,7 +121,7 @@ const getLpTokenDetailsFn = async (address) => {
     poolId: null,
   };
 };
-const getLpTokenDetails = memoize(getLpTokenDetailsFn, (address) => address);
+const getLpTokenDetails = memoize(getLpTokenDetailsFn);
 
 /**
  * Fetches the LP token name for the product list
@@ -205,10 +205,7 @@ const getCurrentPriceBalancerFn = async (tokenAddress) => {
   const priceLP = (reservesOLAS * 10 ** 18) / totalSupply;
   return priceLP;
 };
-const getCurrentPriceBalancer = memoize(
-  getCurrentPriceBalancerFn,
-  (token) => token,
-);
+const getCurrentPriceBalancer = memoize(getCurrentPriceBalancerFn);
 
 const getCurrentLpPriceForProducts = async (productList) => {
   const contract = getDepositoryContract();
