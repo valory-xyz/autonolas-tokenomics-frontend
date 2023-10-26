@@ -23,7 +23,10 @@ import {
   ADDRESSES,
   RPC_URLS,
 } from 'common-util/Contracts';
-import { getProductValueFromEvent } from './requestsHelpers';
+import {
+  getProductValueFromEvent,
+  getLpTokenWithDiscount,
+} from './requestsHelpers';
 
 const LP_PAIRS = {
   // gnosis-chain
@@ -179,27 +182,6 @@ const getLpTokenNamesForProducts = async (productList, events) => {
   });
 };
 
-// FUNCTIONS FOR CALCULATIONS
-// price LP is multiplied by 2 here
-export const buildFullCurrentPriceLp = (currentPriceLp) => Number(round(parseToEth(currentPriceLp * 2), 2)) || '--';
-
-/**
- *
- * @param {BigNumber} lpTokenValue
- * @param {Number} discount
- * @returns {BigNumber}
- */
-export const getLpTokenWithDiscount = (lpTokenValue, discount) => {
-  const price = ethers.BigNumber.from(lpTokenValue);
-  const discountedPrice = price.add(price.mul(discount).div(100));
-  return discountedPrice;
-};
-
-export const displayLpTokenWithDiscount = (value) => {
-  const temp = parseToEth(value);
-  return round(temp, 2);
-};
-
 const getCurrentPriceBalancer = async (tokenAddress) => {
   const { lpChainId, poolId } = await getLpTokenDetails(tokenAddress);
 
@@ -299,17 +281,27 @@ export const getListWithSupplyList = async (
   return { ...product, supplyLeft, priceLP };
 });
 
-const getLpPriceWithProjectedChange = (productList) => productList.map((record) => {
-  const fullCurrentPriceLp = buildFullCurrentPriceLp(record.currentPriceLp);
-  const discount = record?.discount || 0;
+/**
+ * Adds the projected change & discounted olas per LP token to the list
+ */
+const getLpPriceWithProjectedChange = (list) => list.map((record) => {
+  // current price of the LP token is multiplied by 2
+  // because the price is for 1 LP token and
+  // we need the price for 2 LP tokens
+  const fullCurrentPriceLp = Number(round(parseToEth(record.currentPriceLp * 2), 2)) || '--';
+
   const discountedOlasPerLpToken = getLpTokenWithDiscount(
     record.priceLP,
-    discount,
-  );
-  const roundedDiscountedOlasPerLpToken = displayLpTokenWithDiscount(
-    discountedOlasPerLpToken,
+    record?.discount || 0,
   );
 
+  // parse to eth and round to 2 decimal places
+  const roundedDiscountedOlasPerLpToken = round(
+    parseToEth(discountedOlasPerLpToken),
+    2,
+  );
+
+  // calculate the projected change
   const projectedChange = round(
     ((roundedDiscountedOlasPerLpToken - fullCurrentPriceLp)
         / fullCurrentPriceLp)
@@ -317,7 +309,12 @@ const getLpPriceWithProjectedChange = (productList) => productList.map((record) 
     2,
   );
 
-  return { ...record, projectedChange };
+  return {
+    ...record,
+    fullCurrentPriceLp,
+    roundedDiscountedOlasPerLpToken,
+    projectedChange,
+  };
 });
 
 /**

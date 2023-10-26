@@ -13,13 +13,8 @@ import { parseToEth } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { ADDRESSES } from 'common-util/Contracts';
 import { Deposit } from './Deposit';
-import {
-  getProductListRequest,
-  getAllTheProductsNotRemoved,
-  buildFullCurrentPriceLp,
-  getLpTokenWithDiscount,
-  displayLpTokenWithDiscount,
-} from './requests';
+import { getProductListRequest, getAllTheProductsNotRemoved } from './requests';
+import { getLpTokenWithDiscount } from './requestsHelpers';
 
 const { Text } = Typography;
 
@@ -63,15 +58,15 @@ const getColumns = (
     },
     {
       title: getTitle('Current Price of LP Token', 'Denominated in OLAS'),
-      dataIndex: 'currentPriceLp',
-      key: 'currentPriceLp',
-      render: (text, details) => (
+      dataIndex: 'fullCurrentPriceLp',
+      key: 'fullCurrentPriceLp',
+      render: (x, details) => (
         <a
           href={details.currentPriceLpLink}
           rel="noopener noreferrer"
           target="_blank"
         >
-          {buildFullCurrentPriceLp(text)}
+          {x}
         </a>
       ),
     },
@@ -80,22 +75,17 @@ const getColumns = (
         'OLAS minted per LP token',
         'Price for one LP token denominated in OLAS as offered by the bonding product.',
       ),
-      dataIndex: 'priceLP',
-      key: 'priceLP',
-      render: (x, data) => {
-        const discount = data?.discount || 0;
-        const discountedPrice = getLpTokenWithDiscount(x, discount);
-
-        return (
-          <a
-            href={`https://etherscan.io/address/${depositoryAddress}#readContract#F10`}
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            {displayLpTokenWithDiscount(discountedPrice)}
-          </a>
-        );
-      },
+      dataIndex: 'roundedDiscountedOlasPerLpToken',
+      key: 'roundedDiscountedOlasPerLpToken',
+      render: (x) => (
+        <a
+          href={`https://etherscan.io/address/${depositoryAddress}#readContract#F10`}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          {x}
+        </a>
+      ),
     },
     {
       title: getTitle(
