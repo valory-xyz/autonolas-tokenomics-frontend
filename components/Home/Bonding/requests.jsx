@@ -193,8 +193,6 @@ const getCurrentPriceBalancer = async (tokenAddress) => {
   const reservesOLAS = (areAddressesEqual(pool.tokens[0].address, ADDRESSES[lpChainId].olasAddress)
     ? pool.tokens[0].balance
     : pool.tokens[1].balance) * 1.0;
-
-  // TODO: where do we multiply the price by 2? somewhere after?
   const priceLP = (reservesOLAS * 10 ** 18) / totalSupply;
   return priceLP;
 };
