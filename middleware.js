@@ -14,7 +14,7 @@ export default function validateCountryMiddleware(request) {
   if (['IN'].includes(country)) {
     return Response.json(
       { success: false, message: 'This country is not allowed to access this website due to legal reasons.' },
-      { status: 401 },
+      { status: 451 },
     );
   }
 
