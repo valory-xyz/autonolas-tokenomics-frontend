@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { ethers } from 'ethers';
 import PropTypes from 'prop-types';
 import {
   Button, Table, Tag, Tooltip, Typography,
@@ -14,7 +13,13 @@ import { parseToEth } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { ADDRESSES } from 'common-util/Contracts';
 import { Deposit } from './Deposit';
-import { getProductListRequest, getAllTheProductsNotRemoved } from './requests';
+import {
+  getProductListRequest,
+  getAllTheProductsNotRemoved,
+  buildFullCurrentPriceLp,
+  getLpTokenWithDiscount,
+  displayLpTokenWithDiscount,
+} from './requests';
 
 const { Text } = Typography;
 
@@ -27,25 +32,6 @@ const Container = styled.div`
   }
 `;
 
-/**
- *
- * @param {BigNumber} lpTokenValue
- * @param {Number} discount
- * @returns {BigNumber}
- */
-const getLpTokenWithDiscount = (lpTokenValue, discount) => {
-  const price = ethers.BigNumber.from(lpTokenValue);
-  const discountedPrice = price.add(price.mul(discount).div(100));
-  return discountedPrice;
-};
-
-const displayLpTokenWithDiscount = (value) => {
-  const temp = parseToEth(value);
-  return round(temp, 2);
-};
-
-const buildFullCurrentPriceLp = (currentPriceLp) => Number(round(parseToEth(currentPriceLp * 2), 2)) || '--';
-
 const getTitle = (title, tooltipDesc) => (
   <Tooltip title={tooltipDesc}>
     <span>
@@ -55,27 +41,6 @@ const getTitle = (title, tooltipDesc) => (
     </span>
   </Tooltip>
 );
-
-const getCurrentDifferenceInValue = (record) => {
-  const fullCurrentPriceLp = buildFullCurrentPriceLp(record.currentPriceLp);
-  const discount = record?.discount || 0;
-  const discountedOlasPerLpToken = getLpTokenWithDiscount(
-    record.priceLP,
-    discount,
-  );
-  const roundedDiscountedOlasPerLpToken = displayLpTokenWithDiscount(
-    discountedOlasPerLpToken,
-  );
-
-  const projectedChange = round(
-    ((roundedDiscountedOlasPerLpToken - fullCurrentPriceLp)
-      / fullCurrentPriceLp)
-      * 100,
-    2,
-  );
-
-  return projectedChange;
-};
 
 const getColumns = (
   showNoSupply,
@@ -278,11 +243,7 @@ export const BondingList = ({ bondingProgramType }) => {
 
   const getProductsDataSource = () => {
     const list = showNoSupply ? allProducts : filteredProducts;
-    const updatedList = list.map((e) => ({
-      ...e,
-      projectedChange: getCurrentDifferenceInValue(e),
-    }));
-    const sortedList = updatedList.sort((a, b) => {
+    const sortedList = list.sort((a, b) => {
       if (isNaN(a.projectedChange)) return 1;
       if (isNaN(b.projectedChange)) return -1;
       return b.projectedChange - a.projectedChange;

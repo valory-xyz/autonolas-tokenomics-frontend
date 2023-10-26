@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 import { BalancerSDK } from '@balancer-labs/sdk';
-import { memoize } from 'lodash';
+import { memoize, round } from 'lodash';
+import { areAddressesEqual } from '@autonolas/frontend-library';
 
 import { DEX } from 'util/constants';
 import {
@@ -11,6 +12,7 @@ import {
   sendTransaction,
   getChainId,
   isL1Network,
+  parseToEth,
 } from 'common-util/functions';
 import {
   getDepositoryContract,
@@ -177,21 +179,38 @@ const getLpTokenNamesForProducts = async (productList, events) => {
   });
 };
 
+// FUNCTIONS FOR CALCULATIONS
+// price LP is multiplied by 2 here
+export const buildFullCurrentPriceLp = (currentPriceLp) => Number(round(parseToEth(currentPriceLp * 2), 2)) || '--';
+
+/**
+ *
+ * @param {BigNumber} lpTokenValue
+ * @param {Number} discount
+ * @returns {BigNumber}
+ */
+export const getLpTokenWithDiscount = (lpTokenValue, discount) => {
+  const price = ethers.BigNumber.from(lpTokenValue);
+  const discountedPrice = price.add(price.mul(discount).div(100));
+  return discountedPrice;
+};
+
+export const displayLpTokenWithDiscount = (value) => {
+  const temp = parseToEth(value);
+  return round(temp, 2);
+};
+
 const getCurrentPriceBalancer = async (tokenAddress) => {
-  const { lpChainId, poolId } = await getLpTokenDetails(
-    tokenAddress,
-  );
+  const { lpChainId, poolId } = await getLpTokenDetails(tokenAddress);
 
   const balancerConfig = { network: lpChainId, rpcUrl: RPC_URLS[lpChainId] };
   const balancer = new BalancerSDK(balancerConfig);
 
   const pool = await balancer.pools.find(poolId);
   const totalSupply = pool.totalShares;
-  const reservesOLAS = pool.tokens[0].balance * 1.0;
-  // TODO: ADDRESSES[lpChainId].olasAddress is capital, .address is small
-  // (pool.tokens[0].address !== ADDRESSES[lpChainId].olasAddress
-  // ? pool.tokens[1].balance
-  // : pool.tokens[0].balance) * 1.0;
+  const reservesOLAS = (areAddressesEqual(pool.tokens[0].address, ADDRESSES[lpChainId].olasAddress)
+    ? pool.tokens[0].balance
+    : pool.tokens[1].balance) * 1.0;
 
   // TODO: where do we multiply the price by 2? somewhere after?
   const priceLP = (reservesOLAS * 10 ** 18) / totalSupply;
@@ -236,8 +255,8 @@ const getCurrentLpPriceForProducts = async (productList) => {
 
   const resolvedList = await Promise.all(currentLpPricePromiseList);
 
-  return productList.map((component, index) => ({
-    ...component,
+  return productList.map((record, index) => ({
+    ...record,
     currentPriceLp: resolvedList[index],
   }));
 };
@@ -280,6 +299,27 @@ export const getListWithSupplyList = async (
   return { ...product, supplyLeft, priceLP };
 });
 
+const getLpPriceWithProjectedChange = (productList) => productList.map((record) => {
+  const fullCurrentPriceLp = buildFullCurrentPriceLp(record.currentPriceLp);
+  const discount = record?.discount || 0;
+  const discountedOlasPerLpToken = getLpTokenWithDiscount(
+    record.priceLP,
+    discount,
+  );
+  const roundedDiscountedOlasPerLpToken = displayLpTokenWithDiscount(
+    discountedOlasPerLpToken,
+  );
+
+  const projectedChange = round(
+    ((roundedDiscountedOlasPerLpToken - fullCurrentPriceLp)
+        / fullCurrentPriceLp)
+        * 100,
+    2,
+  );
+
+  return { ...record, projectedChange };
+});
+
 /**
  *
  */
@@ -293,9 +333,13 @@ const getProductDetailsFromIds = async ({ productIdList }) => {
     allListPromise.push(allListResult);
   }
 
+  // discount factor is same for all the products
+  const discount = await getLastIDFRequest();
+
   const response = await Promise.all(allListPromise);
   const productList = response.map((product, index) => ({
     ...product,
+    discount,
     id: productIdList[index],
   }));
 
@@ -317,7 +361,9 @@ const getProductDetailsFromIds = async ({ productIdList }) => {
     closedEventList,
   );
 
-  return listWithSupplyList;
+  const listWithProjectedChange = getLpPriceWithProjectedChange(listWithSupplyList);
+
+  return listWithProjectedChange;
 };
 
 /**
@@ -367,7 +413,9 @@ export const getAllTheProductsNotRemoved = async () => {
     closedEventList,
   );
 
-  return listWithSupplyList;
+  const listWithProjectedChange = getLpPriceWithProjectedChange(listWithSupplyList);
+
+  return listWithProjectedChange;
 };
 
 /**
