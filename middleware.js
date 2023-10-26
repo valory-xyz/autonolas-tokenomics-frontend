@@ -12,7 +12,10 @@ export default function validateCountryMiddleware(request) {
   const country = request.geo?.country;
 
   if (prohibitedCountriesCode.includes(country)) {
-    return NextResponse.error('Blocked for legal reasons', { status: 451 });
+    return Response.json(
+      { success: false, message: 'This country is not allowed to access this website due to legal reasons.' },
+      { status: 401 },
+    );
   }
 
   return NextResponse.next();
