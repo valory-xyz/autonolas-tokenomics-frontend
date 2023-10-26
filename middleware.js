@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-// import prohibitedCountries from './data/prohibited-countries.json';
+import prohibitedCountries from './data/prohibited-countries.json';
 
-// const prohibitedCountriesCode = Object.values(prohibitedCountries);
+const prohibitedCountriesCode = Object.values(prohibitedCountries);
 
 /**
  * Middleware to validate the country
@@ -11,12 +11,14 @@ import { NextResponse } from 'next/server';
 export default function validateCountryMiddleware(request) {
   const country = request.geo?.country;
 
-  if ([undefined].includes(country) && request.nextUrl.pathname !== '/_error') {
-    const errorUrl = new URL('/_error', request.url);
-    // errorUrl.searchParams.set('code', '451');
-    // set status code to 451
-
-    return NextResponse.redirect(errorUrl, { status: 451, statusText: 'Unavailable For Legal Reasons' });
+  if (prohibitedCountriesCode.includes(country)) {
+    return NextResponse.json(
+      {
+        message: 'This country is not allowed to access this website due to legal reasons.',
+        status_code: 451,
+      },
+      { status: 451 },
+    );
   }
 
   return NextResponse.next();
