@@ -25,7 +25,7 @@ export default function validateCountryMiddleware(request) {
     }
 
     // if not prohibited & trying to access not-legal page, redirect to home
-    return NextResponse.redirect(new URL('/'));
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
   // if country is prohibited, redirect to not-legal page
