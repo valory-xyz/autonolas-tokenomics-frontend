@@ -5,6 +5,12 @@ import { NextResponse } from 'next/server';
 
 const prohibitedCountriesCode = [undefined, 'IN'];
 
+export const config = {
+  matcher: [
+    '/((?!_next|api/auth).*)(.+)',
+  ],
+};
+
 /**
  * Middleware to validate the country
  *
@@ -13,15 +19,20 @@ const prohibitedCountriesCode = [undefined, 'IN'];
 export default function validateCountryMiddleware(request) {
   const country = request.geo?.country;
 
-  console.log({ country });
+  const isProhibited = prohibitedCountriesCode.includes(country);
 
-  // if already on the not-legal page, don't redirect
+  // // if already on the not-legal page, don't redirect
   if (request.nextUrl.pathname === '/not-legal') {
-    return NextResponse.next();
+    if (isProhibited) {
+      return NextResponse.next();
+    }
+
+    // if not prohibited & trying to access not-legal page, redirect to home
+    return NextResponse.redirect(new URL('/'));
   }
 
-  // if country is prohibited, redirect to not-legal page
-  if (prohibitedCountriesCode.includes(country)) {
+  // // if country is prohibited, redirect to not-legal page
+  if (isProhibited) {
     return NextResponse.redirect(new URL('/not-legal', request.url));
   }
 
