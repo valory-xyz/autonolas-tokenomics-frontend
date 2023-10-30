@@ -3,12 +3,6 @@ import prohibitedCountries from './data/prohibited-countries.json';
 
 const prohibitedCountriesCode = Object.values(prohibitedCountries);
 
-export const config = {
-  matcher: [
-    '/((?!_next|api/auth).*)(.+)',
-  ],
-};
-
 /**
  * Middleware to validate the country
  *
@@ -18,7 +12,9 @@ export default function validateCountryMiddleware(request) {
   const country = request.geo?.country;
   const isProhibited = prohibitedCountriesCode.includes(country);
 
-  console.log({ country, prohibitedCountriesCode, isProhibited });
+  console.log(country);
+  console.log(prohibitedCountriesCode);
+  console.log(isProhibited);
 
   // if already on the not-legal page, don't redirect
   if (request.nextUrl.pathname === '/not-legal') {
