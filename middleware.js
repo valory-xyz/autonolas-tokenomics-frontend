@@ -18,6 +18,8 @@ export default function validateCountryMiddleware(request) {
   const country = request.geo?.country;
   const isProhibited = prohibitedCountriesCode.includes(country);
 
+  console.log({ country, prohibitedCountriesCode, isProhibited });
+
   // if already on the not-legal page, don't redirect
   if (request.nextUrl.pathname === '/not-legal') {
     if (isProhibited) {
