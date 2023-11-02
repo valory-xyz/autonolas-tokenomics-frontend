@@ -1,10 +1,4 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
-const withBundleAnalyzer = require('@next/bundle-analyzer');
-
-/**
- * @type {import('next').NextConfig}
- */
-const nextConfig = {
+module.exports = {
   reactStrictMode: true,
   compiler: {
     styledComponents: true,
@@ -40,7 +34,3 @@ const nextConfig = {
     ];
   },
 };
-
-module.exports = withBundleAnalyzer({
-  enabled: process.env.ANALYZE === 'true',
-}, nextConfig);
