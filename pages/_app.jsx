@@ -11,24 +11,34 @@ import { wagmiConfig } from 'common-util/Login/config';
 import Layout from 'components/Layout';
 import GlobalStyle from 'components/GlobalStyles';
 import { THEME_CONFIG } from '@autonolas/frontend-library';
+import { useRouter } from 'next/router';
 import initStore from '../store';
 
-const MyApp = ({ Component, pageProps }) => (
-  <>
-    <GlobalStyle />
-    <Head>
-      <title>Olas Tokenomics</title>
-      <meta name="title" content="Olas Tokenomics" />
-    </Head>
-    <ConfigProvider theme={THEME_CONFIG}>
-      <WagmiConfigProvider config={wagmiConfig}>
-        <Layout>
+const MyApp = ({ Component, pageProps }) => {
+  const router = useRouter();
+  const isNotLegal = router.pathname === '/not-legal';
+
+  return (
+    <>
+      <GlobalStyle />
+      <Head>
+        <title>Olas Tokenomics</title>
+        <meta name="title" content="Olas Tokenomics" />
+      </Head>
+      <ConfigProvider theme={THEME_CONFIG}>
+        {isNotLegal ? (
           <Component {...pageProps} />
-        </Layout>
-      </WagmiConfigProvider>
-    </ConfigProvider>
-  </>
-);
+        ) : (
+          <WagmiConfigProvider config={wagmiConfig}>
+            <Layout>
+              <Component {...pageProps} />
+            </Layout>
+          </WagmiConfigProvider>
+        )}
+      </ConfigProvider>
+    </>
+  );
+};
 
 MyApp.getInitialProps = async ({ Component, ctx }) => {
   const pageProps = Component.getInitialProps

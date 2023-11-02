@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 import { BalancerSDK } from '@balancer-labs/sdk';
-import { memoize } from 'lodash';
+import { memoize, round } from 'lodash';
+import { areAddressesEqual } from '@autonolas/frontend-library';
 
 import { DEX } from 'util/constants';
 import {
@@ -11,6 +12,7 @@ import {
   sendTransaction,
   getChainId,
   isL1Network,
+  parseToEth,
 } from 'common-util/functions';
 import {
   getDepositoryContract,
@@ -21,7 +23,10 @@ import {
   ADDRESSES,
   RPC_URLS,
 } from 'common-util/Contracts';
-import { getProductValueFromEvent } from './requestsHelpers';
+import {
+  getProductValueFromEvent,
+  getLpTokenWithDiscount,
+} from './requestsHelpers';
 
 const LP_PAIRS = {
   // gnosis-chain
@@ -195,13 +200,9 @@ const getCurrentPriceBalancerFn = async (tokenAddress) => {
   }
 
   const totalSupply = pool.totalShares;
-  const reservesOLAS = pool.tokens[0].balance * 1.0;
-  // TODO: ADDRESSES[lpChainId].olasAddress is capital, .address is small
-  // (pool.tokens[0].address !== ADDRESSES[lpChainId].olasAddress
-  // ? pool.tokens[1].balance
-  // : pool.tokens[0].balance) * 1.0;
-
-  // TODO: where do we multiply the price by 2? somewhere after?
+  const reservesOLAS = (areAddressesEqual(pool.tokens[0].address, ADDRESSES[lpChainId].olasAddress)
+    ? pool.tokens[0].balance
+    : pool.tokens[1].balance) * 1.0;
   const priceLP = (reservesOLAS * 10 ** 18) / totalSupply;
   return priceLP;
 };
@@ -245,8 +246,8 @@ const getCurrentLpPriceForProducts = async (productList) => {
 
   const resolvedList = await Promise.all(currentLpPricePromiseList);
 
-  return productList.map((component, index) => ({
-    ...component,
+  return productList.map((record, index) => ({
+    ...record,
     currentPriceLp: resolvedList[index],
   }));
 };
@@ -290,6 +291,42 @@ export const getListWithSupplyList = async (
 });
 
 /**
+ * Adds the projected change & discounted olas per LP token to the list
+ */
+const getLpPriceWithProjectedChange = (list) => list.map((record) => {
+  // current price of the LP token is multiplied by 2
+  // because the price is for 1 LP token and
+  // we need the price for 2 LP tokens
+  const fullCurrentPriceLp = Number(round(parseToEth(record.currentPriceLp * 2), 2)) || '--';
+
+  const discountedOlasPerLpToken = getLpTokenWithDiscount(
+    record.priceLP,
+    record?.discount || 0,
+  );
+
+  // parse to eth and round to 2 decimal places
+  const roundedDiscountedOlasPerLpToken = round(
+    parseToEth(discountedOlasPerLpToken),
+    2,
+  );
+
+  // calculate the projected change
+  const projectedChange = round(
+    ((roundedDiscountedOlasPerLpToken - fullCurrentPriceLp)
+        / fullCurrentPriceLp)
+        * 100,
+    2,
+  );
+
+  return {
+    ...record,
+    fullCurrentPriceLp,
+    roundedDiscountedOlasPerLpToken,
+    projectedChange,
+  };
+});
+
+/**
  *
  */
 const getProductDetailsFromIds = async ({ productIdList }) => {
@@ -302,9 +339,13 @@ const getProductDetailsFromIds = async ({ productIdList }) => {
     allListPromise.push(allListResult);
   }
 
+  // discount factor is same for all the products
+  const discount = await getLastIDFRequest();
+
   const response = await Promise.all(allListPromise);
   const productList = response.map((product, index) => ({
     ...product,
+    discount,
     id: productIdList[index],
   }));
 
@@ -326,7 +367,9 @@ const getProductDetailsFromIds = async ({ productIdList }) => {
     closedEventList,
   );
 
-  return listWithSupplyList;
+  const listWithProjectedChange = getLpPriceWithProjectedChange(listWithSupplyList);
+
+  return listWithProjectedChange;
 };
 
 /**
@@ -376,7 +419,9 @@ export const getAllTheProductsNotRemoved = async () => {
     closedEventList,
   );
 
-  return listWithSupplyList;
+  const listWithProjectedChange = getLpPriceWithProjectedChange(listWithSupplyList);
+
+  return listWithProjectedChange;
 };
 
 /**

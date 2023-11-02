@@ -157,6 +157,9 @@ const GlobalStyle = createGlobalStyle`
   .custom-form-item-tokenAmount {
     margin-bottom: 4px;
   }
+  .ant-form-item-extra {
+    font-size: 16px !important; 
+  }
 
   /* button */
   .ant-btn-danger {

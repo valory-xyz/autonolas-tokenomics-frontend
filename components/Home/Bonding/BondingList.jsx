@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { ethers } from 'ethers';
 import PropTypes from 'prop-types';
 import {
   Button, Table, Tag, Tooltip, Typography,
@@ -15,6 +14,7 @@ import { useHelpers } from 'common-util/hooks/useHelpers';
 import { ADDRESSES } from 'common-util/Contracts';
 import { Deposit } from './Deposit';
 import { getProductListRequest, getAllTheProductsNotRemoved } from './requests';
+import { getLpTokenWithDiscount } from './requestsHelpers';
 
 const { Text } = Typography;
 
@@ -27,25 +27,6 @@ const Container = styled.div`
   }
 `;
 
-/**
- *
- * @param {BigNumber} lpTokenValue
- * @param {Number} discount
- * @returns {BigNumber}
- */
-const getLpTokenWithDiscount = (lpTokenValue, discount) => {
-  const price = ethers.BigNumber.from(lpTokenValue);
-  const discountedPrice = price.add(price.mul(discount).div(100));
-  return discountedPrice;
-};
-
-const displayLpTokenWithDiscount = (value) => {
-  const temp = parseToEth(value);
-  return round(temp, 2);
-};
-
-const buildFullCurrentPriceLp = (currentPriceLp) => Number(round(parseToEth(currentPriceLp * 2), 2)) || '--';
-
 const getTitle = (title, tooltipDesc) => (
   <Tooltip title={tooltipDesc}>
     <span>
@@ -55,27 +36,6 @@ const getTitle = (title, tooltipDesc) => (
     </span>
   </Tooltip>
 );
-
-const getCurrentDifferenceInValue = (record) => {
-  const fullCurrentPriceLp = buildFullCurrentPriceLp(record.currentPriceLp);
-  const discount = record?.discount || 0;
-  const discountedOlasPerLpToken = getLpTokenWithDiscount(
-    record.priceLP,
-    discount,
-  );
-  const roundedDiscountedOlasPerLpToken = displayLpTokenWithDiscount(
-    discountedOlasPerLpToken,
-  );
-
-  const projectedChange = round(
-    ((roundedDiscountedOlasPerLpToken - fullCurrentPriceLp)
-      / fullCurrentPriceLp)
-      * 100,
-    2,
-  );
-
-  return projectedChange;
-};
 
 const getColumns = (
   showNoSupply,
@@ -98,15 +58,15 @@ const getColumns = (
     },
     {
       title: getTitle('Current Price of LP Token', 'Denominated in OLAS'),
-      dataIndex: 'currentPriceLp',
-      key: 'currentPriceLp',
-      render: (text, details) => (
+      dataIndex: 'fullCurrentPriceLp',
+      key: 'fullCurrentPriceLp',
+      render: (x, details) => (
         <a
           href={details.currentPriceLpLink}
           rel="noopener noreferrer"
           target="_blank"
         >
-          {buildFullCurrentPriceLp(text)}
+          {x}
         </a>
       ),
     },
@@ -115,22 +75,17 @@ const getColumns = (
         'OLAS minted per LP token',
         'Price for one LP token denominated in OLAS as offered by the bonding product.',
       ),
-      dataIndex: 'priceLP',
-      key: 'priceLP',
-      render: (x, data) => {
-        const discount = data?.discount || 0;
-        const discountedPrice = getLpTokenWithDiscount(x, discount);
-
-        return (
-          <a
-            href={`https://etherscan.io/address/${depositoryAddress}#readContract#F10`}
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            {displayLpTokenWithDiscount(discountedPrice)}
-          </a>
-        );
-      },
+      dataIndex: 'roundedDiscountedOlasPerLpToken',
+      key: 'roundedDiscountedOlasPerLpToken',
+      render: (x) => (
+        <a
+          href={`https://etherscan.io/address/${depositoryAddress}#readContract#F10`}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          {x}
+        </a>
+      ),
     },
     {
       title: getTitle(
@@ -279,11 +234,7 @@ export const BondingList = ({ bondingProgramType }) => {
 
   const getProductsDataSource = () => {
     const list = showNoSupply ? allProducts : filteredProducts;
-    const updatedList = list.map((e) => ({
-      ...e,
-      projectedChange: getCurrentDifferenceInValue(e),
-    }));
-    const sortedList = updatedList.sort((a, b) => {
+    const sortedList = list.sort((a, b) => {
       if (isNaN(a.projectedChange)) return 1;
       if (isNaN(b.projectedChange)) return -1;
       return b.projectedChange - a.projectedChange;
