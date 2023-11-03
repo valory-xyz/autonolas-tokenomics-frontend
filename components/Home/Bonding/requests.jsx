@@ -65,7 +65,7 @@ const getBondingProgramsRequest = async ({ isActive }) => {
 /**
  * returns events for the product creation
  */
-export const getProductEvents = memoize(async (eventName) => {
+const getProductEventsFn = async (eventName) => {
   const contract = getDepositoryContract();
 
   const provider = getEthersProvider();
@@ -78,7 +78,8 @@ export const getProductEvents = memoize(async (eventName) => {
   });
 
   return events;
-});
+};
+const getProductEvents = memoize(getProductEventsFn);
 
 /**
  * Fetches detials of the LP token.
@@ -93,7 +94,7 @@ export const getProductEvents = memoize(async (eventName) => {
  *  poolId
  * }
  */
-const getLpTokenDetails = memoize(async (address) => {
+const getLpTokenDetailsFn = async (address) => {
   const chainId = getChainId();
 
   const currentLpPairDetails = Object.keys(LP_PAIRS).find(
@@ -104,6 +105,8 @@ const getLpTokenDetails = memoize(async (address) => {
   if (currentLpPairDetails) {
     return { ...LP_PAIRS[address] };
   }
+
+  window.console.warn('LP pair not found in the LP_PAIRS list');
 
   // if the address is not in the LP_PAIRS list
   // (mainnet and goerli)
@@ -122,7 +125,8 @@ const getLpTokenDetails = memoize(async (address) => {
     dex: DEX.UNISWAP,
     poolId: null,
   };
-});
+};
+const getLpTokenDetails = memoize(getLpTokenDetailsFn);
 
 /**
  * Fetches the LP token name for the product list
@@ -182,13 +186,19 @@ const getLpTokenNamesForProducts = async (productList, events) => {
   });
 };
 
-const getCurrentPriceBalancer = async (tokenAddress) => {
+const getCurrentPriceBalancerFn = async (tokenAddress) => {
   const { lpChainId, poolId } = await getLpTokenDetails(tokenAddress);
 
   const balancerConfig = { network: lpChainId, rpcUrl: RPC_URLS[lpChainId] };
   const balancer = new BalancerSDK(balancerConfig);
-
   const pool = await balancer.pools.find(poolId);
+
+  if (!pool) {
+    throw new Error(
+      `Pool not found on Balancer for poolId: ${poolId} and chainId: ${lpChainId}.`,
+    );
+  }
+
   const totalSupply = pool.totalShares;
   const reservesOLAS = (areAddressesEqual(pool.tokens[0].address, ADDRESSES[lpChainId].olasAddress)
     ? pool.tokens[0].balance
@@ -196,6 +206,7 @@ const getCurrentPriceBalancer = async (tokenAddress) => {
   const priceLP = (reservesOLAS * 10 ** 18) / totalSupply;
   return priceLP;
 };
+const getCurrentPriceBalancer = memoize(getCurrentPriceBalancerFn);
 
 const getCurrentLpPriceForProducts = async (productList) => {
   const contract = getDepositoryContract();
@@ -246,12 +257,12 @@ export const getListWithSupplyList = async (
   createProductEvents,
   closedProductEvents = [],
 ) => list.map((product) => {
-  const createProductEvent = createProductEvents.find(
-    (event) => event.returnValues.productId === `${product.id}`,
+  const createProductEvent = createProductEvents?.find(
+    (event) => event?.returnValues?.productId === `${product.id}`,
   );
 
-  const closeProductEvent = closedProductEvents.find(
-    (event) => event.returnValues.productId === `${product.id}`,
+  const closeProductEvent = closedProductEvents?.find(
+    (event) => event?.returnValues?.productId === `${product.id}`,
   );
 
   // Should not happen but we will warn if it does

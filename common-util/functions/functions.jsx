@@ -85,14 +85,26 @@ const getErrorMessage = (error) => {
     if ((error?.message || '').includes('execution reverted')) {
       return 'Nothing to claim for the connected wallet';
     }
+
+    return error?.message || 'Some error occured';
   }
 
-  return 'Some error occured';
+  return error || 'Some error occured';
 };
 
-export const notifySpecificError = (error) => {
+export const getErrorDescription = (desc) => {
+  // don't show error if it is due to compute units
+  if ((desc || '').includes('app has exceeded its compute units ')) {
+    return null;
+  }
+
+  return desc;
+};
+
+export const notifySpecificError = (error, desc) => {
   const message = getErrorMessage(error);
-  notifyError(message);
+  const description = getErrorDescription(desc);
+  notifyError(message, description);
 };
 
 /**
