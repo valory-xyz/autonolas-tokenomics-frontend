@@ -6,6 +6,8 @@ import { Layout, Menu } from 'antd';
 import { ExportOutlined } from '@ant-design/icons';
 
 import { useHelpers } from 'common-util/hooks/useHelpers';
+import { COLOR } from '@autonolas/frontend-library';
+import styled from 'styled-components';
 import Login from '../Login';
 import Footer from './Footer';
 import { CustomLayout, Logo, DocsLink } from './styles';
@@ -13,6 +15,10 @@ import { CustomLayout, Logo, DocsLink } from './styles';
 const LogoSvg = dynamic(() => import('common-util/SVGs/logo'));
 
 const { Header, Content } = Layout;
+
+const StyledHeader = styled(Header)`
+  border-bottom: 1px solid ${COLOR.BORDER_GREY};
+`;
 
 const NavigationBar = ({ children }) => {
   const router = useRouter();
@@ -42,7 +48,7 @@ const NavigationBar = ({ children }) => {
 
   return (
     <CustomLayout pathname={router.pathname}>
-      <Header>
+      <StyledHeader>
         <div className="column-1">
           <Logo data-testid="tokenomics-logo">
             <LogoSvg />
@@ -57,7 +63,7 @@ const NavigationBar = ({ children }) => {
           onClick={handleMenuItemClick}
           items={[
             { key: 'donate', label: 'Donate' },
-            { key: 'dev-incentives', label: 'Developer Rewards' },
+            { key: 'dev-incentives', label: 'Dev Rewards' },
             { key: 'bonding-products', label: 'Bonding Products' },
             { key: 'my-bonds', label: 'My Bonds' },
             {
@@ -72,7 +78,7 @@ const NavigationBar = ({ children }) => {
           ]}
         />
         <Login />
-      </Header>
+      </StyledHeader>
 
       <Content className="site-layout">
         <div className="site-layout-background">
