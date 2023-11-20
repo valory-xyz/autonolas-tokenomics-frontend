@@ -240,7 +240,7 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
 
   const filterList = (list) => {
     if (hideEmptyProducts) {
-      return list.filter((x) => x.supplyLeft > 0);
+      return list.filter((x) => x.supplyLeft > 0.001);
     }
 
     return list;
@@ -296,5 +296,5 @@ BondingList.propTypes = {
 
 BondingList.defaultProps = {
   bondingProgramType: 'active',
-  hideEmptyProducts: true,
+  hideEmptyProducts: 'active',
 };
