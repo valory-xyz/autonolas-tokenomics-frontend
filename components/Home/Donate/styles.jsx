@@ -9,7 +9,7 @@ export const DonateContainer = styled.div`
   .last-epoch-section {
     padding-left: 1rem;
     margin-left: 1rem;
-    border-left: 1px solid ${COLOR.BORDER_GREY}
+    border-left: 1px solid ${COLOR.BORDER_GREY};
   }
 
   ${MEDIA_QUERY.mobileL} {
@@ -30,7 +30,18 @@ export const EpochStatus = styled.div`
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.75rem;
-  h5, div {
-    margin: 0
+  h5,
+  div {
+    margin: 0;
+  }
+`;
+
+export const EpochCheckpointRow = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 1rem;
+  .ant-btn {
+    width: 200px;
   }
 `;

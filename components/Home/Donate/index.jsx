@@ -26,13 +26,13 @@ import {
   getVeOlasThresholdRequest,
   minAcceptedEthRequest,
 } from './requests';
-import { DonateContainer, EpochStatus } from './styles';
+import { DonateContainer, EpochStatus, EpochCheckpointRow } from './styles';
 
 const { Title, Paragraph, Text } = Typography;
 
 export const DepositServiceDonation = () => {
   const { account, chainId } = useHelpers();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isDonationLoading, setIsDonationLoading] = useState(false);
   const [threshold, setThreshold] = useState(0);
   const [minAcceptedEth, setMinAcceptedEth] = useState(0);
   const [epochCounter, setEpochCounter] = useState(null);
@@ -52,11 +52,8 @@ export const DepositServiceDonation = () => {
 
       const epochCtr = await getEpochCounter();
       setEpochCounter(epochCtr);
-
-      return { updatedEpochCounter: epochCtr };
     } catch (error) {
       window.console.error(error);
-      return { updatedEpochCounter: null };
     }
   };
 
@@ -68,7 +65,7 @@ export const DepositServiceDonation = () => {
 
   const onDepositServiceDonationSubmit = async (values) => {
     try {
-      setIsLoading(true);
+      setIsDonationLoading(true);
 
       const [sortedUnitIds, sortedUnitTypes] = sortUnitIdsAndTypes(
         values.unitIds,
@@ -102,7 +99,7 @@ export const DepositServiceDonation = () => {
     } catch (e) {
       console.error(e);
     } finally {
-      setIsLoading(false);
+      setIsDonationLoading(false);
     }
   };
 
@@ -134,12 +131,10 @@ export const DepositServiceDonation = () => {
   const onCheckpoint = async () => {
     try {
       setIsCheckpointLoading(true);
-
       await checkpointRequest(account);
 
-      // update epoch details after checkpoint
-      const { updatedEpochCounter } = await getThresholdData();
-      notifySuccess(`Started new epoch`);
+      await getThresholdData(); // update epoch details after checkpoint
+      notifySuccess('Started new epoch');
     } catch (error) {
       console.error(error);
     } finally {
@@ -184,7 +179,7 @@ export const DepositServiceDonation = () => {
         />
 
         <DynamicFieldsForm
-          isLoading={isLoading}
+          isLoading={isDonationLoading}
           isUnitTypeInput={false}
           inputOneLabel="Service ID"
           inputTwoLabel="Amount (ETH)"
@@ -205,14 +200,19 @@ export const DepositServiceDonation = () => {
           </EpochStatus>
         ))}
 
-        <Button
-          type="primary"
-          loading={isCheckpointLoading}
-          disabled={isExpectedEndTimeInFuture}
-          onClick={onCheckpoint}
-        >
-          Start new epoch
-        </Button>
+        <EpochCheckpointRow>
+          <Text type="secondary">
+            New epochs must be manually triggered by community members
+          </Text>
+          <Button
+            type="primary"
+            loading={isCheckpointLoading}
+            disabled={isExpectedEndTimeInFuture}
+            onClick={onCheckpoint}
+          >
+            Start new epoch
+          </Button>
+        </EpochCheckpointRow>
       </div>
     </DonateContainer>
   );
