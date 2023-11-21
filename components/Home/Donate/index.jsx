@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { Alert, Typography } from 'antd';
+import { Alert, Button, Typography } from 'antd';
 import { isNumber } from 'lodash';
 import {
   getFullFormattedDate,
@@ -21,41 +21,54 @@ import {
 } from '../DevIncentives/requests';
 import {
   checkServicesNotTerminatedOrNotDeployed,
+  checkpointRequest,
   depositServiceDonationRequest,
   getVeOlasThresholdRequest,
   minAcceptedEthRequest,
 } from './requests';
-import { DonateContainer, EpochStatus } from './styles';
+import { DonateContainer, EpochStatus, EpochCheckpointRow } from './styles';
 
 const { Title, Paragraph, Text } = Typography;
 
 export const DepositServiceDonation = () => {
   const { account, chainId } = useHelpers();
-  const [isLoading, setIsLoading] = useState(false);
+
+  // epoch details
+  const [isEpochDetailsLoading, setIsEpochDetailsLoading] = useState(true);
   const [threshold, setThreshold] = useState(0);
   const [minAcceptedEth, setMinAcceptedEth] = useState(0);
   const [epochCounter, setEpochCounter] = useState(null);
   const [epochDetails, setEpochDetails] = useState(null);
 
+  // donation
+  const [isDonationLoading, setIsDonationLoading] = useState(false);
+
+  // checkpoint
+  const [isCheckpointLoading, setIsCheckpointLoading] = useState(false);
+
+  const getThresholdData = async () => {
+    try {
+      setIsEpochDetailsLoading(true);
+
+      const response = await getVeOlasThresholdRequest();
+      setThreshold(response);
+
+      const minEth = await minAcceptedEthRequest();
+      setMinAcceptedEth(minEth);
+
+      const epochResponse = await getLastEpochRequest();
+      setEpochDetails(epochResponse);
+
+      const epochCtr = await getEpochCounter();
+      setEpochCounter(epochCtr);
+    } catch (error) {
+      window.console.error(error);
+    } finally {
+      setIsEpochDetailsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const getThresholdData = async () => {
-      try {
-        const response = await getVeOlasThresholdRequest();
-        setThreshold(response);
-
-        const minEth = await minAcceptedEthRequest();
-        setMinAcceptedEth(minEth);
-
-        const epochResponse = await getLastEpochRequest();
-        setEpochDetails(epochResponse);
-
-        const epochCtr = await getEpochCounter();
-        setEpochCounter(epochCtr);
-      } catch (error) {
-        window.console.error(error);
-      }
-    };
-
     if (chainId) {
       getThresholdData();
     }
@@ -63,7 +76,7 @@ export const DepositServiceDonation = () => {
 
   const onDepositServiceDonationSubmit = async (values) => {
     try {
-      setIsLoading(true);
+      setIsDonationLoading(true);
 
       const [sortedUnitIds, sortedUnitTypes] = sortUnitIdsAndTypes(
         values.unitIds,
@@ -97,13 +110,13 @@ export const DepositServiceDonation = () => {
     } catch (e) {
       console.error(e);
     } finally {
-      setIsLoading(false);
+      setIsDonationLoading(false);
     }
   };
 
   const epochStatusList = [
     {
-      text: 'Expected end time',
+      text: 'Earliest possible expected end time',
       value: epochDetails?.nextEpochEndTime
         ? getFullFormattedDate(epochDetails.nextEpochEndTime * 1000)
         : NA,
@@ -125,6 +138,23 @@ export const DepositServiceDonation = () => {
       value: epochCounter || NA,
     },
   ];
+
+  const onCheckpoint = async () => {
+    try {
+      setIsCheckpointLoading(true);
+      await checkpointRequest(account);
+
+      await getThresholdData(); // update epoch details after checkpoint
+      notifySuccess('Started new epoch');
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsCheckpointLoading(false);
+    }
+  };
+
+  // disable checkpoint button if expected end time is in the future
+  const isExpectedEndTimeInFuture = (epochDetails?.nextEpochEndTime || 0) * 1000 > Date.now();
 
   return (
     <DonateContainer>
@@ -160,7 +190,7 @@ export const DepositServiceDonation = () => {
         />
 
         <DynamicFieldsForm
-          isLoading={isLoading}
+          isLoading={isDonationLoading}
           isUnitTypeInput={false}
           inputOneLabel="Service ID"
           inputTwoLabel="Amount (ETH)"
@@ -180,6 +210,20 @@ export const DepositServiceDonation = () => {
             <Paragraph>{e.value}</Paragraph>
           </EpochStatus>
         ))}
+
+        <EpochCheckpointRow>
+          <Button
+            type="primary"
+            loading={isCheckpointLoading}
+            disabled={isEpochDetailsLoading || isExpectedEndTimeInFuture}
+            onClick={onCheckpoint}
+          >
+            Start new epoch
+          </Button>
+          <Text type="secondary">
+            New epochs must be manually triggered by community members
+          </Text>
+        </EpochCheckpointRow>
       </div>
     </DonateContainer>
   );
