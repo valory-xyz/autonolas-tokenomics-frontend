@@ -182,7 +182,7 @@ const getColumns = (
   return columns;
 };
 
-export const BondingList = ({ bondingProgramType }) => {
+export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
   const { account, chainId } = useHelpers();
   const [isLoading, setIsLoading] = useState(false);
   const [allProducts, setAllProducts] = useState([]); // all products
@@ -232,14 +232,20 @@ export const BondingList = ({ bondingProgramType }) => {
     setProductDetails(null);
   };
 
+  const sortList = (list) => list.sort((a, b) => {
+    if (isNaN(a.projectedChange)) return 1;
+    if (isNaN(b.projectedChange)) return -1;
+    return b.projectedChange - a.projectedChange;
+  });
+
   const getProductsDataSource = () => {
     const list = showNoSupply ? allProducts : filteredProducts;
-    const sortedList = list.sort((a, b) => {
-      if (isNaN(a.projectedChange)) return 1;
-      if (isNaN(b.projectedChange)) return -1;
-      return b.projectedChange - a.projectedChange;
-    });
-    return sortedList;
+
+    const sortedList = sortList(list);
+    const processedList = hideEmptyProducts
+      ? sortedList.filter((x) => x.supplyLeft > 0.001) : sortedList;
+
+    return processedList;
   };
 
   return (
@@ -278,8 +284,10 @@ export const BondingList = ({ bondingProgramType }) => {
 
 BondingList.propTypes = {
   bondingProgramType: PropTypes.string,
+  hideEmptyProducts: PropTypes.bool,
 };
 
 BondingList.defaultProps = {
   bondingProgramType: 'active',
+  hideEmptyProducts: 'active',
 };

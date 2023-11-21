@@ -30,11 +30,24 @@ const GlobalStyle = createGlobalStyle`
   .m-0 {
     margin: 0 !important;
   }
+  .my-0 {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+  .mb-0 {
+    margin-bottom: 0 !important;
+  }
   .mb-8 {
     margin-bottom: 0.5rem;
   }
   .mb-16 {
     margin-bottom: 1rem;
+  }
+  .mr-4 {
+    margin-right: 4px;
+  }
+  .mr-8 {
+    margin-right: 8px;
   }
   .mr-12 {
     margin-right: 12px;
