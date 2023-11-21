@@ -4,10 +4,10 @@ import dynamic from 'next/dynamic';
 import PropTypes from 'prop-types';
 import { Layout, Menu } from 'antd';
 import { ExportOutlined } from '@ant-design/icons';
+import styled from 'styled-components';
+import { COLOR } from '@autonolas/frontend-library';
 
 import { useHelpers } from 'common-util/hooks/useHelpers';
-import { COLOR } from '@autonolas/frontend-library';
-import styled from 'styled-components';
 import Login from '../Login';
 import Footer from './Footer';
 import { CustomLayout, Logo, DocsLink } from './styles';

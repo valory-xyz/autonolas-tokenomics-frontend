@@ -20,15 +20,16 @@ const StyledDivider = styled(Divider)`
   margin: ${(props) => (props.isMobile ? '12px 0 ' : '0 12px')};
 `;
 
+const SwitchContainer = styled.div`
+  align-items: center;
+  display: flex;
+`;
+
 const ResponsiveDivider = () => {
   const { isMobile } = useScreen();
 
   return <StyledDivider isMobile={isMobile} type={isMobile ? 'horizontal' : 'vertical'} />;
 };
-
-const StyledRadioGroup = styled(Radio.Group)`
-  
-`;
 
 export const BondingProducts = () => {
   // if user not connected, show all products
@@ -53,20 +54,20 @@ export const BondingProducts = () => {
           Bonding Products
         </Title>
         <ResponsiveDivider />
-        <StyledRadioGroup onChange={onChange} value={bondingProgramType}>
+        <Radio.Group onChange={onChange} value={bondingProgramType}>
           <Radio value={BONDING_PRODUCTS.ALL}>All</Radio>
           <Radio value={BONDING_PRODUCTS.ACTIVE}>Active</Radio>
           <Radio value={BONDING_PRODUCTS.INACTIVE}>Inactive</Radio>
-        </StyledRadioGroup>
+        </Radio.Group>
         <ResponsiveDivider />
-        <div>
+        <SwitchContainer>
           <Switch
             checked={hideEmptyProducts}
             onChange={onToggle}
             className="mr-8"
           />
           Hide empty products
-        </div>
+        </SwitchContainer>
       </PageHeader>
 
       <BondingList

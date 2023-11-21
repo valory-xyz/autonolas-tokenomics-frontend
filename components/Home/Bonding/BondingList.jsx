@@ -238,19 +238,12 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
     return b.projectedChange - a.projectedChange;
   });
 
-  const filterList = (list) => {
-    if (hideEmptyProducts) {
-      return list.filter((x) => x.supplyLeft > 0.001);
-    }
-
-    return list;
-  };
-
   const getProductsDataSource = () => {
     const list = showNoSupply ? allProducts : filteredProducts;
 
     const sortedList = sortList(list);
-    const processedList = filterList(sortedList);
+    const processedList = hideEmptyProducts
+      ? sortedList.filter((x) => x.supplyLeft > 0.001) : sortedList;
 
     return processedList;
   };
