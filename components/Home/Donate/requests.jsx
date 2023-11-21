@@ -90,7 +90,7 @@ export const checkpointRequest = async (account) => {
     const response = await sendTransaction(fn, account);
     return response?.transactionHash;
   } catch (error) {
-    notifyError('Error occured on checkpoint');
+    notifyError('Error – could not start new epoch');
     throw error;
   }
 };
