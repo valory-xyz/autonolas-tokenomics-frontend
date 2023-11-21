@@ -211,7 +211,7 @@ export const DepositServiceDonation = () => {
           disabled={isExpectedEndTimeInFuture}
           onClick={onCheckpoint}
         >
-          Checkpoint
+          Start new epoch
         </Button>
       </div>
     </DonateContainer>
