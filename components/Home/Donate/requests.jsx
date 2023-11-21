@@ -86,6 +86,7 @@ export const checkpointRequest = async (account) => {
   const contract = getTokenomicsContract();
   try {
     const fn = contract.methods.checkpoint().send({ from: account });
+
     const response = await sendTransaction(fn, account);
     return response?.transactionHash;
   } catch (error) {

@@ -134,13 +134,12 @@ export const DepositServiceDonation = () => {
   const onCheckpoint = async () => {
     try {
       setIsCheckpointLoading(true);
+
       await checkpointRequest(account);
 
-      // update epoch details
+      // update epoch details after checkpoint
       const { updatedEpochCounter } = await getThresholdData();
       notifySuccess(`New epoch started ${updatedEpochCounter}`);
-
-      // window.location.reload(); // reload page to update epoch status
     } catch (error) {
       console.error(error);
     } finally {
@@ -148,8 +147,8 @@ export const DepositServiceDonation = () => {
     }
   };
 
-  const isExpectedEndTimeFuture = epochDetails?.nextEpochEndTime
-    && epochDetails.nextEpochEndTime * 1000 > Date.now();
+  // disable checkpoint button if expected end time is in the future
+  const isExpectedEndTimeInFuture = (epochDetails?.nextEpochEndTime || 0) * 1000 > Date.now();
 
   return (
     <DonateContainer>
@@ -206,12 +205,10 @@ export const DepositServiceDonation = () => {
           </EpochStatus>
         ))}
 
-        {/* // if "Earliest possible expected end time" === now, then disable button */}
-
         <Button
           type="primary"
           loading={isCheckpointLoading}
-          disabled={isExpectedEndTimeFuture}
+          disabled={isExpectedEndTimeInFuture}
           onClick={onCheckpoint}
         >
           Checkpoint
