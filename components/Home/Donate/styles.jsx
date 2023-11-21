@@ -39,7 +39,7 @@ export const EpochStatus = styled.div`
 export const EpochCheckpointRow = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
   margin-top: 1rem;
   .ant-btn {
     width: 200px;

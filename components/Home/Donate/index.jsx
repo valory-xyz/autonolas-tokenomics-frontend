@@ -32,15 +32,24 @@ const { Title, Paragraph, Text } = Typography;
 
 export const DepositServiceDonation = () => {
   const { account, chainId } = useHelpers();
-  const [isDonationLoading, setIsDonationLoading] = useState(false);
+
+  // epoch details
+  const [isEpochDetailsLoading, setIsEpochDetailsLoading] = useState(true);
   const [threshold, setThreshold] = useState(0);
   const [minAcceptedEth, setMinAcceptedEth] = useState(0);
   const [epochCounter, setEpochCounter] = useState(null);
   const [epochDetails, setEpochDetails] = useState(null);
+
+  // donation
+  const [isDonationLoading, setIsDonationLoading] = useState(false);
+
+  // checkpoint
   const [isCheckpointLoading, setIsCheckpointLoading] = useState(false);
 
   const getThresholdData = async () => {
     try {
+      setIsEpochDetailsLoading(true);
+
       const response = await getVeOlasThresholdRequest();
       setThreshold(response);
 
@@ -54,6 +63,8 @@ export const DepositServiceDonation = () => {
       setEpochCounter(epochCtr);
     } catch (error) {
       window.console.error(error);
+    } finally {
+      setIsEpochDetailsLoading(false);
     }
   };
 
@@ -201,17 +212,17 @@ export const DepositServiceDonation = () => {
         ))}
 
         <EpochCheckpointRow>
-          <Text type="secondary">
-            New epochs must be manually triggered by community members
-          </Text>
           <Button
             type="primary"
             loading={isCheckpointLoading}
-            disabled={isExpectedEndTimeInFuture}
+            disabled={isEpochDetailsLoading || isExpectedEndTimeInFuture}
             onClick={onCheckpoint}
           >
             Start new epoch
           </Button>
+          <Text type="secondary">
+            New epochs must be manually triggered by community members
+          </Text>
         </EpochCheckpointRow>
       </div>
     </DonateContainer>
