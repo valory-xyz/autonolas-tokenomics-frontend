@@ -139,7 +139,7 @@ export const DepositServiceDonation = () => {
 
       // update epoch details after checkpoint
       const { updatedEpochCounter } = await getThresholdData();
-      notifySuccess(`New epoch started ${updatedEpochCounter}`);
+      notifySuccess(`Started new epoch`);
     } catch (error) {
       console.error(error);
     } finally {
