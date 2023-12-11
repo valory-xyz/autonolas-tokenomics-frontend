@@ -154,7 +154,7 @@ const getLpTokenNamesForProducts = async (productList, events) => {
 
     const getLpTokenLink = () => {
       if (lpTokenDetailsList[index].dex === DEX.UNISWAP) {
-        return `https://v2.info.uniswap.org/pair${component.token}`;
+        return `https://v2.info.uniswap.org/pair/${component.token}`;
       }
 
       if (lpTokenDetailsList[index].dex === DEX.BALANCER && lpChainId === 100) {
