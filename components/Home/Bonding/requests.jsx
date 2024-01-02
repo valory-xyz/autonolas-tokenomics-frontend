@@ -71,7 +71,7 @@ const getProductEventsFn = async (eventName) => {
   const provider = getEthersProvider();
   const block = await provider.getBlock('latest');
 
-  const oldestBlock = (getChainId() || 1) >= 100000 ? 50 : 1000000;
+  const oldestBlock = (getChainId() || 1) >= 100000 ? 50 : 100000;
   const events = contract.getPastEvents(eventName, {
     fromBlock: block.number - oldestBlock,
     toBlock: block.number,
