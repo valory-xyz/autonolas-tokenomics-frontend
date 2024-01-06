@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import {
-  Button, Table, Tag, Tooltip, Typography,
+  Button, Spin, Table, Tag, Tooltip, Typography,
 } from 'antd';
 import { remove, round, isNaN } from 'lodash';
 import { COLOR, NA } from '@autonolas/frontend-library';
-import { QuestionCircleOutlined } from '@ant-design/icons';
+import { QuestionCircleOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
 
 import { BONDING_PRODUCTS } from 'util/constants';
@@ -258,9 +258,27 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
           account,
           depositoryAddress,
         )}
+        locale={{
+          emptyText: (
+            <div style={{ padding: '3rem' }}>
+              <UnorderedListOutlined style={{ fontSize: 64 }} className="mb-8" />
+              <br />
+              No products
+            </div>
+          ),
+        }}
         dataSource={getProductsDataSource()}
         bordered
-        loading={isLoading}
+        loading={{
+          spinning: isLoading,
+          tip: <Typography className="mt-8">
+            Loading products
+            <br />
+            This can take up to 30 seconds
+            {/* eslint-disable-next-line react/jsx-closing-tag-location */}
+          </Typography>,
+          indicator: <Spin active />,
+        }}
         pagination={false}
         scroll={{ x: 400 }}
       />
