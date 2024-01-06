@@ -13,6 +13,7 @@ import {
   getChainId,
   isL1Network,
   parseToEth,
+  delay,
 } from 'common-util/functions';
 import {
   getDepositoryContract,
@@ -67,15 +68,40 @@ const getBondingProgramsRequest = async ({ isActive }) => {
  */
 const getProductEventsFn = async (eventName) => {
   const contract = getDepositoryContract();
-
   const provider = getEthersProvider();
   const block = await provider.getBlock('latest');
 
-  const oldestBlock = (getChainId() || 1) >= 100000 ? 50 : 100000;
-  const events = contract.getPastEvents(eventName, {
-    fromBlock: block.number - oldestBlock,
-    toBlock: block.number,
-  });
+  const lookbackBlocks = 100000;
+  const chunkSize = 1000;
+  const eventPromises = [];
+  const delayBetweenRequestsMs = 100;
+
+  for (
+    let fromBlock = block.number - lookbackBlocks;
+    fromBlock <= block.number;
+    fromBlock += chunkSize
+  ) {
+    const toBlock = Math.min(fromBlock + chunkSize - 1, block.number);
+    eventPromises.push(
+      contract.getPastEvents(eventName, {
+        fromBlock,
+        toBlock,
+      }).then((events) => ({ fromBlock, toBlock, events })),
+    );
+  }
+
+  // Introduce delays between each chunk request without using await inside the loop
+  const eventsChunks = await Promise.all(
+    eventPromises.map(
+      (p, index) => p.then(
+        (result) => delay(index * delayBetweenRequestsMs).then(
+          () => result.events,
+        ),
+      ),
+    ),
+  );
+
+  const events = eventsChunks.flat();
 
   return events;
 };
@@ -313,8 +339,8 @@ const getLpPriceWithProjectedChange = (list) => list.map((record) => {
   // calculate the projected change
   const projectedChange = round(
     ((roundedDiscountedOlasPerLpToken - fullCurrentPriceLp)
-        / fullCurrentPriceLp)
-        * 100,
+      / fullCurrentPriceLp)
+    * 100,
     2,
   );
 
