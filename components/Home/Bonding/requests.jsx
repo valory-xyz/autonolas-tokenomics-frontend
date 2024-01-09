@@ -71,13 +71,15 @@ const getProductEventsFn = async (eventName) => {
   const provider = getEthersProvider();
   const block = await provider.getBlock('latest');
 
-  const lookbackBlocks = 100000;
+  // handle forked chains with very high chain IDs because they are
+  // bad at handling large event lookbacks
+  const lookbackBlockCount = (getChainId() || 1) >= 100000 ? 50 : 1000000;
   const chunkSize = 1000;
   const eventPromises = [];
   const delayBetweenRequestsInMs = 100;
 
   for (
-    let fromBlock = block.number - lookbackBlocks;
+    let fromBlock = block.number - lookbackBlockCount;
     fromBlock <= block.number;
     fromBlock += chunkSize
   ) {
