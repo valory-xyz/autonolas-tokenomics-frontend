@@ -74,7 +74,7 @@ const getProductEventsFn = async (eventName) => {
   const lookbackBlocks = 100000;
   const chunkSize = 1000;
   const eventPromises = [];
-  const delayBetweenRequestsMs = 100;
+  const delayBetweenRequestsInMs = 100;
 
   for (
     let fromBlock = block.number - lookbackBlocks;
@@ -94,7 +94,7 @@ const getProductEventsFn = async (eventName) => {
   const eventsChunks = await Promise.all(
     eventPromises.map(
       (p, index) => p.then(
-        (result) => delay(index * delayBetweenRequestsMs).then(
+        (result) => delay(index * delayBetweenRequestsInMs).then(
           () => result.events,
         ),
       ),
