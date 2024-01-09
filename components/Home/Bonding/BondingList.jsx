@@ -258,10 +258,16 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
         )}
         locale={{
           emptyText: (
-            <div style={{ padding: '3rem' }}>
-              <UnorderedListOutlined style={{ fontSize: 64 }} className="mb-8" />
-              <br />
-              No products
+            <div style={{ padding: '5rem' }}>
+              {isLoading ? ' '
+                : (
+                  <>
+                    <UnorderedListOutlined style={{ fontSize: 64 }} className="mb-8" />
+                    <br />
+                    No products
+
+                  </>
+                )}
             </div>
           ),
         }}
