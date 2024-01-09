@@ -130,7 +130,7 @@ const getColumns = (
       dataIndex: 'supply',
       key: 'supply',
       render: (x, row) => {
-        const supplyLeftInPercent = round(row.supplyLeft * 100, 0);
+        const supplyLeftInPercent = isNaN(row.supplyLeft) ? 0 : round(row.supplyLeft * 100, 0);
         return (
           <>
             <a
@@ -140,12 +140,10 @@ const getColumns = (
             >
               {round(parseToEth(x), 2)}
             </a>
-            &nbsp;
-            <Tooltip title={`${supplyLeftInPercent}% of supply left`}>
-              <Tag color={supplyLeftInPercent < 6 ? COLOR.RED : COLOR.PRIMARY}>
-                {`${supplyLeftInPercent}%`}
-              </Tag>
-            </Tooltip>
+            &nbsp;&nbsp;
+            <Tag color={supplyLeftInPercent < 6 ? COLOR.GREY_2 : COLOR.PRIMARY}>
+              {`${supplyLeftInPercent}%`}
+            </Tag>
           </>
         );
       },
