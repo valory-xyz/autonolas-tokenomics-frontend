@@ -238,7 +238,7 @@ export const BondingList = ({
   const getProductsDataSource = () => {
     const sortedList = sortList(filteredProducts);
     const processedList = hideEmptyProducts
-      ? sortedList.filter((x) => x.supplyLeft > 0.001) : sortedList;
+      ? sortedList.filter((x) => x.supplyLeft > 0.00001) : sortedList;
 
     return processedList;
   };
