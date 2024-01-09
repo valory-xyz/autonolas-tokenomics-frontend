@@ -190,7 +190,7 @@ export const BondingList = ({
   const { account, chainId } = useHelpers();
   const [isLoading, setIsLoading] = useState(false);
   const [errorState, setErrorState] = useState(false);
-  const [filteredProducts, setFilteredProducts] = useState([]); // (active / inactive products)
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [retry, setRetry] = useState(0);
 
   // if productDetails is `not null`, then open the deposit modal
@@ -293,18 +293,19 @@ export const BondingList = ({
         bordered
         loading={{
           spinning: isLoading,
-          tip: <Typography className="mt-8">
-            Loading products
-            {
-              retry > 0 && (
-              <>
-                <br />
-                This can take up to 30 seconds
-              </>
-              )
-            }
-            {/* eslint-disable-next-line react/jsx-closing-tag-location */}
-          </Typography>,
+          tip: (
+            <Typography className="mt-8">
+              Loading products
+              {
+                retry > 0 && (
+                <>
+                  <br />
+                  This can take up to 30 seconds
+                </>
+                )
+              }
+            </Typography>
+          ),
           indicator: <Spin active />,
         }}
         pagination={false}
