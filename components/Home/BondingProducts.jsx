@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import styled from 'styled-components';
 import {
-  Typography, Radio, Switch, Divider,
+  Typography, Switch, Divider,
+  Radio,
+  Tooltip,
 } from 'antd';
 
 import { BONDING_PRODUCTS } from 'util/constants';
@@ -55,9 +57,10 @@ export const BondingProducts = () => {
         </Title>
         <ResponsiveDivider />
         <Radio.Group onChange={onChange} value={bondingProgramType}>
-          <Radio value={BONDING_PRODUCTS.ALL}>All</Radio>
           <Radio value={BONDING_PRODUCTS.ACTIVE}>Active</Radio>
-          <Radio value={BONDING_PRODUCTS.INACTIVE}>Inactive</Radio>
+          <Tooltip title="Currently displaying active products only. To view inactive products, call methods on the Depository contract via Etherscan.">
+            <Radio value={BONDING_PRODUCTS.INACTIVE} disabled>Inactive</Radio>
+          </Tooltip>
         </Radio.Group>
         <ResponsiveDivider />
         <SwitchContainer>

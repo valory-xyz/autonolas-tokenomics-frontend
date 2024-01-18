@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import {
-  Button, Table, Tag, Tooltip, Typography,
+  Button, Empty, Spin, Table, Tag, Tooltip, Typography,
 } from 'antd';
-import { remove, round, isNaN } from 'lodash';
+import {
+  round, isNaN, remove,
+} from 'lodash';
 import { COLOR, NA } from '@autonolas/frontend-library';
-import { QuestionCircleOutlined } from '@ant-design/icons';
+import { ExclamationCircleTwoTone, QuestionCircleOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
 
 import { BONDING_PRODUCTS } from 'util/constants';
@@ -13,7 +15,7 @@ import { notifySpecificError, parseToEth } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { ADDRESSES } from 'common-util/Contracts';
 import { Deposit } from './Deposit';
-import { getProductListRequest, getAllTheProductsNotRemoved } from './requests';
+import { getProductListRequest } from './requests';
 import { getLpTokenWithDiscount } from './requestsHelpers';
 
 const { Text } = Typography;
@@ -38,11 +40,12 @@ const getTitle = (title, tooltipDesc) => (
 );
 
 const getColumns = (
-  showNoSupply,
+  // showNoSupply,
   onClick,
   isActive,
   acc,
   depositoryAddress,
+  hideEmptyProducts,
 ) => {
   const columns = [
     { title: 'ID', dataIndex: 'id', key: 'id' },
@@ -130,7 +133,7 @@ const getColumns = (
       dataIndex: 'supply',
       key: 'supply',
       render: (x, row) => {
-        const supplyLeftInPercent = round(row.supplyLeft * 100, 0);
+        const supplyLeftInPercent = isNaN(row.supplyLeft) ? 0 : round(row.supplyLeft * 100, 0);
         return (
           <>
             <a
@@ -140,12 +143,10 @@ const getColumns = (
             >
               {round(parseToEth(x), 2)}
             </a>
-            &nbsp;
-            <Tooltip title={`${supplyLeftInPercent}% of supply left`}>
-              <Tag color={supplyLeftInPercent < 6 ? COLOR.RED : COLOR.PRIMARY}>
-                {`${supplyLeftInPercent}%`}
-              </Tag>
-            </Tooltip>
+            &nbsp;&nbsp;
+            <Tag color={supplyLeftInPercent < 6 ? COLOR.GREY_2 : COLOR.PRIMARY}>
+              {`${supplyLeftInPercent}%`}
+            </Tag>
           </>
         );
       },
@@ -161,7 +162,7 @@ const getColumns = (
         <Button
           type="primary"
           // disbled if there is no supply or if the user is not connected
-          disabled={showNoSupply || !acc}
+          disabled={!hideEmptyProducts || !acc}
           onClick={() => onClick(row)}
         >
           Bond
@@ -182,12 +183,15 @@ const getColumns = (
   return columns;
 };
 
-export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
+export const BondingList = ({
+  bondingProgramType,
+  hideEmptyProducts,
+}) => {
   const { account, chainId } = useHelpers();
   const [isLoading, setIsLoading] = useState(false);
-  const [allProducts, setAllProducts] = useState([]); // all products
-  const [filteredProducts, setFilteredProducts] = useState([]); // (active / inactive products)
-  const showNoSupply = bondingProgramType === BONDING_PRODUCTS.ALL;
+  const [errorState, setErrorState] = useState(false);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [retry, setRetry] = useState(0);
 
   // if productDetails is `not null`, then open the deposit modal
   const [productDetails, setProductDetails] = useState(null);
@@ -197,21 +201,14 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
 
   const getProducts = async () => {
     try {
+      setErrorState(false);
       setIsLoading(true);
 
-      // If bondingProgramType is allProduct, we will get all the products
-      // that are not removed
-      if (showNoSupply) {
-        // fetches "all" products
-        const productList = await getAllTheProductsNotRemoved();
-        setAllProducts(productList);
-      } else {
-        // fetches both "active" and "inactive" products
-        const filteredProductList = await getProductListRequest({ isActive });
-        setFilteredProducts(filteredProductList);
-      }
+      const filteredProductList = await getProductListRequest({ isActive }, retry);
+      setFilteredProducts(filteredProductList);
     } catch (error) {
       const errorMessage = typeof error?.message === 'string' ? error.message : null;
+      setErrorState(true);
       notifySpecificError('Error while fetching products', errorMessage);
       console.error(error, errorMessage);
     } finally {
@@ -222,7 +219,7 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
   // fetch the bonding list
   useEffect(() => {
     getProducts();
-  }, [account, chainId, bondingProgramType]);
+  }, [account, chainId, bondingProgramType, retry]);
 
   const onBondClick = (row) => {
     setProductDetails(row);
@@ -239,30 +236,81 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
   });
 
   const getProductsDataSource = () => {
-    const list = showNoSupply ? allProducts : filteredProducts;
-
-    const sortedList = sortList(list);
+    const sortedList = sortList(filteredProducts);
     const processedList = hideEmptyProducts
-      ? sortedList.filter((x) => x.supplyLeft > 0.001) : sortedList;
+      ? sortedList.filter((x) => x.supplyLeft > 0.00001) : sortedList;
 
     return processedList;
   };
+
+  const handleRetry = () => {
+    setRetry((prevRetry) => prevRetry + 1);
+  };
+
+  if (errorState) {
+    return (
+      <Container className="mt-16">
+        <Empty
+          description={(
+            <>
+              <Text className="mb-8">Couldn&apos;t fetch products</Text>
+              <br />
+              <Button onClick={handleRetry}>Try again</Button>
+            </>
+          )}
+          image={<ExclamationCircleTwoTone style={{ fontSize: '7rem' }} twoToneColor={COLOR.GREY_1} />}
+        />
+      </Container>
+    );
+  }
 
   return (
     <Container>
       <Table
         columns={getColumns(
-          showNoSupply,
           onBondClick,
           isActive,
           account,
           depositoryAddress,
+          hideEmptyProducts,
         )}
+        locale={{
+          emptyText: (
+            <div style={{ padding: '5rem' }}>
+              {isLoading ? ' '
+                : (
+                  <>
+                    <UnorderedListOutlined style={{ fontSize: 64 }} className="mb-8" />
+                    <br />
+                    No products
+
+                  </>
+                )}
+            </div>
+          ),
+        }}
         dataSource={getProductsDataSource()}
         bordered
-        loading={isLoading}
+        loading={{
+          spinning: isLoading,
+          tip: (
+            <Typography className="mt-8">
+              Loading products
+              {
+                retry > 0 && (
+                <>
+                  <br />
+                  This can take up to 30 seconds
+                </>
+                )
+              }
+            </Typography>
+          ),
+          indicator: <Spin active />,
+        }}
         pagination={false}
         scroll={{ x: 400 }}
+        className="mb-16"
       />
 
       {!!productDetails && (

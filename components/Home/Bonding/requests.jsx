@@ -13,6 +13,7 @@ import {
   getChainId,
   isL1Network,
   parseToEth,
+  delay,
 } from 'common-util/functions';
 import {
   getDepositoryContract,
@@ -65,17 +66,44 @@ const getBondingProgramsRequest = async ({ isActive }) => {
 /**
  * returns events for the product creation
  */
-const getProductEventsFn = async (eventName) => {
+const getProductEventsFn = async (eventName, retry) => {
   const contract = getDepositoryContract();
-
   const provider = getEthersProvider();
   const block = await provider.getBlock('latest');
 
-  const oldestBlock = (getChainId() || 1) >= 100000 ? 50 : 1000000;
-  const events = contract.getPastEvents(eventName, {
-    fromBlock: block.number - oldestBlock,
-    toBlock: block.number,
-  });
+  // handle forked chains with very high chain IDs because they are
+  // bad at handling large event lookbacks
+  const lookbackBlockCount = (getChainId() || 1) >= 100000 ? 50 : 100000;
+  const chunkSize = retry > 0 ? 500 : 50000;
+  const eventPromises = [];
+  const delayBetweenRequestsInMs = 100;
+
+  for (
+    let fromBlock = block.number - lookbackBlockCount;
+    fromBlock <= block.number;
+    fromBlock += chunkSize
+  ) {
+    const toBlock = Math.min(fromBlock + chunkSize - 1, block.number);
+    eventPromises.push(
+      contract.getPastEvents(eventName, {
+        fromBlock,
+        toBlock,
+      }).then((events) => ({ fromBlock, toBlock, events })),
+    );
+  }
+
+  // Introduce delays between each chunk request without using await inside the loop
+  const eventsChunks = await Promise.all(
+    eventPromises.map(
+      (p, index) => p.then(
+        (result) => delay(index * delayBetweenRequestsInMs).then(
+          () => result.events,
+        ),
+      ),
+    ),
+  );
+
+  const events = eventsChunks.flat();
 
   return events;
 };
@@ -313,8 +341,8 @@ const getLpPriceWithProjectedChange = (list) => list.map((record) => {
   // calculate the projected change
   const projectedChange = round(
     ((roundedDiscountedOlasPerLpToken - fullCurrentPriceLp)
-        / fullCurrentPriceLp)
-        * 100,
+      / fullCurrentPriceLp)
+    * 100,
     2,
   );
 
@@ -329,7 +357,7 @@ const getLpPriceWithProjectedChange = (list) => list.map((record) => {
 /**
  *
  */
-const getProductDetailsFromIds = async ({ productIdList }) => {
+const getProductDetailsFromIds = async ({ productIdList }, retry) => {
   const contract = getDepositoryContract();
 
   const allListPromise = [];
@@ -353,8 +381,8 @@ const getProductDetailsFromIds = async ({ productIdList }) => {
     productList,
   );
 
-  const createEventList = await getProductEvents('CreateProduct');
-  const closedEventList = await getProductEvents('CloseProduct');
+  const createEventList = await getProductEvents('CreateProduct', retry);
+  const closedEventList = await getProductEvents('CloseProduct', retry);
 
   const listWithLpTokens = await getLpTokenNamesForProducts(
     listWithCurrentLpPrice,
@@ -363,58 +391,6 @@ const getProductDetailsFromIds = async ({ productIdList }) => {
 
   const listWithSupplyList = await getListWithSupplyList(
     listWithLpTokens,
-    createEventList,
-    closedEventList,
-  );
-
-  const listWithProjectedChange = getLpPriceWithProjectedChange(listWithSupplyList);
-
-  return listWithProjectedChange;
-};
-
-/**
- * returns all the products that are not removed
- * ie. 1. active products,
- *     2. inactive products,
- *     3. 0 supply + active + inactive (combination of 1, 2, 3)
- */
-export const getAllTheProductsNotRemoved = async () => {
-  const contract = getDepositoryContract();
-  const productsList = await contract.methods.productCounter().call();
-
-  const allListPromise = [];
-  for (let i = 0; i < productsList; i += 1) {
-    const id = `${i}`;
-    const result = contract.methods.mapBondProducts(id).call();
-    allListPromise.push(result);
-  }
-
-  // discount factor is same for all the products
-  const discount = await getLastIDFRequest();
-
-  const response = await Promise.all(allListPromise);
-  // add id & discount to the product
-  const productWithIds = response.map((product, index) => ({
-    ...product,
-    discount,
-    id: index,
-    key: index,
-  }));
-
-  const createEventList = await getProductEvents('CreateProduct');
-  const closedEventList = await getProductEvents('CloseProduct');
-
-  const listWithLpTokens = await getLpTokenNamesForProducts(
-    productWithIds,
-    createEventList,
-  );
-
-  const listWithCurrentLpPrice = await getCurrentLpPriceForProducts(
-    listWithLpTokens,
-  );
-
-  const listWithSupplyList = await getListWithSupplyList(
-    listWithCurrentLpPrice,
     createEventList,
     closedEventList,
   );
@@ -427,9 +403,9 @@ export const getAllTheProductsNotRemoved = async () => {
 /**
  * fetches product list based on the active/inactive status
  */
-export const getProductListRequest = async ({ isActive }) => {
+export const getProductListRequest = async ({ isActive }, retry) => {
   const productIdList = await getBondingProgramsRequest({ isActive });
-  const response = await getProductDetailsFromIds({ productIdList });
+  const response = await getProductDetailsFromIds({ productIdList }, retry);
   const discount = await getLastIDFRequest(); // discount factor is same for all the products
 
   const productList = response.map((product, index) => ({
