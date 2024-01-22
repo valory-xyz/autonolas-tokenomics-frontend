@@ -39,6 +39,15 @@ const LP_PAIRS = {
     poolId:
       '0x79c872ed3acb3fc5770dd8a0cd9cd5db3b3ac985000200000000000000000067',
   },
+  // polygon
+  '0x06512E620A8317da51a73690A596Aca97287b31D': {
+    lpChainId: 137,
+    name: 'OLAS-WMATIC',
+    originAddress: '0x62309056c759c36879Cde93693E7903bF415E4Bc',
+    dex: DEX.BALANCER,
+    poolId:
+      '0x62309056c759c36879cde93693e7903bf415e4bc000200000000000000000d5f',
+  },
 };
 
 /**
@@ -85,22 +94,19 @@ const getProductEventsFn = async (eventName, retry) => {
   ) {
     const toBlock = Math.min(fromBlock + chunkSize - 1, block.number);
     eventPromises.push(
-      contract.getPastEvents(eventName, {
-        fromBlock,
-        toBlock,
-      }).then((events) => ({ fromBlock, toBlock, events })),
+      contract
+        .getPastEvents(eventName, {
+          fromBlock,
+          toBlock,
+        })
+        .then((events) => ({ fromBlock, toBlock, events })),
     );
   }
 
   // Introduce delays between each chunk request without using await inside the loop
   const eventsChunks = await Promise.all(
-    eventPromises.map(
-      (p, index) => p.then(
-        (result) => delay(index * delayBetweenRequestsInMs).then(
-          () => result.events,
-        ),
-      ),
-    ),
+    /* eslint-disable-next-line max-len */
+    eventPromises.map((p, index) => p.then((result) => delay(index * delayBetweenRequestsInMs).then(() => result.events))),
   );
 
   const events = eventsChunks.flat();
@@ -185,8 +191,14 @@ const getLpTokenNamesForProducts = async (productList, events) => {
         return `https://v2.info.uniswap.org/pair/${component.token}`;
       }
 
-      if (lpTokenDetailsList[index].dex === DEX.BALANCER && lpChainId === 100) {
-        return `https://app.balancer.fi/#/gnosis-chain/pool/${poolId}`;
+      if (lpTokenDetailsList[index].dex === DEX.BALANCER) {
+        if (lpChainId === 100) {
+          return `https://app.balancer.fi/#/gnosis-chain/pool/${poolId}`;
+        }
+
+        if (lpChainId === 137) {
+          return `https://app.balancer.fi/#/polygon/pool/${poolId}`;
+        }
       }
 
       return new Error('Dex not supported');
@@ -198,8 +210,14 @@ const getLpTokenNamesForProducts = async (productList, events) => {
         return `https://etherscan.io/address/${depositoryAddress}#readContract#F7`;
       }
 
-      if (lpTokenDetailsList[index].dex === DEX.BALANCER && lpChainId === 100) {
-        return `https://gnosisscan.io/address/${ADDRESSES[lpChainId].balancerVault}#readContract#F10`;
+      if (lpTokenDetailsList[index].dex === DEX.BALANCER) {
+        if (lpChainId === 100) {
+          return `https://gnosisscan.io/address/${ADDRESSES[lpChainId].balancerVault}#readContract#F10`;
+        }
+
+        if (lpChainId === 137) {
+          return `https://polygonscan.com/address/${ADDRESSES[lpChainId].balancerVault}#readContract#F10`;
+        }
       }
 
       return new Error('Dex not supported');
@@ -341,8 +359,8 @@ const getLpPriceWithProjectedChange = (list) => list.map((record) => {
   // calculate the projected change
   const projectedChange = round(
     ((roundedDiscountedOlasPerLpToken - fullCurrentPriceLp)
-      / fullCurrentPriceLp)
-    * 100,
+        / fullCurrentPriceLp)
+        * 100,
     2,
   );
 

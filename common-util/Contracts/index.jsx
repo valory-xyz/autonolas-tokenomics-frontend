@@ -54,6 +54,7 @@ export const ADDRESSES = {
     olasAddress: '0xEdfc28215B1Eb6eb0be426f1f529cf691A5C2400',
   },
   // NOTE: Except 1 & 5 other addresses are used for LP pairs
+  // gnosis and gnosis testnet
   100: {
     olasAddress: '0xcE11e14225575945b8E6Dc0D4F2dD4C570f79d9f',
     balancerVault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
@@ -61,6 +62,16 @@ export const ADDRESSES = {
   10200: {
     olasAddress: '0xE40AE73aa0Ed3Ec35fdAF56e01FCd0D1Ff1d9AB6',
   },
+
+  // polygon and mumbai
+  137: {
+    olasAddress: '0xFEF5d947472e72Efbb2E388c730B7428406F2F95',
+    balancerVault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
+  },
+  80001: {
+    olasAddress: '0x81e7Ac2D5aCA991aef9187a34C0A536FA526dD0F',
+  },
+
   [LOCAL_CHAIN_ID]: LOCAL_ADDRESSES,
   [LOCAL_FORK_ID]: MAINNET_ADDRESSES,
 };
@@ -156,5 +167,6 @@ export const RPC_URLS = {
   1: process.env.NEXT_PUBLIC_MAINNET_URL,
   5: process.env.NEXT_PUBLIC_GOERLI_URL,
   100: process.env.NEXT_PUBLIC_GNOSIS_URL,
+  137: process.env.NEXT_PUBLIC_POLYGON_URL,
   [LOCAL_FORK_ID]: 'http://127.0.0.1:8545',
 };
