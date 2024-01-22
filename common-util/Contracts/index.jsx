@@ -61,6 +61,13 @@ export const ADDRESSES = {
   10200: {
     olasAddress: '0xE40AE73aa0Ed3Ec35fdAF56e01FCd0D1Ff1d9AB6',
   },
+  // polygon
+  137: {
+    olasAddress: 'TODO',
+  },
+  80001: {
+    olasAddress: 'TODO',
+  },
   [LOCAL_CHAIN_ID]: LOCAL_ADDRESSES,
   [LOCAL_FORK_ID]: MAINNET_ADDRESSES,
 };
