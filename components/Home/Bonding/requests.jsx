@@ -191,7 +191,7 @@ const getLpTokenNamesForProducts = async (productList, events) => {
         return `https://v2.info.uniswap.org/pair/${component.token}`;
       }
 
-      if (lpTokenDetailsList[index].dex === DEX.BALANCER && lpChainId === 100) {
+      if (lpTokenDetailsList[index].dex === DEX.BALANCER) {
         if (lpChainId === 100) {
           return `https://app.balancer.fi/#/gnosis-chain/pool/${poolId}`;
         }
