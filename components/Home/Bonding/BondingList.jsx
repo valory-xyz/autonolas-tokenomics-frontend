@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import {
-  Button, Empty, Spin, Table, Tag, Tooltip, Typography,
+  Button,
+  Empty,
+  Popconfirm,
+  Spin,
+  Table,
+  Tag,
+  Tooltip,
+  Typography,
 } from 'antd';
 import { round, isNaN, remove } from 'lodash';
 import { COLOR, NA } from '@autonolas/frontend-library';
@@ -161,16 +168,40 @@ const getColumns = (
       ),
       dataIndex: 'bondForOlas',
       key: 'bondForOlas',
-      render: (_, row) => (
-        <Button
-          type="primary"
-          // disbled if there is no supply or if the user is not connected
-          disabled={!hideEmptyProducts || !acc}
-          onClick={() => onClick(row)}
-        >
-          Bond
-        </Button>
-      ),
+      render: (_, row) => {
+        // disbled if there is no supply or if the user is not connected
+        const isBondButtonDisabled = !hideEmptyProducts || !acc;
+        const isCurrentDifferenceNegative = row.projectedChange < 0;
+
+        // if the current difference is negative, then show a popconfirm
+        // to confirm the user wants to bond
+        if (isCurrentDifferenceNegative) {
+          return (
+            <Popconfirm
+              title="Current difference in value is negative – are you sure you want to bond?"
+              okText="Proceed"
+              cancelText="Cancel"
+              placement="left"
+              disabled={isBondButtonDisabled}
+              onConfirm={() => onClick(row)}
+            >
+              <Button type="primary" disabled={isBondButtonDisabled}>
+                Bond
+              </Button>
+            </Popconfirm>
+          );
+        }
+
+        return (
+          <Button
+            type="primary"
+            disabled={isBondButtonDisabled}
+            onClick={() => onClick(row)}
+          >
+            Bond
+          </Button>
+        );
+      },
     },
   ];
 
@@ -348,12 +379,3 @@ BondingList.defaultProps = {
   bondingProgramType: 'active',
   hideEmptyProducts: 'active',
 };
-
-/* <Popconfirm
-  title="Are you sure you want to delete this item?"
-  onConfirm={() => removeMemoryItem(index)}
-  okText="Yes"
-  cancelText="No"
->
-  <DeleteOutlined danger key="remove" />
-</Popconfirm>, */
