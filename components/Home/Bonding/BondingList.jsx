@@ -178,7 +178,8 @@ const getColumns = (
         if (isCurrentDifferenceNegative) {
           return (
             <Popconfirm
-              title="Current difference in value is negative – are you sure you want to bond?"
+              title="Current difference in value is negative"
+              description="Are you sure you want to bond?"
               okText="Proceed"
               cancelText="Cancel"
               placement="left"
