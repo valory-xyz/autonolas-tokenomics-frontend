@@ -169,7 +169,7 @@ const getColumns = (
       dataIndex: 'bondForOlas',
       key: 'bondForOlas',
       render: (_, row) => {
-        // disbled if there is no supply or if the user is not connected
+        // disabled if there is no supply or if the user is not connected
         const isBondButtonDisabled = !hideEmptyProducts || !acc;
         const isCurrentDifferenceNegative = row.projectedChange < 0;
 
