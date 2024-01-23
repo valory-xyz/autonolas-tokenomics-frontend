@@ -3,11 +3,13 @@ import PropTypes from 'prop-types';
 import {
   Button, Empty, Spin, Table, Tag, Tooltip, Typography,
 } from 'antd';
-import {
-  round, isNaN, remove,
-} from 'lodash';
+import { round, isNaN, remove } from 'lodash';
 import { COLOR, NA } from '@autonolas/frontend-library';
-import { ExclamationCircleTwoTone, QuestionCircleOutlined, UnorderedListOutlined } from '@ant-design/icons';
+import {
+  ExclamationCircleTwoTone,
+  QuestionCircleOutlined,
+  UnorderedListOutlined,
+} from '@ant-design/icons';
 import styled from 'styled-components';
 
 import { BONDING_PRODUCTS } from 'util/constants';
@@ -40,7 +42,6 @@ const getTitle = (title, tooltipDesc) => (
 );
 
 const getColumns = (
-  // showNoSupply,
   onClick,
   isActive,
   acc,
@@ -133,7 +134,9 @@ const getColumns = (
       dataIndex: 'supply',
       key: 'supply',
       render: (x, row) => {
-        const supplyLeftInPercent = isNaN(row.supplyLeft) ? 0 : round(row.supplyLeft * 100, 0);
+        const supplyLeftInPercent = isNaN(row.supplyLeft)
+          ? 0
+          : round(row.supplyLeft * 100, 0);
         return (
           <>
             <a
@@ -183,10 +186,22 @@ const getColumns = (
   return columns;
 };
 
-export const BondingList = ({
-  bondingProgramType,
-  hideEmptyProducts,
-}) => {
+const NoProducts = () => (
+  <>
+    <UnorderedListOutlined style={{ fontSize: 64 }} className="mb-8" />
+    <br />
+    No products
+  </>
+);
+
+const ThisCanTakeUpTo30Seconds = () => (
+  <>
+    <br />
+    This can take up to 30 seconds
+  </>
+);
+
+export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
   const { account, chainId } = useHelpers();
   const [isLoading, setIsLoading] = useState(false);
   const [errorState, setErrorState] = useState(false);
@@ -204,7 +219,10 @@ export const BondingList = ({
       setErrorState(false);
       setIsLoading(true);
 
-      const filteredProductList = await getProductListRequest({ isActive }, retry);
+      const filteredProductList = await getProductListRequest(
+        { isActive },
+        retry,
+      );
       setFilteredProducts(filteredProductList);
     } catch (error) {
       const errorMessage = typeof error?.message === 'string' ? error.message : null;
@@ -238,7 +256,8 @@ export const BondingList = ({
   const getProductsDataSource = () => {
     const sortedList = sortList(filteredProducts);
     const processedList = hideEmptyProducts
-      ? sortedList.filter((x) => x.supplyLeft > 0.00001) : sortedList;
+      ? sortedList.filter((x) => x.supplyLeft > 0.00001)
+      : sortedList;
 
     return processedList;
   };
@@ -258,7 +277,12 @@ export const BondingList = ({
               <Button onClick={handleRetry}>Try again</Button>
             </>
           )}
-          image={<ExclamationCircleTwoTone style={{ fontSize: '7rem' }} twoToneColor={COLOR.GREY_1} />}
+          image={(
+            <ExclamationCircleTwoTone
+              style={{ fontSize: '7rem' }}
+              twoToneColor={COLOR.GREY_1}
+            />
+          )}
         />
       </Container>
     );
@@ -277,15 +301,7 @@ export const BondingList = ({
         locale={{
           emptyText: (
             <div style={{ padding: '5rem' }}>
-              {isLoading ? ' '
-                : (
-                  <>
-                    <UnorderedListOutlined style={{ fontSize: 64 }} className="mb-8" />
-                    <br />
-                    No products
-
-                  </>
-                )}
+              {isLoading ? ' ' : <NoProducts />}
             </div>
           ),
         }}
@@ -296,14 +312,7 @@ export const BondingList = ({
           tip: (
             <Typography className="mt-8">
               Loading products
-              {
-                retry > 0 && (
-                <>
-                  <br />
-                  This can take up to 30 seconds
-                </>
-                )
-              }
+              {retry > 0 && <ThisCanTakeUpTo30Seconds />}
             </Typography>
           ),
           indicator: <Spin active />,
@@ -339,3 +348,12 @@ BondingList.defaultProps = {
   bondingProgramType: 'active',
   hideEmptyProducts: 'active',
 };
+
+/* <Popconfirm
+  title="Are you sure you want to delete this item?"
+  onConfirm={() => removeMemoryItem(index)}
+  okText="Yes"
+  cancelText="No"
+>
+  <DeleteOutlined danger key="remove" />
+</Popconfirm>, */
