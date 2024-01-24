@@ -171,6 +171,8 @@ const getLpTokenDetails = memoize(getLpTokenDetailsFn);
 const getLpTokenNamesForProducts = async (productList, events) => {
   const lpTokenNamePromiseList = [];
 
+  console.log(events);
+
   for (let i = 0; i < productList.length; i += 1) {
     const tokenAddress = getProductValueFromEvent(
       productList[i],
@@ -314,6 +316,11 @@ export const getListWithSupplyList = async (
   // Should not happen but we will warn if it does
   if (!createProductEvent) {
     window.console.warn(`Product ${product.id} not found in the event list`);
+    return {
+      ...product,
+      supplyLeft: 0,
+      priceLP: 0,
+    };
   }
 
   const eventSupply = Number(
@@ -399,6 +406,8 @@ const getProductDetailsFromIds = async ({ productIdList }, retry) => {
     productList,
   );
 
+  console.log('listWithCurrentLpPrice', listWithCurrentLpPrice);
+
   const createEventList = await getProductEvents('CreateProduct', retry);
   const closedEventList = await getProductEvents('CloseProduct', retry);
 
@@ -423,6 +432,11 @@ const getProductDetailsFromIds = async ({ productIdList }, retry) => {
  */
 export const getProductListRequest = async ({ isActive }, retry) => {
   const productIdList = await getBondingProgramsRequest({ isActive });
+  // const productIdList = [
+  //   '91', // not available in events
+  //   // '117', // works
+  // ];
+  console.log('productIdList', productIdList);
   const response = await getProductDetailsFromIds({ productIdList }, retry);
   const discount = await getLastIDFRequest(); // discount factor is same for all the products
 
