@@ -81,8 +81,11 @@ const getProductEventsFn = async (eventName, retry) => {
   const block = await provider.getBlock('latest');
 
   // handle forked chains with very high chain IDs because they are
-  // bad at handling large event lookbacks
-  const lookbackBlockCount = (getChainId() || 1) >= 100000 ? 50 : 100000;
+  // bad at handling large event lookbacks, hence 50 blocks.
+  // Also, previous 200000 blocks means approximately 200000 * 15s = 50 days
+  // Try to adjust the lookbackBlockCount if you are running into issues
+  // such as events not being fetched.
+  const lookbackBlockCount = (getChainId() || 1) >= 100000 ? 50 : 200000;
   const chunkSize = retry > 0 ? 500 : 50000;
   const eventPromises = [];
   const delayBetweenRequestsInMs = 100;
@@ -314,11 +317,6 @@ export const getListWithSupplyList = async (
   // Should not happen but we will warn if it does
   if (!createProductEvent) {
     window.console.warn(`Product ${product.id} not found in the event list`);
-    return {
-      ...product,
-      supplyLeft: 0,
-      priceLP: 0,
-    };
   }
 
   const eventSupply = Number(
