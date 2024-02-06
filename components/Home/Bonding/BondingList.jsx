@@ -9,6 +9,7 @@ import {
   Tag,
   Tooltip,
   Typography,
+  Flex,
 } from 'antd';
 import { round, isNaN, remove } from 'lodash';
 import { COLOR, NA } from '@autonolas/frontend-library';
@@ -61,16 +62,21 @@ const getColumns = (
       title: getTitle('LP Token', 'LP token address enabled by the Treasury'),
       dataIndex: 'lpTokenName',
       key: 'lpTokenName',
+      width: 260,
       render: (x, data) => (
-        <a href={data.lpTokenLink} target="_blank" rel="noreferrer">
-          {x}
-        </a>
+        <Flex justify="space-between" align="center">
+          <a href={data.lpTokenLink} target="_blank" rel="noreferrer">
+            {x}
+          </a>
+          <Button type="primary">Manage</Button>
+        </Flex>
       ),
     },
     {
       title: getTitle('Current Price of LP Token', 'Denominated in OLAS'),
       dataIndex: 'fullCurrentPriceLp',
       key: 'fullCurrentPriceLp',
+      width: 200,
       render: (x, details) => (
         <a
           href={details.currentPriceLpLink}
@@ -88,6 +94,7 @@ const getColumns = (
       ),
       dataIndex: 'roundedDiscountedOlasPerLpToken',
       key: 'roundedDiscountedOlasPerLpToken',
+      width: 200,
       render: (x) => (
         <a
           href={`https://etherscan.io/address/${depositoryAddress}#readContract#F10`}
@@ -103,6 +110,7 @@ const getColumns = (
         'Current difference in value',
         'Percentage difference between current price of LP token and OLAS minted per LP token',
       ),
+      width: 200,
       render: (record) => {
         const { projectedChange } = record;
 
