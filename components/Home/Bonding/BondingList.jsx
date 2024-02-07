@@ -9,7 +9,6 @@ import {
   Tag,
   Tooltip,
   Typography,
-  Flex,
 } from 'antd';
 import { round, isNaN, remove } from 'lodash';
 import { COLOR, NA } from '@autonolas/frontend-library';
@@ -25,6 +24,7 @@ import { notifySpecificError, parseToEth } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { ADDRESSES } from 'common-util/Contracts';
 import { Deposit } from './Deposit';
+import { LpTokenManagement } from './LpTokenManagement';
 import { getProductListRequest } from './requests';
 import { getLpTokenWithDiscount } from './requestsHelpers';
 
@@ -64,12 +64,7 @@ const getColumns = (
       key: 'lpTokenName',
       width: 260,
       render: (x, data) => (
-        <Flex justify="space-between" align="center">
-          <a href={data.lpTokenLink} target="_blank" rel="noreferrer">
-            {x}
-          </a>
-          <Button type="primary">Manage</Button>
-        </Flex>
+        <LpTokenManagement lpToken={x} lpTokenLink={data.lpTokenLink} />
       ),
     },
     {

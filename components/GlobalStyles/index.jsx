@@ -76,6 +76,9 @@ const GlobalStyle = createGlobalStyle`
   .hide-only-sm {
     display: initial;
   }
+  .full-width {
+    width: 100%;
+  }
 
   /* layout */
   .ant-layout {
