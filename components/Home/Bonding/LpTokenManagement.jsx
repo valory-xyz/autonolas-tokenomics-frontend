@@ -9,19 +9,25 @@ import {
   Flex,
   Typography,
 } from 'antd';
+import { NA } from '@autonolas/frontend-library';
 
 const { Paragraph, Text } = Typography;
 
 export const LpTokenManagement = ({ lpToken, lpTokenLink }) => {
   const [form] = Form.useForm();
   const [isManageModalVisible, setIsManageModalVisible] = useState(true);
+  const [estimatedOutput, setEstimatedOutput] = useState(0);
 
   useEffect(() => {
     // default value of 1 to slippage and user can change it
     form.setFieldsValue({ slippage: 1 });
   }, [form]);
 
-  const onWsolBlur = () => {};
+  const onWsolBlur = () => {
+    const wsol = form.getFieldValue('wsol');
+    console.log('WSOL', wsol);
+    setEstimatedOutput(100);
+  };
 
   const handleDeposit = () => {
     console.log('Deposit');
@@ -53,6 +59,7 @@ export const LpTokenManagement = ({ lpToken, lpTokenLink }) => {
           form={form}
           name="manage"
           layout="vertical"
+          className="mt-16"
           onFinish={handleDeposit}
         >
           <Form.Item
@@ -65,7 +72,7 @@ export const LpTokenManagement = ({ lpToken, lpTokenLink }) => {
               },
             ]}
           >
-            <InputNumber min={0} className="full-width" />
+            <InputNumber min={0} className="full-width" onBlur={onWsolBlur} />
           </Form.Item>
 
           <Form.Item
@@ -96,8 +103,8 @@ export const LpTokenManagement = ({ lpToken, lpTokenLink }) => {
 
           <Form.Item>
             <Flex vertical gap="small" className="mb-16">
-              <Text>ESTIMATED OUTPUT</Text>
-              <Text>LP Tokens</Text>
+              <Text strong>ESTIMATED OUTPUT</Text>
+              <Text>{`${estimatedOutput || '--'} LP Tokens`}</Text>
             </Flex>
 
             <Button type="primary" htmlType="submit">
