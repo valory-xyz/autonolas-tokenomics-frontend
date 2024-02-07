@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
 import PropTypes from 'prop-types';
-import { Layout, Menu } from 'antd';
+import { Layout as AntdLayout, Menu } from 'antd';
 import { ExportOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
 import { COLOR } from '@autonolas/frontend-library';
+import { ConnectionProvider } from '@solana/wallet-adapter-react';
 
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import Login from '../Login';
@@ -14,13 +15,14 @@ import { CustomLayout, Logo, DocsLink } from './styles';
 
 const LogoSvg = dynamic(() => import('common-util/SVGs/logo'));
 
-const { Header, Content } = Layout;
+const { Header, Content } = AntdLayout;
+const endpoint = process.env.NEXT_PUBLIC_SOLANA_MAINNET_BETA_URL;
 
 const StyledHeader = styled(Header)`
   border-bottom: 1px solid ${COLOR.BORDER_GREY};
 `;
 
-const NavigationBar = ({ children }) => {
+const Layout = ({ children }) => {
   const router = useRouter();
   const { chainId } = useHelpers();
 
@@ -91,12 +93,20 @@ const NavigationBar = ({ children }) => {
   );
 };
 
-NavigationBar.propTypes = {
+Layout.propTypes = {
   children: PropTypes.element,
 };
 
-NavigationBar.defaultProps = {
+Layout.defaultProps = {
   children: null,
 };
 
-export default NavigationBar;
+const LayoutWithWalletProvider = (props) => (
+  <ConnectionProvider endpoint={endpoint}>
+    <Layout {...props}>{props.children}</Layout>
+  </ConnectionProvider>
+);
+
+LayoutWithWalletProvider.propTypes = { children: PropTypes.element };
+LayoutWithWalletProvider.defaultProps = { children: null };
+export default LayoutWithWalletProvider;

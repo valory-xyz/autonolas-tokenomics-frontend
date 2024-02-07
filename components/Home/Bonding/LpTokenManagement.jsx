@@ -1,26 +1,35 @@
+/* eslint-disable camelcase */
 import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import {
   Button,
   Form,
-  Input,
+  // Input,
   Modal,
   InputNumber,
   Flex,
   Typography,
 } from 'antd';
-import { NA } from '@autonolas/frontend-library';
+// import { NA } from '@autonolas/frontend-library';
+import { useDepositEstimation } from './lpTokenManageUtils';
 
-const { Paragraph, Text } = Typography;
+const {
+  // Paragraph,
+  Text,
+} = Typography;
 
 export const LpTokenManagement = ({ lpToken, lpTokenLink }) => {
   const [form] = Form.useForm();
   const [isManageModalVisible, setIsManageModalVisible] = useState(true);
   const [estimatedOutput, setEstimatedOutput] = useState(0);
 
+  const ab = useDepositEstimation();
+
   useEffect(() => {
     // default value of 1 to slippage and user can change it
     form.setFieldsValue({ slippage: 1 });
+    // console.log('AB', ab);
+    ab();
   }, [form]);
 
   const onWsolBlur = () => {
@@ -49,11 +58,6 @@ export const LpTokenManagement = ({ lpToken, lpTokenLink }) => {
         open={isManageModalVisible}
         onCancel={() => setIsManageModalVisible(false)}
         footer={null}
-        // footer={[
-        //   <Button key="submit" type="primary" onClick={handleDeposit}>
-        //     Deposit
-        //   </Button>,
-        // ]}
       >
         <Form
           form={form}
