@@ -245,7 +245,7 @@ const getLpTokenNamesForProducts = async (productList, events) => {
         }
 
         if (lpChainId === 42161) {
-          return `https://arbitrum.balancer.fi/#/arbitrum/pool/${poolId}`;
+          return `https://arbiscan.io/address/${ADDRESSES[lpChainId].balancerVault}#readContract#F10`;
         }
       }
 
