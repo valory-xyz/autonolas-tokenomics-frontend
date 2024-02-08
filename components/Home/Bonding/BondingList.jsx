@@ -11,7 +11,7 @@ import {
   Typography,
 } from 'antd';
 import { round, isNaN, remove } from 'lodash';
-import { COLOR, NA } from '@autonolas/frontend-library';
+import { COLOR, NA, getNetworkName } from '@autonolas/frontend-library';
 import {
   ExclamationCircleTwoTone,
   QuestionCircleOutlined,
@@ -56,11 +56,26 @@ const getColumns = (
   hideEmptyProducts,
 ) => {
   const columns = [
-    { title: 'ID', dataIndex: 'id', key: 'id' },
+    {
+      title: 'ID',
+      dataIndex: 'id',
+      key: 'id',
+      width: 70,
+    },
+    {
+      title: 'Network',
+      dataIndex: 'lpChainId',
+      key: 'lpChainId',
+      render: (x) => {
+        if (x === 42161) return 'Arbitrum';
+        return getNetworkName(x);
+      },
+    },
     {
       title: getTitle('LP Token', 'LP token address enabled by the Treasury'),
       dataIndex: 'lpTokenName',
       key: 'lpTokenName',
+      width: 180,
       render: (x, data) => {
         if (!x) return NA;
         return (
@@ -74,6 +89,7 @@ const getColumns = (
       title: getTitle('Current Price of LP Token', 'Denominated in OLAS'),
       dataIndex: 'fullCurrentPriceLp',
       key: 'fullCurrentPriceLp',
+      width: 180,
       render: (x, details) => (
         <a
           href={details.currentPriceLpLink}
@@ -87,10 +103,11 @@ const getColumns = (
     {
       title: getTitle(
         'OLAS minted per LP token',
-        'Price for one LP token denominated in OLAS as offered by the bonding product.',
+        'Price for one LP token denominated in OLAS as offered by the bonding product plus discount.',
       ),
       dataIndex: 'roundedDiscountedOlasPerLpToken',
       key: 'roundedDiscountedOlasPerLpToken',
+      width: 180,
       render: (x) => (
         <a
           href={`https://etherscan.io/address/${depositoryAddress}#readContract#F10`}
@@ -106,6 +123,7 @@ const getColumns = (
         'Current difference in value',
         'Percentage difference between current price of LP token and OLAS minted per LP token',
       ),
+      width: 180,
       render: (record) => {
         const { projectedChange } = record;
 

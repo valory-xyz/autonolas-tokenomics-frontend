@@ -254,6 +254,7 @@ const getLpTokenNamesForProducts = async (productList, events) => {
 
     return {
       ...component,
+      lpChainId,
       lpTokenName: name,
       lpTokenLink: getLpTokenLink(),
       currentPriceLpLink: getCurrentPriceLpLink(),
@@ -451,7 +452,6 @@ const getProductDetailsFromIds = async ({ productIdList }, retry) => {
  */
 export const getProductListRequest = async ({ isActive }, retry) => {
   const productIdList = await getBondingProgramsRequest({ isActive });
-
   const response = await getProductDetailsFromIds({ productIdList }, retry);
   const discount = await getLastIDFRequest(); // discount factor is same for all the products
 
