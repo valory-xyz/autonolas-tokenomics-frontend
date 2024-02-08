@@ -76,7 +76,6 @@ const getBondingProgramsRequest = async ({ isActive }) => {
  * returns events for the product creation
  */
 const getProductEventsFn = async (eventName, retry) => {
-  console.log('getProductEventsFn called');
   const contract = getDepositoryContract();
   const provider = getEthersProvider();
   const block = await provider.getBlock('latest');

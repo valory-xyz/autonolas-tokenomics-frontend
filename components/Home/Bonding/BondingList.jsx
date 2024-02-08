@@ -10,7 +10,9 @@ import {
   Tooltip,
   Typography,
 } from 'antd';
-import { round, isNaN, remove } from 'lodash';
+import {
+  round, isNaN, remove, uniqBy,
+} from 'lodash';
 import { COLOR, NA } from '@autonolas/frontend-library';
 import {
   ExclamationCircleTwoTone,
@@ -272,7 +274,12 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
         { isActive, position: 3 },
         retry,
       );
-      setFilteredProducts((prevList) => [...prevList, ...listThree]);
+
+      setFilteredProducts((prevList) => {
+        const list = [...prevList, ...listThree];
+        const uniqueList = uniqBy(list, 'id');
+        return uniqueList;
+      });
     } catch (error) {
       const errorMessage = typeof error?.message === 'string' ? error.message : null;
       setErrorState(true);
