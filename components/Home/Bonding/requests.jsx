@@ -19,7 +19,7 @@ import {
   getDepositoryContract,
   getUniswapV2PairContract,
   getTokenomicsContract,
-  // getErc20Contract,
+  getErc20Contract,
   getGenericBondCalculatorContract,
   ADDRESSES,
   RPC_URLS,
@@ -47,6 +47,15 @@ const LP_PAIRS = {
     dex: DEX.BALANCER,
     poolId:
       '0x62309056c759c36879cde93693e7903bf415e4bc000200000000000000000d5f',
+  },
+  // arbitrum
+  '0xf9825A563222f9eFC81e369311DAdb13D68e60a4': {
+    lpChainId: 42161,
+    name: 'OLAS-WETH',
+    originAddress: '0xaf8912a3c4f55a8584b67df30ee0ddf0e60e01f8',
+    dex: DEX.BALANCER,
+    poolId:
+      '0xaf8912a3c4f55a8584b67df30ee0ddf0e60e01f80002000000000000000004fc',
   },
 };
 
@@ -89,8 +98,6 @@ const getProductEventsFn = async (eventName, retry) => {
   const chunkSize = retry > 0 ? 500 : 50000;
   const eventPromises = [];
   const delayBetweenRequestsInMs = 100;
-
-  // console.log({ fromBlock: block.number, lookbackBlockCount });
 
   for (
     let fromBlock = block.number - lookbackBlockCount;
@@ -149,28 +156,26 @@ const getLpTokenDetailsFn = async (address) => {
 
   // if the address is not in the LP_PAIRS list
   // (mainnet and goerli)
-  // const contract = getUniswapV2PairContract(address);
-  // console.log({
-  //   contract,
-  //   cc: contract.methods.token1().call(),
-  // });
 
-  // const token0 = await contract.methods.token0().call();
-  // const token1 = await contract.methods.token1().call();
-
-  // console.log({
-  //   token0,
-  //   token1,
-  // });
-
-  // const erc20Contract = getErc20Contract(
-  //   token0 === ADDRESSES[chainId].olasAddress ? token1 : token0,
-  // );
-  // const tokenSymbol = await erc20Contract.methods.symbol().call();
+  let tokenSymbol = null;
+  try {
+    const contract = getUniswapV2PairContract(address);
+    const token0 = await contract.methods.token0().call();
+    const token1 = await contract.methods.token1().call();
+    const erc20Contract = getErc20Contract(
+      token0 === ADDRESSES[chainId].olasAddress ? token1 : token0,
+    );
+    tokenSymbol = await erc20Contract.methods.symbol().call();
+  } catch (error) {
+    console.error(
+      'Error fetching token0 and token1 from the LP pair contract: ',
+      address,
+    );
+  }
 
   return {
     lpChainId: chainId,
-    // name: `OLAS-${tokenSymbol}`,
+    name: `OLAS${tokenSymbol ? `-${tokenSymbol}` : ''}`,
     originAddress: address,
     dex: DEX.UNISWAP,
     poolId: null,
@@ -215,6 +220,10 @@ const getLpTokenNamesForProducts = async (productList, events) => {
         if (lpChainId === 137) {
           return `https://app.balancer.fi/#/polygon/pool/${poolId}`;
         }
+
+        if (lpChainId === 42161) {
+          return `https://app.balancer.fi/#/arbitrum/pool/${poolId}`;
+        }
       }
 
       return new Error('Dex not supported');
@@ -234,6 +243,10 @@ const getLpTokenNamesForProducts = async (productList, events) => {
         if (lpChainId === 137) {
           return `https://polygonscan.com/address/${ADDRESSES[lpChainId].balancerVault}#readContract#F10`;
         }
+
+        if (lpChainId === 42161) {
+          return `https://arbitrum.balancer.fi/#/arbitrum/pool/${poolId}`;
+        }
       }
 
       return new Error('Dex not supported');
@@ -250,7 +263,6 @@ const getLpTokenNamesForProducts = async (productList, events) => {
 
 const getCurrentPriceBalancerFn = async (tokenAddress) => {
   const { lpChainId, poolId } = await getLpTokenDetails(tokenAddress);
-
   const balancerConfig = { network: lpChainId, rpcUrl: RPC_URLS[lpChainId] };
   const balancer = new BalancerSDK(balancerConfig);
   const pool = await balancer.pools.find(poolId);
