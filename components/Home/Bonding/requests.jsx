@@ -19,7 +19,7 @@ import {
   getDepositoryContract,
   getUniswapV2PairContract,
   getTokenomicsContract,
-  getErc20Contract,
+  // getErc20Contract,
   getGenericBondCalculatorContract,
   ADDRESSES,
   RPC_URLS,
@@ -76,6 +76,7 @@ const getBondingProgramsRequest = async ({ isActive }) => {
  * returns events for the product creation
  */
 const getProductEventsFn = async (eventName, retry) => {
+  console.log('getProductEventsFn called');
   const contract = getDepositoryContract();
   const provider = getEthersProvider();
   const block = await provider.getBlock('latest');
@@ -85,10 +86,12 @@ const getProductEventsFn = async (eventName, retry) => {
   // Also, previous 200000 blocks means approximately 200000 * 15s = 50 days
   // Try to adjust the lookbackBlockCount if you are running into issues
   // such as events not being fetched.
-  const lookbackBlockCount = (getChainId() || 1) >= 100000 ? 50 : 250000;
+  const lookbackBlockCount = (getChainId() || 1) >= 100000 ? 50 : 300000;
   const chunkSize = retry > 0 ? 500 : 50000;
   const eventPromises = [];
   const delayBetweenRequestsInMs = 100;
+
+  // console.log({ fromBlock: block.number, lookbackBlockCount });
 
   for (
     let fromBlock = block.number - lookbackBlockCount;
@@ -147,17 +150,28 @@ const getLpTokenDetailsFn = async (address) => {
 
   // if the address is not in the LP_PAIRS list
   // (mainnet and goerli)
-  const contract = getUniswapV2PairContract(address);
-  const token0 = await contract.methods.token0().call();
-  const token1 = await contract.methods.token1().call();
-  const erc20Contract = getErc20Contract(
-    token0 === ADDRESSES[chainId].olasAddress ? token1 : token0,
-  );
-  const tokenSymbol = await erc20Contract.methods.symbol().call();
+  // const contract = getUniswapV2PairContract(address);
+  // console.log({
+  //   contract,
+  //   cc: contract.methods.token1().call(),
+  // });
+
+  // const token0 = await contract.methods.token0().call();
+  // const token1 = await contract.methods.token1().call();
+
+  // console.log({
+  //   token0,
+  //   token1,
+  // });
+
+  // const erc20Contract = getErc20Contract(
+  //   token0 === ADDRESSES[chainId].olasAddress ? token1 : token0,
+  // );
+  // const tokenSymbol = await erc20Contract.methods.symbol().call();
 
   return {
     lpChainId: chainId,
-    name: `OLAS-${tokenSymbol}`,
+    // name: `OLAS-${tokenSymbol}`,
     originAddress: address,
     dex: DEX.UNISWAP,
     poolId: null,
@@ -424,8 +438,17 @@ const getProductDetailsFromIds = async ({ productIdList }, retry) => {
 /**
  * fetches product list based on the active/inactive status
  */
-export const getProductListRequest = async ({ isActive }, retry) => {
-  const productIdList = await getBondingProgramsRequest({ isActive });
+export const getProductListRequest = async ({ isActive, position }, retry) => {
+  const allProductIdList = await getBondingProgramsRequest({ isActive });
+  let productIdList = [];
+  if (position === 1) {
+    productIdList = allProductIdList.slice(0, 25);
+  } else if (position === 2) {
+    productIdList = allProductIdList.slice(25, 50);
+  } else if (position === 3) {
+    productIdList = allProductIdList.slice(50); // all except 1st 50
+  }
+
   const response = await getProductDetailsFromIds({ productIdList }, retry);
   const discount = await getLastIDFRequest(); // discount factor is same for all the products
 

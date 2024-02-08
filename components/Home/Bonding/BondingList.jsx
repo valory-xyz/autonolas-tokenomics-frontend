@@ -20,7 +20,7 @@ import {
 import styled from 'styled-components';
 
 import { BONDING_PRODUCTS } from 'util/constants';
-import { notifySpecificError, parseToEth } from 'common-util/functions';
+import { notifySpecificError, parseToEth, delay } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { ADDRESSES } from 'common-util/Contracts';
 import { Deposit } from './Deposit';
@@ -61,11 +61,14 @@ const getColumns = (
       title: getTitle('LP Token', 'LP token address enabled by the Treasury'),
       dataIndex: 'lpTokenName',
       key: 'lpTokenName',
-      render: (x, data) => (
-        <a href={data.lpTokenLink} target="_blank" rel="noreferrer">
-          {x}
-        </a>
-      ),
+      render: (x, data) => {
+        if (!x) return NA;
+        return (
+          <a href={data.lpTokenLink} target="_blank" rel="noreferrer">
+            {x}
+          </a>
+        );
+      },
     },
     {
       title: getTitle('Current Price of LP Token', 'Denominated in OLAS'),
@@ -251,11 +254,25 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
       setErrorState(false);
       setIsLoading(true);
 
-      const filteredProductList = await getProductListRequest(
-        { isActive },
+      const listOne = await getProductListRequest(
+        { isActive, position: 1 },
         retry,
       );
-      setFilteredProducts(filteredProductList);
+      setFilteredProducts(listOne);
+      await delay(5000);
+
+      const listTwo = await getProductListRequest(
+        { isActive, position: 2 },
+        retry,
+      );
+      setFilteredProducts((prevList) => [...prevList, ...listTwo]);
+      await delay(5000);
+
+      const listThree = await getProductListRequest(
+        { isActive, position: 3 },
+        retry,
+      );
+      setFilteredProducts((prevList) => [...prevList, ...listThree]);
     } catch (error) {
       const errorMessage = typeof error?.message === 'string' ? error.message : null;
       setErrorState(true);
