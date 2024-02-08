@@ -61,11 +61,14 @@ const getColumns = (
       title: getTitle('LP Token', 'LP token address enabled by the Treasury'),
       dataIndex: 'lpTokenName',
       key: 'lpTokenName',
-      render: (x, data) => (
-        <a href={data.lpTokenLink} target="_blank" rel="noreferrer">
-          {x}
-        </a>
-      ),
+      render: (x, data) => {
+        if (!x) return NA;
+        return (
+          <a href={data.lpTokenLink} target="_blank" rel="noreferrer">
+            {x}
+          </a>
+        );
+      },
     },
     {
       title: getTitle('Current Price of LP Token', 'Denominated in OLAS'),

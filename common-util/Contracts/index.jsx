@@ -72,6 +72,12 @@ export const ADDRESSES = {
     olasAddress: '0x81e7Ac2D5aCA991aef9187a34C0A536FA526dD0F',
   },
 
+  // arbitrum
+  42161: {
+    olasAddress: '0x064f8b858c2a603e1b106a2039f5446d32dc81c1',
+    balancerVault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
+  },
+
   [LOCAL_CHAIN_ID]: LOCAL_ADDRESSES,
   [LOCAL_FORK_ID]: MAINNET_ADDRESSES,
 };
