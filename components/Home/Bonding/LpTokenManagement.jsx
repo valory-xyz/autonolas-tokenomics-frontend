@@ -16,7 +16,7 @@ import {
 } from 'antd';
 // import { NA } from '@autonolas/frontend-library';
 import pDebounce from 'p-debounce';
-import { isNumber } from 'lodash';
+import { isNumber, set } from 'lodash';
 import {
   getCommaSeparatedNumber,
   notifyError,
@@ -35,9 +35,10 @@ const DepositForm = () => {
   const [form] = Form.useForm();
   const [estimatedQuote, setEstimatedQuote] = useState(null);
   const [isEstimating, setIsEstimating] = useState(false);
+  const [isDepositing, setIsDepositing] = useState(false);
 
-  const increaseLiquidityFn = useDepositEstimation();
-  const increaseLiquidity = pDebounce(increaseLiquidityFn, 500);
+  const { increaseLiquidity: fn, deposit } = useDepositEstimation();
+  const increaseLiquidity = pDebounce(fn, 500);
 
   // initially, set default slippage value
   useEffect(() => {
@@ -65,8 +66,17 @@ const DepositForm = () => {
     }
   };
 
-  const handleDeposit = () => {
-    // console.log('Deposit');
+  const handleDeposit = async () => {
+    try {
+      setIsDepositing(true);
+      // console.log('Deposit');
+      await deposit();
+    } catch (error) {
+      notifyError('Failed to deposit');
+      console.error(error);
+    } finally {
+      setIsDepositing(false);
+    }
   };
 
   const estimatedOutput = `${

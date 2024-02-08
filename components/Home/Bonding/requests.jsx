@@ -69,7 +69,10 @@ const getLastIDFRequest = async () => {
 const getBondingProgramsRequest = async ({ isActive }) => {
   const contract = getDepositoryContract();
   const response = await contract.methods.getProducts(isActive).call();
-  return response;
+  console.log('response', response);
+  // return response;
+  // return 500;
+  return ['125'];
 };
 
 /**
