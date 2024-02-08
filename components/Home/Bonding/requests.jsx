@@ -449,16 +449,8 @@ const getProductDetailsFromIds = async ({ productIdList }, retry) => {
 /**
  * fetches product list based on the active/inactive status
  */
-export const getProductListRequest = async ({ isActive, position }, retry) => {
-  const allProductIdList = await getBondingProgramsRequest({ isActive });
-  let productIdList = [];
-  if (position === 1) {
-    productIdList = allProductIdList.slice(0, 25);
-  } else if (position === 2) {
-    productIdList = allProductIdList.slice(25, 50);
-  } else if (position === 3) {
-    productIdList = allProductIdList.slice(50); // all except 1st 50
-  }
+export const getProductListRequest = async ({ isActive }, retry) => {
+  const productIdList = await getBondingProgramsRequest({ isActive });
 
   const response = await getProductDetailsFromIds({ productIdList }, retry);
   const discount = await getLastIDFRequest(); // discount factor is same for all the products

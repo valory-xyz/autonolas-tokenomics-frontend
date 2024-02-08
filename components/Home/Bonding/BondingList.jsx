@@ -10,9 +10,7 @@ import {
   Tooltip,
   Typography,
 } from 'antd';
-import {
-  round, isNaN, remove, uniqBy,
-} from 'lodash';
+import { round, isNaN, remove } from 'lodash';
 import { COLOR, NA } from '@autonolas/frontend-library';
 import {
   ExclamationCircleTwoTone,
@@ -22,7 +20,7 @@ import {
 import styled from 'styled-components';
 
 import { BONDING_PRODUCTS } from 'util/constants';
-import { notifySpecificError, parseToEth, delay } from 'common-util/functions';
+import { notifySpecificError, parseToEth } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { ADDRESSES } from 'common-util/Contracts';
 import { Deposit } from './Deposit';
@@ -256,30 +254,11 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
       setErrorState(false);
       setIsLoading(true);
 
-      const listOne = await getProductListRequest(
-        { isActive, position: 1 },
+      const filteredProductList = await getProductListRequest(
+        { isActive },
         retry,
       );
-      setFilteredProducts(listOne);
-      await delay(5000);
-
-      const listTwo = await getProductListRequest(
-        { isActive, position: 2 },
-        retry,
-      );
-      setFilteredProducts((prevList) => [...prevList, ...listTwo]);
-      await delay(5000);
-
-      const listThree = await getProductListRequest(
-        { isActive, position: 3 },
-        retry,
-      );
-
-      setFilteredProducts((prevList) => {
-        const list = [...prevList, ...listThree];
-        const uniqueList = uniqBy(list, 'id');
-        return uniqueList;
-      });
+      setFilteredProducts(filteredProductList);
     } catch (error) {
       const errorMessage = typeof error?.message === 'string' ? error.message : null;
       setErrorState(true);
