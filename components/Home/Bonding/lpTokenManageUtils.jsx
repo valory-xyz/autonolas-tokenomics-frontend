@@ -145,12 +145,13 @@ export const useDepositEstimation = () => {
     );
 
     // TODO: which wallet is this?
-    // const userWallet = provider.wallet.payer;
+    const userWallet = provider.wallet.payer;
     // console.log('User wallet:', userWallet.publicKey.toBase58());
-    const userWallet = '0x07b5302e01D44bD5b90C63C6Fb24807946704bFC';
+    // const userWallet = '0x07b5302e01D44bD5b90C63C6Fb24807946704bFC';
 
+    // TODO: this will be an address in future, needs to be removed
     const bridgedTokenMint = await createMint(
-      provider.connection,
+      connection,
       userWallet,
       pdaProgram,
       null,
@@ -159,6 +160,7 @@ export const useDepositEstimation = () => {
     console.log('Bridged token mint:', bridgedTokenMint.toBase58());
 
     // // ATA for the PDA to store the position NFT
+    // TODO: this will be an address in future, needs to be removed
     // const pdaPositionAccount = await getAssociatedTokenAddress(
     //   positionMint,
     //   pdaProgram,
@@ -169,6 +171,7 @@ export const useDepositEstimation = () => {
 
     // Get the ATA of the userWallet address, and if it does not exist, create it
     // This account will have bridged tokens
+    // TODO: this will trigger transaction, needs phantom wallet
     // const bridgedTokenAccount = await getOrCreateAssociatedTokenAccount(
     //   provider.connection,
     //   userWallet,
@@ -181,6 +184,7 @@ export const useDepositEstimation = () => {
     // );
 
     // Get the tokenA ATA of the userWallet address, and if it does not exist, create it
+    // TODO: will be figured out by the user
     // const tokenOwnerAccountA = await getOrCreateAssociatedTokenAccount(
     //   provider.connection,
     //   userWallet,
@@ -224,13 +228,13 @@ export const useDepositEstimation = () => {
     //       position,
     //       pdaPositionAccount,
     //       whirlpool,
-    //       tokenOwnerAccountA: tokenOwnerAccountA.address,
-    //       tokenOwnerAccountB: tokenOwnerAccountB.address,
+    //       tokenOwnerAccountA: tokenOwnerAccountA.address, // TODO: input from user
+    //       tokenOwnerAccountB: tokenOwnerAccountB.address, // TODO: input from user
     //       tokenVaultA,
     //       tokenVaultB,
     //       tickArrayLower,
     //       tickArrayUpper,
-    //       bridgedTokenAccount: bridgedTokenAccount.address,
+    //       bridgedTokenAccount: bridgedTokenAccount.address, // TODO: create this account
     //       bridgedTokenMint,
     //       lockbox: pdaProgram,
     //       whirlpoolProgram: orca,
@@ -251,3 +255,32 @@ export const useDepositEstimation = () => {
 
   return { increaseLiquidity, deposit };
 };
+// for withdrawal, these will be provided
+// feeCollectorTokenOwnerAccountA: feeCollectorTokenOwnerAccountA.address,
+// feeCollectorTokenOwnerAccountB: feeCollectorTokenOwnerAccountB.address,
+/**
+ *   signature = await program.methods.withdraw(bigBalance, zeroAmount, zeroAmount)
+          .accounts(
+              {
+                lockbox: pdaProgram,
+                whirlpoolProgram: orca,
+                whirlpool: whirlpool,
+                tokenProgram: TOKEN_PROGRAM_ID,
+                position: position,
+                positionMint: positionMint,
+                bridgedTokenAccount: bridgedTokenAccount.address, // TODO: needs to figure out, there could be several
+                bridgedTokenMint: bridgedTokenMint,
+                pdaPositionAccount: pdaPositionAccount,
+                tokenOwnerAccountA: tokenOwnerAccountA.address, // TODO: figure out or create for the user
+                tokenOwnerAccountB: tokenOwnerAccountB.address, // TODO: figure out or create for the user
+                feeCollectorTokenOwnerAccountA: feeCollectorTokenOwnerAccountA.address,
+                feeCollectorTokenOwnerAccountB: feeCollectorTokenOwnerAccountB.address,
+                tokenVaultA: tokenVaultA,
+                tokenVaultB: tokenVaultB,
+                tickArrayLower: tickArrayLower,
+                tickArrayUpper: tickArrayUpper
+              }
+          )
+          .signers([userWallet])
+          .rpc();
+ */
