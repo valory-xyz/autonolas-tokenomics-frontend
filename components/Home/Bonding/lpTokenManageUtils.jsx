@@ -1,14 +1,7 @@
 /* eslint-disable max-len */
 /* eslint-disable camelcase */
-import {
-  // AnchorProvider,
-  setProvider,
-  web3,
-  getProvider,
-  Program,
-} from '@coral-xyz/anchor';
+import { setProvider, web3, Program } from '@coral-xyz/anchor';
 import idl from 'common-util/AbiAndAddresses/liquidityLockbox.json';
-// import idl_whirlpool from 'common-util/AbiAndAddresses/whirlpool.json';
 import { AnchorProvider } from '@project-serum/anchor';
 import NodeWallet from '@project-serum/anchor/dist/cjs/nodewallet';
 
@@ -17,93 +10,101 @@ import Decimal from 'decimal.js';
 import {
   WhirlpoolContext,
   buildWhirlpoolClient,
-  // ORCA_WHIRLPOOL_PROGRAM_ID,
-  PDAUtil,
-  // PoolUtil,
-  // PriceMath,
   increaseLiquidityQuoteByInputTokenWithParams,
-  // decreaseLiquidityQuoteByLiquidityWithParams,
   TickUtil,
 } from '@orca-so/whirlpools-sdk';
 import { useConnection } from '@solana/wallet-adapter-react';
-import { Keypair, PublicKey } from '@solana/web3.js';
+import { Keypair } from '@solana/web3.js';
 import {
-  createMint,
   getAssociatedTokenAddress,
   getOrCreateAssociatedTokenAccount,
-  syncNative,
+  TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import { useCallback } from 'react';
+import { notifySuccess } from '@autonolas/frontend-library';
 
 const PROGRAM_ID = new web3.PublicKey(
   '7ahQGWysExobjeZ91RTsNqTCN3kWyHGZ43ud2vB7VVoZ',
 );
-const orca = new web3.PublicKey('whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc');
-const whirlpool = new web3.PublicKey(
+const ORCA = new web3.PublicKey('whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc');
+const WHIRLPOOL = new web3.PublicKey(
   '5dMKUYJDsjZkAD3wiV3ViQkuq9pSmWQ5eAzcQLtDnUT3',
 );
-const sol = new web3.PublicKey('So11111111111111111111111111111111111111112');
-const wallet = new NodeWallet(Keypair.generate());
-
-const tickSpacing = 64;
-const [lower_tick_index, upper_tick_index] = TickUtil.getFullRangeTickIndex(tickSpacing);
-
-const tokenVaultA = new web3.PublicKey(
+const SOL = new web3.PublicKey('So11111111111111111111111111111111111111112');
+const NODE_WALLET = new NodeWallet(Keypair.generate());
+const BRIDGED_TOKEN_MINT = new web3.PublicKey(
+  '', // TODO: will be added
+);
+const PDA_POSITION_ACCOUNT = new web3.PublicKey(
+  '', // TODO: will be added
+);
+const FEE_COLLECTOR_TOKEN_OWNER_ACCOUNT_A = new web3.PublicKey(
+  '', // TODO: will be added
+);
+const FEE_COLLECTOR_TOKEN_OWNER_ACCOUNT_B = new web3.PublicKey(
+  '', // TODO: will be added
+);
+const LOCKBOX = new web3.PublicKey(
+  '', // TODO: will be added
+);
+const POSITION = new web3.PublicKey(
+  '', // TODO: will be added
+);
+const POSITION_MINT = new web3.PublicKey(
+  '', // TODO: will be added
+);
+const TOKEN_VAULT_A = new web3.PublicKey(
   'CLA8hU8SkdCZ9cJVLMfZQfcgAsywZ9txBJ6qrRAqthLx',
 );
-const tokenVaultB = new web3.PublicKey(
+const TOKEN_VAULT_B = new web3.PublicKey(
   '6E8pzDK8uwpENc49kp5xo5EGydYjtamPSmUKXxum4ybb',
 );
-const tickArrayLower = new web3.PublicKey(
+const TICK_ARRAY_LOWER = new web3.PublicKey(
   '3oJAqTKTCdGvLS9zpoBquWvMjwthu9Np67Qp4W8AT843',
 );
-const tickArrayUpper = new web3.PublicKey(
+const TICK_ARRAY_UPPER = new web3.PublicKey(
   'J3eMJUQWLmSsG5VnXVFHCGwakpKmzi4jkNvi3vbCZQ3o',
 );
+const TICK_SPACING = 64;
+const [tickLowerIndex, tickUpperIndex] = TickUtil.getFullRangeTickIndex(TICK_SPACING);
 
-export const useDepositEstimation = () => {
+export const useTokenManagement = () => {
   const { connection } = useConnection();
-  const provider = new AnchorProvider(connection, wallet, {
+  const provider = new AnchorProvider(connection, NODE_WALLET, {
     commitment: 'processed',
   });
   setProvider(provider);
 
-  const ctx = WhirlpoolContext.withProvider(provider, orca);
-  const client = buildWhirlpoolClient(ctx);
+  const whirlpoolCtx = WhirlpoolContext.withProvider(provider, ORCA);
+  const client = buildWhirlpoolClient(whirlpoolCtx);
 
   const getWhirlpoolData = useCallback(async () => {
-    const whirlpoolClient = await client.getPool(whirlpool);
+    const whirlpoolClient = await client.getPool(WHIRLPOOL);
 
-    const whirlpool_data = whirlpoolClient.getData();
+    const whirlpoolData = whirlpoolClient.getData();
     const token_a = whirlpoolClient.getTokenAInfo();
     const token_b = whirlpoolClient.getTokenBInfo();
 
-    return { whirlpool_data, token_a, token_b };
+    return { whirlpoolData, token_a, token_b };
   }, []);
 
   const increaseLiquidity = async ({ wsol, slippage }) => {
-    const { whirlpool_data, token_a, token_b } = await getWhirlpoolData();
+    const { whirlpoolData, token_a, token_b } = await getWhirlpoolData();
     const slippageTolerance = Percentage.fromDecimal(new Decimal(slippage));
-
-    // console.log({
-    //   inputTokenAmount: DecimalUtil.toBN(new Decimal(wsol), 9).toString(),
-    //   slippage,
-    //   slippageTolerance: slippageTolerance.toString(),
-    // });
 
     const quote = increaseLiquidityQuoteByInputTokenWithParams({
       // Pass the pool definition and state
       tokenMintA: token_a.mint,
       tokenMintB: token_b.mint,
-      sqrtPrice: whirlpool_data.sqrtPrice,
-      tickCurrentIndex: whirlpool_data.tickCurrentIndex,
+      sqrtPrice: whirlpoolData.sqrtPrice,
+      tickCurrentIndex: whirlpoolData.tickCurrentIndex,
 
       // Price range
-      tickLowerIndex: lower_tick_index,
-      tickUpperIndex: upper_tick_index,
+      tickLowerIndex,
+      tickUpperIndex,
 
       // Input token and amount
-      inputTokenMint: sol,
+      inputTokenMint: SOL,
       inputTokenAmount: DecimalUtil.toBN(new Decimal(wsol), 9),
 
       // Acceptable slippage
@@ -158,132 +159,66 @@ export const useDepositEstimation = () => {
     return { solMax, olasMax, liquidity };
   };
 
-  // { wsol, slippage }
-  const deposit = async ({ wsol, slippage }) => {
-    const { whirlpool_data, token_a, token_b } = await getWhirlpoolData();
-    const quote = increaseLiquidity({ wsol, slippage });
-
+  const deposit = async ({ wsol, slippage, userWallet }) => {
     const program = new Program(idl, PROGRAM_ID, provider);
 
-    // Get all the accounts for the initial zero position
-    const positionMintKeypair = web3.Keypair.generate();
-    const positionMint = positionMintKeypair.publicKey;
-    console.log('positionMint:', positionMint.toBase58());
-
-    const positionPda = PDAUtil.getPosition(orca, positionMint);
-    const position = positionPda.publicKey;
-    console.log('position:', position);
-
-    const [pdaProgram, _bump] = await web3.PublicKey.findProgramAddress(
-      [Buffer.from('liquidity_lockbox', 'utf-8')],
-      program.programId,
-    );
-
-    // TODO: which wallet is this?
-    const userWallet = provider.wallet.payer;
-    console.log('User wallet:', userWallet);
-    // const userWallet = '0x07b5302e01D44bD5b90C63C6Fb24807946704bFC';
-
-    // TODO: this will be an address in future, needs to be removed
-    // const bridgedTokenMint = await createMint(
-    //   connection,
-    //   userWallet,
-    //   pdaProgram,
-    //   null,
-    //   8,
-    // );
-    // console.log('Bridged token mint:', bridgedTokenMint.toBase58());
-
-    // // ATA for the PDA to store the position NFT
-    // TODO: this will be an address in future, needs to be removed
-    // const pdaPositionAccount = await getAssociatedTokenAddress(
-    //   positionMint,
-    //   pdaProgram,
-    //   true, // allowOwnerOffCurve - allow pda accounts to be have associated token account
-    // );
-
-    console.log('position:', position);
+    const { token_a, token_b } = await getWhirlpoolData();
+    const quote = increaseLiquidity({ wsol, slippage });
 
     // Get the ATA of the userWallet address, and if it does not exist, create it
     // This account will have bridged tokens
-    // TODO: this will trigger transaction, needs phantom wallet
-    // const bridgedTokenAccount = await getOrCreateAssociatedTokenAccount(
-    //   provider.connection,
-    //   userWallet,
-    //   bridgedTokenMint,
-    //   userWallet.publicKey,
-    // );
-    // console.log(
-    //   'User ATA for bridged:',
-    //   bridgedTokenAccount.address.toBase58(),
-    // );
+    const bridgedTokenAccount = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      userWallet,
+      BRIDGED_TOKEN_MINT,
+      userWallet.publicKey,
+    );
+    console.log(
+      'User ATA for bridged:',
+      bridgedTokenAccount.address.toBase58(),
+    );
 
     // Get the tokenA ATA of the userWallet address, and if it does not exist, create it
-    // TODO: will be figured out by the user
-    // const tokenOwnerAccountA = await getOrCreateAssociatedTokenAccount(
-    //   provider.connection,
-    //   userWallet,
-    //   token_a.mint,
-    //   userWallet.publicKey,
-    // );
-    // console.log('User ATA for tokenA:', tokenOwnerAccountA.address.toBase58());
-
-    // Simulate SOL transfer and the sync of native SOL
-    // await provider.connection.requestAirdrop(
-    //   tokenOwnerAccountA.address,
-    //   100000000000,
-    // );
-    // await syncNative(
-    //   provider.connection,
-    //   userWallet,
-    //   tokenOwnerAccountA.address,
-    // );
+    const tokenOwnerAccountA = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      userWallet,
+      token_a.mint,
+      userWallet.publicKey,
+    );
+    console.log('User ATA for tokenA:', tokenOwnerAccountA.address.toBase58());
 
     // Get the tokenA ATA of the userWallet address, and if it does not exist, create it
-    // const tokenOwnerAccountB = await getOrCreateAssociatedTokenAccount(
-    //   provider.connection,
-    //   userWallet,
-    //   token_b.mint,
-    //   userWallet.publicKey,
-    // );
-    // console.log('User ATA for tokenB:', tokenOwnerAccountB.address.toBase58());
+    const tokenOwnerAccountB = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      userWallet,
+      token_b.mint,
+      userWallet.publicKey,
+    );
+    console.log('User ATA for tokenB:', tokenOwnerAccountB.address.toBase58());
 
-    // // ############################## DEPOSIT ##############################
-    // console.log(
-    //   '\nSending position NFT to the program in exchange of bridged tokens',
-    // );
-
-    // accountInfo = await provider.connection.getAccountInfo(pdaPositionAccount);
-
-    // // Execute the correct deposit tx
+    // Execute the correct deposit tx
     try {
-      console.log('===>>> here -- 1');
       const signature = await program.methods
         .deposit(quote.liquidityAmount, quote.tokenMaxA, quote.tokenMaxB)
         .accounts({
-          position,
-          pdaPositionAccount: Keypair.generate().publicKey, // TODO: dummy, remove
-          whirlpool,
-          tokenOwnerAccountA: Keypair.generate().publicKey, // TODO: dummy, remove
-          tokenOwnerAccountB: Keypair.generate().publicKey, // TODO: dummy, remove
-          // tokenOwnerAccountA: tokenOwnerAccountA.address, // TODO: input from user
-          // tokenOwnerAccountB: tokenOwnerAccountB.address, // TODO: input from user
-          tokenVaultA,
-          tokenVaultB,
-          tickArrayLower,
-          tickArrayUpper,
-          bridgedTokenAccount: Keypair.generate().publicKey, // TODO: dummy, remove
-          // bridgedTokenAccount: bridgedTokenAccount.address, // TODO: create this account
-          // bridgedTokenMint,
-          bridgedTokenMint: Keypair.generate().publicKey, // TODO: dummy, remove
-          lockbox: pdaProgram,
-          whirlpoolProgram: orca,
+          position: POSITION,
+          pdaPositionAccount: PDA_POSITION_ACCOUNT,
+          whirlpool: WHIRLPOOL,
+          tokenOwnerAccountA: tokenOwnerAccountA.address, // TODO: input from user
+          tokenOwnerAccountB: tokenOwnerAccountB.address, // TODO: input from user
+          tokenVaultA: TOKEN_VAULT_A,
+          tokenVaultB: TOKEN_VAULT_B,
+          tickArrayLower: TICK_ARRAY_LOWER,
+          tickArrayUpper: TICK_ARRAY_UPPER,
+          bridgedTokenAccount: bridgedTokenAccount.address, // TODO: create this account
+          bridgedTokenMint: BRIDGED_TOKEN_MINT,
+          lockbox: LOCKBOX,
+          whirlpoolProgram: ORCA,
         })
         // .signers([userWallet])
         .rpc();
 
-      console.log('===>>> here -- 2');
-
+      notifySuccess('Deposit successful', signature);
       console.log('Deposit Signature:', signature);
     } catch (error) {
       if (error instanceof Error && 'message' in error) {
@@ -292,39 +227,72 @@ export const useDepositEstimation = () => {
         console.error('Transaction Error:', error);
       }
     }
-
-    console.log('===>>> here -- 3');
   };
 
-  return { increaseLiquidity, getTransformedQuote, deposit };
+  const withdraw = async ({ userWallet, slippage: zeroAmount }) => {
+    const { token_a, token_b } = await getWhirlpoolData();
+
+    // any balance from 0 to user's balance => user input
+    const amount = 0; // (add a max button => user's balance)
+
+    const bridgedTokenAccount = await getAssociatedTokenAddress(
+      BRIDGED_TOKEN_MINT,
+      userWallet.publicKey,
+    );
+
+    const tokenOwnerAccountA = await getAssociatedTokenAddress(
+      token_a.mint,
+      userWallet.publicKey,
+    );
+
+    const tokenOwnerAccountB = await getAssociatedTokenAddress(
+      token_b.mint,
+      userWallet.publicKey,
+    );
+
+    const program = new Program(idl, PROGRAM_ID, provider);
+
+    console.log(
+      'User ATA for bridged:',
+      bridgedTokenAccount.address.toBase58(),
+    );
+
+    try {
+      const signature = await program.methods
+        .withdraw(amount, zeroAmount, zeroAmount)
+        .accounts({
+          lockbox: LOCKBOX,
+          whirlpoolProgram: ORCA,
+          whirlpool: WHIRLPOOL,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          position: POSITION,
+          positionMint: POSITION_MINT,
+          bridgedTokenAccount,
+          bridgedTokenMint: BRIDGED_TOKEN_MINT,
+          pdaPositionAccount: PDA_POSITION_ACCOUNT,
+          tokenOwnerAccountA,
+          tokenOwnerAccountB,
+          feeCollectorTokenOwnerAccountA: FEE_COLLECTOR_TOKEN_OWNER_ACCOUNT_A,
+          feeCollectorTokenOwnerAccountB: FEE_COLLECTOR_TOKEN_OWNER_ACCOUNT_B,
+          tokenVaultA: TOKEN_VAULT_A,
+          tokenVaultB: TOKEN_VAULT_B,
+          tickArrayLower: TICK_ARRAY_LOWER,
+          tickArrayUpper: TICK_ARRAY_UPPER,
+        })
+        // .signers([userWallet])
+        .rpc();
+
+      notifySuccess('Withdraw successful', signature);
+      console.log('Withdraw Signature:', signature);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  return {
+    increaseLiquidity,
+    getTransformedQuote,
+    deposit,
+    withdraw,
+  };
 };
-// for withdrawal, these will be provided
-// feeCollectorTokenOwnerAccountA: feeCollectorTokenOwnerAccountA.address,
-// feeCollectorTokenOwnerAccountB: feeCollectorTokenOwnerAccountB.address,
-/**
- *
- signature = await program.methods.withdraw(bigBalance, zeroAmount, zeroAmount)
-.accounts(
-  {
-    lockbox: pdaProgram,
-    whirlpoolProgram: orca,
-    whirlpool: whirlpool,
-    tokenProgram: TOKEN_PROGRAM_ID,
-    position: position,
-    positionMint: positionMint,
-    bridgedTokenAccount: bridgedTokenAccount.address, // TODO: needs to figure out, there could be several
-    bridgedTokenMint: bridgedTokenMint,
-    pdaPositionAccount: pdaPositionAccount,
-    tokenOwnerAccountA: tokenOwnerAccountA.address, // TODO: figure out or create for the user
-    tokenOwnerAccountB: tokenOwnerAccountB.address, // TODO: figure out or create for the user
-    feeCollectorTokenOwnerAccountA: feeCollectorTokenOwnerAccountA.address,
-    feeCollectorTokenOwnerAccountB: feeCollectorTokenOwnerAccountB.address,
-    tokenVaultA: tokenVaultA,
-    tokenVaultB: tokenVaultB,
-    tickArrayLower: tickArrayLower,
-    tickArrayUpper: tickArrayUpper
-  }
-)
-.signers([userWallet])
-.rpc();
- */

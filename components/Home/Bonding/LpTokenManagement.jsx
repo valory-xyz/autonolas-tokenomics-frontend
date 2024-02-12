@@ -1,7 +1,5 @@
 /* eslint-disable camelcase */
-import {
-  use, useCallback, useEffect, useState,
-} from 'react';
+import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import {
   Button,
@@ -16,16 +14,20 @@ import {
 } from 'antd';
 // import { NA } from '@autonolas/frontend-library';
 import pDebounce from 'p-debounce';
-import { isNumber, set } from 'lodash';
+import { isNumber } from 'lodash';
 import {
   getCommaSeparatedNumber,
   notifyError,
 } from '@autonolas/frontend-library';
 
 import { SolanaWallet } from 'common-util/Login/SolanaWallet';
-import { useAnchorWallet, useConnection, useWallet } from '@solana/wallet-adapter-react';
+import {
+  //  useAnchorWallet,
+  useConnection,
+  useWallet,
+} from '@solana/wallet-adapter-react';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { useDepositEstimation } from './lpTokenManageUtils';
+import { useTokenManagement } from './lpTokenManageUtils';
 
 const {
   // Paragraph,
@@ -44,7 +46,11 @@ const DepositForm = () => {
   const wallet = useWallet();
   const { connection } = useConnection();
 
-  const { increaseLiquidity: fn, deposit, getTransformedQuote } = useDepositEstimation();
+  const {
+    increaseLiquidity: fn,
+    deposit,
+    getTransformedQuote,
+  } = useTokenManagement();
   const increaseLiquidity = pDebounce(fn, 500);
 
   // initially, set default slippage value
@@ -80,7 +86,7 @@ const DepositForm = () => {
       await wallet.connect();
 
       const balance = await connection.getBalance(wallet.publicKey);
-      const lamportBalance = (balance / LAMPORTS_PER_SOL);
+      const lamportBalance = balance / LAMPORTS_PER_SOL;
       console.log({ lamportBalance });
 
       const wsol = form.getFieldValue('wsol');
@@ -179,7 +185,11 @@ const DepositForm = () => {
           </Flex>
         </Spin>
 
-        <Button type="primary" htmlType="submit" disabled={isEstimating}>
+        <Button
+          type="primary"
+          htmlType="submit"
+          disabled={isEstimating || isDepositing}
+        >
           Deposit
         </Button>
       </Form.Item>
