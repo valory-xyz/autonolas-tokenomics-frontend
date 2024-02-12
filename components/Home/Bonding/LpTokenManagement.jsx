@@ -20,7 +20,7 @@ import {
   notifyError,
 } from '@autonolas/frontend-library';
 
-import { SolanaWallet } from 'common-util/Login/SolanaWallet';
+// import { SolanaWallet } from 'common-util/Login/SolanaWallet';
 import {
   //  useAnchorWallet,
   useConnection,
@@ -35,6 +35,14 @@ const {
 } = Typography;
 
 const DEFAULT_SLIPPAGE = 1; // default value of 1 to slippage and user can change it
+
+const slippageValidator = (_, value) => {
+  if (value < 0 || value > 100) {
+    return Promise.reject(new Error('Slippage must be between 0 and 100'));
+  }
+
+  return Promise.resolve();
+};
 
 const DepositForm = () => {
   const [form] = Form.useForm();
@@ -194,8 +202,145 @@ const DepositForm = () => {
         </Button>
       </Form.Item>
 
-      <br />
-      <SolanaWallet />
+      {/* <br /> */}
+      {/* <SolanaWallet /> */}
+    </Form>
+  );
+};
+
+const WithDraw = () => {
+  const [form] = Form.useForm();
+  const [estimatedQuote, setEstimatedQuote] = useState(null);
+  const [isEstimating, setIsEstimating] = useState(false);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
+
+  // const anchorWallet = useAnchorWallet();
+  const wallet = useWallet();
+  const { connection } = useConnection();
+
+  const {
+    increaseLiquidity: fn,
+    deposit,
+    getTransformedQuote,
+  } = useTokenManagement();
+  const increaseLiquidity = pDebounce(fn, 500);
+
+  // initially, set default slippage value
+  useEffect(() => {
+    form.setFieldsValue({ slippage: DEFAULT_SLIPPAGE });
+  }, [form]);
+
+  const onAmountAndSlippageChange = async () => {
+    const wsol = form.getFieldValue('wsol');
+    const slippage = form.getFieldValue('slippage');
+
+    if (!isNumber(wsol) || !isNumber(slippage)) return;
+
+    try {
+      setIsEstimating(true);
+      const quote = await increaseLiquidity({ slippage, wsol });
+      const transformedQuote = await getTransformedQuote(quote);
+      setEstimatedQuote(transformedQuote);
+
+      // update olas value
+      form.setFieldsValue({ olas: transformedQuote?.olasMax || null });
+    } catch (error) {
+      notifyError('Failed to get estimated quote');
+      console.error(error);
+    } finally {
+      setIsEstimating(false);
+    }
+  };
+
+  const handleDeposit = async () => {
+    try {
+      setIsWithdrawing(true);
+      await wallet.connect();
+
+      const balance = await connection.getBalance(wallet.publicKey);
+      const lamportBalance = balance / LAMPORTS_PER_SOL;
+      console.log({ lamportBalance });
+
+      const wsol = form.getFieldValue('wsol');
+      const slippage = form.getFieldValue('slippage');
+
+      console.log('handle --- >>>>  1111 ');
+      await deposit({ slippage, wsol });
+    } catch (error) {
+      notifyError('Failed to deposit');
+      console.error(error);
+    } finally {
+      setIsWithdrawing(false);
+    }
+    console.log('handle --- >>>>  3333 ');
+  };
+
+  return (
+    <Form
+      form={form}
+      name="withdraw-form"
+      layout="vertical"
+      className="mt-16"
+      onFinish={handleDeposit}
+    >
+      <Form.Item
+        name="amount"
+        label="Amount"
+        rules={[{ required: true, message: 'Please input a valid amount' }]}
+      >
+        <InputNumber
+          className="full-width"
+          onChange={onAmountAndSlippageChange}
+        />
+      </Form.Item>
+
+      <Form.Item
+        name="slippage"
+        label="Slippage"
+        rules={[
+          {
+            required: true,
+            message: 'Please input a valid amount of slippage',
+          },
+          { validator: slippageValidator },
+        ]}
+      >
+        <InputNumber
+          min={0.01}
+          suffix="%"
+          className="full-width"
+          onChange={onAmountAndSlippageChange}
+        />
+      </Form.Item>
+
+      <Form.Item
+        name="olas"
+        label="OLAS"
+        rules={[{ required: true, message: 'Please input a valid OLAS' }]}
+      >
+        <InputNumber disabled className="full-width" />
+      </Form.Item>
+
+      <Form.Item
+        name="wsol"
+        label="WSOL"
+        rules={[{ required: true, message: 'Please input a valid WSOL' }]}
+      >
+        <InputNumber disabled className="full-width" />
+      </Form.Item>
+
+      <Form.Item>
+        <Button
+          type="primary"
+          htmlType="submit"
+          disabled={isEstimating || isWithdrawing}
+        >
+          Withdraw
+        </Button>
+      </Form.Item>
+
+      {/* <br /> */}
+      {/* <SolanaWallet /> */}
     </Form>
   );
 };
@@ -229,12 +374,11 @@ export const LpTokenManagement = ({ lpToken, lpTokenLink }) => {
               label: 'Deposit',
               children: <DepositForm />,
             },
-            // {
-            //   key: 'withdraw',
-            //   label: 'Withdraw',
-            //   disabled: true,
-            //   children: null,
-            // },
+            {
+              key: 'withdraw',
+              label: 'Withdraw',
+              children: <WithDraw />,
+            },
           ]}
         />
       </Modal>

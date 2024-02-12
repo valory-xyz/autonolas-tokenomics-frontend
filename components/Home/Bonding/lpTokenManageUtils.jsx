@@ -12,16 +12,18 @@ import {
   buildWhirlpoolClient,
   increaseLiquidityQuoteByInputTokenWithParams,
   TickUtil,
+  decreaseLiquidityQuoteByLiquidityWithParams,
 } from '@orca-so/whirlpools-sdk';
 import { useConnection } from '@solana/wallet-adapter-react';
 import { Keypair } from '@solana/web3.js';
 import {
+  AccountLayout,
   getAssociatedTokenAddress,
   getOrCreateAssociatedTokenAccount,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import { useCallback } from 'react';
-import { notifySuccess } from '@autonolas/frontend-library';
+import { notifyError, notifySuccess } from '@autonolas/frontend-library';
 
 const PROGRAM_ID = new web3.PublicKey(
   '7ahQGWysExobjeZ91RTsNqTCN3kWyHGZ43ud2vB7VVoZ',
@@ -33,25 +35,25 @@ const WHIRLPOOL = new web3.PublicKey(
 const SOL = new web3.PublicKey('So11111111111111111111111111111111111111112');
 const NODE_WALLET = new NodeWallet(Keypair.generate());
 const BRIDGED_TOKEN_MINT = new web3.PublicKey(
-  '', // TODO: will be added
+  'So11111111111111111111111111111111111111112', // TODO: dummy address for now, real one will be added later
 );
 const PDA_POSITION_ACCOUNT = new web3.PublicKey(
-  '', // TODO: will be added
+  'So11111111111111111111111111111111111111112', // TODO: dummy address for now, real one will be added later
 );
 const FEE_COLLECTOR_TOKEN_OWNER_ACCOUNT_A = new web3.PublicKey(
-  '', // TODO: will be added
+  'So11111111111111111111111111111111111111112', // TODO: dummy address for now, real one will be added later
 );
 const FEE_COLLECTOR_TOKEN_OWNER_ACCOUNT_B = new web3.PublicKey(
-  '', // TODO: will be added
+  'So11111111111111111111111111111111111111112', // TODO: dummy address for now, real one will be added later
 );
 const LOCKBOX = new web3.PublicKey(
-  '', // TODO: will be added
+  'So11111111111111111111111111111111111111112', // TODO: dummy address for now, real one will be added later
 );
 const POSITION = new web3.PublicKey(
-  '', // TODO: will be added
+  'So11111111111111111111111111111111111111112', // TODO: dummy address for now, real one will be added later
 );
 const POSITION_MINT = new web3.PublicKey(
-  '', // TODO: will be added
+  'So11111111111111111111111111111111111111112', // TODO: dummy address for now, real one will be added later
 );
 const TOKEN_VAULT_A = new web3.PublicKey(
   'CLA8hU8SkdCZ9cJVLMfZQfcgAsywZ9txBJ6qrRAqthLx',
@@ -82,20 +84,20 @@ export const useTokenManagement = () => {
     const whirlpoolClient = await client.getPool(WHIRLPOOL);
 
     const whirlpoolData = whirlpoolClient.getData();
-    const token_a = whirlpoolClient.getTokenAInfo();
-    const token_b = whirlpoolClient.getTokenBInfo();
+    const whirlpoolTokenA = whirlpoolClient.getTokenAInfo();
+    const whirlpoolTokenB = whirlpoolClient.getTokenBInfo();
 
-    return { whirlpoolData, token_a, token_b };
+    return { whirlpoolData, whirlpoolTokenA, whirlpoolTokenB };
   }, []);
 
   const increaseLiquidity = async ({ wsol, slippage }) => {
-    const { whirlpoolData, token_a, token_b } = await getWhirlpoolData();
+    const { whirlpoolData, whirlpoolTokenA, whirlpoolTokenB } = await getWhirlpoolData();
     const slippageTolerance = Percentage.fromDecimal(new Decimal(slippage));
 
     const quote = increaseLiquidityQuoteByInputTokenWithParams({
       // Pass the pool definition and state
-      tokenMintA: token_a.mint,
-      tokenMintB: token_b.mint,
+      tokenMintA: whirlpoolTokenA.mint,
+      tokenMintB: whirlpoolTokenB.mint,
       sqrtPrice: whirlpoolData.sqrtPrice,
       tickCurrentIndex: whirlpoolData.tickCurrentIndex,
 
@@ -113,13 +115,13 @@ export const useTokenManagement = () => {
 
     const solMax = DecimalUtil.fromBN(
       quote.tokenMaxA,
-      token_a.decimals,
-    ).toFixed(token_a.decimals);
+      whirlpoolTokenA.decimals,
+    ).toFixed(whirlpoolTokenA.decimals);
 
     const olasMax = DecimalUtil.fromBN(
       quote.tokenMaxB,
-      token_b.decimals,
-    ).toFixed(token_b.decimals);
+      whirlpoolTokenB.decimals,
+    ).toFixed(whirlpoolTokenB.decimals);
 
     const liquidity = quote.liquidityAmount.toString();
 
@@ -142,17 +144,17 @@ export const useTokenManagement = () => {
   };
 
   const getTransformedQuote = async (quote) => {
-    const { token_a, token_b } = await getWhirlpoolData();
+    const { whirlpoolTokenA, whirlpoolTokenB } = await getWhirlpoolData();
 
     const solMax = DecimalUtil.fromBN(
       quote.tokenMaxA,
-      token_a.decimals,
-    ).toFixed(token_a.decimals);
+      whirlpoolTokenA.decimals,
+    ).toFixed(whirlpoolTokenA.decimals);
 
     const olasMax = DecimalUtil.fromBN(
       quote.tokenMaxB,
-      token_b.decimals,
-    ).toFixed(token_b.decimals);
+      whirlpoolTokenB.decimals,
+    ).toFixed(whirlpoolTokenB.decimals);
 
     const liquidity = quote.liquidityAmount.toString();
 
@@ -160,9 +162,14 @@ export const useTokenManagement = () => {
   };
 
   const deposit = async ({ wsol, slippage, userWallet }) => {
+    if (!userWallet) {
+      // notifyError();
+      return;
+    }
+
     const program = new Program(idl, PROGRAM_ID, provider);
 
-    const { token_a, token_b } = await getWhirlpoolData();
+    const { whirlpoolTokenA, whirlpoolTokenB } = await getWhirlpoolData();
     const quote = increaseLiquidity({ wsol, slippage });
 
     // Get the ATA of the userWallet address, and if it does not exist, create it
@@ -178,23 +185,23 @@ export const useTokenManagement = () => {
       bridgedTokenAccount.address.toBase58(),
     );
 
-    // Get the tokenA ATA of the userWallet address, and if it does not exist, create it
-    const tokenOwnerAccountA = await getOrCreateAssociatedTokenAccount(
-      provider.connection,
-      userWallet,
-      token_a.mint,
+    const tokenOwnerAccountA = await getAssociatedTokenAddress(
+      whirlpoolTokenA.mint,
       userWallet.publicKey,
     );
-    console.log('User ATA for tokenA:', tokenOwnerAccountA.address.toBase58());
 
-    // Get the tokenA ATA of the userWallet address, and if it does not exist, create it
-    const tokenOwnerAccountB = await getOrCreateAssociatedTokenAccount(
-      provider.connection,
-      userWallet,
-      token_b.mint,
+    const tokenOwnerAccountB = await getAssociatedTokenAddress(
+      whirlpoolTokenB.mint,
       userWallet.publicKey,
     );
-    console.log('User ATA for tokenB:', tokenOwnerAccountB.address.toBase58());
+
+    // if()
+    /**
+     * TODO:
+     * if tokenOwnerAccountA = 0x111... then throw error OR
+     * if tokenOwnerAccountB = 0x111... then throw error OR
+     * else continue
+     */
 
     // Execute the correct deposit tx
     try {
@@ -204,13 +211,13 @@ export const useTokenManagement = () => {
           position: POSITION,
           pdaPositionAccount: PDA_POSITION_ACCOUNT,
           whirlpool: WHIRLPOOL,
-          tokenOwnerAccountA: tokenOwnerAccountA.address, // TODO: input from user
-          tokenOwnerAccountB: tokenOwnerAccountB.address, // TODO: input from user
+          tokenOwnerAccountA,
+          tokenOwnerAccountB,
           tokenVaultA: TOKEN_VAULT_A,
           tokenVaultB: TOKEN_VAULT_B,
           tickArrayLower: TICK_ARRAY_LOWER,
           tickArrayUpper: TICK_ARRAY_UPPER,
-          bridgedTokenAccount: bridgedTokenAccount.address, // TODO: create this account
+          bridgedTokenAccount: bridgedTokenAccount.address,
           bridgedTokenMint: BRIDGED_TOKEN_MINT,
           lockbox: LOCKBOX,
           whirlpoolProgram: ORCA,
@@ -230,25 +237,47 @@ export const useTokenManagement = () => {
   };
 
   const withdraw = async ({ userWallet, slippage: zeroAmount }) => {
-    const { token_a, token_b } = await getWhirlpoolData();
+    /**
+     * TODO: upside down  of the form deposit
+     * 1. Amount: 1 to MAX amount
+     * 2. Slippage: 1 to 100
+     * 3. WSOL (min token A): uneditable
+     * 4. OLAS (min token B): uneditable
+     *
+     * WITHDRAW button
+     */
+    // Set acceptable slippage
+    const slippage = Percentage.fromFraction(10, 1000); // 1%
 
-    // any balance from 0 to user's balance => user input
-    const amount = 0; // (add a max button => user's balance)
+    const { whirlpoolData, whirlpoolTokenA, whirlpoolTokenB } = await getWhirlpoolData();
 
     const bridgedTokenAccount = await getAssociatedTokenAddress(
       BRIDGED_TOKEN_MINT,
       userWallet.publicKey,
     );
+    // TODO: If bridgedTokenAccount does NOT exists, throw an error
 
-    const tokenOwnerAccountA = await getAssociatedTokenAddress(
-      token_a.mint,
+    // TODO: any balance from 0 to user's balance => user input
+    const amount = 1; // (add a max button => user's balance)
+
+    const tokenAccounts = await provider.connection.getTokenAccountsByOwner(
       userWallet.publicKey,
+      { programId: TOKEN_PROGRAM_ID },
     );
 
-    const tokenOwnerAccountB = await getAssociatedTokenAddress(
-      token_b.mint,
-      userWallet.publicKey,
-    );
+    let maxAmount = 0;
+    tokenAccounts.value.forEach((tokenAccount) => {
+      const accountData = AccountLayout.decode(tokenAccount.account.data);
+      if (accountData.mint.toString() === BRIDGED_TOKEN_MINT.toString()) {
+        if (tokenAccount.pubkey.toString() === bridgedTokenAccount) {
+          // then all good
+        } else {
+          notifyError(); // TODO
+        }
+        maxAmount = accountData.amount.toString();
+        console.log('User ATA bridged balance now:', accountData.amount.toString());
+      }
+    });
 
     const program = new Program(idl, PROGRAM_ID, provider);
 
@@ -257,9 +286,40 @@ export const useTokenManagement = () => {
       bridgedTokenAccount.address.toBase58(),
     );
 
+    // Get the tokenA ATA of the userWallet address, and if it does not exist, create it
+    const tokenOwnerAccountA = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      userWallet,
+      whirlpoolTokenA.mint,
+      userWallet.publicKey,
+    );
+    console.log('User ATA for tokenA:', tokenOwnerAccountA.address.toBase58());
+
+    // Get the tokenA ATA of the userWallet address, and if it does not exist, create it
+    const tokenOwnerAccountB = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      userWallet,
+      whirlpoolTokenB.mint,
+      userWallet.publicKey,
+    );
+    console.log('User ATA for tokenB:', tokenOwnerAccountB.address.toBase58());
+
+    // Obtain withdraw estimation
+    const quote = decreaseLiquidityQuoteByLiquidityWithParams({
+      // Pass the pool state as is
+      sqrtPrice: whirlpoolData.sqrtPrice,
+      tickCurrentIndex: whirlpoolData.tickCurrentIndex,
+      // Pass the price range of the position as is
+      tickLowerIndex,
+      tickUpperIndex,
+      liquidity: amount, // Liquidity to be withdrawn
+      // Acceptable slippage
+      slippageTolerance: slippage,
+    });
+
     try {
       const signature = await program.methods
-        .withdraw(amount, zeroAmount, zeroAmount)
+        .withdraw(amount, quote.tokenMinA, quote.tokenMinB)
         .accounts({
           lockbox: LOCKBOX,
           whirlpoolProgram: ORCA,
@@ -270,8 +330,8 @@ export const useTokenManagement = () => {
           bridgedTokenAccount,
           bridgedTokenMint: BRIDGED_TOKEN_MINT,
           pdaPositionAccount: PDA_POSITION_ACCOUNT,
-          tokenOwnerAccountA,
-          tokenOwnerAccountB,
+          tokenOwnerAccountA: tokenOwnerAccountA.address,
+          tokenOwnerAccountB: tokenOwnerAccountB.address,
           feeCollectorTokenOwnerAccountA: FEE_COLLECTOR_TOKEN_OWNER_ACCOUNT_A,
           feeCollectorTokenOwnerAccountB: FEE_COLLECTOR_TOKEN_OWNER_ACCOUNT_B,
           tokenVaultA: TOKEN_VAULT_A,
