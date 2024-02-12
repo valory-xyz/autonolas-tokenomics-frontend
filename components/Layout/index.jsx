@@ -6,16 +6,28 @@ import { Layout as AntdLayout, Menu } from 'antd';
 import { ExportOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
 import { COLOR } from '@autonolas/frontend-library';
-import { ConnectionProvider } from '@solana/wallet-adapter-react';
+import {
+  ConnectionProvider,
+  WalletProvider,
+} from '@solana/wallet-adapter-react';
+import { PhantomWalletAdapter } from '@solana/wallet-adapter-wallets';
+import { web3 } from '@project-serum/anchor';
 
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import Login from '../Login';
 import Footer from './Footer';
 import { CustomLayout, Logo, DocsLink } from './styles';
 
+const wallets = [new PhantomWalletAdapter()];
 const LogoSvg = dynamic(() => import('common-util/SVGs/logo'));
 
 const { Header, Content } = AntdLayout;
+
+// TODO: remove this and use mainnet
+// const isDevnet = false;
+// const endpoint = isDevnet
+//   ? web3.clusterApiUrl('testnet')
+//   : web3.clusterApiUrl('mainnet-beta');
 const endpoint = process.env.NEXT_PUBLIC_SOLANA_MAINNET_BETA_URL;
 
 const StyledHeader = styled(Header)`
@@ -103,7 +115,9 @@ Layout.defaultProps = {
 
 const LayoutWithWalletProvider = (props) => (
   <ConnectionProvider endpoint={endpoint}>
-    <Layout {...props}>{props.children}</Layout>
+    <WalletProvider wallets={wallets} autoConnect={false}>
+      <Layout {...props}>{props.children}</Layout>
+    </WalletProvider>
   </ConnectionProvider>
 );
 

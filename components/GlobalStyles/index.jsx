@@ -106,6 +106,11 @@ const GlobalStyle = createGlobalStyle`
         font-weight: bold;
       }
     }
+    ${MEDIA_QUERY.mobileM} {
+      &.ant-menu-horizontal {
+        line-height: 2;
+      }
+    }
   }
 
   /* navigation header menu */

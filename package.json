@@ -19,6 +19,8 @@
     "@project-serum/anchor": "^0.26.0",
     "@solana/spl-token": "^0.4.0",
     "@solana/wallet-adapter-react": "^0.15.35",
+    "@solana/wallet-adapter-react-ui": "^0.9.35",
+    "@solana/wallet-adapter-wallets": "^0.19.26",
     "@solana/web3.js": "^1.90.0",
     "@wagmi/core": "^1.4.1",
     "@web3modal/ethereum": "^2.7.1",

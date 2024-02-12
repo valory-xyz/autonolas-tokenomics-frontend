@@ -22,6 +22,9 @@ import {
   notifyError,
 } from '@autonolas/frontend-library';
 
+import { SolanaWallet } from 'common-util/Login/SolanaWallet';
+import { useAnchorWallet, useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { useDepositEstimation } from './lpTokenManageUtils';
 
 const {
@@ -37,7 +40,11 @@ const DepositForm = () => {
   const [isEstimating, setIsEstimating] = useState(false);
   const [isDepositing, setIsDepositing] = useState(false);
 
-  const { increaseLiquidity: fn, deposit } = useDepositEstimation();
+  // const anchorWallet = useAnchorWallet();
+  const wallet = useWallet();
+  const { connection } = useConnection();
+
+  const { increaseLiquidity: fn, deposit, getTransformedQuote } = useDepositEstimation();
   const increaseLiquidity = pDebounce(fn, 500);
 
   // initially, set default slippage value
@@ -54,10 +61,11 @@ const DepositForm = () => {
     try {
       setIsEstimating(true);
       const quote = await increaseLiquidity({ slippage, wsol });
-      setEstimatedQuote(quote);
+      const transformedQuote = await getTransformedQuote(quote);
+      setEstimatedQuote(transformedQuote);
 
       // update olas value
-      form.setFieldsValue({ olas: quote?.olasMax || null });
+      form.setFieldsValue({ olas: transformedQuote?.olasMax || null });
     } catch (error) {
       notifyError('Failed to get estimated quote');
       console.error(error);
@@ -69,14 +77,24 @@ const DepositForm = () => {
   const handleDeposit = async () => {
     try {
       setIsDepositing(true);
-      // console.log('Deposit');
-      await deposit();
+      await wallet.connect();
+
+      const balance = await connection.getBalance(wallet.publicKey);
+      const lamportBalance = (balance / LAMPORTS_PER_SOL);
+      console.log({ lamportBalance });
+
+      const wsol = form.getFieldValue('wsol');
+      const slippage = form.getFieldValue('slippage');
+
+      console.log('handle --- >>>>  1111 ');
+      await deposit({ slippage, wsol });
     } catch (error) {
       notifyError('Failed to deposit');
       console.error(error);
     } finally {
       setIsDepositing(false);
     }
+    console.log('handle --- >>>>  3333 ');
   };
 
   const estimatedOutput = `${
@@ -145,6 +163,7 @@ const DepositForm = () => {
           min={0}
           step={0.01}
           // precision={2}
+          disabled={isEstimating}
           suffix="%"
           className="full-width"
           onChange={onWsolAndSlippageChange}
@@ -160,10 +179,13 @@ const DepositForm = () => {
           </Flex>
         </Spin>
 
-        <Button type="primary" htmlType="submit">
+        <Button type="primary" htmlType="submit" disabled={isEstimating}>
           Deposit
         </Button>
       </Form.Item>
+
+      <br />
+      <SolanaWallet />
     </Form>
   );
 };

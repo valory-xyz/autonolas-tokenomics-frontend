@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 /* eslint-disable camelcase */
 import {
   // AnchorProvider,
@@ -25,7 +26,7 @@ import {
   TickUtil,
 } from '@orca-so/whirlpools-sdk';
 import { useConnection } from '@solana/wallet-adapter-react';
-import { Keypair } from '@solana/web3.js';
+import { Keypair, PublicKey } from '@solana/web3.js';
 import {
   createMint,
   getAssociatedTokenAddress,
@@ -47,9 +48,24 @@ const wallet = new NodeWallet(Keypair.generate());
 const tickSpacing = 64;
 const [lower_tick_index, upper_tick_index] = TickUtil.getFullRangeTickIndex(tickSpacing);
 
+const tokenVaultA = new web3.PublicKey(
+  'CLA8hU8SkdCZ9cJVLMfZQfcgAsywZ9txBJ6qrRAqthLx',
+);
+const tokenVaultB = new web3.PublicKey(
+  '6E8pzDK8uwpENc49kp5xo5EGydYjtamPSmUKXxum4ybb',
+);
+const tickArrayLower = new web3.PublicKey(
+  '3oJAqTKTCdGvLS9zpoBquWvMjwthu9Np67Qp4W8AT843',
+);
+const tickArrayUpper = new web3.PublicKey(
+  'J3eMJUQWLmSsG5VnXVFHCGwakpKmzi4jkNvi3vbCZQ3o',
+);
+
 export const useDepositEstimation = () => {
   const { connection } = useConnection();
-  const provider = new AnchorProvider(connection, wallet);
+  const provider = new AnchorProvider(connection, wallet, {
+    commitment: 'processed',
+  });
   setProvider(provider);
 
   const ctx = WhirlpoolContext.withProvider(provider, orca);
@@ -124,9 +140,28 @@ export const useDepositEstimation = () => {
     };
   };
 
+  const getTransformedQuote = async (quote) => {
+    const { token_a, token_b } = await getWhirlpoolData();
+
+    const solMax = DecimalUtil.fromBN(
+      quote.tokenMaxA,
+      token_a.decimals,
+    ).toFixed(token_a.decimals);
+
+    const olasMax = DecimalUtil.fromBN(
+      quote.tokenMaxB,
+      token_b.decimals,
+    ).toFixed(token_b.decimals);
+
+    const liquidity = quote.liquidityAmount.toString();
+
+    return { solMax, olasMax, liquidity };
+  };
+
   // { wsol, slippage }
-  const deposit = async () => {
+  const deposit = async ({ wsol, slippage }) => {
     const { whirlpool_data, token_a, token_b } = await getWhirlpoolData();
+    const quote = increaseLiquidity({ wsol, slippage });
 
     const program = new Program(idl, PROGRAM_ID, provider);
 
@@ -146,18 +181,18 @@ export const useDepositEstimation = () => {
 
     // TODO: which wallet is this?
     const userWallet = provider.wallet.payer;
-    // console.log('User wallet:', userWallet.publicKey.toBase58());
+    console.log('User wallet:', userWallet);
     // const userWallet = '0x07b5302e01D44bD5b90C63C6Fb24807946704bFC';
 
     // TODO: this will be an address in future, needs to be removed
-    const bridgedTokenMint = await createMint(
-      connection,
-      userWallet,
-      pdaProgram,
-      null,
-      8,
-    );
-    console.log('Bridged token mint:', bridgedTokenMint.toBase58());
+    // const bridgedTokenMint = await createMint(
+    //   connection,
+    //   userWallet,
+    //   pdaProgram,
+    //   null,
+    //   8,
+    // );
+    // console.log('Bridged token mint:', bridgedTokenMint.toBase58());
 
     // // ATA for the PDA to store the position NFT
     // TODO: this will be an address in future, needs to be removed
@@ -221,66 +256,75 @@ export const useDepositEstimation = () => {
     // accountInfo = await provider.connection.getAccountInfo(pdaPositionAccount);
 
     // // Execute the correct deposit tx
-    // try {
-    //   const signature = await program.methods
-    //     .deposit(quote.liquidityAmount, quote.tokenMaxA, quote.tokenMaxB)
-    //     .accounts({
-    //       position,
-    //       pdaPositionAccount,
-    //       whirlpool,
-    //       tokenOwnerAccountA: tokenOwnerAccountA.address, // TODO: input from user
-    //       tokenOwnerAccountB: tokenOwnerAccountB.address, // TODO: input from user
-    //       tokenVaultA,
-    //       tokenVaultB,
-    //       tickArrayLower,
-    //       tickArrayUpper,
-    //       bridgedTokenAccount: bridgedTokenAccount.address, // TODO: create this account
-    //       bridgedTokenMint,
-    //       lockbox: pdaProgram,
-    //       whirlpoolProgram: orca,
-    //     })
-    //     .signers([userWallet])
-    //     .rpc();
+    try {
+      console.log('===>>> here -- 1');
+      const signature = await program.methods
+        .deposit(quote.liquidityAmount, quote.tokenMaxA, quote.tokenMaxB)
+        .accounts({
+          position,
+          pdaPositionAccount: Keypair.generate().publicKey, // TODO: dummy, remove
+          whirlpool,
+          tokenOwnerAccountA: Keypair.generate().publicKey, // TODO: dummy, remove
+          tokenOwnerAccountB: Keypair.generate().publicKey, // TODO: dummy, remove
+          // tokenOwnerAccountA: tokenOwnerAccountA.address, // TODO: input from user
+          // tokenOwnerAccountB: tokenOwnerAccountB.address, // TODO: input from user
+          tokenVaultA,
+          tokenVaultB,
+          tickArrayLower,
+          tickArrayUpper,
+          bridgedTokenAccount: Keypair.generate().publicKey, // TODO: dummy, remove
+          // bridgedTokenAccount: bridgedTokenAccount.address, // TODO: create this account
+          // bridgedTokenMint,
+          bridgedTokenMint: Keypair.generate().publicKey, // TODO: dummy, remove
+          lockbox: pdaProgram,
+          whirlpoolProgram: orca,
+        })
+        // .signers([userWallet])
+        .rpc();
 
-    //   console.log('Deposit Signature:', signature);
-    // } catch (error) {
-    //   if (error instanceof Error && 'message' in error) {
-    //     console.error('Program Error:', error);
-    //     console.error('Error Message:', error.message);
-    //   } else {
-    //     console.error('Transaction Error:', error);
-    //   }
-    // }
+      console.log('===>>> here -- 2');
+
+      console.log('Deposit Signature:', signature);
+    } catch (error) {
+      if (error instanceof Error && 'message' in error) {
+        console.error(error);
+      } else {
+        console.error('Transaction Error:', error);
+      }
+    }
+
+    console.log('===>>> here -- 3');
   };
 
-  return { increaseLiquidity, deposit };
+  return { increaseLiquidity, getTransformedQuote, deposit };
 };
 // for withdrawal, these will be provided
 // feeCollectorTokenOwnerAccountA: feeCollectorTokenOwnerAccountA.address,
 // feeCollectorTokenOwnerAccountB: feeCollectorTokenOwnerAccountB.address,
 /**
- *   signature = await program.methods.withdraw(bigBalance, zeroAmount, zeroAmount)
-          .accounts(
-              {
-                lockbox: pdaProgram,
-                whirlpoolProgram: orca,
-                whirlpool: whirlpool,
-                tokenProgram: TOKEN_PROGRAM_ID,
-                position: position,
-                positionMint: positionMint,
-                bridgedTokenAccount: bridgedTokenAccount.address, // TODO: needs to figure out, there could be several
-                bridgedTokenMint: bridgedTokenMint,
-                pdaPositionAccount: pdaPositionAccount,
-                tokenOwnerAccountA: tokenOwnerAccountA.address, // TODO: figure out or create for the user
-                tokenOwnerAccountB: tokenOwnerAccountB.address, // TODO: figure out or create for the user
-                feeCollectorTokenOwnerAccountA: feeCollectorTokenOwnerAccountA.address,
-                feeCollectorTokenOwnerAccountB: feeCollectorTokenOwnerAccountB.address,
-                tokenVaultA: tokenVaultA,
-                tokenVaultB: tokenVaultB,
-                tickArrayLower: tickArrayLower,
-                tickArrayUpper: tickArrayUpper
-              }
-          )
-          .signers([userWallet])
-          .rpc();
+ *
+ signature = await program.methods.withdraw(bigBalance, zeroAmount, zeroAmount)
+.accounts(
+  {
+    lockbox: pdaProgram,
+    whirlpoolProgram: orca,
+    whirlpool: whirlpool,
+    tokenProgram: TOKEN_PROGRAM_ID,
+    position: position,
+    positionMint: positionMint,
+    bridgedTokenAccount: bridgedTokenAccount.address, // TODO: needs to figure out, there could be several
+    bridgedTokenMint: bridgedTokenMint,
+    pdaPositionAccount: pdaPositionAccount,
+    tokenOwnerAccountA: tokenOwnerAccountA.address, // TODO: figure out or create for the user
+    tokenOwnerAccountB: tokenOwnerAccountB.address, // TODO: figure out or create for the user
+    feeCollectorTokenOwnerAccountA: feeCollectorTokenOwnerAccountA.address,
+    feeCollectorTokenOwnerAccountB: feeCollectorTokenOwnerAccountB.address,
+    tokenVaultA: tokenVaultA,
+    tokenVaultB: tokenVaultB,
+    tickArrayLower: tickArrayLower,
+    tickArrayUpper: tickArrayUpper
+  }
+)
+.signers([userWallet])
+.rpc();
  */
