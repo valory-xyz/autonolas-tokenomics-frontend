@@ -113,34 +113,7 @@ export const useTokenManagement = () => {
       slippageTolerance,
     });
 
-    const solMax = DecimalUtil.fromBN(
-      quote.tokenMaxA,
-      whirlpoolTokenA.decimals,
-    ).toFixed(whirlpoolTokenA.decimals);
-
-    const olasMax = DecimalUtil.fromBN(
-      quote.tokenMaxB,
-      whirlpoolTokenB.decimals,
-    ).toFixed(whirlpoolTokenB.decimals);
-
-    const liquidity = quote.liquidityAmount.toString();
-
-    // console.log({
-    //   solMax,
-    //   olasMax,
-    //   liquidity,
-    //   tokenMaxA: quote.tokenMaxA.toString(),
-    //   tokenMaxB: quote.tokenMaxB.toString(),
-    //   tokenEstA: quote.tokenEstA.toString(),
-    //   tokenEstB: quote.tokenEstB.toString(),
-    // });
-
-    return {
-      solMax,
-      olasMax,
-      liquidity,
-      ...quote,
-    };
+    return quote;
   };
 
   const getTransformedQuote = async (quote) => {
@@ -236,7 +209,40 @@ export const useTokenManagement = () => {
     }
   };
 
-  const withdraw = async ({ userWallet, slippage: zeroAmount }) => {
+  /** ******** WITHDRAW and helpers hooks ********* */
+  const withdrawTransformedQuote = async (quote) => {
+    const { whirlpoolTokenA, whirlpoolTokenB } = await getWhirlpoolData();
+
+    const wsolMin = DecimalUtil.fromBN(
+      quote.tokenMinA,
+      whirlpoolTokenA.decimals,
+    ).toFixed(whirlpoolTokenA.decimals);
+
+    const olasMin = DecimalUtil.fromBN(
+      quote.tokenMinB,
+      whirlpoolTokenB.decimals,
+    ).toFixed(whirlpoolTokenB.decimals);
+
+    return { wsolMin, olasMin };
+  };
+
+  const withdrawDecreaseLiquidity = async ({ amount, slippage }) => {
+    const { whirlpoolData } = await getWhirlpoolData();
+    const slippageTolerance = Percentage.fromDecimal(new Decimal(slippage));
+
+    const quote = decreaseLiquidityQuoteByLiquidityWithParams({
+      sqrtPrice: whirlpoolData.sqrtPrice,
+      tickCurrentIndex: whirlpoolData.tickCurrentIndex,
+      tickLowerIndex,
+      tickUpperIndex,
+      liquidity: DecimalUtil.toBN(new Decimal(amount), 9),
+      slippageTolerance,
+    });
+
+    return quote;
+  };
+
+  const withdraw = async ({ userWallet, slippage }) => {
     /**
      * TODO: upside down  of the form deposit
      * 1. Amount: 1 to MAX amount
@@ -247,9 +253,8 @@ export const useTokenManagement = () => {
      * WITHDRAW button
      */
     // Set acceptable slippage
-    const slippage = Percentage.fromFraction(10, 1000); // 1%
 
-    const { whirlpoolData, whirlpoolTokenA, whirlpoolTokenB } = await getWhirlpoolData();
+    const { whirlpoolTokenA, whirlpoolTokenB } = await getWhirlpoolData();
 
     const bridgedTokenAccount = await getAssociatedTokenAddress(
       BRIDGED_TOKEN_MINT,
@@ -275,9 +280,13 @@ export const useTokenManagement = () => {
           notifyError(); // TODO
         }
         maxAmount = accountData.amount.toString();
-        console.log('User ATA bridged balance now:', accountData.amount.toString());
+        console.log(
+          'User ATA bridged balance now:',
+          accountData.amount.toString(),
+        );
       }
     });
+    console.log('Max amount:', maxAmount);
 
     const program = new Program(idl, PROGRAM_ID, provider);
 
@@ -305,17 +314,7 @@ export const useTokenManagement = () => {
     console.log('User ATA for tokenB:', tokenOwnerAccountB.address.toBase58());
 
     // Obtain withdraw estimation
-    const quote = decreaseLiquidityQuoteByLiquidityWithParams({
-      // Pass the pool state as is
-      sqrtPrice: whirlpoolData.sqrtPrice,
-      tickCurrentIndex: whirlpoolData.tickCurrentIndex,
-      // Pass the price range of the position as is
-      tickLowerIndex,
-      tickUpperIndex,
-      liquidity: amount, // Liquidity to be withdrawn
-      // Acceptable slippage
-      slippageTolerance: slippage,
-    });
+    const quote = await withdrawDecreaseLiquidity({ amount, slippage });
 
     try {
       const signature = await program.methods
@@ -350,9 +349,14 @@ export const useTokenManagement = () => {
   };
 
   return {
+    // deposit
     increaseLiquidity,
     getTransformedQuote,
-    deposit,
     withdraw,
+
+    // withdraw
+    withdrawTransformedQuote,
+    withdrawDecreaseLiquidity,
+    deposit,
   };
 };

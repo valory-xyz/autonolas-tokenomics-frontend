@@ -1,4 +1,3 @@
-/* eslint-disable camelcase */
 import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import {
@@ -23,10 +22,10 @@ import {
 // import { SolanaWallet } from 'common-util/Login/SolanaWallet';
 import {
   //  useAnchorWallet,
-  useConnection,
+  // useConnection,
   useWallet,
 } from '@solana/wallet-adapter-react';
-import { LAMPORTS_PER_SOL } from '@solana/web3.js';
+// import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { useTokenManagement } from './lpTokenManageUtils';
 
 const {
@@ -51,8 +50,8 @@ const DepositForm = () => {
   const [isDepositing, setIsDepositing] = useState(false);
 
   // const anchorWallet = useAnchorWallet();
-  const wallet = useWallet();
-  const { connection } = useConnection();
+  // const wallet = useWallet();
+  // const { connection } = useConnection();
 
   const {
     increaseLiquidity: fn,
@@ -91,11 +90,11 @@ const DepositForm = () => {
   const handleDeposit = async () => {
     try {
       setIsDepositing(true);
-      await wallet.connect();
+      // await wallet.connect();
 
-      const balance = await connection.getBalance(wallet.publicKey);
-      const lamportBalance = balance / LAMPORTS_PER_SOL;
-      console.log({ lamportBalance });
+      // const balance = await connection.getBalance(wallet.publicKey);
+      // const lamportBalance = balance / LAMPORTS_PER_SOL;
+      // console.log({ lamportBalance });
 
       const wsol = form.getFieldValue('wsol');
       const slippage = form.getFieldValue('slippage');
@@ -210,20 +209,20 @@ const DepositForm = () => {
 
 const WithDraw = () => {
   const [form] = Form.useForm();
-  const [estimatedQuote, setEstimatedQuote] = useState(null);
+  // const [estimatedQuote, setEstimatedQuote] = useState(null);
   const [isEstimating, setIsEstimating] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
 
   // const anchorWallet = useAnchorWallet();
   const wallet = useWallet();
-  const { connection } = useConnection();
+  // const { connection } = useConnection();
 
   const {
-    increaseLiquidity: fn,
+    withdrawDecreaseLiquidity: fn,
+    withdrawTransformedQuote,
     deposit,
-    getTransformedQuote,
   } = useTokenManagement();
-  const increaseLiquidity = pDebounce(fn, 500);
+  const decreaseLiquidity = pDebounce(fn, 500);
 
   // initially, set default slippage value
   useEffect(() => {
@@ -231,19 +230,22 @@ const WithDraw = () => {
   }, [form]);
 
   const onAmountAndSlippageChange = async () => {
-    const wsol = form.getFieldValue('wsol');
+    const amount = form.getFieldValue('amount');
     const slippage = form.getFieldValue('slippage');
 
-    if (!isNumber(wsol) || !isNumber(slippage)) return;
+    if (!isNumber(amount) || !isNumber(slippage)) return;
 
     try {
       setIsEstimating(true);
-      const quote = await increaseLiquidity({ slippage, wsol });
-      const transformedQuote = await getTransformedQuote(quote);
-      setEstimatedQuote(transformedQuote);
+      const quote = await decreaseLiquidity({ amount, slippage });
+      const transformedQuote = await withdrawTransformedQuote(quote);
+      // setEstimatedQuote(transformedQuote);
 
-      // update olas value
-      form.setFieldsValue({ olas: transformedQuote?.olasMax || null });
+      // update olas and wsol value
+      form.setFieldsValue({
+        olas: transformedQuote?.olasMin || null,
+        wsol: transformedQuote?.wsolMin || null,
+      });
     } catch (error) {
       notifyError('Failed to get estimated quote');
       console.error(error);
@@ -252,27 +254,20 @@ const WithDraw = () => {
     }
   };
 
-  const handleDeposit = async () => {
+  const handleWithdraw = async () => {
     try {
       setIsWithdrawing(true);
       await wallet.connect();
 
-      const balance = await connection.getBalance(wallet.publicKey);
-      const lamportBalance = balance / LAMPORTS_PER_SOL;
-      console.log({ lamportBalance });
-
-      const wsol = form.getFieldValue('wsol');
+      const amount = form.getFieldValue('amount');
       const slippage = form.getFieldValue('slippage');
-
-      console.log('handle --- >>>>  1111 ');
-      await deposit({ slippage, wsol });
+      await deposit({ amount, slippage });
     } catch (error) {
-      notifyError('Failed to deposit');
+      notifyError('Failed to withdraw');
       console.error(error);
     } finally {
       setIsWithdrawing(false);
     }
-    console.log('handle --- >>>>  3333 ');
   };
 
   return (
@@ -281,7 +276,7 @@ const WithDraw = () => {
       name="withdraw-form"
       layout="vertical"
       className="mt-16"
-      onFinish={handleDeposit}
+      onFinish={handleWithdraw}
     >
       <Form.Item
         name="amount"
@@ -298,10 +293,7 @@ const WithDraw = () => {
         name="slippage"
         label="Slippage"
         rules={[
-          {
-            required: true,
-            message: 'Please input a valid amount of slippage',
-          },
+          { required: true, message: 'Please input a valid slippage' },
           { validator: slippageValidator },
         ]}
       >
