@@ -70,17 +70,22 @@ const TICK_ARRAY_UPPER = new web3.PublicKey(
 const TICK_SPACING = 64;
 const [tickLowerIndex, tickUpperIndex] = TickUtil.getFullRangeTickIndex(TICK_SPACING);
 
-export const useTokenManagement = () => {
+const useManagementProvider = () => {
   const { connection } = useConnection();
   const provider = new AnchorProvider(connection, NODE_WALLET, {
     commitment: 'processed',
   });
   setProvider(provider);
 
-  const whirlpoolCtx = WhirlpoolContext.withProvider(provider, ORCA);
-  const client = buildWhirlpoolClient(whirlpoolCtx);
+  return provider;
+};
+
+const useWhirlpool = () => {
+  const provider = useManagementProvider();
 
   const getWhirlpoolData = useCallback(async () => {
+    const whirlpoolCtx = WhirlpoolContext.withProvider(provider, ORCA);
+    const client = buildWhirlpoolClient(whirlpoolCtx);
     const whirlpoolClient = await client.getPool(WHIRLPOOL);
 
     const whirlpoolData = whirlpoolClient.getData();
@@ -90,7 +95,14 @@ export const useTokenManagement = () => {
     return { whirlpoolData, whirlpoolTokenA, whirlpoolTokenB };
   }, []);
 
-  const increaseLiquidity = async ({ wsol, slippage }) => {
+  return { getWhirlpoolData };
+};
+
+export const useDepositTokenManagement = () => {
+  const provider = useManagementProvider();
+  const { getWhirlpoolData } = useWhirlpool();
+
+  const depositIncreaseLiquidity = async ({ wsol, slippage }) => {
     const { whirlpoolData, whirlpoolTokenA, whirlpoolTokenB } = await getWhirlpoolData();
     const slippageTolerance = Percentage.fromDecimal(new Decimal(slippage));
 
@@ -116,7 +128,7 @@ export const useTokenManagement = () => {
     return quote;
   };
 
-  const getTransformedQuote = async (quote) => {
+  const depositTransformedQuote = async (quote) => {
     const { whirlpoolTokenA, whirlpoolTokenB } = await getWhirlpoolData();
 
     const solMax = DecimalUtil.fromBN(
@@ -136,14 +148,14 @@ export const useTokenManagement = () => {
 
   const deposit = async ({ wsol, slippage, userWallet }) => {
     if (!userWallet) {
-      // notifyError();
+      notifyError('Please connect your phantom wallet');
       return;
     }
 
     const program = new Program(idl, PROGRAM_ID, provider);
 
     const { whirlpoolTokenA, whirlpoolTokenB } = await getWhirlpoolData();
-    const quote = increaseLiquidity({ wsol, slippage });
+    const quote = depositIncreaseLiquidity({ wsol, slippage });
 
     // Get the ATA of the userWallet address, and if it does not exist, create it
     // This account will have bridged tokens
@@ -209,7 +221,14 @@ export const useTokenManagement = () => {
     }
   };
 
-  /** ******** WITHDRAW and helpers hooks ********* */
+  return { depositIncreaseLiquidity, depositTransformedQuote, deposit };
+};
+
+export const useWithdrawTokenManagement = () => {
+  const provider = useManagementProvider();
+  const program = new Program(idl, PROGRAM_ID, provider);
+  const { getWhirlpoolData } = useWhirlpool();
+
   const withdrawTransformedQuote = async (quote) => {
     const { whirlpoolTokenA, whirlpoolTokenB } = await getWhirlpoolData();
 
@@ -242,7 +261,7 @@ export const useTokenManagement = () => {
     return quote;
   };
 
-  const withdraw = async ({ userWallet, slippage }) => {
+  const withdraw = async ({ amount, slippage, userWallet }) => {
     /**
      * TODO: upside down  of the form deposit
      * 1. Amount: 1 to MAX amount
@@ -252,7 +271,6 @@ export const useTokenManagement = () => {
      *
      * WITHDRAW button
      */
-    // Set acceptable slippage
 
     const { whirlpoolTokenA, whirlpoolTokenB } = await getWhirlpoolData();
 
@@ -260,10 +278,14 @@ export const useTokenManagement = () => {
       BRIDGED_TOKEN_MINT,
       userWallet.publicKey,
     );
-    // TODO: If bridgedTokenAccount does NOT exists, throw an error
+
+    if (!bridgedTokenAccount) {
+      notifyError('Please connect your phantom wallet');
+      return;
+    }
 
     // TODO: any balance from 0 to user's balance => user input
-    const amount = 1; // (add a max button => user's balance)
+    // const amount = 1; // (add a max button => user's balance)
 
     const tokenAccounts = await provider.connection.getTokenAccountsByOwner(
       userWallet.publicKey,
@@ -277,18 +299,18 @@ export const useTokenManagement = () => {
         if (tokenAccount.pubkey.toString() === bridgedTokenAccount) {
           // then all good
         } else {
-          notifyError(); // TODO
+          notifyError('You do not have the correct bridged token account');
         }
         maxAmount = accountData.amount.toString();
-        console.log(
-          'User ATA bridged balance now:',
-          accountData.amount.toString(),
-        );
+        console.log('User ATA bridged balance now: ', maxAmount);
       }
     });
     console.log('Max amount:', maxAmount);
 
-    const program = new Program(idl, PROGRAM_ID, provider);
+    if (maxAmount < amount) {
+      notifyError('Insufficient balance');
+      return;
+    }
 
     console.log(
       'User ATA for bridged:',
@@ -348,15 +370,5 @@ export const useTokenManagement = () => {
     }
   };
 
-  return {
-    // deposit
-    increaseLiquidity,
-    getTransformedQuote,
-    withdraw,
-
-    // withdraw
-    withdrawTransformedQuote,
-    withdrawDecreaseLiquidity,
-    deposit,
-  };
+  return { withdrawTransformedQuote, withdrawDecreaseLiquidity, withdraw };
 };

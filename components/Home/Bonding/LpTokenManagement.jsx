@@ -26,7 +26,7 @@ import {
   useWallet,
 } from '@solana/wallet-adapter-react';
 // import { LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { useTokenManagement } from './lpTokenManageUtils';
+import { useDepositTokenManagement, useWithdrawTokenManagement } from './lpTokenManageUtils';
 
 const {
   // Paragraph,
@@ -54,11 +54,11 @@ const DepositForm = () => {
   // const { connection } = useConnection();
 
   const {
-    increaseLiquidity: fn,
+    depositIncreaseLiquidity: fn,
+    depositTransformedQuote,
     deposit,
-    getTransformedQuote,
-  } = useTokenManagement();
-  const increaseLiquidity = pDebounce(fn, 500);
+  } = useDepositTokenManagement();
+  const depositIncreaseLiquidity = pDebounce(fn, 500);
 
   // initially, set default slippage value
   useEffect(() => {
@@ -73,8 +73,8 @@ const DepositForm = () => {
 
     try {
       setIsEstimating(true);
-      const quote = await increaseLiquidity({ slippage, wsol });
-      const transformedQuote = await getTransformedQuote(quote);
+      const quote = await depositIncreaseLiquidity({ slippage, wsol });
+      const transformedQuote = await depositTransformedQuote(quote);
       setEstimatedQuote(transformedQuote);
 
       // update olas value
@@ -220,8 +220,8 @@ const WithDraw = () => {
   const {
     withdrawDecreaseLiquidity: fn,
     withdrawTransformedQuote,
-    deposit,
-  } = useTokenManagement();
+    withdraw,
+  } = useWithdrawTokenManagement();
   const decreaseLiquidity = pDebounce(fn, 500);
 
   // initially, set default slippage value
@@ -261,7 +261,7 @@ const WithDraw = () => {
 
       const amount = form.getFieldValue('amount');
       const slippage = form.getFieldValue('slippage');
-      await deposit({ amount, slippage });
+      await withdraw({ amount, slippage });
     } catch (error) {
       notifyError('Failed to withdraw');
       console.error(error);
@@ -284,6 +284,7 @@ const WithDraw = () => {
         rules={[{ required: true, message: 'Please input a valid amount' }]}
       >
         <InputNumber
+          min={1}
           className="full-width"
           onChange={onAmountAndSlippageChange}
         />
