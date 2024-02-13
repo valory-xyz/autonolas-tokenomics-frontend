@@ -11,7 +11,6 @@ import {
   WalletProvider,
 } from '@solana/wallet-adapter-react';
 import { PhantomWalletAdapter } from '@solana/wallet-adapter-wallets';
-import { web3 } from '@project-serum/anchor';
 
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import Login from '../Login';
@@ -23,11 +22,6 @@ const LogoSvg = dynamic(() => import('common-util/SVGs/logo'));
 
 const { Header, Content } = AntdLayout;
 
-// TODO: remove this and use mainnet
-// const isDevnet = false;
-// const endpoint = isDevnet
-//   ? web3.clusterApiUrl('testnet')
-//   : web3.clusterApiUrl('mainnet-beta');
 const endpoint = process.env.NEXT_PUBLIC_SOLANA_MAINNET_BETA_URL;
 
 const StyledHeader = styled(Header)`
@@ -115,7 +109,7 @@ Layout.defaultProps = {
 
 const LayoutWithWalletProvider = (props) => (
   <ConnectionProvider endpoint={endpoint}>
-    <WalletProvider wallets={wallets} autoConnect={false}>
+    <WalletProvider wallets={wallets} autoConnect>
       <Layout {...props}>{props.children}</Layout>
     </WalletProvider>
   </ConnectionProvider>

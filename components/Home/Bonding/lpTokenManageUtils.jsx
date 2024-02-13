@@ -1,10 +1,8 @@
-/* eslint-disable max-len */
-/* eslint-disable camelcase */
+import { useCallback } from 'react';
 import { setProvider, web3, Program } from '@coral-xyz/anchor';
 import idl from 'common-util/AbiAndAddresses/liquidityLockbox.json';
 import { AnchorProvider } from '@project-serum/anchor';
 import NodeWallet from '@project-serum/anchor/dist/cjs/nodewallet';
-
 import { DecimalUtil, Percentage } from '@orca-so/common-sdk';
 import Decimal from 'decimal.js';
 import {
@@ -14,7 +12,6 @@ import {
   TickUtil,
   decreaseLiquidityQuoteByLiquidityWithParams,
 } from '@orca-so/whirlpools-sdk';
-import { useConnection } from '@solana/wallet-adapter-react';
 import { Keypair } from '@solana/web3.js';
 import {
   AccountLayout,
@@ -22,8 +19,9 @@ import {
   getOrCreateAssociatedTokenAccount,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
-import { useCallback } from 'react';
 import { notifyError, notifySuccess } from '@autonolas/frontend-library';
+
+import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
 
 const PROGRAM_ID = new web3.PublicKey(
   '7ahQGWysExobjeZ91RTsNqTCN3kWyHGZ43ud2vB7VVoZ',
@@ -71,7 +69,7 @@ const TICK_SPACING = 64;
 const [tickLowerIndex, tickUpperIndex] = TickUtil.getFullRangeTickIndex(TICK_SPACING);
 
 const useManagementProvider = () => {
-  const { connection } = useConnection();
+  const { connection } = useSvmConnectivity();
   const provider = new AnchorProvider(connection, NODE_WALLET, {
     commitment: 'processed',
   });
@@ -226,6 +224,7 @@ export const useDepositTokenManagement = () => {
 
 export const useWithdrawTokenManagement = () => {
   const provider = useManagementProvider();
+  const { svmWalletPublicKey } = useSvmConnectivity();
   const program = new Program(idl, PROGRAM_ID, provider);
   const { getWhirlpoolData } = useWhirlpool();
 
@@ -261,7 +260,50 @@ export const useWithdrawTokenManagement = () => {
     return quote;
   };
 
+  const getBridgedTokenAccount = async () => {
+    if (!svmWalletPublicKey) return null;
+
+    const bridgedTokenAccount = await getAssociatedTokenAddress(
+      BRIDGED_TOKEN_MINT,
+      svmWalletPublicKey,
+    );
+
+    return bridgedTokenAccount;
+  };
+
+  const getMaxAmount = async () => {
+    const bridgedTokenAccount = await getBridgedTokenAccount();
+    if (!bridgedTokenAccount) return null;
+
+    const tokenAccounts = await provider.connection.getTokenAccountsByOwner(
+      svmWalletPublicKey,
+      { programId: TOKEN_PROGRAM_ID },
+    );
+
+    let maxAmount = -1;
+    tokenAccounts.value.forEach((tokenAccount) => {
+      const accountData = AccountLayout.decode(tokenAccount.account.data);
+      if (accountData.mint.toString() === BRIDGED_TOKEN_MINT.toString()) {
+        if (tokenAccount.pubkey.toString() === bridgedTokenAccount) {
+          maxAmount = accountData.amount.toString();
+        }
+      }
+    });
+
+    if (maxAmount === -1) {
+      notifyError('You do not have the correct bridged token account');
+      return null;
+    }
+
+    return maxAmount;
+  };
+
   const withdraw = async ({ amount, slippage, userWallet }) => {
+    const bridgedTokenAccount = await getBridgedTokenAccount({ userWallet });
+    if (!bridgedTokenAccount) {
+      notifyError('Please connect your phantom wallet');
+      return;
+    }
     /**
      * TODO: upside down  of the form deposit
      * 1. Amount: 1 to MAX amount
@@ -273,49 +315,6 @@ export const useWithdrawTokenManagement = () => {
      */
 
     const { whirlpoolTokenA, whirlpoolTokenB } = await getWhirlpoolData();
-
-    const bridgedTokenAccount = await getAssociatedTokenAddress(
-      BRIDGED_TOKEN_MINT,
-      userWallet.publicKey,
-    );
-
-    if (!bridgedTokenAccount) {
-      notifyError('Please connect your phantom wallet');
-      return;
-    }
-
-    // TODO: any balance from 0 to user's balance => user input
-    // const amount = 1; // (add a max button => user's balance)
-
-    const tokenAccounts = await provider.connection.getTokenAccountsByOwner(
-      userWallet.publicKey,
-      { programId: TOKEN_PROGRAM_ID },
-    );
-
-    let maxAmount = 0;
-    tokenAccounts.value.forEach((tokenAccount) => {
-      const accountData = AccountLayout.decode(tokenAccount.account.data);
-      if (accountData.mint.toString() === BRIDGED_TOKEN_MINT.toString()) {
-        if (tokenAccount.pubkey.toString() === bridgedTokenAccount) {
-          // then all good
-        } else {
-          notifyError('You do not have the correct bridged token account');
-        }
-        maxAmount = accountData.amount.toString();
-        console.log('User ATA bridged balance now: ', maxAmount);
-      }
-    });
-    console.log('Max amount:', maxAmount);
-
-    if (maxAmount < amount) {
-      notifyError('Insufficient balance');
-      return;
-    }
-
-    console.log(
-      'User ATA for bridged:',
-      bridgedTokenAccount.address.toBase58(),
-    );
 
     // Get the tokenA ATA of the userWallet address, and if it does not exist, create it
     const tokenOwnerAccountA = await getOrCreateAssociatedTokenAccount(
@@ -370,5 +369,10 @@ export const useWithdrawTokenManagement = () => {
     }
   };
 
-  return { withdrawTransformedQuote, withdrawDecreaseLiquidity, withdraw };
+  return {
+    withdrawTransformedQuote,
+    withdrawDecreaseLiquidity,
+    withdraw,
+    getMaxAmount,
+  };
 };

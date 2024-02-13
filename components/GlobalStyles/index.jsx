@@ -64,6 +64,9 @@ const GlobalStyle = createGlobalStyle`
   .ml-16 {
     margin-left: 16px;
   }
+  .mt-8 {
+    margin-top: 8px;
+  }
   .mt-16 {
     margin-top: 16px;
   }

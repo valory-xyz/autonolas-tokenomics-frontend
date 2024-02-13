@@ -13,20 +13,19 @@ import {
 } from 'antd';
 // import { NA } from '@autonolas/frontend-library';
 import pDebounce from 'p-debounce';
-import { isNumber } from 'lodash';
+import { isNil, isNumber } from 'lodash';
 import {
   getCommaSeparatedNumber,
   notifyError,
 } from '@autonolas/frontend-library';
-
-// import { SolanaWallet } from 'common-util/Login/SolanaWallet';
-import {
-  //  useAnchorWallet,
-  // useConnection,
-  useWallet,
-} from '@solana/wallet-adapter-react';
 // import { LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { useDepositTokenManagement, useWithdrawTokenManagement } from './lpTokenManageUtils';
+
+import { SolanaWallet } from 'common-util/Login/SolanaWallet';
+import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
+import {
+  useDepositTokenManagement,
+  useWithdrawTokenManagement,
+} from './lpTokenManageUtils';
 
 const {
   // Paragraph,
@@ -209,18 +208,16 @@ const DepositForm = () => {
 
 const WithDraw = () => {
   const [form] = Form.useForm();
-  // const [estimatedQuote, setEstimatedQuote] = useState(null);
   const [isEstimating, setIsEstimating] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [maxAmount, setMaxAmount] = useState(0);
 
-  // const anchorWallet = useAnchorWallet();
-  const wallet = useWallet();
-  // const { connection } = useConnection();
-
+  const { wallet, isSvmWalletConnected } = useSvmConnectivity();
   const {
     withdrawDecreaseLiquidity: fn,
     withdrawTransformedQuote,
     withdraw,
+    getMaxAmount,
   } = useWithdrawTokenManagement();
   const decreaseLiquidity = pDebounce(fn, 500);
 
@@ -228,6 +225,17 @@ const WithDraw = () => {
   useEffect(() => {
     form.setFieldsValue({ slippage: DEFAULT_SLIPPAGE });
   }, [form]);
+
+  useEffect(() => {
+    const tempMaxAmountFn = async () => {
+      const tempAmount = await getMaxAmount();
+      if (!isNil(tempAmount)) {
+        setMaxAmount(tempAmount);
+      }
+    };
+
+    if (isSvmWalletConnected) tempMaxAmountFn();
+  }, [isSvmWalletConnected]);
 
   const onAmountAndSlippageChange = async () => {
     const amount = form.getFieldValue('amount');
@@ -239,7 +247,6 @@ const WithDraw = () => {
       setIsEstimating(true);
       const quote = await decreaseLiquidity({ amount, slippage });
       const transformedQuote = await withdrawTransformedQuote(quote);
-      // setEstimatedQuote(transformedQuote);
 
       // update olas and wsol value
       form.setFieldsValue({
@@ -255,12 +262,19 @@ const WithDraw = () => {
   };
 
   const handleWithdraw = async () => {
+    if (!isSvmWalletConnected) return;
+
+    const amount = form.getFieldValue('amount');
+    const slippage = form.getFieldValue('slippage');
+    if (amount > maxAmount) {
+      notifyError('Amount exceeds max');
+      return;
+    }
+
     try {
       setIsWithdrawing(true);
       await wallet.connect();
 
-      const amount = form.getFieldValue('amount');
-      const slippage = form.getFieldValue('slippage');
       await withdraw({ amount, slippage });
     } catch (error) {
       notifyError('Failed to withdraw');
@@ -280,8 +294,27 @@ const WithDraw = () => {
     >
       <Form.Item
         name="amount"
-        label="Amount"
         rules={[{ required: true, message: 'Please input a valid amount' }]}
+        label={(
+          <>
+            Amount
+            <Button
+              size="small"
+              type="primary"
+              ghost
+              className="ml-8"
+              disabled={
+                !isSvmWalletConnected
+                || isWithdrawing
+                || isEstimating
+                || !maxAmount
+              }
+              onClick={() => form.setFieldsValue({ amount: maxAmount })}
+            >
+              Max
+            </Button>
+          </>
+        )}
       >
         <InputNumber
           min={1}
@@ -306,34 +339,33 @@ const WithDraw = () => {
         />
       </Form.Item>
 
-      <Form.Item
-        name="olas"
-        label="OLAS"
-        rules={[{ required: true, message: 'Please input a valid OLAS' }]}
-      >
-        <InputNumber disabled className="full-width" />
-      </Form.Item>
+      <Spin spinning={isEstimating} size="small">
+        <Form.Item
+          name="olas"
+          label="OLAS"
+          rules={[{ required: true, message: 'Please input a valid OLAS' }]}
+        >
+          <InputNumber disabled className="full-width" />
+        </Form.Item>
 
-      <Form.Item
-        name="wsol"
-        label="WSOL"
-        rules={[{ required: true, message: 'Please input a valid WSOL' }]}
-      >
-        <InputNumber disabled className="full-width" />
-      </Form.Item>
+        <Form.Item
+          name="wsol"
+          label="WSOL"
+          rules={[{ required: true, message: 'Please input a valid WSOL' }]}
+        >
+          <InputNumber disabled className="full-width" />
+        </Form.Item>
+      </Spin>
 
       <Form.Item>
         <Button
           type="primary"
           htmlType="submit"
-          disabled={isEstimating || isWithdrawing}
+          disabled={isEstimating || isWithdrawing || !isSvmWalletConnected}
         >
           Withdraw
         </Button>
       </Form.Item>
-
-      {/* <br /> */}
-      {/* <SolanaWallet /> */}
     </Form>
   );
 };
@@ -357,10 +389,11 @@ export const LpTokenManagement = ({ lpToken, lpTokenLink }) => {
         open={isManageModalVisible}
         onCancel={() => setIsManageModalVisible(false)}
         footer={null}
+        width={600}
       >
         <Tabs
-          // TODO: fix the tab border in GlobalStyles
           defaultActiveKey="1"
+          tabBarExtraContent={<SolanaWallet />}
           items={[
             {
               key: 'deposit',
