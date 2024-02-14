@@ -9,11 +9,11 @@ import { WsolDeposit } from './WsolDeposit';
 import { WsolWithDraw } from './WsolWithdraw';
 
 export const WsolTokenManagement = ({ lpToken, lpTokenLink }) => {
-  const [isManageModalVisible, setIsManageModalVisible] = useState(true);
+  const [isManageModalVisible, setIsManageModalVisible] = useState(false);
 
   return (
     <>
-      <Flex justify="space-between" align="center">
+      <Flex justify="space-between" align="center" gap={12}>
         <a href={lpTokenLink} target="_blank" rel="noreferrer">
           {lpToken}
         </a>

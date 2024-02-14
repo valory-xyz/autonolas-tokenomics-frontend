@@ -18,12 +18,12 @@ export const WsolWithDraw = () => {
 
   const { wallet, isSvmWalletConnected } = useSvmConnectivity();
   const {
-    withdrawDecreaseLiquidity: fn,
+    withdrawDecreaseLiquidityQuote: fn,
     withdrawTransformedQuote,
     withdraw,
     getMaxAmount,
   } = useWithdrawTokenManagement();
-  const decreaseLiquidity = pDebounce(fn, 500);
+  const getDecreaseLiquidityQuote = pDebounce(fn, 500);
 
   // initially, set default slippage value
   useEffect(() => {
@@ -49,7 +49,7 @@ export const WsolWithDraw = () => {
 
     try {
       setIsEstimating(true);
-      const quote = await decreaseLiquidity({ amount, slippage });
+      const quote = await getDecreaseLiquidityQuote({ amount, slippage });
       const transformedQuote = await withdrawTransformedQuote(quote);
 
       // update olas and wsol value

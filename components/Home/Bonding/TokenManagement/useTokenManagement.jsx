@@ -22,6 +22,7 @@ import {
 import { notifyError, notifySuccess } from '@autonolas/frontend-library';
 
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
+import { SVM_EMPTY_ADDRESS } from './utils';
 
 const PROGRAM_ID = new web3.PublicKey(
   '7ahQGWysExobjeZ91RTsNqTCN3kWyHGZ43ud2vB7VVoZ',
@@ -70,19 +71,22 @@ const [tickLowerIndex, tickUpperIndex] = TickUtil.getFullRangeTickIndex(TICK_SPA
 
 const useManagementProvider = () => {
   const { connection } = useSvmConnectivity();
-  const provider = new AnchorProvider(connection, NODE_WALLET, {
+  const nodeProvider = new AnchorProvider(connection, NODE_WALLET, {
     commitment: 'processed',
   });
-  setProvider(provider);
+  setProvider(nodeProvider);
 
-  return provider;
+  return nodeProvider;
 };
 
+/**
+ * Hook to get the data from the whirlpool
+ */
 const useWhirlpool = () => {
-  const provider = useManagementProvider();
+  const nodeProvider = useManagementProvider();
 
   const getWhirlpoolData = useCallback(async () => {
-    const whirlpoolCtx = WhirlpoolContext.withProvider(provider, ORCA);
+    const whirlpoolCtx = WhirlpoolContext.withProvider(nodeProvider, ORCA);
     const client = buildWhirlpoolClient(whirlpoolCtx);
     const whirlpoolClient = await client.getPool(WHIRLPOOL);
 
@@ -97,29 +101,26 @@ const useWhirlpool = () => {
 };
 
 export const useDepositTokenManagement = () => {
-  const provider = useManagementProvider();
+  const nodeProvider = useManagementProvider();
   const { getWhirlpoolData } = useWhirlpool();
+  const { svmWalletPublicKey } = useSvmConnectivity();
 
-  const depositIncreaseLiquidity = async ({ wsol, slippage }) => {
+  const program = new Program(idl, PROGRAM_ID, nodeProvider);
+  const userWallet = null; // TODO: need to fix this because it requires secret key
+
+  const depositIncreaseLiquidityQuote = async ({ wsol, slippage }) => {
     const { whirlpoolData, whirlpoolTokenA, whirlpoolTokenB } = await getWhirlpoolData();
     const slippageTolerance = Percentage.fromDecimal(new Decimal(slippage));
 
     const quote = increaseLiquidityQuoteByInputTokenWithParams({
-      // Pass the pool definition and state
       tokenMintA: whirlpoolTokenA.mint,
       tokenMintB: whirlpoolTokenB.mint,
       sqrtPrice: whirlpoolData.sqrtPrice,
       tickCurrentIndex: whirlpoolData.tickCurrentIndex,
-
-      // Price range
       tickLowerIndex,
       tickUpperIndex,
-
-      // Input token and amount
       inputTokenMint: SOL,
       inputTokenAmount: DecimalUtil.toBN(new Decimal(wsol), 9),
-
-      // Acceptable slippage
       slippageTolerance,
     });
 
@@ -144,24 +145,22 @@ export const useDepositTokenManagement = () => {
     return { solMax, olasMax, liquidity };
   };
 
-  const deposit = async ({ wsol, slippage, userWallet }) => {
-    if (!userWallet) {
+  const deposit = async ({ wsol, slippage }) => {
+    if (!svmWalletPublicKey) {
       notifyError('Please connect your phantom wallet');
       return;
     }
 
-    const program = new Program(idl, PROGRAM_ID, provider);
-
     const { whirlpoolTokenA, whirlpoolTokenB } = await getWhirlpoolData();
-    const quote = depositIncreaseLiquidity({ wsol, slippage });
+    const quote = depositIncreaseLiquidityQuote({ wsol, slippage });
 
     // Get the ATA of the userWallet address, and if it does not exist, create it
     // This account will have bridged tokens
     const bridgedTokenAccount = await getOrCreateAssociatedTokenAccount(
-      provider.connection,
+      nodeProvider.connection,
       userWallet,
       BRIDGED_TOKEN_MINT,
-      userWallet.publicKey,
+      svmWalletPublicKey,
     );
     console.log(
       'User ATA for bridged:',
@@ -170,23 +169,24 @@ export const useDepositTokenManagement = () => {
 
     const tokenOwnerAccountA = await getAssociatedTokenAddress(
       whirlpoolTokenA.mint,
-      userWallet.publicKey,
+      svmWalletPublicKey,
     );
 
     const tokenOwnerAccountB = await getAssociatedTokenAddress(
       whirlpoolTokenB.mint,
-      userWallet.publicKey,
+      svmWalletPublicKey,
     );
 
-    // if()
-    /**
-     * TODO:
-     * if tokenOwnerAccountA = 0x111... then throw error OR
-     * if tokenOwnerAccountB = 0x111... then throw error OR
-     * else continue
-     */
+    // Check if the user has the correct token account
+    // and it is required to deposit
+    if (
+      tokenOwnerAccountA === SVM_EMPTY_ADDRESS
+      || tokenOwnerAccountB === SVM_EMPTY_ADDRESS
+    ) {
+      notifyError('You do not have the correct token account');
+      return;
+    }
 
-    // Execute the correct deposit tx
     try {
       const signature = await program.methods
         .deposit(quote.liquidityAmount, quote.tokenMaxA, quote.tokenMaxB)
@@ -209,24 +209,21 @@ export const useDepositTokenManagement = () => {
         .rpc();
 
       notifySuccess('Deposit successful', signature);
-      console.log('Deposit Signature:', signature);
+      console.log('Deposit Signature:', signature); // TODO: remove
     } catch (error) {
-      if (error instanceof Error && 'message' in error) {
-        console.error(error);
-      } else {
-        console.error('Transaction Error:', error);
-      }
+      console.error(error);
     }
   };
 
-  return { depositIncreaseLiquidity, depositTransformedQuote, deposit };
+  return { depositIncreaseLiquidityQuote, depositTransformedQuote, deposit };
 };
 
 export const useWithdrawTokenManagement = () => {
-  const provider = useManagementProvider();
+  const nodeProvider = useManagementProvider();
   const { svmWalletPublicKey } = useSvmConnectivity();
-  const program = new Program(idl, PROGRAM_ID, provider);
   const { getWhirlpoolData } = useWhirlpool();
+
+  const program = new Program(idl, PROGRAM_ID, nodeProvider);
 
   const withdrawTransformedQuote = async (quote) => {
     const { whirlpoolTokenA, whirlpoolTokenB } = await getWhirlpoolData();
@@ -244,7 +241,7 @@ export const useWithdrawTokenManagement = () => {
     return { wsolMin, olasMin };
   };
 
-  const withdrawDecreaseLiquidity = async ({ amount, slippage }) => {
+  const withdrawDecreaseLiquidityQuote = async ({ amount, slippage }) => {
     const { whirlpoolData } = await getWhirlpoolData();
     const slippageTolerance = Percentage.fromDecimal(new Decimal(slippage));
 
@@ -271,19 +268,34 @@ export const useWithdrawTokenManagement = () => {
     return bridgedTokenAccount;
   };
 
+  /**
+   * Fetch the maximum amount of bridged tokens
+   * that the user can withdraw. User must have wallet connected
+   * to get the maximum amount.
+   */
   const getMaxAmount = async () => {
     const bridgedTokenAccount = await getBridgedTokenAccount();
     if (!bridgedTokenAccount) return null;
 
-    const tokenAccounts = await provider.connection.getTokenAccountsByOwner(
+    const tokenAccounts = await nodeProvider.connection.getTokenAccountsByOwner(
       svmWalletPublicKey,
       { programId: TOKEN_PROGRAM_ID },
     );
 
-    let maxAmount = -1;
+    let maxAmount = -1; // initialize to -1
+
+    // Iterate through the token accounts of the user
+    // to find the bridged token account
     tokenAccounts.value.forEach((tokenAccount) => {
       const accountData = AccountLayout.decode(tokenAccount.account.data);
       if (accountData.mint.toString() === BRIDGED_TOKEN_MINT.toString()) {
+        console.log(
+          'Bridged Token Accounts:',
+          tokenAccount.pubkey,
+          accountData,
+          bridgedTokenAccount,
+        );
+
         if (tokenAccount.pubkey.toString() === bridgedTokenAccount) {
           maxAmount = accountData.amount.toString();
         }
@@ -291,51 +303,45 @@ export const useWithdrawTokenManagement = () => {
     });
 
     if (maxAmount === -1) {
-      notifyError('You do not have the correct bridged token account');
+      notifyError('You do not have the bridged token account yet');
       return null;
     }
 
     return maxAmount;
   };
 
+  /**
+   * Withdraw from the lockbox
+   */
   const withdraw = async ({ amount, slippage, userWallet }) => {
     const bridgedTokenAccount = await getBridgedTokenAccount({ userWallet });
     if (!bridgedTokenAccount) {
       notifyError('Please connect your phantom wallet');
       return;
     }
-    /**
-     * TODO: upside down  of the form deposit
-     * 1. Amount: 1 to MAX amount
-     * 2. Slippage: 1 to 100
-     * 3. WSOL (min token A): uneditable
-     * 4. OLAS (min token B): uneditable
-     *
-     * WITHDRAW button
-     */
 
     const { whirlpoolTokenA, whirlpoolTokenB } = await getWhirlpoolData();
 
     // Get the tokenA ATA of the userWallet address, and if it does not exist, create it
     const tokenOwnerAccountA = await getOrCreateAssociatedTokenAccount(
-      provider.connection,
+      nodeProvider.connection,
       userWallet,
       whirlpoolTokenA.mint,
-      userWallet.publicKey,
+      svmWalletPublicKey,
     );
     console.log('User ATA for tokenA:', tokenOwnerAccountA.address.toBase58());
 
-    // Get the tokenA ATA of the userWallet address, and if it does not exist, create it
+    // Get the tokenB ATA of the userWallet address, and if it does not exist, create it
     const tokenOwnerAccountB = await getOrCreateAssociatedTokenAccount(
-      provider.connection,
+      nodeProvider.connection,
       userWallet,
       whirlpoolTokenB.mint,
-      userWallet.publicKey,
+      svmWalletPublicKey,
     );
     console.log('User ATA for tokenB:', tokenOwnerAccountB.address.toBase58());
 
     // Obtain withdraw estimation
-    const quote = await withdrawDecreaseLiquidity({ amount, slippage });
+    const quote = await withdrawDecreaseLiquidityQuote({ amount, slippage });
 
     try {
       const signature = await program.methods
@@ -371,7 +377,7 @@ export const useWithdrawTokenManagement = () => {
 
   return {
     withdrawTransformedQuote,
-    withdrawDecreaseLiquidity,
+    withdrawDecreaseLiquidityQuote,
     withdraw,
     getMaxAmount,
   };

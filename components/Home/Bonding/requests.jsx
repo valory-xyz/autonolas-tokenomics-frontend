@@ -80,7 +80,6 @@ const getBondingProgramsRequest = async ({ isActive }) => {
   const response = await contract.methods.getProducts(isActive).call();
   console.log('response', response);
   // return response;
-  // return 500;
   return ['125'];
 };
 
@@ -405,7 +404,9 @@ const getLpPriceWithProjectedChange = (list) => list.map((record) => {
 });
 
 /**
- *
+ * Fetches product details from the product ids and updates the list
+ * to include other details such as the LP token name, supply left, etc.
+ * and returns the updated list.
  */
 const getProductDetailsFromIds = async ({ productIdList }, retry) => {
   const contract = getDepositoryContract();

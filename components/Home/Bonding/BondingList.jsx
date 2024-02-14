@@ -77,6 +77,14 @@ const getColumns = (
       dataIndex: 'lpTokenName',
       key: 'lpTokenName',
       width: 180,
+      // TODO: temporary fix for OLAS-WSOL LP Token, should be removed after fixing LP pairs
+      // if (x !== 'OLAS-WMATIC') {
+      //   return (
+      //     <a href={data.lpTokenLink} target="_blank" rel="noreferrer">
+      //       {x}
+      //     </a>
+      //   );
+      // }
       render: (x, data) => (
         <WsolTokenManagement lpToken={x} lpTokenLink={data.lpTokenLink} />
       ),
@@ -140,6 +148,7 @@ const getColumns = (
       title: getTitle('Vesting', 'The bond vesting time to withdraw OLAS'),
       dataIndex: 'vesting',
       key: 'vesting',
+      width: 120,
       render: (seconds) => (
         <a
           href={`https://etherscan.io/address/${depositoryAddress}#readContract#F10`}
@@ -157,6 +166,7 @@ const getColumns = (
       ),
       dataIndex: 'supply',
       key: 'supply',
+      width: 170,
       render: (x, row) => {
         const supplyLeftInPercent = isNaN(row.supplyLeft)
           ? 0
@@ -185,6 +195,7 @@ const getColumns = (
       ),
       dataIndex: 'bondForOlas',
       key: 'bondForOlas',
+      width: 160,
       render: (_, row) => {
         // disabled if there is no supply or if the user is not connected
         const isBondButtonDisabled = !hideEmptyProducts || !acc;

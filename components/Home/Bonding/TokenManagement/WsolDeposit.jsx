@@ -23,11 +23,11 @@ export const WsolDeposit = () => {
   const { isSvmWalletConnected } = useSvmConnectivity();
 
   const {
-    depositIncreaseLiquidity: fn,
+    depositIncreaseLiquidityQuote: fn,
     depositTransformedQuote,
     deposit,
   } = useDepositTokenManagement();
-  const depositIncreaseLiquidity = pDebounce(fn, 500);
+  const getDepositQuote = pDebounce(fn, 500);
 
   // initially, set default slippage value
   useEffect(() => {
@@ -42,7 +42,7 @@ export const WsolDeposit = () => {
 
     try {
       setIsEstimating(true);
-      const quote = await depositIncreaseLiquidity({ slippage, wsol });
+      const quote = await getDepositQuote({ slippage, wsol });
       const transformedQuote = await depositTransformedQuote(quote);
       setEstimatedQuote(transformedQuote);
 
