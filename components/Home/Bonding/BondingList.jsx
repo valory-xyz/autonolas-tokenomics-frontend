@@ -24,7 +24,7 @@ import { notifySpecificError, parseToEth } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { ADDRESSES } from 'common-util/Contracts';
 import { Deposit } from './Deposit';
-import { LpTokenManagement } from './LpTokenManagement';
+import { WsolTokenManagement } from './TokenManagement/WsolTokenManagement';
 import { getProductListRequest } from './requests';
 import { getLpTokenWithDiscount } from './requestsHelpers';
 
@@ -78,7 +78,7 @@ const getColumns = (
       key: 'lpTokenName',
       width: 180,
       render: (x, data) => (
-        <LpTokenManagement lpToken={x} lpTokenLink={data.lpTokenLink} />
+        <WsolTokenManagement lpToken={x} lpTokenLink={data.lpTokenLink} />
       ),
     },
     {
