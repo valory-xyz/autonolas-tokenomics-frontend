@@ -20,4 +20,5 @@ export const BONDING_PRODUCTS = {
 export const DEX = {
   UNISWAP: 'uniswap',
   BALANCER: 'balancer',
+  SOLANA: 'whirlpool',
 };

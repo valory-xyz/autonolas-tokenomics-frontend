@@ -17,12 +17,19 @@ import {
   AccountLayout,
   getAssociatedTokenAddress,
   getOrCreateAssociatedTokenAccount,
+  createAssociatedTokenAccount,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
-import { notifyError, notifySuccess } from '@autonolas/frontend-library';
+import {
+  areAddressesEqual,
+  notifyError,
+  notifySuccess,
+} from '@autonolas/frontend-library';
 
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
-import { SVM_EMPTY_ADDRESS } from './utils';
+import { ADDRESSES } from 'common-util/Contracts';
+import { round } from 'lodash';
+import { SVM_EMPTY_ADDRESS, getMyKeyPair } from './utils';
 
 const PROGRAM_ID = new web3.PublicKey(
   '7ahQGWysExobjeZ91RTsNqTCN3kWyHGZ43ud2vB7VVoZ',
@@ -100,10 +107,65 @@ const useWhirlpool = () => {
   return { getWhirlpoolData };
 };
 
+// TODO: reuse the function somehow because it is needed for bonding list page
+export const getWhirlPoolInformation = async (connection, whirlpool) => {
+  const nodeProvider = new AnchorProvider(connection, NODE_WALLET, {
+    commitment: 'processed',
+  });
+
+  const whirlpoolCtx = WhirlpoolContext.withProvider(nodeProvider, ORCA);
+  const client = buildWhirlpoolClient(whirlpoolCtx);
+  const whirlpoolClient = await client.getPool(whirlpool);
+
+  const whirlpoolTokenA = whirlpoolClient.getTokenAInfo();
+  const whirlpoolTokenB = whirlpoolClient.getTokenBInfo();
+
+  // return { whirlpoolData, whirlpoolTokenA, whirlpoolTokenB };
+
+  const tickArrayLower = await whirlpoolCtx.fetcher.getTickArray(
+    TICK_ARRAY_LOWER,
+  );
+
+  let totalSupply = 0;
+  for (let i = 0; i < tickArrayLower.ticks.length; i += 1) {
+    totalSupply += tickArrayLower.ticks[i].liquidityNet;
+  }
+
+  const reserveOlas = (areAddressesEqual(
+    whirlpoolTokenA.mint.toString(),
+    ADDRESSES[-1].olasAddress, // TODO: if -1 is changed, update here
+  )
+    ? whirlpoolTokenA.supply
+    : whirlpoolTokenB.supply) * 1.0;
+
+  const priceLP = round((Decimal(reserveOlas) / Decimal(totalSupply)) * 2, 18);
+  return priceLP;
+
+  // const reserveToken0 = (await whirlpoolCtx.fetcher.getPoolTokenAccount(whirlpoolTokenA.mint)).amount;
+  // for tick in tick_array_lower.ticks:
+  //     current_supply += tick.liquidity_net
+  // if REVERSE:
+  //     reserve_token0 = (await ctx.fetcher.get_token_account(whirlpool.token_vault_a)).amount
+  //     reserve_token1 = (await ctx.fetcher.get_token_account(whirlpool.token_vault_b)).amount
+  //     currentOLASPrice = (reserve_token0 / (reserve_token1 * 10 **(decimals_a - decimals_b)))
+  //     currentPriceLP = round(Decimal(reserve_token1) / Decimal(current_supply) * 2, 18)
+  // else:
+  //     reserve_token0 = (await ctx.fetcher.get_token_account(whirlpool.token_vault_a)).amount
+  //     reserve_token1 = (await ctx.fetcher.get_token_account(whirlpool.token_vault_b)).amount
+  //     currentOLASPrice = (reserve_token1 / (reserve_token0 * 10 **(decimals_b - decimals_a)))
+  //     currentPriceLP = round(Decimal(reserve_token0) / Decimal(current_supply) * 2, 18)
+
+  // const totalSupply = pool.totalShares;
+  // const reservesOLAS = (areAddressesEqual(pool.tokens[0].address, ADDRESSES[lpChainId].olasAddress)
+  //   ? pool.tokens[0].balance
+  //   : pool.tokens[1].balance) * 1.0;
+  // const priceLP = (reservesOLAS * 10 ** 18) / totalSupply;
+};
+
 export const useDepositTokenManagement = () => {
   const nodeProvider = useManagementProvider();
   const { getWhirlpoolData } = useWhirlpool();
-  const { svmWalletPublicKey } = useSvmConnectivity();
+  const { svmWalletPublicKey, connection, wallet } = useSvmConnectivity();
 
   const program = new Program(idl, PROGRAM_ID, nodeProvider);
   const userWallet = null; // TODO: need to fix this because it requires secret key
@@ -154,19 +216,6 @@ export const useDepositTokenManagement = () => {
     const { whirlpoolTokenA, whirlpoolTokenB } = await getWhirlpoolData();
     const quote = depositIncreaseLiquidityQuote({ wsol, slippage });
 
-    // Get the ATA of the userWallet address, and if it does not exist, create it
-    // This account will have bridged tokens
-    const bridgedTokenAccount = await getOrCreateAssociatedTokenAccount(
-      nodeProvider.connection,
-      userWallet,
-      BRIDGED_TOKEN_MINT,
-      svmWalletPublicKey,
-    );
-    console.log(
-      'User ATA for bridged:',
-      bridgedTokenAccount.address.toBase58(),
-    );
-
     const tokenOwnerAccountA = await getAssociatedTokenAddress(
       whirlpoolTokenA.mint,
       svmWalletPublicKey,
@@ -177,6 +226,9 @@ export const useDepositTokenManagement = () => {
       svmWalletPublicKey,
     );
 
+    console.log('Token Owner Account A:', tokenOwnerAccountA.toString());
+    console.log('Token Owner Account B:', tokenOwnerAccountB.toString());
+
     // Check if the user has the correct token account
     // and it is required to deposit
     if (
@@ -184,8 +236,46 @@ export const useDepositTokenManagement = () => {
       || tokenOwnerAccountB === SVM_EMPTY_ADDRESS
     ) {
       notifyError('You do not have the correct token account');
-      return;
+      // return;
     }
+
+    /**
+     * resources:
+     * 1. https://solana.stackexchange.com/a/2797 - Need to build from scratch
+     * 2.
+     */
+
+    // const associatedBridgeTokenAccount = await getAssociatedTokenAddress(
+    //   BRIDGED_TOKEN_MINT,
+    //   svmWalletPublicKey,
+    // );
+
+    // console.log('Associated Bridge Token Account:', associatedBridgeTokenAccount.toString());
+
+    // const bridgedTokenAccount = await createAssociatedTokenAccount(
+    //   connection,
+    //   // getMyKeyPair(),
+    //   svmWalletPublicKey,
+    //   BRIDGED_TOKEN_MINT,
+    //   svmWalletPublicKey,
+    // );
+    // console.log(
+    //   'Trying to trigger createAssociatedTokenAccount for bridged:',
+    //   bridgedTokenAccount.address.toBase58(),
+    // );
+
+    // Get the ATA of the userWallet address, and if it does not exist, create it
+    // This account will have bridged tokens
+    const bridgedTokenAccount = await getOrCreateAssociatedTokenAccount(
+      connection,
+      wallet, // userWallet,
+      BRIDGED_TOKEN_MINT,
+      svmWalletPublicKey,
+    );
+    console.log(
+      'User ATA for bridged:',
+      bridgedTokenAccount.address.toBase58(),
+    );
 
     try {
       const signature = await program.methods

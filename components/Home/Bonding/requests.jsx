@@ -28,6 +28,7 @@ import {
   getProductValueFromEvent,
   getLpTokenWithDiscount,
 } from './requestsHelpers';
+import { getWhirlPoolInformation } from './TokenManagement/useTokenManagement';
 
 const LP_PAIRS = {
   // gnosis-chain
@@ -56,6 +57,14 @@ const LP_PAIRS = {
     dex: DEX.BALANCER,
     poolId:
       '0xaf8912a3c4f55a8584b67df30ee0ddf0e60e01f80002000000000000000004fc',
+  },
+  // solana
+  '-1': {
+    lpChainId: -1, // 126922396888673 (solana), 7565164 (sol)
+    name: 'OLAS-WSOL',
+    originAddress: '', // origin address is the position (TODO: will be sent later)
+    dex: DEX.SOLANA,
+    poolId: '5dMKUYJDsjZkAD3wiV3ViQkuq9pSmWQ5eAzcQLtDnUT3', // whirlpool address
   },
 };
 
@@ -149,7 +158,7 @@ const getLpTokenDetailsFn = async (address) => {
     (key) => key === address,
   );
 
-  // if the address is in the LP_PAIRS list (for now, just gnosis-chain)
+  // if the address is in the LP_PAIRS list
   if (currentLpPairDetails) {
     return { ...LP_PAIRS[address] };
   }
@@ -228,6 +237,10 @@ const getLpTokenNamesForProducts = async (productList, events) => {
         }
       }
 
+      if (lpTokenDetailsList[index].dex === DEX.SOLANA) {
+        return 'https://v1.orca.so/liquidity/browse?tokenMint=Ez3nzG9ofodYCvEmw73XhQ87LWNYVRM2s7diB5tBZPyM&tokenMint=So11111111111111111111111111111111111111112'; // TODO: mohan will fix it
+      }
+
       return new Error('Dex not supported');
     };
 
@@ -249,6 +262,10 @@ const getLpTokenNamesForProducts = async (productList, events) => {
         if (lpChainId === 42161) {
           return `https://arbiscan.io/address/${ADDRESSES[lpChainId].balancerVault}#readContract#F10`;
         }
+      }
+
+      if (lpTokenDetailsList[index].dex === DEX.SOLANA) {
+        return `https://solscan.io/account/${ADDRESSES[lpChainId].balancerVault}`;
       }
 
       return new Error('Dex not supported');
@@ -285,6 +302,13 @@ const getCurrentPriceBalancerFn = async (tokenAddress) => {
 };
 const getCurrentPriceBalancer = memoize(getCurrentPriceBalancerFn);
 
+const getCurrentPriceWhirlpoolFn = async (tokenAddress) => {
+  const { poolId } = await getLpTokenDetails(tokenAddress);
+  const priceLP = await getWhirlPoolInformation(poolId); // TODO: pass connection as first argument
+  return priceLP;
+};
+const getCurrentPriceWhirlpool = memoize(getCurrentPriceWhirlpoolFn);
+
 const getCurrentLpPriceForProducts = async (productList) => {
   const contract = getDepositoryContract();
 
@@ -313,6 +337,9 @@ const getCurrentLpPriceForProducts = async (productList) => {
         // } else
         if (dex === DEX.BALANCER) {
           currentLpPrice = getCurrentPriceBalancer(productList[i].token);
+          currentLpPricePromiseList.push(currentLpPrice);
+        } else if (dex === DEX.SOLANA) {
+          currentLpPrice = getCurrentPriceWhirlpool(productList[i].token);
           currentLpPricePromiseList.push(currentLpPrice);
         } else {
           throw new Error('Dex not supported');

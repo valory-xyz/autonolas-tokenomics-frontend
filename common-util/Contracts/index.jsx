@@ -78,6 +78,13 @@ export const ADDRESSES = {
     balancerVault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
   },
 
+  // solana
+  '-1': {
+    olasAddress: 'Ez3nzG9ofodYCvEmw73XhQ87LWNYVRM2s7diB5tBZPyM', // TODO: repeated in other places
+    balancerVault: '5dMKUYJDsjZkAD3wiV3ViQkuq9pSmWQ5eAzcQLtDnUT3', // it is whirpool address
+    wsolAddress: 'So11111111111111111111111111111111111111112',
+  },
+
   [LOCAL_CHAIN_ID]: LOCAL_ADDRESSES,
   [LOCAL_FORK_ID]: MAINNET_ADDRESSES,
 };

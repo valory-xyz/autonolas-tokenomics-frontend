@@ -28,6 +28,7 @@ export const WsolTokenManagement = ({ lpToken, lpTokenLink }) => {
         onCancel={() => setIsManageModalVisible(false)}
         footer={null}
         width={600}
+        destroyOnClose
       >
         <Tabs
           defaultActiveKey="1"
