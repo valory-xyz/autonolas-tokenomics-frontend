@@ -5,32 +5,34 @@ import { areAddressesEqual } from '@autonolas/frontend-library';
 
 import { DEX } from 'util/constants';
 import {
-  MAX_AMOUNT,
   ADDRESS_ZERO,
   ONE_ETH,
   getEthersProvider,
-  sendTransaction,
   getChainId,
   isL1Network,
   parseToEth,
   delay,
+  notifySpecificError,
 } from 'common-util/functions';
 import {
   getDepositoryContract,
   getUniswapV2PairContract,
   getTokenomicsContract,
   getErc20Contract,
-  getGenericBondCalculatorContract,
   ADDRESSES,
   RPC_URLS,
 } from 'common-util/Contracts';
+import { useHelpers } from 'common-util/hooks/useHelpers';
+import { useCallback, useEffect, useState } from 'react';
 import {
   getProductValueFromEvent,
   getLpTokenWithDiscount,
-} from './requestsHelpers';
-import { getWhirlPoolInformation } from './TokenManagement/useTokenManagement';
+  getLpTokenLink,
+  getCurrentPriceLpLink,
+} from './utils';
+import { getWhirlPoolInformation } from '../TokenManagement/useTokenManagement';
 
-const LP_PAIRS = {
+export const LP_PAIRS = {
   // gnosis-chain
   '0x27df632fd0dcf191C418c803801D521cd579F18e': {
     lpChainId: 100,
@@ -59,12 +61,12 @@ const LP_PAIRS = {
       '0xaf8912a3c4f55a8584b67df30ee0ddf0e60e01f80002000000000000000004fc',
   },
   // solana
-  '-1': {
+  svm: {
     lpChainId: -1, // 126922396888673 (solana), 7565164 (sol)
     name: 'OLAS-WSOL',
     originAddress: '', // origin address is the position (TODO: will be sent later)
     dex: DEX.SOLANA,
-    poolId: '5dMKUYJDsjZkAD3wiV3ViQkuq9pSmWQ5eAzcQLtDnUT3', // whirlpool address
+    poolId: ADDRESSES.svm.balancerVault,
   },
 };
 
@@ -87,9 +89,9 @@ const getLastIDFRequest = async () => {
 const getBondingProgramsRequest = async ({ isActive }) => {
   const contract = getDepositoryContract();
   const response = await contract.methods.getProducts(isActive).call();
-  console.log('response', response);
-  // return response;
-  return ['125'];
+  return response;
+  // console.log('response', response);
+  // return ['125'];
 };
 
 /**
@@ -217,66 +219,23 @@ const getLpTokenNamesForProducts = async (productList, events) => {
 
   return productList.map((component, index) => {
     const { name, poolId, lpChainId } = lpTokenDetailsList[index];
-
-    const getLpTokenLink = () => {
-      if (lpTokenDetailsList[index].dex === DEX.UNISWAP) {
-        return `https://v2.info.uniswap.org/pair/${component.token}`;
-      }
-
-      if (lpTokenDetailsList[index].dex === DEX.BALANCER) {
-        if (lpChainId === 100) {
-          return `https://app.balancer.fi/#/gnosis-chain/pool/${poolId}`;
-        }
-
-        if (lpChainId === 137) {
-          return `https://app.balancer.fi/#/polygon/pool/${poolId}`;
-        }
-
-        if (lpChainId === 42161) {
-          return `https://app.balancer.fi/#/arbitrum/pool/${poolId}`;
-        }
-      }
-
-      if (lpTokenDetailsList[index].dex === DEX.SOLANA) {
-        return 'https://v1.orca.so/liquidity/browse?tokenMint=Ez3nzG9ofodYCvEmw73XhQ87LWNYVRM2s7diB5tBZPyM&tokenMint=So11111111111111111111111111111111111111112'; // TODO: mohan will fix it
-      }
-
-      return new Error('Dex not supported');
-    };
-
-    const getCurrentPriceLpLink = () => {
-      if (lpTokenDetailsList[index].dex === DEX.UNISWAP) {
-        const depositoryAddress = ADDRESSES[lpChainId].depository;
-        return `https://etherscan.io/address/${depositoryAddress}#readContract#F7`;
-      }
-
-      if (lpTokenDetailsList[index].dex === DEX.BALANCER) {
-        if (lpChainId === 100) {
-          return `https://gnosisscan.io/address/${ADDRESSES[lpChainId].balancerVault}#readContract#F10`;
-        }
-
-        if (lpChainId === 137) {
-          return `https://polygonscan.com/address/${ADDRESSES[lpChainId].balancerVault}#readContract#F10`;
-        }
-
-        if (lpChainId === 42161) {
-          return `https://arbiscan.io/address/${ADDRESSES[lpChainId].balancerVault}#readContract#F10`;
-        }
-      }
-
-      if (lpTokenDetailsList[index].dex === DEX.SOLANA) {
-        return `https://solscan.io/account/${ADDRESSES[lpChainId].balancerVault}`;
-      }
-
-      return new Error('Dex not supported');
-    };
+    const lpTokenLink = getLpTokenLink({
+      lpDex: lpTokenDetailsList[index].dex,
+      lpChainId,
+      lpPoolId: poolId,
+      productName: component.token,
+    });
+    const currentPriceLpLink = getCurrentPriceLpLink({
+      lpDex: lpTokenDetailsList[index].dex,
+      lpChainId,
+    });
 
     return {
       ...component,
       lpChainId,
       lpTokenName: name,
-      lpTokenLink: getLpTokenLink(),
-      currentPriceLpLink: getCurrentPriceLpLink(),
+      lpTokenLink,
+      currentPriceLpLink,
     };
   });
 };
@@ -356,7 +315,7 @@ const getCurrentLpPriceForProducts = async (productList) => {
   }));
 };
 
-export const getListWithSupplyList = async (
+const getListWithSupplyList = async (
   list,
   createProductEvents,
   closedProductEvents = [],
@@ -496,65 +455,52 @@ export const getProductListRequest = async ({ isActive }, retry) => {
   return productList;
 };
 
-export const hasSufficientTokenRequest = async ({
-  account,
-  chainId,
-  token: productToken,
-  tokenAmount,
-}) => {
-  const contract = getUniswapV2PairContract(productToken);
-  const treasuryAddress = ADDRESSES[chainId].treasury;
-  const response = await contract.methods
-    .allowance(account, treasuryAddress)
-    .call();
+export const useProducts = ({ isActive }) => {
+  const { chainId } = useHelpers();
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorState, setErrorState] = useState(false);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [retry, setRetry] = useState(0);
 
-  // if allowance is greater than or equal to token amount
-  // then user has sufficient token
-  const hasEnoughAllowance = ethers.BigNumber.from(response).gte(
-    ethers.BigNumber.from(tokenAmount),
-  );
-  return hasEnoughAllowance;
-};
+  // if productDetails is `not null`, then open the deposit modal
+  const [productDetails, setProductDetails] = useState(null);
 
-/**
- * Approves the treasury contract to spend the token
- */
-export const approveRequest = async ({ account, chainId, token }) => {
-  const contract = getUniswapV2PairContract(token);
-  const treasuryAddress = ADDRESSES[chainId].treasury;
+  const depositoryAddress = ADDRESSES[chainId].depository;
 
-  const fn = contract.methods
-    .approve(treasuryAddress, MAX_AMOUNT)
-    .send({ from: account });
+  const getProducts = useCallback(async () => {
+    try {
+      setErrorState(false);
+      setIsLoading(true);
 
-  const response = await sendTransaction(fn, account);
-  return response;
-};
+      const filteredProductList = await getProductListRequest(
+        { isActive },
+        retry,
+      );
+      setFilteredProducts(filteredProductList);
+    } catch (e) {
+      const errorMessage = typeof e?.message === 'string' ? e.message : null;
+      setErrorState(true);
+      notifySpecificError('Error while fetching products', errorMessage);
+      console.error(e, errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [retry, isActive]);
 
-/**
- * Deposits the token
- */
-export const depositRequest = async ({ account, productId, tokenAmount }) => {
-  const contract = getDepositoryContract();
+  // fetch the bonding list
+  useEffect(() => {
+    getProducts();
+  }, [getProducts]);
 
-  const fn = contract.methods
-    .deposit(productId, tokenAmount)
-    .send({ from: account });
-
-  const response = await sendTransaction(fn, account);
-  return response?.transactionHash;
-};
-
-export const getLpBalanceRequest = async ({ account, token }) => {
-  const contract = getUniswapV2PairContract(token);
-  const response = await contract.methods.balanceOf(account).call();
-  return response.toString();
-};
-
-export const bondCalculationRequest = async ({ tokenAmount, priceLP }) => {
-  const contract = getGenericBondCalculatorContract();
-  const response = await contract.methods
-    .calculatePayoutOLAS(tokenAmount, priceLP)
-    .call();
-  return response;
+  return {
+    isLoading,
+    errorState,
+    filteredProducts,
+    retry,
+    setRetry,
+    productDetails,
+    setProductDetails,
+    depositoryAddress,
+    refetch: getProducts,
+  };
 };

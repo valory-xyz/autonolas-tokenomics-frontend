@@ -79,9 +79,9 @@ export const ADDRESSES = {
   },
 
   // solana
-  '-1': {
-    olasAddress: 'Ez3nzG9ofodYCvEmw73XhQ87LWNYVRM2s7diB5tBZPyM', // TODO: repeated in other places
-    balancerVault: '5dMKUYJDsjZkAD3wiV3ViQkuq9pSmWQ5eAzcQLtDnUT3', // it is whirpool address
+  svm: {
+    olasAddress: 'Ez3nzG9ofodYCvEmw73XhQ87LWNYVRM2s7diB5tBZPyM',
+    balancerVault: '5dMKUYJDsjZkAD3wiV3ViQkuq9pSmWQ5eAzcQLtDnUT3', // whirpool address
     wsolAddress: 'So11111111111111111111111111111111111111112',
   },
 

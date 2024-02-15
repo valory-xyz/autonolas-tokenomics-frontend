@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import {
   Button,
@@ -20,13 +19,12 @@ import {
 import styled from 'styled-components';
 
 import { BONDING_PRODUCTS } from 'util/constants';
-import { notifySpecificError, parseToEth } from 'common-util/functions';
+import { parseToEth } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
-import { ADDRESSES } from 'common-util/Contracts';
-import { Deposit } from './Deposit';
-import { WsolTokenManagement } from './TokenManagement/WsolTokenManagement';
-import { getProductListRequest } from './requests';
-import { getLpTokenWithDiscount } from './requestsHelpers';
+import { Deposit } from '../Deposit/Deposit';
+import { WsolTokenManagement } from '../TokenManagement/WsolTokenManagement';
+import { LP_PAIRS, useProducts } from './useBondingList';
+import { getLpTokenWithDiscount } from './utils';
 
 const { Text } = Typography;
 
@@ -67,6 +65,7 @@ const getColumns = (
       title: 'Network',
       dataIndex: 'lpChainId',
       key: 'lpChainId',
+      width: 140,
       render: (x) => {
         if (x === 42161) return 'Arbitrum';
         return getNetworkName(x);
@@ -77,17 +76,20 @@ const getColumns = (
       dataIndex: 'lpTokenName',
       key: 'lpTokenName',
       width: 180,
-      // TODO: temporary fix for OLAS-WSOL LP Token, should be removed after fixing LP pairs
-      // if (x !== 'OLAS-WMATIC') {
-      //   return (
-      //     <a href={data.lpTokenLink} target="_blank" rel="noreferrer">
-      //       {x}
-      //     </a>
-      //   );
-      // }
-      render: (x, data) => (
-        <WsolTokenManagement lpToken={x} lpTokenLink={data.lpTokenLink} />
-      ),
+
+      render: (x, data) => {
+        if (x === LP_PAIRS.svm.name) {
+          return (
+            <WsolTokenManagement lpToken={x} lpTokenLink={data.lpTokenLink} />
+          );
+        }
+
+        return (
+          <a href={data.lpTokenLink} target="_blank" rel="noreferrer">
+            {x}
+          </a>
+        );
+      },
     },
     {
       title: getTitle('Current Price of LP Token', 'Denominated in OLAS'),
@@ -166,7 +168,7 @@ const getColumns = (
       ),
       dataIndex: 'supply',
       key: 'supply',
-      width: 170,
+      width: 200,
       render: (x, row) => {
         const supplyLeftInPercent = isNaN(row.supplyLeft)
           ? 0
@@ -262,42 +264,21 @@ const ThisCanTakeUpTo30Seconds = () => (
 );
 
 export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
-  const { account, chainId } = useHelpers();
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorState, setErrorState] = useState(false);
-  const [filteredProducts, setFilteredProducts] = useState([]);
-  const [retry, setRetry] = useState(0);
-
-  // if productDetails is `not null`, then open the deposit modal
-  const [productDetails, setProductDetails] = useState(null);
+  const { account } = useHelpers();
 
   const isActive = bondingProgramType === BONDING_PRODUCTS.ACTIVE;
-  const depositoryAddress = ADDRESSES[chainId].depository;
 
-  const getProducts = async () => {
-    try {
-      setErrorState(false);
-      setIsLoading(true);
-
-      const filteredProductList = await getProductListRequest(
-        { isActive },
-        retry,
-      );
-      setFilteredProducts(filteredProductList);
-    } catch (error) {
-      const errorMessage = typeof error?.message === 'string' ? error.message : null;
-      setErrorState(true);
-      notifySpecificError('Error while fetching products', errorMessage);
-      console.error(error, errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // fetch the bonding list
-  useEffect(() => {
-    getProducts();
-  }, [account, chainId, bondingProgramType, retry]);
+  const {
+    isLoading,
+    errorState,
+    filteredProducts,
+    retry,
+    setRetry,
+    productDetails,
+    setProductDetails,
+    depositoryAddress,
+    refetch,
+  } = useProducts({ isActive });
 
   const onBondClick = (row) => {
     setProductDetails(row);
@@ -391,7 +372,7 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
             productDetails?.discount,
           )}
           productSupply={productDetails?.supply}
-          getProducts={getProducts}
+          getProducts={refetch}
           closeModal={onModalClose}
         />
       )}

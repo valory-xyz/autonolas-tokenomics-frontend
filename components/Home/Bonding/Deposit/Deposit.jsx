@@ -14,12 +14,7 @@ import {
 
 import { parseToWei, parseToEth, ONE_ETH } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
-import {
-  depositRequest,
-  hasSufficientTokenRequest,
-  approveRequest,
-  getLpBalanceRequest,
-} from './requests';
+import { useDeposit } from './useDeposit';
 
 const { Text } = Typography;
 const fullWidth = { width: '100%' };
@@ -32,19 +27,23 @@ export const Deposit = ({
   getProducts,
   closeModal,
 }) => {
-  const { account, chainId } = useHelpers();
+  const { account } = useHelpers();
   const [form] = Form.useForm();
   const [isLoading, setIsLoading] = useState(false);
   const [isApproveModalVisible, setIsApproveModalVisible] = useState(false);
   const [lpBalance, setLpBalance] = useState(0);
 
+  const {
+    getLpBalanceRequest,
+    depositRequest,
+    approveRequest,
+    hasSufficientTokenRequest,
+  } = useDeposit();
+
   useEffect(() => {
     const getData = async () => {
       try {
-        const lpResponse = await getLpBalanceRequest({
-          account,
-          token: productToken,
-        });
+        const lpResponse = await getLpBalanceRequest({ token: productToken });
 
         setLpBalance(lpResponse);
       } catch (error) {
@@ -56,7 +55,7 @@ export const Deposit = ({
     if (account) {
       getData();
     }
-  }, [account, productToken]);
+  }, [account, productToken, getLpBalanceRequest]);
 
   const depositHelper = async () => {
     try {
@@ -64,7 +63,6 @@ export const Deposit = ({
 
       // deposit if LP token is present for the product ID
       const txHash = await depositRequest({
-        account,
         productId,
         tokenAmount: parseToWei(form.getFieldValue('tokenAmount')),
       });
@@ -91,8 +89,6 @@ export const Deposit = ({
         // check allowance of the product ID and open approve modal if not approved
         try {
           const hasSufficientAllowance = await hasSufficientTokenRequest({
-            account,
-            chainId,
             token: productToken,
             tokenAmount: parseToWei(values.tokenAmount),
           });
@@ -252,11 +248,7 @@ export const Deposit = ({
               onClick={async () => {
                 try {
                   setIsLoading(true);
-                  await approveRequest({
-                    account,
-                    chainId,
-                    token: productToken,
-                  });
+                  await approveRequest({ token: productToken });
 
                   // once approved, close the modal and call deposit helper
                   setIsApproveModalVisible(false);

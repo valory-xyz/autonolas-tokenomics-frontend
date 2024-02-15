@@ -17,7 +17,6 @@ import {
   AccountLayout,
   getAssociatedTokenAddress,
   getOrCreateAssociatedTokenAccount,
-  createAssociatedTokenAccount,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import {
@@ -29,14 +28,14 @@ import {
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
 import { ADDRESSES } from 'common-util/Contracts';
 import { round } from 'lodash';
-import { SVM_EMPTY_ADDRESS, getMyKeyPair } from './utils';
+import { SVM_EMPTY_ADDRESS } from './utils';
 
 const PROGRAM_ID = new web3.PublicKey(
   '7ahQGWysExobjeZ91RTsNqTCN3kWyHGZ43ud2vB7VVoZ',
 );
 const ORCA = new web3.PublicKey('whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc');
 const WHIRLPOOL = new web3.PublicKey(
-  '5dMKUYJDsjZkAD3wiV3ViQkuq9pSmWQ5eAzcQLtDnUT3',
+  ADDRESSES.svm.balancerVault,
 );
 const SOL = new web3.PublicKey('So11111111111111111111111111111111111111112');
 const NODE_WALLET = new NodeWallet(Keypair.generate());
@@ -140,26 +139,6 @@ export const getWhirlPoolInformation = async (connection, whirlpool) => {
 
   const priceLP = round((Decimal(reserveOlas) / Decimal(totalSupply)) * 2, 18);
   return priceLP;
-
-  // const reserveToken0 = (await whirlpoolCtx.fetcher.getPoolTokenAccount(whirlpoolTokenA.mint)).amount;
-  // for tick in tick_array_lower.ticks:
-  //     current_supply += tick.liquidity_net
-  // if REVERSE:
-  //     reserve_token0 = (await ctx.fetcher.get_token_account(whirlpool.token_vault_a)).amount
-  //     reserve_token1 = (await ctx.fetcher.get_token_account(whirlpool.token_vault_b)).amount
-  //     currentOLASPrice = (reserve_token0 / (reserve_token1 * 10 **(decimals_a - decimals_b)))
-  //     currentPriceLP = round(Decimal(reserve_token1) / Decimal(current_supply) * 2, 18)
-  // else:
-  //     reserve_token0 = (await ctx.fetcher.get_token_account(whirlpool.token_vault_a)).amount
-  //     reserve_token1 = (await ctx.fetcher.get_token_account(whirlpool.token_vault_b)).amount
-  //     currentOLASPrice = (reserve_token1 / (reserve_token0 * 10 **(decimals_b - decimals_a)))
-  //     currentPriceLP = round(Decimal(reserve_token0) / Decimal(current_supply) * 2, 18)
-
-  // const totalSupply = pool.totalShares;
-  // const reservesOLAS = (areAddressesEqual(pool.tokens[0].address, ADDRESSES[lpChainId].olasAddress)
-  //   ? pool.tokens[0].balance
-  //   : pool.tokens[1].balance) * 1.0;
-  // const priceLP = (reservesOLAS * 10 ** 18) / totalSupply;
 };
 
 export const useDepositTokenManagement = () => {
@@ -168,7 +147,7 @@ export const useDepositTokenManagement = () => {
   const { svmWalletPublicKey, connection, wallet } = useSvmConnectivity();
 
   const program = new Program(idl, PROGRAM_ID, nodeProvider);
-  const userWallet = null; // TODO: need to fix this because it requires secret key
+  // const userWallet = null; // TODO: need to fix this because it requires secret key
 
   const depositIncreaseLiquidityQuote = async ({ wsol, slippage }) => {
     const { whirlpoolData, whirlpoolTokenA, whirlpoolTokenB } = await getWhirlpoolData();
