@@ -5,6 +5,7 @@ import { AnchorProvider } from '@project-serum/anchor';
 import NodeWallet from '@project-serum/anchor/dist/cjs/nodewallet';
 import { DecimalUtil, Percentage } from '@orca-so/common-sdk';
 import Decimal from 'decimal.js';
+import { round } from 'lodash';
 import {
   WhirlpoolContext,
   buildWhirlpoolClient,
@@ -27,16 +28,14 @@ import {
 
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
 import { ADDRESSES } from 'common-util/Contracts';
-import { round } from 'lodash';
 import { SVM_EMPTY_ADDRESS } from './utils';
+import { useGetOrCreateAssociatedTokenAccount } from './useGetOrCreateAssociatedTokenAccount';
 
 const PROGRAM_ID = new web3.PublicKey(
   '7ahQGWysExobjeZ91RTsNqTCN3kWyHGZ43ud2vB7VVoZ',
 );
 const ORCA = new web3.PublicKey('whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc');
-const WHIRLPOOL = new web3.PublicKey(
-  ADDRESSES.svm.balancerVault,
-);
+const WHIRLPOOL = new web3.PublicKey(ADDRESSES.svm.balancerVault);
 const SOL = new web3.PublicKey('So11111111111111111111111111111111111111112');
 const NODE_WALLET = new NodeWallet(Keypair.generate());
 const BRIDGED_TOKEN_MINT = new web3.PublicKey(
@@ -101,50 +100,57 @@ const useWhirlpool = () => {
     const whirlpoolTokenB = whirlpoolClient.getTokenBInfo();
 
     return { whirlpoolData, whirlpoolTokenA, whirlpoolTokenB };
-  }, []);
+  }, [nodeProvider]);
 
   return { getWhirlpoolData };
 };
 
-// TODO: reuse the function somehow because it is needed for bonding list page
-export const getWhirlPoolInformation = async (connection, whirlpool) => {
-  const nodeProvider = new AnchorProvider(connection, NODE_WALLET, {
-    commitment: 'processed',
-  });
+export const useWhirlPoolInformation = () => {
+  const { connection } = useSvmConnectivity();
 
-  const whirlpoolCtx = WhirlpoolContext.withProvider(nodeProvider, ORCA);
-  const client = buildWhirlpoolClient(whirlpoolCtx);
-  const whirlpoolClient = await client.getPool(whirlpool);
+  return useCallback(
+    async (whirlpool) => {
+      const nodeProvider = new AnchorProvider(connection, NODE_WALLET, {
+        commitment: 'processed',
+      });
 
-  const whirlpoolTokenA = whirlpoolClient.getTokenAInfo();
-  const whirlpoolTokenB = whirlpoolClient.getTokenBInfo();
+      const whirlpoolCtx = WhirlpoolContext.withProvider(nodeProvider, ORCA);
+      const client = buildWhirlpoolClient(whirlpoolCtx);
+      const whirlpoolClient = await client.getPool(whirlpool);
 
-  // return { whirlpoolData, whirlpoolTokenA, whirlpoolTokenB };
+      const whirlpoolTokenA = whirlpoolClient.getTokenAInfo();
+      const whirlpoolTokenB = whirlpoolClient.getTokenBInfo();
 
-  const tickArrayLower = await whirlpoolCtx.fetcher.getTickArray(
-    TICK_ARRAY_LOWER,
+      const tickArrayLower = await whirlpoolCtx.fetcher.getTickArray(
+        TICK_ARRAY_LOWER,
+      );
+
+      let totalSupply = 0;
+      for (let i = 0; i < tickArrayLower.ticks.length; i += 1) {
+        totalSupply += tickArrayLower.ticks[i].liquidityNet;
+      }
+
+      const address1 = whirlpoolTokenA.mint.toString();
+      const address2 = ADDRESSES.svm.olasAddress;
+      const reserveOlas = (areAddressesEqual(address1, address2)
+        ? whirlpoolTokenA.supply
+        : whirlpoolTokenB.supply) * 1.0;
+
+      const priceLP = round(
+        (Decimal(reserveOlas) / Decimal(totalSupply)) * 2,
+        18,
+      );
+      return priceLP;
+    },
+    [connection],
   );
-
-  let totalSupply = 0;
-  for (let i = 0; i < tickArrayLower.ticks.length; i += 1) {
-    totalSupply += tickArrayLower.ticks[i].liquidityNet;
-  }
-
-  const reserveOlas = (areAddressesEqual(
-    whirlpoolTokenA.mint.toString(),
-    ADDRESSES[-1].olasAddress, // TODO: if -1 is changed, update here
-  )
-    ? whirlpoolTokenA.supply
-    : whirlpoolTokenB.supply) * 1.0;
-
-  const priceLP = round((Decimal(reserveOlas) / Decimal(totalSupply)) * 2, 18);
-  return priceLP;
 };
 
 export const useDepositTokenManagement = () => {
   const nodeProvider = useManagementProvider();
   const { getWhirlpoolData } = useWhirlpool();
-  const { svmWalletPublicKey, connection, wallet } = useSvmConnectivity();
+  const { svmWalletPublicKey } = useSvmConnectivity();
+  const customGetOrCreateAssociatedTokenAccount = useGetOrCreateAssociatedTokenAccount();
 
   const program = new Program(idl, PROGRAM_ID, nodeProvider);
   // const userWallet = null; // TODO: need to fix this because it requires secret key
@@ -218,36 +224,7 @@ export const useDepositTokenManagement = () => {
       // return;
     }
 
-    /**
-     * resources:
-     * 1. https://solana.stackexchange.com/a/2797 - Need to build from scratch
-     * 2.
-     */
-
-    // const associatedBridgeTokenAccount = await getAssociatedTokenAddress(
-    //   BRIDGED_TOKEN_MINT,
-    //   svmWalletPublicKey,
-    // );
-
-    // console.log('Associated Bridge Token Account:', associatedBridgeTokenAccount.toString());
-
-    // const bridgedTokenAccount = await createAssociatedTokenAccount(
-    //   connection,
-    //   // getMyKeyPair(),
-    //   svmWalletPublicKey,
-    //   BRIDGED_TOKEN_MINT,
-    //   svmWalletPublicKey,
-    // );
-    // console.log(
-    //   'Trying to trigger createAssociatedTokenAccount for bridged:',
-    //   bridgedTokenAccount.address.toBase58(),
-    // );
-
-    // Get the ATA of the userWallet address, and if it does not exist, create it
-    // This account will have bridged tokens
-    const bridgedTokenAccount = await getOrCreateAssociatedTokenAccount(
-      connection,
-      wallet, // userWallet,
+    const bridgedTokenAccount = await customGetOrCreateAssociatedTokenAccount(
       BRIDGED_TOKEN_MINT,
       svmWalletPublicKey,
     );
@@ -255,6 +232,11 @@ export const useDepositTokenManagement = () => {
       'User ATA for bridged:',
       bridgedTokenAccount.address.toBase58(),
     );
+
+    if (!bridgedTokenAccount) {
+      notifyError('You do not have the bridged token account yet');
+      return;
+    }
 
     try {
       const signature = await program.methods

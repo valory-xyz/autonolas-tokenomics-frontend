@@ -1,17 +1,16 @@
+import { useCallback, useEffect, useState } from 'react';
 import { ethers } from 'ethers';
+import { memoize, round, get } from 'lodash';
 import { BalancerSDK } from '@balancer-labs/sdk';
-import { memoize, round } from 'lodash';
 import { areAddressesEqual } from '@autonolas/frontend-library';
 
 import { DEX } from 'util/constants';
 import {
   ADDRESS_ZERO,
   ONE_ETH,
-  getEthersProvider,
   getChainId,
   isL1Network,
   parseToEth,
-  delay,
   notifySpecificError,
 } from 'common-util/functions';
 import {
@@ -23,14 +22,18 @@ import {
   RPC_URLS,
 } from 'common-util/Contracts';
 import { useHelpers } from 'common-util/hooks/useHelpers';
-import { useCallback, useEffect, useState } from 'react';
+
 import {
   getProductValueFromEvent,
   getLpTokenWithDiscount,
   getLpTokenLink,
   getCurrentPriceLpLink,
+  getProductEvents,
 } from './utils';
-import { getWhirlPoolInformation } from '../TokenManagement/useTokenManagement';
+import { useWhirlPoolInformation } from '../TokenManagement/useTokenManagement';
+
+const { BigNumber } = ethers;
+const SUPPLY = 'returnValues.supply';
 
 export const LP_PAIRS = {
   // gnosis-chain
@@ -86,60 +89,6 @@ const getLastIDFRequest = async () => {
   return discount;
 };
 
-const getBondingProgramsRequest = async ({ isActive }) => {
-  const contract = getDepositoryContract();
-  const response = await contract.methods.getProducts(isActive).call();
-  return response;
-  // console.log('response', response);
-  // return ['125'];
-};
-
-/**
- * returns events for the product creation
- */
-const getProductEventsFn = async (eventName, retry) => {
-  const contract = getDepositoryContract();
-  const provider = getEthersProvider();
-  const block = await provider.getBlock('latest');
-
-  // handle forked chains with very high chain IDs because they are
-  // bad at handling large event lookbacks, hence 50 blocks.
-  // Also, previous 200000 blocks means approximately 200000 * 15s = 50 days
-  // Try to adjust the lookbackBlockCount if you are running into issues
-  // such as events not being fetched.
-  const lookbackBlockCount = (getChainId() || 1) >= 100000 ? 50 : 300000;
-  const chunkSize = retry > 0 ? 500 : 50000;
-  const eventPromises = [];
-  const delayBetweenRequestsInMs = 100;
-
-  for (
-    let fromBlock = block.number - lookbackBlockCount;
-    fromBlock <= block.number;
-    fromBlock += chunkSize
-  ) {
-    const toBlock = Math.min(fromBlock + chunkSize - 1, block.number);
-    eventPromises.push(
-      contract
-        .getPastEvents(eventName, {
-          fromBlock,
-          toBlock,
-        })
-        .then((events) => ({ fromBlock, toBlock, events })),
-    );
-  }
-
-  // Introduce delays between each chunk request without using await inside the loop
-  const eventsChunks = await Promise.all(
-    /* eslint-disable-next-line max-len */
-    eventPromises.map((p, index) => p.then((result) => delay(index * delayBetweenRequestsInMs).then(() => result.events))),
-  );
-
-  const events = eventsChunks.flat();
-
-  return events;
-};
-const getProductEvents = memoize(getProductEventsFn);
-
 /**
  * Fetches detials of the LP token.
  * The token needs to distinguish between the one on the ETH mainnet
@@ -153,7 +102,7 @@ const getProductEvents = memoize(getProductEventsFn);
  *  poolId
  * }
  */
-const getLpTokenDetailsFn = async (address) => {
+const getLpTokenDetails = memoize(async (address) => {
   const chainId = getChainId();
 
   const currentLpPairDetails = Object.keys(LP_PAIRS).find(
@@ -193,8 +142,97 @@ const getLpTokenDetailsFn = async (address) => {
     dex: DEX.UNISWAP,
     poolId: null,
   };
+});
+
+const getCurrentPriceBalancerFn = memoize(async (tokenAddress) => {
+  const { lpChainId, poolId } = await getLpTokenDetails(tokenAddress);
+  const balancerConfig = { network: lpChainId, rpcUrl: RPC_URLS[lpChainId] };
+  const balancer = new BalancerSDK(balancerConfig);
+  const pool = await balancer.pools.find(poolId);
+
+  if (!pool) {
+    throw new Error(
+      `Pool not found on Balancer for poolId: ${poolId} and chainId: ${lpChainId}.`,
+    );
+  }
+
+  const totalSupply = pool.totalShares;
+  const firstPoolTokenAddress = pool.tokens[0].address;
+  const olasTokenAddress = ADDRESSES[lpChainId].olasAddress;
+  const reservesOLAS = (areAddressesEqual(firstPoolTokenAddress, olasTokenAddress)
+    ? pool.tokens[0].balance
+    : pool.tokens[1].balance) * 1.0;
+  const priceLP = (reservesOLAS * 10 ** 18) / totalSupply;
+  return priceLP;
+});
+
+/**
+ * hook to add the current LP price to the products
+ */
+const useAddCurrentLpPriceToProducts = () => {
+  const getCurrentPriceWhirlpool = useWhirlPoolInformation();
+
+  const getCurrentPriceBalancer = useCallback(getCurrentPriceBalancerFn, [
+    getCurrentPriceBalancerFn,
+  ]);
+
+  const getCurrentPriceForSvm = useCallback(
+    async (tokenAddress) => {
+      const tokenInfo = await getLpTokenDetails(tokenAddress);
+      const priceLP = await getCurrentPriceWhirlpool(tokenInfo.poolId);
+      return priceLP;
+    },
+    [getCurrentPriceWhirlpool],
+  );
+
+  return useCallback(
+    async (productList) => {
+      const contract = getDepositoryContract();
+
+      const currentLpPricePromiseList = [];
+      for (let i = 0; i < productList.length; i += 1) {
+        if (productList[i].token === ADDRESS_ZERO) {
+          currentLpPricePromiseList.push(0);
+        } else {
+          /* eslint-disable-next-line no-await-in-loop */
+          const { lpChainId, dex } = await getLpTokenDetails(
+            productList[i].token,
+          );
+
+          if (isL1Network(lpChainId)) {
+            const currentLpPricePromise = contract.methods
+              .getCurrentPriceLP(productList[i].token)
+              .call();
+            currentLpPricePromiseList.push(currentLpPricePromise);
+          } else {
+            let currentLpPrice = null;
+            // NOTE: It could be uniswap for other chains hence this if case.
+            // (commented for now)
+            // if (dex === DEX.UNISWAP) {
+            //   currentLpPricePromise = contract.methods
+            //     .getCurrentPriceUniswap(originAddress)
+            //     .call();
+            //   currentLpPricePromiseList.push(currentLpPricePromise);
+            // } else
+            if (dex === DEX.BALANCER) {
+              currentLpPrice = getCurrentPriceBalancer(productList[i].token);
+              currentLpPricePromiseList.push(currentLpPrice);
+            } else if (dex === DEX.SOLANA) {
+              currentLpPrice = getCurrentPriceForSvm(productList[i].token);
+              currentLpPricePromiseList.push(currentLpPrice);
+            } else {
+              throw new Error('Dex not supported');
+            }
+          }
+        }
+      }
+
+      const lpPrices = await Promise.all(currentLpPricePromiseList);
+      return productList.map((p, i) => ({ ...p, currentPriceLp: lpPrices[i] }));
+    },
+    [getCurrentPriceBalancer, getCurrentPriceForSvm],
+  );
 };
-const getLpTokenDetails = memoize(getLpTokenDetailsFn);
 
 /**
  * Fetches the LP token name for the product list
@@ -240,223 +278,171 @@ const getLpTokenNamesForProducts = async (productList, events) => {
   });
 };
 
-const getCurrentPriceBalancerFn = async (tokenAddress) => {
-  const { lpChainId, poolId } = await getLpTokenDetails(tokenAddress);
-  const balancerConfig = { network: lpChainId, rpcUrl: RPC_URLS[lpChainId] };
-  const balancer = new BalancerSDK(balancerConfig);
-  const pool = await balancer.pools.find(poolId);
-
-  if (!pool) {
-    throw new Error(
-      `Pool not found on Balancer for poolId: ${poolId} and chainId: ${lpChainId}.`,
+/**
+ * hook to add the supply left to the products
+ */
+const useAddSupplyLeftToProducts = () => useCallback(
+  async (list, createProductEvents, closedProductEvents = []) => list.map((product) => {
+    const createProductEvent = createProductEvents?.find(
+      (event) => event?.returnValues?.productId === `${product.id}`,
     );
-  }
 
-  const totalSupply = pool.totalShares;
-  const reservesOLAS = (areAddressesEqual(pool.tokens[0].address, ADDRESSES[lpChainId].olasAddress)
-    ? pool.tokens[0].balance
-    : pool.tokens[1].balance) * 1.0;
-  const priceLP = (reservesOLAS * 10 ** 18) / totalSupply;
-  return priceLP;
-};
-const getCurrentPriceBalancer = memoize(getCurrentPriceBalancerFn);
+    const closeProductEvent = closedProductEvents?.find(
+      (event) => event?.returnValues?.productId === `${product.id}`,
+    );
 
-const getCurrentPriceWhirlpoolFn = async (tokenAddress) => {
-  const { poolId } = await getLpTokenDetails(tokenAddress);
-  const priceLP = await getWhirlPoolInformation(poolId); // TODO: pass connection as first argument
-  return priceLP;
-};
-const getCurrentPriceWhirlpool = memoize(getCurrentPriceWhirlpoolFn);
-
-const getCurrentLpPriceForProducts = async (productList) => {
-  const contract = getDepositoryContract();
-
-  const currentLpPricePromiseList = [];
-  for (let i = 0; i < productList.length; i += 1) {
-    if (productList[i].token === ADDRESS_ZERO) {
-      currentLpPricePromiseList.push(0);
-    } else {
-      /* eslint-disable-next-line no-await-in-loop */
-      const { lpChainId, dex } = await getLpTokenDetails(productList[i].token);
-
-      if (isL1Network(lpChainId)) {
-        const currentLpPricePromise = contract.methods
-          .getCurrentPriceLP(productList[i].token)
-          .call();
-        currentLpPricePromiseList.push(currentLpPricePromise);
-      } else {
-        let currentLpPrice = null;
-        // NOTE: It could be uniswap for other chains hence this if case.
-        // (commented for now)
-        // if (dex === DEX.UNISWAP) {
-        //   currentLpPricePromise = contract.methods
-        //     .getCurrentPriceUniswap(originAddress)
-        //     .call();
-        //   currentLpPricePromiseList.push(currentLpPricePromise);
-        // } else
-        if (dex === DEX.BALANCER) {
-          currentLpPrice = getCurrentPriceBalancer(productList[i].token);
-          currentLpPricePromiseList.push(currentLpPrice);
-        } else if (dex === DEX.SOLANA) {
-          currentLpPrice = getCurrentPriceWhirlpool(productList[i].token);
-          currentLpPricePromiseList.push(currentLpPrice);
-        } else {
-          throw new Error('Dex not supported');
-        }
-      }
+    // Should not happen but we will warn if it does
+    if (!createProductEvent) {
+      window.console.warn(
+        `Product ${product.id} not found in the event list`,
+      );
     }
-  }
 
-  const resolvedList = await Promise.all(currentLpPricePromiseList);
+    const createEventSupply = get(createProductEvent, SUPPLY, 0);
+    const eventSupply = BigNumber.from(createEventSupply).div(ONE_ETH);
 
-  return productList.map((record, index) => ({
-    ...record,
-    currentPriceLp: resolvedList[index],
-  }));
-};
+    const closeProductSupply = get(closeProductEvent, SUPPLY, 0);
+    const productSupply = !closeProductEvent
+      ? Number(BigNumber.from(product.supply).div(ONE_ETH))
+      : Number(BigNumber.from(closeProductSupply).div(ONE_ETH));
 
-const getListWithSupplyList = async (
-  list,
-  createProductEvents,
-  closedProductEvents = [],
-) => list.map((product) => {
-  const createProductEvent = createProductEvents?.find(
-    (event) => event?.returnValues?.productId === `${product.id}`,
-  );
+    const supplyLeft = productSupply / Number(eventSupply);
 
-  const closeProductEvent = closedProductEvents?.find(
-    (event) => event?.returnValues?.productId === `${product.id}`,
-  );
+    const priceLP = product.token !== ADDRESS_ZERO
+      ? product.priceLP
+      : createProductEvent.returnValues?.priceLP || 0;
 
-  // Should not happen but we will warn if it does
-  if (!createProductEvent) {
-    window.console.warn(`Product ${product.id} not found in the event list`);
-  }
-
-  const eventSupply = Number(
-    ethers.BigNumber.from(createProductEvent.returnValues.supply).div(
-      ONE_ETH,
-    ),
-  );
-  const productSupply = !closeProductEvent
-    ? Number(ethers.BigNumber.from(product.supply).div(ONE_ETH))
-    : Number(
-      ethers.BigNumber.from(closeProductEvent.returnValues.supply).div(
-        ONE_ETH,
-      ),
-    );
-  const supplyLeft = productSupply / eventSupply;
-  const priceLP = product.token !== ADDRESS_ZERO
-    ? product.priceLP
-    : createProductEvent?.returnValues?.priceLP || 0;
-
-  return { ...product, supplyLeft, priceLP };
-});
+    return { ...product, supplyLeft, priceLP };
+  }),
+  [],
+);
 
 /**
  * Adds the projected change & discounted olas per LP token to the list
  */
-const getLpPriceWithProjectedChange = (list) => list.map((record) => {
-  // current price of the LP token is multiplied by 2
-  // because the price is for 1 LP token and
-  // we need the price for 2 LP tokens
-  const fullCurrentPriceLp = Number(round(parseToEth(record.currentPriceLp * 2), 2)) || '--';
+const useAddProjectChangeToProducts = () => useCallback(
+  (productList) => productList.map((record) => {
+    // current price of the LP token is multiplied by 2
+    // because the price is for 1 LP token and
+    // we need the price for 2 LP tokens
+    const fullCurrentPriceLp = Number(round(parseToEth(record.currentPriceLp * 2), 2)) || '--';
 
-  const discountedOlasPerLpToken = getLpTokenWithDiscount(
-    record.priceLP,
-    record?.discount || 0,
-  );
+    const discountedOlasPerLpToken = getLpTokenWithDiscount(
+      record.priceLP,
+      record.discount || 0,
+    );
 
-  // parse to eth and round to 2 decimal places
-  const roundedDiscountedOlasPerLpToken = round(
-    parseToEth(discountedOlasPerLpToken),
-    2,
-  );
+    // parse to eth and round to 2 decimal places
+    const roundedDiscountedOlasPerLpToken = round(
+      parseToEth(discountedOlasPerLpToken),
+      2,
+    );
 
-  // calculate the projected change
-  const projectedChange = round(
-    ((roundedDiscountedOlasPerLpToken - fullCurrentPriceLp)
-        / fullCurrentPriceLp)
-        * 100,
-    2,
-  );
+    // calculate the projected change
+    const difference = roundedDiscountedOlasPerLpToken - fullCurrentPriceLp;
+    const projectedChange = round(
+      (difference / fullCurrentPriceLp) * 100,
+      2,
+    );
 
-  return {
-    ...record,
-    fullCurrentPriceLp,
-    roundedDiscountedOlasPerLpToken,
-    projectedChange,
-  };
-});
+    return {
+      ...record,
+      fullCurrentPriceLp,
+      roundedDiscountedOlasPerLpToken,
+      projectedChange,
+    };
+  }),
+  [],
+);
+
+const useAddDiscountToProductList = () => useCallback(async (productList) => {
+  const discount = await getLastIDFRequest(); // discount factor is same for all the products
+  return productList.map((e) => ({ ...e, discount }));
+}, []);
 
 /**
  * Fetches product details from the product ids and updates the list
  * to include other details such as the LP token name, supply left, etc.
  * and returns the updated list.
  */
-const getProductDetailsFromIds = async ({ productIdList }, retry) => {
-  const contract = getDepositoryContract();
+const useProductDetailsFromIds = ({ retry }) => {
+  const addDiscountToProductList = useAddDiscountToProductList();
+  const addSupplyLeftToProducts = useAddSupplyLeftToProducts();
+  const addCurrentLpPriceToProducts = useAddCurrentLpPriceToProducts();
+  const addProjectedChange = useAddProjectChangeToProducts();
 
-  const allListPromise = [];
-  for (let i = 0; i < productIdList.length; i += 1) {
-    const id = productIdList[i];
-    const allListResult = contract.methods.mapBondProducts(id).call();
-    allListPromise.push(allListResult);
-  }
+  return useCallback(
+    async (productIdList) => {
+      const contract = getDepositoryContract();
 
-  // discount factor is same for all the products
-  const discount = await getLastIDFRequest();
+      const createEventList = await getProductEvents('CreateProduct', retry);
+      const closedEventList = await getProductEvents('CloseProduct', retry);
 
-  const response = await Promise.all(allListPromise);
-  const productList = response.map((product, index) => ({
-    ...product,
-    discount,
-    id: productIdList[index],
-  }));
+      const allListPromise = [];
+      for (let i = 0; i < productIdList.length; i += 1) {
+        const id = productIdList[i];
+        const allListResult = contract.methods.mapBondProducts(id).call();
+        allListPromise.push(allListResult);
+      }
 
-  const listWithCurrentLpPrice = await getCurrentLpPriceForProducts(
-    productList,
+      const response = await Promise.all(allListPromise);
+      const list = response.map((e, i) => ({ ...e, id: productIdList[i] }));
+      const withDiscount = await addDiscountToProductList(list);
+
+      const withCurrentLpPrice = await addCurrentLpPriceToProducts(
+        withDiscount,
+      );
+
+      const withLpTokens = await getLpTokenNamesForProducts(
+        withCurrentLpPrice,
+        createEventList,
+      );
+
+      const withSupplyList = await addSupplyLeftToProducts(
+        withLpTokens,
+        createEventList,
+        closedEventList,
+      );
+
+      const withProjectedChange = addProjectedChange(withSupplyList);
+      return withProjectedChange;
+    },
+    [
+      retry,
+      addDiscountToProductList,
+      addCurrentLpPriceToProducts,
+      addSupplyLeftToProducts,
+      addProjectedChange,
+    ],
   );
-
-  const createEventList = await getProductEvents('CreateProduct', retry);
-  const closedEventList = await getProductEvents('CloseProduct', retry);
-
-  const listWithLpTokens = await getLpTokenNamesForProducts(
-    listWithCurrentLpPrice,
-    createEventList,
-  );
-
-  const listWithSupplyList = await getListWithSupplyList(
-    listWithLpTokens,
-    createEventList,
-    closedEventList,
-  );
-
-  const listWithProjectedChange = getLpPriceWithProjectedChange(listWithSupplyList);
-
-  return listWithProjectedChange;
 };
 
 /**
  * fetches product list based on the active/inactive status
  */
-export const getProductListRequest = async ({ isActive }, retry) => {
-  const productIdList = await getBondingProgramsRequest({ isActive });
-  const response = await getProductDetailsFromIds({ productIdList }, retry);
-  const discount = await getLastIDFRequest(); // discount factor is same for all the products
+const useProductListRequest = ({ isActive, retry }) => {
+  const getProductDetailsFromIds = useProductDetailsFromIds({ retry });
 
-  const productList = response.map((product, index) => ({
-    id: productIdList[index],
-    key: productIdList[index],
-    discount,
-    ...product,
-  }));
+  return useCallback(async () => {
+    // const contract = getDepositoryContract();
+    // const productIdList = await contract.methods.getProducts(isActive).call();
+    const productIdList = ['127'];
+    const response = await getProductDetailsFromIds(productIdList);
 
-  return productList;
+    const productList = response.map((product, index) => ({
+      id: productIdList[index],
+      key: productIdList[index],
+      ...product,
+    }));
+
+    return productList;
+  }, [isActive, getProductDetailsFromIds]);
 };
 
 export const useProducts = ({ isActive }) => {
   const { chainId } = useHelpers();
+  const getProductListRequest = useProductListRequest({ isActive });
+
   const [isLoading, setIsLoading] = useState(false);
   const [errorState, setErrorState] = useState(false);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -472,10 +458,10 @@ export const useProducts = ({ isActive }) => {
       setErrorState(false);
       setIsLoading(true);
 
-      const filteredProductList = await getProductListRequest(
-        { isActive },
+      const filteredProductList = await getProductListRequest({
+        isActive,
         retry,
-      );
+      });
       setFilteredProducts(filteredProductList);
     } catch (e) {
       const errorMessage = typeof e?.message === 'string' ? e.message : null;
@@ -485,7 +471,7 @@ export const useProducts = ({ isActive }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [retry, isActive]);
+  }, [retry, isActive, getProductListRequest]);
 
   // fetch the bonding list
   useEffect(() => {

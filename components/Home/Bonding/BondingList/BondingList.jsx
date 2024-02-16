@@ -75,10 +75,10 @@ const getColumns = (
       title: getTitle('LP Token', 'LP token address enabled by the Treasury'),
       dataIndex: 'lpTokenName',
       key: 'lpTokenName',
-      width: 180,
-
+      // width: 180,
       render: (x, data) => {
-        if (x === LP_PAIRS.svm.name) {
+        if (x === LP_PAIRS['0x36B203Cb3086269f005a4b987772452243c0767f'].name) {
+          // if (x === LP_PAIRS.svm.name) { // TODO: uncomment this line
           return (
             <WsolTokenManagement lpToken={x} lpTokenLink={data.lpTokenLink} />
           );

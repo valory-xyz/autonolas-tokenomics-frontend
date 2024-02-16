@@ -23,6 +23,12 @@ const GlobalStyle = createGlobalStyle`
     margin-top: 0;
   }
 
+  html {
+    /* uncomment for dark mode */
+    /* background-color: ${COLOR.WHITE}; */
+    /* filter: invert(1) hue-rotate(180deg); */
+  }
+
   background-size: 100%;
   background-color: ${COLOR.WHITE};
 

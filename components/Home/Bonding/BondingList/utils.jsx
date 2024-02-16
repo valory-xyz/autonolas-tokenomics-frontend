@@ -1,9 +1,15 @@
 import { ethers } from 'ethers';
 import { notifyError } from '@autonolas/frontend-library';
+import { memoize } from 'lodash';
 
-import { ADDRESS_ZERO } from 'common-util/functions';
 import { DEX } from 'util/constants';
-import { ADDRESSES } from 'common-util/Contracts';
+import {
+  ADDRESS_ZERO,
+  getEthersProvider,
+  getChainId,
+  delay,
+} from 'common-util/functions';
+import { getDepositoryContract, ADDRESSES } from 'common-util/Contracts';
 
 export const getProductValueFromEvent = (product, events, keyName) => {
   if ((events || []).length === 0) {
@@ -34,6 +40,52 @@ export const getLpTokenWithDiscount = (lpTokenValue, discount) => {
   const discountedPrice = price.add(price.mul(discount).div(100));
   return discountedPrice;
 };
+
+const getProductEventsNonMemoized = async (eventName, retry) => {
+  const contract = getDepositoryContract();
+  const provider = getEthersProvider();
+  const block = await provider.getBlock('latest');
+
+  // handle forked chains with very high chain IDs because they are
+  // bad at handling large event lookbacks, hence 50 blocks.
+  // Also, previous 200000 blocks means approximately 200000 * 15s = 50 days
+  // Try to adjust the lookbackBlockCount if you are running into issues
+  // such as events not being fetched.
+  const lookbackBlockCount = (getChainId() || 1) >= 100000 ? 50 : 300000;
+  const chunkSize = retry > 0 ? 500 : 50000;
+  const eventPromises = [];
+  const delayBetweenRequestsInMs = 100;
+
+  for (
+    let fromBlock = block.number - lookbackBlockCount;
+    fromBlock <= block.number;
+    fromBlock += chunkSize
+  ) {
+    const toBlock = Math.min(fromBlock + chunkSize - 1, block.number);
+    eventPromises.push(
+      contract
+        .getPastEvents(eventName, {
+          fromBlock,
+          toBlock,
+        })
+        .then((events) => ({ fromBlock, toBlock, events })),
+    );
+  }
+
+  // Introduce delays between each chunk request without using await inside the loop
+  const eventsChunks = await Promise.all(
+    /* eslint-disable-next-line max-len */
+    eventPromises.map((p, index) => p.then((result) => delay(index * delayBetweenRequestsInMs).then(() => result.events))),
+  );
+
+  const events = eventsChunks.flat();
+
+  return events;
+};
+/**
+ * returns events for the product creation
+ */
+export const getProductEvents = memoize(getProductEventsNonMemoized);
 
 /**
  * Function to get the link to the LP token

@@ -5,11 +5,13 @@ import {
 } from 'antd';
 
 import { SolanaWallet } from 'common-util/Login/SolanaWallet';
+// import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
 import { WsolDeposit } from './WsolDeposit';
 import { WsolWithDraw } from './WsolWithdraw';
 
 export const WsolTokenManagement = ({ lpToken, lpTokenLink }) => {
   const [isManageModalVisible, setIsManageModalVisible] = useState(false);
+  // const { isSvmWalletConnected } = useSvmConnectivity();
 
   return (
     <>
@@ -17,7 +19,11 @@ export const WsolTokenManagement = ({ lpToken, lpTokenLink }) => {
         <a href={lpTokenLink} target="_blank" rel="noreferrer">
           {lpToken}
         </a>
-        <Button type="primary" onClick={() => setIsManageModalVisible(true)}>
+        <Button
+          type="primary"
+          // disabled={!isSvmWalletConnected}
+          onClick={() => setIsManageModalVisible(true)}
+        >
           Manage
         </Button>
       </Flex>
