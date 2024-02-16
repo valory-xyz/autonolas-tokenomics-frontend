@@ -22,7 +22,6 @@ import {
   RPC_URLS,
 } from 'common-util/Contracts';
 import { useHelpers } from 'common-util/hooks/useHelpers';
-
 import {
   getProductValueFromEvent,
   getLpTokenWithDiscount,
@@ -30,7 +29,7 @@ import {
   getCurrentPriceLpLink,
   getProductEvents,
 } from './utils';
-import { useWhirlPoolInformation } from '../TokenManagement/useTokenManagement';
+import { useWhirlPoolInformation } from '../TokenManagement/hooks/useWhirlpool';
 
 const { BigNumber } = ethers;
 const SUPPLY = 'returnValues.supply';
@@ -65,9 +64,9 @@ export const LP_PAIRS = {
   },
   // solana
   svm: {
-    lpChainId: -1, // 126922396888673 (solana), 7565164 (sol)
+    lpChainId: 'svm',
     name: 'OLAS-WSOL',
-    originAddress: '', // origin address is the position (TODO: will be sent later)
+    originAddress: '', // TODO: will be sent later- origin address is the position
     dex: DEX.SOLANA,
     poolId: ADDRESSES.svm.balancerVault,
   },
@@ -94,15 +93,11 @@ const getLastIDFRequest = async () => {
  * The token needs to distinguish between the one on the ETH mainnet
  * and the mirrored one from other mainnets.
  *
- * @returns {Object} {
- *  lpChainId,
- *  originAddress,
- *  dex,
- *  name,
- *  poolId
+ * @returns {Object} { lpChainId, originAddress, dex, name, poolId }
  * }
  */
 const getLpTokenDetails = memoize(async (address) => {
+  // TODO: check for solana
   const chainId = getChainId();
 
   const currentLpPairDetails = Object.keys(LP_PAIRS).find(
@@ -176,14 +171,14 @@ const useAddCurrentLpPriceToProducts = () => {
     getCurrentPriceBalancerFn,
   ]);
 
-  const getCurrentPriceForSvm = useCallback(
-    async (tokenAddress) => {
-      const tokenInfo = await getLpTokenDetails(tokenAddress);
-      const priceLP = await getCurrentPriceWhirlpool(tokenInfo.poolId);
-      return priceLP;
-    },
-    [getCurrentPriceWhirlpool],
-  );
+  const getCurrentPriceForSvm = useCallback(async () => {
+    // @Aleks, I think the below code is not needed and updated
+    // because we already know the poolId for solana.
+    // const tokenInfo = await getLpTokenDetails(tokenAddress);
+    // const priceLP = await getCurrentPriceWhirlpool(tokenInfo.poolId);
+    const priceLP = await getCurrentPriceWhirlpool(LP_PAIRS.svm.poolId);
+    return priceLP;
+  }, [getCurrentPriceWhirlpool]);
 
   return useCallback(
     async (productList) => {
@@ -420,7 +415,7 @@ const useProductDetailsFromIds = ({ retry }) => {
 /**
  * fetches product list based on the active/inactive status
  */
-const useProductListRequest = ({ isActive, retry }) => {
+const useProductListRequest = ({ retry }) => {
   const getProductDetailsFromIds = useProductDetailsFromIds({ retry });
 
   return useCallback(async () => {
@@ -436,20 +431,18 @@ const useProductListRequest = ({ isActive, retry }) => {
     }));
 
     return productList;
-  }, [isActive, getProductDetailsFromIds]);
+  }, [getProductDetailsFromIds]);
 };
 
 export const useProducts = ({ isActive }) => {
-  const { chainId } = useHelpers();
-  const getProductListRequest = useProductListRequest({ isActive });
-
   const [isLoading, setIsLoading] = useState(false);
   const [errorState, setErrorState] = useState(false);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [retry, setRetry] = useState(0);
+  const [productDetails, setProductDetails] = useState(null); // if `not null`, open deposit modal
 
-  // if productDetails is `not null`, then open the deposit modal
-  const [productDetails, setProductDetails] = useState(null);
+  const { chainId } = useHelpers();
+  const getProductListRequest = useProductListRequest({ retry });
 
   const depositoryAddress = ADDRESSES[chainId].depository;
 

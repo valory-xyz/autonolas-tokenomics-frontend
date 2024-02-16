@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
-import { notifyError } from '@autonolas/frontend-library';
 import { memoize } from 'lodash';
+import { notifyError } from '@autonolas/frontend-library';
 
 import { DEX } from 'util/constants';
 import {
@@ -20,14 +20,12 @@ export const getProductValueFromEvent = (product, events, keyName) => {
     return product[keyName];
   }
 
-  const event = events?.find(
+  const event = events.find(
     (e) => e?.returnValues?.productId === `${product.id}`,
   );
   if (!event) notifyError('Product not found in the event list');
   return event.returnValues[keyName];
 };
-
-// FUNCTIONS FOR CALCULATIONS
 
 /**
  *
@@ -64,10 +62,7 @@ const getProductEventsNonMemoized = async (eventName, retry) => {
     const toBlock = Math.min(fromBlock + chunkSize - 1, block.number);
     eventPromises.push(
       contract
-        .getPastEvents(eventName, {
-          fromBlock,
-          toBlock,
-        })
+        .getPastEvents(eventName, { fromBlock, toBlock })
         .then((events) => ({ fromBlock, toBlock, events })),
     );
   }
@@ -79,7 +74,6 @@ const getProductEventsNonMemoized = async (eventName, retry) => {
   );
 
   const events = eventsChunks.flat();
-
   return events;
 };
 /**
@@ -112,7 +106,7 @@ export const getLpTokenLink = ({
   }
 
   if (lpDex === DEX.SOLANA) {
-    return `https://v1.orca.so/liquidity/browse?tokenMint=${ADDRESSES.svm.olasAddress}&tokenMint=So11111111111111111111111111111111111111112`;
+    return `https://v1.orca.so/liquidity/browse?tokenMint=${ADDRESSES.svm.olasAddress}&tokenMint=${ADDRESSES.svm.wsolAddress}`;
   }
 
   return new Error('Dex not supported');

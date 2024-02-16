@@ -78,7 +78,7 @@ const getColumns = (
       // width: 180,
       render: (x, data) => {
         if (x === LP_PAIRS['0x36B203Cb3086269f005a4b987772452243c0767f'].name) {
-          // if (x === LP_PAIRS.svm.name) { // TODO: uncomment this line
+          // if (x === LP_PAIRS.svm.name) { // TODO: uncomment once the LP token is available
           return (
             <WsolTokenManagement lpToken={x} lpTokenLink={data.lpTokenLink} />
           );

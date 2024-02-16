@@ -1,17 +1,26 @@
 import { useState } from 'react';
 import PropTypes from 'prop-types';
 import {
-  Button, Modal, Flex, Tabs,
+  Button, Modal, Flex, Tabs, Tooltip,
 } from 'antd';
 
 import { SolanaWallet } from 'common-util/Login/SolanaWallet';
-// import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
 import { WsolDeposit } from './WsolDeposit';
 import { WsolWithDraw } from './WsolWithdraw';
 
+const IS_MANAGEMENT_ENABLED = true;
+
 export const WsolTokenManagement = ({ lpToken, lpTokenLink }) => {
   const [isManageModalVisible, setIsManageModalVisible] = useState(false);
-  // const { isSvmWalletConnected } = useSvmConnectivity();
+  const manageButton = (
+    <Button
+      type="primary"
+      disabled={!IS_MANAGEMENT_ENABLED}
+      onClick={() => setIsManageModalVisible(true)}
+    >
+      Manage
+    </Button>
+  );
 
   return (
     <>
@@ -19,13 +28,11 @@ export const WsolTokenManagement = ({ lpToken, lpTokenLink }) => {
         <a href={lpTokenLink} target="_blank" rel="noreferrer">
           {lpToken}
         </a>
-        <Button
-          type="primary"
-          // disabled={!isSvmWalletConnected}
-          onClick={() => setIsManageModalVisible(true)}
-        >
-          Manage
-        </Button>
+        {IS_MANAGEMENT_ENABLED ? (
+          manageButton
+        ) : (
+          <Tooltip title="Coming soon">{manageButton}</Tooltip>
+        )}
       </Flex>
 
       <Modal
@@ -37,7 +44,7 @@ export const WsolTokenManagement = ({ lpToken, lpTokenLink }) => {
         destroyOnClose
       >
         <Tabs
-          defaultActiveKey="1"
+          defaultActiveKey="deposit"
           tabBarExtraContent={<SolanaWallet />}
           items={[
             {

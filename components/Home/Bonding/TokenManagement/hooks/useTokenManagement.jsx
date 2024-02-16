@@ -1,163 +1,57 @@
 import { useCallback } from 'react';
-import { setProvider, web3, Program } from '@coral-xyz/anchor';
+import { Program } from '@coral-xyz/anchor';
 import idl from 'common-util/AbiAndAddresses/liquidityLockbox.json';
-import { AnchorProvider } from '@project-serum/anchor';
-import NodeWallet from '@project-serum/anchor/dist/cjs/nodewallet';
 import { DecimalUtil, Percentage } from '@orca-so/common-sdk';
 import Decimal from 'decimal.js';
-import { round } from 'lodash';
 import {
-  WhirlpoolContext,
-  buildWhirlpoolClient,
   increaseLiquidityQuoteByInputTokenWithParams,
-  TickUtil,
   decreaseLiquidityQuoteByLiquidityWithParams,
+  TickUtil,
 } from '@orca-so/whirlpools-sdk';
-import { Keypair } from '@solana/web3.js';
 import {
   AccountLayout,
   getAssociatedTokenAddress,
   getOrCreateAssociatedTokenAccount,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
-import {
-  areAddressesEqual,
-  notifyError,
-  notifySuccess,
-} from '@autonolas/frontend-library';
+import { notifyError, notifySuccess } from '@autonolas/frontend-library';
 
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
-import { ADDRESSES } from 'common-util/Contracts';
-import { SVM_EMPTY_ADDRESS } from './utils';
+import { SVM_EMPTY_ADDRESS } from '../utils';
 import { useGetOrCreateAssociatedTokenAccount } from './useGetOrCreateAssociatedTokenAccount';
+import { useWhirlpool } from './useWhirlpool';
+import {
+  SOL,
+  BRIDGED_TOKEN_MINT,
+  FEE_COLLECTOR_TOKEN_OWNER_ACCOUNT_A,
+  FEE_COLLECTOR_TOKEN_OWNER_ACCOUNT_B,
+  LOCKBOX,
+  ORCA,
+  PDA_POSITION_ACCOUNT,
+  POSITION,
+  PROGRAM_ID,
+  TICK_ARRAY_LOWER,
+  TICK_ARRAY_UPPER,
+  TOKEN_VAULT_A,
+  TOKEN_VAULT_B,
+  WHIRLPOOL,
+  TICK_SPACING,
+  POSITION_MINT,
+} from './constants';
 
-const PROGRAM_ID = new web3.PublicKey(
-  '7ahQGWysExobjeZ91RTsNqTCN3kWyHGZ43ud2vB7VVoZ',
-);
-const ORCA = new web3.PublicKey('whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc');
-const WHIRLPOOL = new web3.PublicKey(ADDRESSES.svm.balancerVault);
-const SOL = new web3.PublicKey('So11111111111111111111111111111111111111112');
-const NODE_WALLET = new NodeWallet(Keypair.generate());
-const BRIDGED_TOKEN_MINT = new web3.PublicKey(
-  'So11111111111111111111111111111111111111112', // TODO: dummy address for now, real one will be added later
-);
-const PDA_POSITION_ACCOUNT = new web3.PublicKey(
-  'So11111111111111111111111111111111111111112', // TODO: dummy address for now, real one will be added later
-);
-const FEE_COLLECTOR_TOKEN_OWNER_ACCOUNT_A = new web3.PublicKey(
-  'So11111111111111111111111111111111111111112', // TODO: dummy address for now, real one will be added later
-);
-const FEE_COLLECTOR_TOKEN_OWNER_ACCOUNT_B = new web3.PublicKey(
-  'So11111111111111111111111111111111111111112', // TODO: dummy address for now, real one will be added later
-);
-const LOCKBOX = new web3.PublicKey(
-  'So11111111111111111111111111111111111111112', // TODO: dummy address for now, real one will be added later
-);
-const POSITION = new web3.PublicKey(
-  'So11111111111111111111111111111111111111112', // TODO: dummy address for now, real one will be added later
-);
-const POSITION_MINT = new web3.PublicKey(
-  'So11111111111111111111111111111111111111112', // TODO: dummy address for now, real one will be added later
-);
-const TOKEN_VAULT_A = new web3.PublicKey(
-  'CLA8hU8SkdCZ9cJVLMfZQfcgAsywZ9txBJ6qrRAqthLx',
-);
-const TOKEN_VAULT_B = new web3.PublicKey(
-  '6E8pzDK8uwpENc49kp5xo5EGydYjtamPSmUKXxum4ybb',
-);
-const TICK_ARRAY_LOWER = new web3.PublicKey(
-  '3oJAqTKTCdGvLS9zpoBquWvMjwthu9Np67Qp4W8AT843',
-);
-const TICK_ARRAY_UPPER = new web3.PublicKey(
-  'J3eMJUQWLmSsG5VnXVFHCGwakpKmzi4jkNvi3vbCZQ3o',
-);
-const TICK_SPACING = 64;
-const [tickLowerIndex, tickUpperIndex] = TickUtil.getFullRangeTickIndex(TICK_SPACING);
-
-const useManagementProvider = () => {
-  const { connection } = useSvmConnectivity();
-  const nodeProvider = new AnchorProvider(connection, NODE_WALLET, {
-    commitment: 'processed',
-  });
-  setProvider(nodeProvider);
-
-  return nodeProvider;
-};
-
-/**
- * Hook to get the data from the whirlpool
- */
-const useWhirlpool = () => {
-  const nodeProvider = useManagementProvider();
-
-  const getWhirlpoolData = useCallback(async () => {
-    const whirlpoolCtx = WhirlpoolContext.withProvider(nodeProvider, ORCA);
-    const client = buildWhirlpoolClient(whirlpoolCtx);
-    const whirlpoolClient = await client.getPool(WHIRLPOOL);
-
-    const whirlpoolData = whirlpoolClient.getData();
-    const whirlpoolTokenA = whirlpoolClient.getTokenAInfo();
-    const whirlpoolTokenB = whirlpoolClient.getTokenBInfo();
-
-    return { whirlpoolData, whirlpoolTokenA, whirlpoolTokenB };
-  }, [nodeProvider]);
-
-  return { getWhirlpoolData };
-};
-
-export const useWhirlPoolInformation = () => {
-  const { connection } = useSvmConnectivity();
-
-  return useCallback(
-    async (whirlpool) => {
-      const nodeProvider = new AnchorProvider(connection, NODE_WALLET, {
-        commitment: 'processed',
-      });
-
-      const whirlpoolCtx = WhirlpoolContext.withProvider(nodeProvider, ORCA);
-      const client = buildWhirlpoolClient(whirlpoolCtx);
-      const whirlpoolClient = await client.getPool(whirlpool);
-
-      const whirlpoolTokenA = whirlpoolClient.getTokenAInfo();
-      const whirlpoolTokenB = whirlpoolClient.getTokenBInfo();
-
-      const tickArrayLower = await whirlpoolCtx.fetcher.getTickArray(
-        TICK_ARRAY_LOWER,
-      );
-
-      let totalSupply = 0;
-      for (let i = 0; i < tickArrayLower.ticks.length; i += 1) {
-        totalSupply += tickArrayLower.ticks[i].liquidityNet;
-      }
-
-      const address1 = whirlpoolTokenA.mint.toString();
-      const address2 = ADDRESSES.svm.olasAddress;
-      const reserveOlas = (areAddressesEqual(address1, address2)
-        ? whirlpoolTokenA.supply
-        : whirlpoolTokenB.supply) * 1.0;
-
-      const priceLP = round(
-        (Decimal(reserveOlas) / Decimal(totalSupply)) * 2,
-        18,
-      );
-      return priceLP;
-    },
-    [connection],
-  );
-};
+export const [tickLowerIndex, tickUpperIndex] = TickUtil.getFullRangeTickIndex(TICK_SPACING);
 
 export const useDepositTokenManagement = () => {
-  const nodeProvider = useManagementProvider();
+  const { nodeProvider, svmWalletPublicKey } = useSvmConnectivity();
   const { getWhirlpoolData } = useWhirlpool();
-  const { svmWalletPublicKey } = useSvmConnectivity();
   const customGetOrCreateAssociatedTokenAccount = useGetOrCreateAssociatedTokenAccount();
 
   const program = new Program(idl, PROGRAM_ID, nodeProvider);
-  // const userWallet = null; // TODO: need to fix this because it requires secret key
 
   const depositIncreaseLiquidityQuote = async ({ wsol, slippage }) => {
     const { whirlpoolData, whirlpoolTokenA, whirlpoolTokenB } = await getWhirlpoolData();
     const slippageTolerance = Percentage.fromDecimal(new Decimal(slippage));
+    const inputTokenAmount = DecimalUtil.toBN(new Decimal(wsol), 9);
 
     const quote = increaseLiquidityQuoteByInputTokenWithParams({
       tokenMintA: whirlpoolTokenA.mint,
@@ -167,7 +61,7 @@ export const useDepositTokenManagement = () => {
       tickLowerIndex,
       tickUpperIndex,
       inputTokenMint: SOL,
-      inputTokenAmount: DecimalUtil.toBN(new Decimal(wsol), 9),
+      inputTokenAmount,
       slippageTolerance,
     });
 
@@ -211,8 +105,8 @@ export const useDepositTokenManagement = () => {
       svmWalletPublicKey,
     );
 
-    console.log('Token Owner Account A:', tokenOwnerAccountA.toString());
-    console.log('Token Owner Account B:', tokenOwnerAccountB.toString());
+    // console.log('Token Owner Account A:', tokenOwnerAccountA.toString());
+    // console.log('Token Owner Account B:', tokenOwnerAccountB.toString());
 
     // Check if the user has the correct token account
     // and it is required to deposit
@@ -221,17 +115,17 @@ export const useDepositTokenManagement = () => {
       || tokenOwnerAccountB === SVM_EMPTY_ADDRESS
     ) {
       notifyError('You do not have the correct token account');
-      // return;
+      return;
     }
 
     const bridgedTokenAccount = await customGetOrCreateAssociatedTokenAccount(
       BRIDGED_TOKEN_MINT,
       svmWalletPublicKey,
     );
-    console.log(
-      'User ATA for bridged:',
-      bridgedTokenAccount.address.toBase58(),
-    );
+    // console.log(
+    //   'User ATA for bridged:',
+    //   bridgedTokenAccount.address.toBase58(),
+    // );
 
     if (!bridgedTokenAccount) {
       notifyError('You do not have the bridged token account yet');
@@ -260,7 +154,7 @@ export const useDepositTokenManagement = () => {
         .rpc();
 
       notifySuccess('Deposit successful', signature);
-      console.log('Deposit Signature:', signature); // TODO: remove
+      // console.log('Deposit Signature:', signature);
     } catch (error) {
       console.error(error);
     }
@@ -269,10 +163,25 @@ export const useDepositTokenManagement = () => {
   return { depositIncreaseLiquidityQuote, depositTransformedQuote, deposit };
 };
 
-export const useWithdrawTokenManagement = () => {
-  const nodeProvider = useManagementProvider();
+const useBridgedTokenAccount = () => {
   const { svmWalletPublicKey } = useSvmConnectivity();
+
+  return useCallback(async () => {
+    if (!svmWalletPublicKey) return null;
+
+    const bridgedTokenAccount = await getAssociatedTokenAddress(
+      BRIDGED_TOKEN_MINT,
+      svmWalletPublicKey,
+    );
+
+    return bridgedTokenAccount;
+  }, [svmWalletPublicKey]);
+};
+
+export const useWithdrawTokenManagement = () => {
+  const { svmWalletPublicKey, nodeProvider } = useSvmConnectivity();
   const { getWhirlpoolData } = useWhirlpool();
+  const getBridgedTokenAccount = useBridgedTokenAccount();
 
   const program = new Program(idl, PROGRAM_ID, nodeProvider);
 
@@ -295,36 +204,27 @@ export const useWithdrawTokenManagement = () => {
   const withdrawDecreaseLiquidityQuote = async ({ amount, slippage }) => {
     const { whirlpoolData } = await getWhirlpoolData();
     const slippageTolerance = Percentage.fromDecimal(new Decimal(slippage));
+    const liquidity = DecimalUtil.toBN(new Decimal(amount), 9);
 
     const quote = decreaseLiquidityQuoteByLiquidityWithParams({
       sqrtPrice: whirlpoolData.sqrtPrice,
       tickCurrentIndex: whirlpoolData.tickCurrentIndex,
       tickLowerIndex,
       tickUpperIndex,
-      liquidity: DecimalUtil.toBN(new Decimal(amount), 9),
+      liquidity,
       slippageTolerance,
     });
 
     return quote;
   };
 
-  const getBridgedTokenAccount = async () => {
-    if (!svmWalletPublicKey) return null;
-
-    const bridgedTokenAccount = await getAssociatedTokenAddress(
-      BRIDGED_TOKEN_MINT,
-      svmWalletPublicKey,
-    );
-
-    return bridgedTokenAccount;
-  };
-
   /**
-   * Fetch the maximum amount of bridged tokens
-   * that the user can withdraw. User must have wallet connected
-   * to get the maximum amount.
+   * Fetch the maximum amount of bridged tokens that the user can withdraw.
+   * User must have wallet connected to get the maximum amount, else it will return null.
+   *
+   * @returns {Promise<number | null>}
    */
-  const getMaxAmount = async () => {
+  const getMaxAmount = useCallback(async () => {
     const bridgedTokenAccount = await getBridgedTokenAccount();
     if (!bridgedTokenAccount) return null;
 
@@ -340,12 +240,12 @@ export const useWithdrawTokenManagement = () => {
     tokenAccounts.value.forEach((tokenAccount) => {
       const accountData = AccountLayout.decode(tokenAccount.account.data);
       if (accountData.mint.toString() === BRIDGED_TOKEN_MINT.toString()) {
-        console.log(
-          'Bridged Token Accounts:',
-          tokenAccount.pubkey,
-          accountData,
-          bridgedTokenAccount,
-        );
+        // console.log(
+        //   'Bridged Token Accounts:',
+        //   tokenAccount.pubkey,
+        //   accountData,
+        //   bridgedTokenAccount,
+        // );
 
         if (tokenAccount.pubkey.toString() === bridgedTokenAccount) {
           maxAmount = accountData.amount.toString();
@@ -359,7 +259,7 @@ export const useWithdrawTokenManagement = () => {
     }
 
     return maxAmount;
-  };
+  }, [svmWalletPublicKey, nodeProvider, getBridgedTokenAccount]);
 
   /**
    * Withdraw from the lockbox
@@ -380,7 +280,7 @@ export const useWithdrawTokenManagement = () => {
       whirlpoolTokenA.mint,
       svmWalletPublicKey,
     );
-    console.log('User ATA for tokenA:', tokenOwnerAccountA.address.toBase58());
+    // console.log('User ATA for tokenA:', tokenOwnerAccountA.address.toBase58());
 
     // Get the tokenB ATA of the userWallet address, and if it does not exist, create it
     const tokenOwnerAccountB = await getOrCreateAssociatedTokenAccount(
@@ -389,11 +289,9 @@ export const useWithdrawTokenManagement = () => {
       whirlpoolTokenB.mint,
       svmWalletPublicKey,
     );
-    console.log('User ATA for tokenB:', tokenOwnerAccountB.address.toBase58());
+    // console.log('User ATA for tokenB:', tokenOwnerAccountB.address.toBase58());
 
-    // Obtain withdraw estimation
     const quote = await withdrawDecreaseLiquidityQuote({ amount, slippage });
-
     try {
       const signature = await program.methods
         .withdraw(amount, quote.tokenMinA, quote.tokenMinB)
@@ -420,7 +318,7 @@ export const useWithdrawTokenManagement = () => {
         .rpc();
 
       notifySuccess('Withdraw successful', signature);
-      console.log('Withdraw Signature:', signature);
+      // console.log('Withdraw Signature:', signature);
     } catch (error) {
       console.error(error);
     }

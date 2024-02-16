@@ -9,6 +9,8 @@ import {
 } from 'common-util/Contracts';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 
+const { BigNumber } = ethers;
+
 export const useDeposit = () => {
   const { account, chainId } = useHelpers();
 
@@ -22,8 +24,8 @@ export const useDeposit = () => {
 
       // if allowance is greater than or equal to token amount
       // then user has sufficient token
-      const hasEnoughAllowance = ethers.BigNumber.from(response).gte(
-        ethers.BigNumber.from(tokenAmount),
+      const hasEnoughAllowance = BigNumber.from(response).gte(
+        BigNumber.from(tokenAmount),
       );
       return hasEnoughAllowance;
     },
@@ -46,7 +48,6 @@ export const useDeposit = () => {
     async ({ token }) => {
       const contract = getUniswapV2PairContract(token);
       const treasuryAddress = ADDRESSES[chainId].treasury;
-
       const fn = contract.methods
         .approve(treasuryAddress, MAX_AMOUNT)
         .send({ from: account });
@@ -60,7 +61,6 @@ export const useDeposit = () => {
   const depositRequest = useCallback(
     async ({ productId, tokenAmount }) => {
       const contract = getDepositoryContract();
-
       const fn = contract.methods
         .deposit(productId, tokenAmount)
         .send({ from: account });

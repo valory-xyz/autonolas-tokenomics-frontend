@@ -7,7 +7,7 @@ import { isNil, isNumber } from 'lodash';
 import { notifyError } from '@autonolas/frontend-library';
 
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
-import { useWithdrawTokenManagement } from './useTokenManagement';
+import { useWithdrawTokenManagement } from './hooks/useTokenManagement';
 import { DEFAULT_SLIPPAGE, slippageValidator } from './utils';
 
 export const WsolWithDraw = () => {
@@ -16,7 +16,7 @@ export const WsolWithDraw = () => {
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [maxAmount, setMaxAmount] = useState(0);
 
-  const { wallet, isSvmWalletConnected } = useSvmConnectivity();
+  const { isSvmWalletConnected } = useSvmConnectivity();
   const {
     withdrawDecreaseLiquidityQuote: fn,
     withdrawTransformedQuote,
@@ -39,7 +39,7 @@ export const WsolWithDraw = () => {
     };
 
     if (isSvmWalletConnected) tempMaxAmountFn();
-  }, [isSvmWalletConnected]);
+  }, [isSvmWalletConnected, getMaxAmount]);
 
   const onAmountAndSlippageChange = async () => {
     const amount = form.getFieldValue('amount');
@@ -77,7 +77,6 @@ export const WsolWithDraw = () => {
 
     try {
       setIsWithdrawing(true);
-      await wallet.connect();
 
       await withdraw({ amount, slippage });
     } catch (error) {

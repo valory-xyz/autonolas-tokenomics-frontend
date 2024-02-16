@@ -10,17 +10,17 @@ import {
 } from '@autonolas/frontend-library';
 
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
-import { useDepositTokenManagement } from './useTokenManagement';
+import { useDepositTokenManagement } from './hooks/useTokenManagement';
 import { DEFAULT_SLIPPAGE, slippageValidator } from './utils';
 
 const { Text } = Typography;
+
 export const WsolDeposit = () => {
   const [form] = Form.useForm();
+  const { isSvmWalletConnected } = useSvmConnectivity();
   const [estimatedQuote, setEstimatedQuote] = useState(null);
   const [isEstimating, setIsEstimating] = useState(false);
   const [isDepositing, setIsDepositing] = useState(false);
-
-  const { isSvmWalletConnected } = useSvmConnectivity();
 
   const {
     depositIncreaseLiquidityQuote: fn,
@@ -29,8 +29,8 @@ export const WsolDeposit = () => {
   } = useDepositTokenManagement();
   const getDepositQuote = pDebounce(fn, 500);
 
-  // initially, set default slippage value
   useEffect(() => {
+    // initially, set default slippage value
     form.setFieldsValue({ slippage: DEFAULT_SLIPPAGE });
   }, [form]);
 
@@ -38,18 +38,20 @@ export const WsolDeposit = () => {
     const wsol = form.getFieldValue('wsol');
     const slippage = form.getFieldValue('slippage');
 
+    // estimate quote only if wsol and slippage are valid
     if (!isNumber(wsol) || !isNumber(slippage)) return;
 
     try {
       setIsEstimating(true);
+
       const quote = await getDepositQuote({ slippage, wsol });
       const transformedQuote = await depositTransformedQuote(quote);
       setEstimatedQuote(transformedQuote);
 
-      // update olas value
+      // update olas value in form
       form.setFieldsValue({ olas: transformedQuote?.olasMax || null });
     } catch (error) {
-      notifyError('Failed to get estimated quote');
+      notifyError('Failed to estimate quote');
       console.error(error);
     } finally {
       setIsEstimating(false);
@@ -59,11 +61,6 @@ export const WsolDeposit = () => {
   const handleDeposit = async () => {
     try {
       setIsDepositing(true);
-      // await wallet.connect();
-
-      // const balance = await connection.getBalance(wallet.publicKey);
-      // const lamportBalance = balance / LAMPORTS_PER_SOL;
-      // console.log({ lamportBalance });
 
       const wsol = form.getFieldValue('wsol');
       const slippage = form.getFieldValue('slippage');
