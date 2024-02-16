@@ -1,14 +1,26 @@
+/* eslint-disable max-len */
+/* eslint-disable no-param-reassign */
 import { useCallback } from 'react';
 import { Transaction } from '@solana/web3.js';
 import {
   getAssociatedTokenAddress,
   createAssociatedTokenAccountInstruction,
 } from '@solana/spl-token';
-import { useAnchorWallet, useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { notifyError, notifySuccess } from '@autonolas/frontend-library';
 
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
 
+/**
+ *
+ * function to configure and send current transaction (ref: https://stackoverflow.com/a/73943145)
+ *
+ * @param {import("@solana/web3.js").Transaction} transaction
+ * @param {import("@solana/web3.js").Connection} connection
+ * @param {import("@solana/web3.js").PublicKey} feePayer
+ * @param {import("@solana/wallet-adapter-base").SignerWalletAdapterProps['signTransaction']} signTransaction
+ *
+ */
 const configureAndSendCurrentTransaction = async (
   transaction,
   connection,
@@ -20,19 +32,8 @@ const configureAndSendCurrentTransaction = async (
   transaction.feePayer = feePayer;
   transaction.recentBlockhash = blockHash.blockhash;
 
-  // const modifiedTransaction = {
-  //   ...transaction,
-  //   feePayer,
-  //   recentBlockhash: blockHash.blockhash,
-  // };
-  console.log('modifiedTransaction: ', transaction);
-
   const signed = await signTransaction(transaction);
-  console.log('signed: ', signed);
-
   const signature = await connection.sendRawTransaction(signed.serialize());
-  console.log('signature: ', signature);
-
   await connection.confirmTransaction({
     blockhash: blockHash.blockhash,
     lastValidBlockHeight: blockHash.lastValidBlockHeight,
@@ -41,6 +42,9 @@ const configureAndSendCurrentTransaction = async (
   return signature;
 };
 
+/**
+ * hook to get or create associated token account
+ */
 export const useGetOrCreateAssociatedTokenAccount = () => {
   const { connection } = useConnection();
   const { svmWalletPublicKey } = useSvmConnectivity();
@@ -60,8 +64,6 @@ export const useGetOrCreateAssociatedTokenAccount = () => {
           owner,
         );
 
-        console.log('associatedToken: ', associatedToken);
-
         let account = await connection.getAccountInfo(associatedToken);
         if (account) return associatedToken;
 
@@ -77,33 +79,17 @@ export const useGetOrCreateAssociatedTokenAccount = () => {
         );
 
         const transaction = new Transaction().add(...transactionInstructions);
-
-        // const updatedTransaction = {
-        //   ...transaction,
-        //   serialize: transaction.serialize,
-        //   serializeMessage: transaction.serializeMessage,
-        //   compileMessage: transaction.compileMessage,
-        // };
-
-        // transaction.serialize = transaction.serialize;
-        // transaction.serializeMessage = transaction.serializeMessage;
-
-        // console.log('transaction: ', transaction, updatedTransaction);
-
-        // signature is transaction address - 'https://explorer.solana.com/'
         const signature = await configureAndSendCurrentTransaction(
           transaction,
           connection,
           svmWalletPublicKey,
           signTransaction,
         );
-        console.log('signature: ', signature);
 
         notifySuccess('Associated token account created', signature); // TODO: remove if not needed
         account = await connection.getAccountInfo(associatedToken);
         return account;
       } catch (error) {
-        notifyError('Error while creating associated token account');
         console.error(error);
         return null;
       }

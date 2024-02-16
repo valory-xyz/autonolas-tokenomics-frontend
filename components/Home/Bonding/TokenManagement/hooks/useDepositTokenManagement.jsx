@@ -95,8 +95,8 @@ export const useDepositTokenManagement = () => {
       svmWalletPublicKey,
     );
 
-    console.log('Token Owner Account A:', tokenOwnerAccountA.toString());
-    console.log('Token Owner Account B:', tokenOwnerAccountB.toString());
+    // console.log('Token Owner Account A:', tokenOwnerAccountA.toString());
+    // console.log('Token Owner Account B:', tokenOwnerAccountB.toString());
 
     // Check if the user has the correct token account
     // and it is required to deposit
@@ -118,7 +118,7 @@ export const useDepositTokenManagement = () => {
     // );
 
     if (!bridgedTokenAccount) {
-      notifyError('You do not have the bridged token account yet');
+      notifyError('You do not have the bridged token account, please try again.');
       return;
     }
 

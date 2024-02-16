@@ -10,12 +10,12 @@ import {
 import {
   AccountLayout,
   getAssociatedTokenAddress,
-  getOrCreateAssociatedTokenAccount,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import { notifyError, notifySuccess } from '@autonolas/frontend-library';
 
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
+import { useGetOrCreateAssociatedTokenAccount } from './useGetOrCreateAssociatedTokenAccount';
 import { useWhirlpool } from './useWhirlpool';
 import {
   BRIDGED_TOKEN_MINT,
@@ -36,6 +36,7 @@ import {
 } from './constants';
 
 export const [tickLowerIndex, tickUpperIndex] = TickUtil.getFullRangeTickIndex(TICK_SPACING);
+const TOKEN_MINT_ERROR = 'You do not have the correct token account, please try again.';
 
 const useBridgedTokenAccount = () => {
   const { svmWalletPublicKey } = useSvmConnectivity();
@@ -56,6 +57,7 @@ export const useWithdrawTokenManagement = () => {
   const { svmWalletPublicKey, nodeProvider } = useSvmConnectivity();
   const { getWhirlpoolData } = useWhirlpool();
   const getBridgedTokenAccount = useBridgedTokenAccount();
+  const customGetOrCreateAssociatedTokenAccount = useGetOrCreateAssociatedTokenAccount();
 
   const program = new Program(idl, PROGRAM_ID, nodeProvider);
 
@@ -148,21 +150,26 @@ export const useWithdrawTokenManagement = () => {
     const { whirlpoolTokenA, whirlpoolTokenB } = await getWhirlpoolData();
 
     // Get the tokenA ATA of the userWallet address, and if it does not exist, create it
-    const tokenOwnerAccountA = await getOrCreateAssociatedTokenAccount(
-      nodeProvider.connection,
-      userWallet,
+    const tokenOwnerAccountA = await customGetOrCreateAssociatedTokenAccount(
       whirlpoolTokenA.mint,
       svmWalletPublicKey,
     );
+
+    if (!tokenOwnerAccountA) {
+      notifyError(TOKEN_MINT_ERROR);
+      return;
+    }
     // console.log('User ATA for tokenA:', tokenOwnerAccountA.address.toBase58());
 
     // Get the tokenB ATA of the userWallet address, and if it does not exist, create it
-    const tokenOwnerAccountB = await getOrCreateAssociatedTokenAccount(
-      nodeProvider.connection,
-      userWallet,
+    const tokenOwnerAccountB = await customGetOrCreateAssociatedTokenAccount(
       whirlpoolTokenB.mint,
       svmWalletPublicKey,
     );
+    if (!tokenOwnerAccountA) {
+      notifyError(TOKEN_MINT_ERROR);
+      return;
+    }
     // console.log('User ATA for tokenB:', tokenOwnerAccountB.address.toBase58());
 
     const quote = await withdrawDecreaseLiquidityQuote({ amount, slippage });
@@ -192,7 +199,6 @@ export const useWithdrawTokenManagement = () => {
         .rpc();
 
       notifySuccess('Withdraw successful', signature);
-      // console.log('Withdraw Signature:', signature);
     } catch (error) {
       console.error(error);
     }
