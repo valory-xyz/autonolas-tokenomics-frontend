@@ -4,7 +4,7 @@ import {
   getAssociatedTokenAddress,
   createAssociatedTokenAccountInstruction,
 } from '@solana/spl-token';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useAnchorWallet, useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { notifyError, notifySuccess } from '@autonolas/frontend-library';
 
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
@@ -16,13 +16,22 @@ const configureAndSendCurrentTransaction = async (
   signTransaction,
 ) => {
   const blockHash = await connection.getLatestBlockhash();
-  const modifiedTransaction = {
-    ...transaction,
-    feePayer,
-    recentBlockhash: blockHash.blockhash,
-  };
-  const signed = await signTransaction(modifiedTransaction);
+
+  transaction.feePayer = feePayer;
+  transaction.recentBlockhash = blockHash.blockhash;
+
+  // const modifiedTransaction = {
+  //   ...transaction,
+  //   feePayer,
+  //   recentBlockhash: blockHash.blockhash,
+  // };
+  console.log('modifiedTransaction: ', transaction);
+
+  const signed = await signTransaction(transaction);
+  console.log('signed: ', signed);
+
   const signature = await connection.sendRawTransaction(signed.serialize());
+  console.log('signature: ', signature);
 
   await connection.confirmTransaction({
     blockhash: blockHash.blockhash,
@@ -33,8 +42,10 @@ const configureAndSendCurrentTransaction = async (
 };
 
 export const useGetOrCreateAssociatedTokenAccount = () => {
-  const { connection, svmWalletPublicKey } = useSvmConnectivity();
+  const { connection } = useConnection();
+  const { svmWalletPublicKey } = useSvmConnectivity();
   const { signTransaction } = useWallet();
+  // const { signTransaction } = useAnchorWallet();
 
   return useCallback(
     async (mintToken, owner = svmWalletPublicKey) => {
@@ -48,6 +59,8 @@ export const useGetOrCreateAssociatedTokenAccount = () => {
           mintToken,
           owner,
         );
+
+        console.log('associatedToken: ', associatedToken);
 
         let account = await connection.getAccountInfo(associatedToken);
         if (account) return associatedToken;
@@ -65,6 +78,18 @@ export const useGetOrCreateAssociatedTokenAccount = () => {
 
         const transaction = new Transaction().add(...transactionInstructions);
 
+        // const updatedTransaction = {
+        //   ...transaction,
+        //   serialize: transaction.serialize,
+        //   serializeMessage: transaction.serializeMessage,
+        //   compileMessage: transaction.compileMessage,
+        // };
+
+        // transaction.serialize = transaction.serialize;
+        // transaction.serializeMessage = transaction.serializeMessage;
+
+        // console.log('transaction: ', transaction, updatedTransaction);
+
         // signature is transaction address - 'https://explorer.solana.com/'
         const signature = await configureAndSendCurrentTransaction(
           transaction,
@@ -72,6 +97,7 @@ export const useGetOrCreateAssociatedTokenAccount = () => {
           svmWalletPublicKey,
           signTransaction,
         );
+        console.log('signature: ', signature);
 
         notifySuccess('Associated token account created', signature); // TODO: remove if not needed
         account = await connection.getAccountInfo(associatedToken);

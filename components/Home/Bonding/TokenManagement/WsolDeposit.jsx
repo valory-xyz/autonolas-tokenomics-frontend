@@ -10,7 +10,7 @@ import {
 } from '@autonolas/frontend-library';
 
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
-import { useDepositTokenManagement } from './hooks/useTokenManagement';
+import { useDepositTokenManagement } from './hooks/useDepositTokenManagement';
 import { DEFAULT_SLIPPAGE, slippageValidator } from './utils';
 
 const { Text } = Typography;
@@ -23,8 +23,8 @@ export const WsolDeposit = () => {
   const [isDepositing, setIsDepositing] = useState(false);
 
   const {
-    depositIncreaseLiquidityQuote: fn,
-    depositTransformedQuote,
+    getDepositIncreaseLiquidityQuote: fn,
+    getDepositTransformedQuote,
     deposit,
   } = useDepositTokenManagement();
   const getDepositQuote = pDebounce(fn, 500);
@@ -45,7 +45,7 @@ export const WsolDeposit = () => {
       setIsEstimating(true);
 
       const quote = await getDepositQuote({ slippage, wsol });
-      const transformedQuote = await depositTransformedQuote(quote);
+      const transformedQuote = await getDepositTransformedQuote(quote);
       setEstimatedQuote(transformedQuote);
 
       // update olas value in form
@@ -143,6 +143,7 @@ export const WsolDeposit = () => {
         <Button
           type="primary"
           htmlType="submit"
+          loading={isDepositing}
           disabled={isDepositButtonDisabled}
         >
           Deposit

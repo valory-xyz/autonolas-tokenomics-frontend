@@ -7,7 +7,7 @@ import { isNil, isNumber } from 'lodash';
 import { notifyError } from '@autonolas/frontend-library';
 
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
-import { useWithdrawTokenManagement } from './hooks/useTokenManagement';
+import { useWithdrawTokenManagement } from './hooks/useWithdrawTokenManagement';
 import { DEFAULT_SLIPPAGE, slippageValidator } from './utils';
 
 export const WsolWithDraw = () => {
@@ -162,6 +162,7 @@ export const WsolWithDraw = () => {
         <Button
           type="primary"
           htmlType="submit"
+          loading={isWithdrawing}
           disabled={isWithdrawButtonDisabled}
         >
           Withdraw
