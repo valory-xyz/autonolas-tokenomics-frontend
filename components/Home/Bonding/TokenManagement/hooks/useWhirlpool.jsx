@@ -1,33 +1,91 @@
 /* eslint-disable max-len */
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   WhirlpoolContext,
   buildWhirlpoolClient,
-  WhirlpoolAccountFetcher,
-  // Account
-  getAllWhirlpoolAccountsForConfig,
-  ORCA_WHIRLPOOL_PROGRAM_ID,
-  getAccountSize,
-  AccountName,
-  WHIRLPOOL_CODER,
-  ParsableWhirlpool,
-  PREFER_CACHE,
-
 } from '@orca-so/whirlpools-sdk';
 import { areAddressesEqual } from '@autonolas/frontend-library';
-import { filter, pickBy, round } from 'lodash';
+import { round } from 'lodash';
 import Decimal from 'decimal.js';
 
 import { ADDRESSES } from 'common-util/Contracts';
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
-import { AddressUtil, SimpleAccountFetcher } from '@orca-so/common-sdk';
+import { gql, GraphQLClient } from 'graphql-request';
 import {
   WHIRLPOOL, // filter by whirlpool
   TICK_ARRAY_LOWER,
   ORCA,
-  WHIRLPOOL_CONFIG_ID,
-  PROGRAM_ID,
 } from './constants';
+
+const whirlpoolQuery = async () => {
+  const SHYFT_API_KEY = process.env.NEXT_PUBLIC_SHYFT_API_KEY;
+  if (!SHYFT_API_KEY) {
+    throw new Error('SHYFT_API_KEY is not set');
+  }
+
+  const endpoint = `https://programs.shyft.to/v0/graphql/?api_key=${SHYFT_API_KEY}`;
+  const graphQLClient = new GraphQLClient(endpoint, {
+    method: 'POST',
+    jsonSerializer: {
+      parse: JSON.parse,
+      stringify: JSON.stringify,
+    },
+  });
+
+  // Can build queries using Hasura: https://docs.shyft.to/solana-indexers/instant-graphql-apis/getting-started
+  const query = gql`
+    query FindNonZeroLiqPositionQuery(
+      $where: ORCA_WHIRLPOOLS_position_bool_exp
+      $orderBy: [ORCA_WHIRLPOOLS_position_order_by!]
+      $limit: Int
+      $offset: Int
+    ) {
+      ORCA_WHIRLPOOLS_position(
+        limit: $limit
+        offset: $offset
+        order_by: $orderBy
+        where: $where
+      ) {
+        _lamports
+        feeGrowthCheckpointA
+        feeGrowthCheckpointB
+        feeOwedA
+        feeOwedB
+        liquidity
+        positionMint
+        tickLowerIndex
+        tickUpperIndex
+        whirlpool
+        pubkey
+      }
+    }
+  `;
+
+  const variables = {
+    where: {
+      liquidity: { _gt: '0' },
+      whirlpool: { _eq: WHIRLPOOL.toString() },
+    },
+    orderBy: { liquidity: 'desc' },
+  };
+
+  const result = await graphQLClient.request(query, variables);
+  return result;
+};
+
+const useWhirlpoolQuery = () => {
+  const [queryResult, setQueryResult] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const result = await whirlpoolQuery();
+      setQueryResult(result);
+    };
+    fetchData();
+  }, []);
+
+  return queryResult;
+};
 
 /**
  * Hook to get the data from the whirlpool
@@ -40,8 +98,6 @@ export const useWhirlpool = () => {
     const client = buildWhirlpoolClient(whirlpoolCtx);
     const whirlpoolClient = await client.getPool(WHIRLPOOL);
 
-    const gggg = client.getFetcher();
-
     const whirlpoolData = whirlpoolClient.getData();
     const whirlpoolTokenA = whirlpoolClient.getTokenAInfo();
     const whirlpoolTokenB = whirlpoolClient.getTokenBInfo();
@@ -52,21 +108,19 @@ export const useWhirlpool = () => {
   return { getWhirlpoolData };
 };
 
-const filters = [
-  { dataSize: (0, getAccountSize)(AccountName.Whirlpool) },
-  {
-    memcmp: WHIRLPOOL_CODER.memcmp(
-      AccountName.Whirlpool,
-      WHIRLPOOL_CONFIG_ID.toBuffer(),
-    ),
-  },
-];
-
 export const useWhirlPoolInformation = () => {
-  const { nodeProvider, connection } = useSvmConnectivity();
+  const { nodeProvider } = useSvmConnectivity();
+  const whirlpoolQueryResult = useWhirlpoolQuery();
+  const { getWhirlpoolData } = useWhirlpool();
+
+  console.log(whirlpoolQueryResult);
 
   return useCallback(
     async (whirlpool) => {
+      if (!whirlpoolQueryResult) {
+        return null;
+      }
+
       // # Calculate full range position token reserves and their accumulated total position supply
       // reserve_token0 = 0
       // reserve_token1 = 0
@@ -91,133 +145,35 @@ export const useWhirlPoolInformation = () => {
       //     ORCA_WHIRLPOOL_PROGRAM_ID,
       //     WHIRLPOOL_PUBKEY
       // )
+
+      console.log(whirlpool);
       const whirlpoolCtx = WhirlpoolContext.withProvider(nodeProvider, ORCA);
-      const client = buildWhirlpoolClient(whirlpoolCtx);
-      const whirlpoolClient = await client.getPool(whirlpool);
+      const { whirlpoolTokenA, whirlpoolTokenB } = await getWhirlpoolData();
 
-      const fetcher = new SimpleAccountFetcher(connection);
-
-      // async def find_positions_by_whirlpool(self, program_id: Pubkey, whirlpool: Pubkey) -> List[Position]:
-      //   accounts = (await self._connection.get_program_accounts(
-      //       program_id,
-      //       None,
-      //       "base64",
-      //       None,
-      //       [ACCOUNT_SIZE_POSITION, MemcmpOpts(8, str(whirlpool))]
-      //   )).value
-
-      //   return list(map(
-      //       lambda a: KeyedAccountConverter.to_keyed_position(a.pubkey, AccountParser.parse_position(a.account.data)),
-      //       accounts
-      //   ))
-
-      const accounts = await connection.getProgramAccounts(
-        ORCA_WHIRLPOOL_PROGRAM_ID,
-        {
-          filters,
-        },
+      const tickArrayLower = await whirlpoolCtx.fetcher.getTickArray(
+        TICK_ARRAY_LOWER,
       );
-      // console.log({ accounts }); // 4167
 
-      // const fetcher = new WhirlpoolAccountFetcher(connection);
+      let totalSupply = 0;
+      for (let i = 0; i < tickArrayLower.ticks.length; i += 1) {
+        totalSupply += tickArrayLower.ticks[i].liquidityNet;
+      }
 
-      // const parsedAccounts = [];
-      // accounts.forEach(({ pubkey, account }) => {
-      //   const parsedAccount = ParsableWhirlpool.parse(pubkey, account);
-      //   // (0, tiny_invariant_1.default)(!!parsedAccount, `could not parse whirlpool: ${pubkey.toBase58()}`);
-      //   parsedAccounts.push([AddressUtil.toString(pubkey), parsedAccount]);
-      // });
-      // const mappedAccounts = new Map(parsedAccounts.map(([address, pool]) => [AddressUtil.toString(address), pool]));
-      // console.log({ mappedAccounts });
+      const address1 = whirlpoolTokenA.mint.toString();
+      const address2 = ADDRESSES.svm.olasAddress;
+      // console.log(address1, address2, whirlpoolTokenA.supply);
 
-      // const keys = Array.from(mappedAccounts.keys());
-      // console.log({ keys });
+      const reserveOlas = (areAddressesEqual(address1, address2)
+        ? whirlpoolTokenA.supply
+        : whirlpoolTokenB.supply);
+      // console.log(reserveOlas, totalSupply);
 
-      // const pos = await fetcher.getPositions(keys, PREFER_CACHE);
-      // console.log({ pos });
-
-      // const positions = Array.from((pos).values());
-      // console.log({ positions });
-
-      // const whirlpoolAddrs = positions
-      //   .map((position) => position?.whirlpool.toBase58())
-      //   .flatMap((x) => (x || []));
-
-      // console.log({ whirlpoolAddrs });
-
-      // const allProgramAccounts = await connection.getProgramAccounts(ORCA_WHIRLPOOL_PROGRAM_ID, {
-      //   filters,
-      // });
-      // console.log('abcd', allProgramAccounts);
-
-      const allAccounts = await getAllWhirlpoolAccountsForConfig({
-        connection,
-        configId: WHIRLPOOL_CONFIG_ID,
-        programId: ORCA_WHIRLPOOL_PROGRAM_ID,
-      });
-      console.log(allAccounts);
-
-      // find the whirlpool positions using the whirlpool program id
-      // const myAccounts = filter(allAccounts, (account) => {
-      //   const isEq = areAddressesEqual(account.key, WHIRLPOOL_CONFIG_ID.toString());
-      //   console.log({ a: account.key, b: WHIRLPOOL_CONFIG_ID.toString(), isEq });
-      //   return isEq;
-      // });
-
-      const grouppedByKeys = allAccounts.reduce(
-        (acc, account) => {
-          const key = account.key.toBase58();
-          if (!acc[key]) {
-            acc[key] = [];
-          }
-          acc[key].push(account);
-          return acc;
-        },
-        {},
+      const priceLP = round(
+        (Decimal(Number(reserveOlas)) / Decimal(totalSupply)) * 2,
+        18,
       );
-      console.log(grouppedByKeys);
-
-      const myAccounts = pickBy(allAccounts, (value, key) => areAddressesEqual(key, WHIRLPOOL_CONFIG_ID.toString()));
-      console.log(myAccounts);
-
-      // response1.forEach((element) => {
-      //   console.log(element);
-      // });
-
-      // const addresses = Array.from(response1.entries())
-      //   .filter(([_address, data]) => !data.liquidity.isZero())
-      //   .filter(([_address, data]) => data.configId.equals(WHIRLPOOL_CONFIG_ID))
-      //   .map(([address, _data]) => address)
-
-      // console.log('liquid whirlpools', addresses);
-
-      // const whirlpoolTokenA = whirlpoolClient.getTokenAInfo();
-      // const whirlpoolTokenB = whirlpoolClient.getTokenBInfo();
-
-      // const tickArrayLower = await whirlpoolCtx.fetcher.getTickArray(
-      //   TICK_ARRAY_LOWER,
-      // );
-
-      // let totalSupply = 0;
-      // for (let i = 0; i < tickArrayLower.ticks.length; i += 1) {
-      //   totalSupply += tickArrayLower.ticks[i].liquidityNet;
-      // }
-
-      // const address1 = whirlpoolTokenA.mint.toString();
-      // const address2 = ADDRESSES.svm.olasAddress;
-      // const reserveOlas =
-      //   (areAddressesEqual(address1, address2)
-      //     ? whirlpoolTokenA.supply
-      //     : whirlpoolTokenB.supply) * 1.0;
-
-      // const priceLP = round(
-      //   (Decimal(reserveOlas) / Decimal(totalSupply)) * 2,
-      //   18,
-      // );
-      // return priceLP;
-
-      return 0;
+      return priceLP;
     },
-    [nodeProvider],
+    [nodeProvider, whirlpoolQueryResult, getWhirlpoolData],
   );
 };
