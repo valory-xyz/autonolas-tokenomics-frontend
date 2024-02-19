@@ -419,13 +419,13 @@ const useProductDetailsFromIds = ({ retry }) => {
 /**
  * fetches product list based on the active/inactive status
  */
-const useProductListRequest = ({ retry }) => {
+const useProductListRequest = ({ isActive, retry }) => {
   const getProductDetailsFromIds = useProductDetailsFromIds({ retry });
 
   return useCallback(async () => {
-    // const contract = getDepositoryContract();
-    // const productIdList = await contract.methods.getProducts(isActive).call();
-    const productIdList = ['127'];
+    const contract = getDepositoryContract();
+    const productIdList = await contract.methods.getProducts(isActive).call();
+    // const productIdList = ['127'];
     const response = await getProductDetailsFromIds(productIdList);
 
     const productList = response.map((product, index) => ({
@@ -435,7 +435,7 @@ const useProductListRequest = ({ retry }) => {
     }));
 
     return productList;
-  }, [getProductDetailsFromIds]);
+  }, [getProductDetailsFromIds, isActive]);
 };
 
 export const useProducts = ({ isActive }) => {
@@ -446,7 +446,7 @@ export const useProducts = ({ isActive }) => {
   const [productDetails, setProductDetails] = useState(null); // if `not null`, open deposit modal
 
   const { chainId } = useHelpers();
-  const getProductListRequest = useProductListRequest({ retry });
+  const getProductListRequest = useProductListRequest({ isActive, retry });
 
   const depositoryAddress = ADDRESSES[chainId].depository;
 
