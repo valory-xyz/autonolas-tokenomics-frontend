@@ -7,7 +7,7 @@ import { isNil, isNumber } from 'lodash';
 import { notifyError } from '@autonolas/frontend-library';
 
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
-import { useWithdrawTokenManagement } from './hooks/useWithdrawTokenManagement';
+import { useWsolWithdraw } from './hooks/useWsolWithdraw';
 import { DEFAULT_SLIPPAGE, slippageValidator } from './utils';
 
 export const WsolWithDraw = () => {
@@ -22,7 +22,7 @@ export const WsolWithDraw = () => {
     withdrawTransformedQuote,
     withdraw,
     getMaxAmount,
-  } = useWithdrawTokenManagement();
+  } = useWsolWithdraw();
   const getDecreaseLiquidityQuote = pDebounce(fn, 500);
 
   // initially, set default slippage value

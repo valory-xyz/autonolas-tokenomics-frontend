@@ -10,7 +10,7 @@ import {
 } from '@autonolas/frontend-library';
 
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
-import { useDepositTokenManagement } from './hooks/useDepositTokenManagement';
+import { useWsolDeposit } from './hooks/useWsolDeposit';
 import { DEFAULT_SLIPPAGE, slippageValidator } from './utils';
 
 const { Text } = Typography;
@@ -26,7 +26,7 @@ export const WsolDeposit = () => {
     getDepositIncreaseLiquidityQuote: fn,
     getDepositTransformedQuote,
     deposit,
-  } = useDepositTokenManagement();
+  } = useWsolDeposit();
   const getDepositQuote = pDebounce(fn, 500);
 
   useEffect(() => {

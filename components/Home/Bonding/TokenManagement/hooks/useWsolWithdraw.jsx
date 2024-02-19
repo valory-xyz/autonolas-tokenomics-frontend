@@ -53,7 +53,7 @@ const useBridgedTokenAccount = () => {
   }, [svmWalletPublicKey]);
 };
 
-export const useWithdrawTokenManagement = () => {
+export const useWsolWithdraw = () => {
   const { svmWalletPublicKey, nodeProvider } = useSvmConnectivity();
   const { getWhirlpoolData } = useWhirlpool();
   const getBridgedTokenAccount = useBridgedTokenAccount();

@@ -31,7 +31,7 @@ import {
 
 export const [tickLowerIndex, tickUpperIndex] = TickUtil.getFullRangeTickIndex(TICK_SPACING);
 
-export const useDepositTokenManagement = () => {
+export const useWsolDeposit = () => {
   const { nodeProvider, svmWalletPublicKey } = useSvmConnectivity();
   const { getWhirlpoolData } = useWhirlpool();
   const customGetOrCreateAssociatedTokenAccount = useGetOrCreateAssociatedTokenAccount();
