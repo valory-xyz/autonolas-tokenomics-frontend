@@ -182,6 +182,7 @@ const useAddCurrentLpPriceToProducts = () => {
 
   return useCallback(
     async (productList) => {
+      console.log('productList', productList);
       const contract = getDepositoryContract();
 
       const currentLpPricePromiseList = [];
@@ -210,7 +211,10 @@ const useAddCurrentLpPriceToProducts = () => {
             //   currentLpPricePromiseList.push(currentLpPricePromise);
             // } else
             if (dex === DEX.BALANCER) {
-              currentLpPrice = getCurrentPriceBalancer(productList[i].token);
+              // currentLpPrice = getCurrentPriceBalancer(productList[i].token);
+              // currentLpPricePromiseList.push(currentLpPrice);
+
+              currentLpPrice = getCurrentPriceForSvm(productList[i].token);
               currentLpPricePromiseList.push(currentLpPrice);
             } else if (dex === DEX.SOLANA) {
               currentLpPrice = getCurrentPriceForSvm(productList[i].token);

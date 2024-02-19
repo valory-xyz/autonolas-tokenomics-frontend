@@ -1828,10 +1828,10 @@
   dependencies:
     tiny-invariant "^1.3.1"
 
-"@orca-so/whirlpools-sdk@^0.12.1":
-  version "0.12.1"
-  resolved "https://registry.yarnpkg.com/@orca-so/whirlpools-sdk/-/whirlpools-sdk-0.12.1.tgz#92f31dd4a1c534184b7cc1832eaf06d058ff0d7e"
-  integrity sha512-fCM1Tu4ShqPn/KkoXCJUkaPPuy7A2YgMh4P7o3iuo8iyNCXn02D/e4jjIeWS1sOy5IJQkxVCpkw5wikHghOeMA==
+"@orca-so/whirlpools-sdk@^0.12.2":
+  version "0.12.2"
+  resolved "https://registry.yarnpkg.com/@orca-so/whirlpools-sdk/-/whirlpools-sdk-0.12.2.tgz#8682ad599244a6eeeb6f9face276b2c0edef0d22"
+  integrity sha512-pcjAYeaTrYpX0HSMhzn0vj8qxOVtWQTQrXuk2djfT71/ViLl4vTjrchoqG3rFgek3QwPgLubNC6NOiSYmoWhDw==
   dependencies:
     tiny-invariant "^1.3.1"
 
