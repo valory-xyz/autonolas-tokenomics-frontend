@@ -3,7 +3,11 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   WhirlpoolContext,
   buildWhirlpoolClient,
+  PoolUtil,
+  PriceMath,
 } from '@orca-so/whirlpools-sdk';
+import { BN } from '@coral-xyz/anchor';
+
 import { areAddressesEqual } from '@autonolas/frontend-library';
 import { round } from 'lodash';
 import Decimal from 'decimal.js';
@@ -57,6 +61,7 @@ const whirlpoolQuery = async () => {
         tickUpperIndex
         whirlpool
         pubkey
+        liquidity
       }
     }
   `;
@@ -69,8 +74,23 @@ const whirlpoolQuery = async () => {
     orderBy: { liquidity: 'desc' },
   };
 
-  const result = await graphQLClient.request(query, variables);
-  return result;
+  const result = (await graphQLClient.request(query, variables))
+    .ORCA_WHIRLPOOLS_position;
+  console.log({ result });
+
+  const filteredPositions = result.filter(
+    (e) => e.tickLowerIndex === -443584
+      && e.tickUpperIndex === 443584
+      && e.liquidity > 0,
+  );
+
+  const keys = filteredPositions.map((e) => e.pubkey);
+  // filteredPositions.forEach((element) => {
+  //   console.log(element.pubkey);
+  // });
+  console.log({ keys });
+
+  return filteredPositions;
 };
 
 const useWhirlpoolQuery = () => {
@@ -110,14 +130,14 @@ export const useWhirlpool = () => {
 
 export const useWhirlPoolInformation = () => {
   const { nodeProvider } = useSvmConnectivity();
-  const whirlpoolQueryResult = useWhirlpoolQuery();
+  const positions = useWhirlpoolQuery();
   const { getWhirlpoolData } = useWhirlpool();
 
-  console.log(whirlpoolQueryResult);
+  console.log(positions);
 
   return useCallback(
     async (whirlpool) => {
-      if (!whirlpoolQueryResult) {
+      if (!positions) {
         return null;
       }
 
@@ -146,34 +166,77 @@ export const useWhirlPoolInformation = () => {
       //     WHIRLPOOL_PUBKEY
       // )
 
-      console.log(whirlpool);
       const whirlpoolCtx = WhirlpoolContext.withProvider(nodeProvider, ORCA);
-      const { whirlpoolTokenA, whirlpoolTokenB } = await getWhirlpoolData();
+      const { whirlpoolData, whirlpoolTokenA, whirlpoolTokenB } = await getWhirlpoolData();
 
-      const tickArrayLower = await whirlpoolCtx.fetcher.getTickArray(
-        TICK_ARRAY_LOWER,
-      );
+      let reserveToken0 = new BN(0);
+      let reserveToken1 = new BN(0);
+      let totalSupply = new BN(0);
 
-      let totalSupply = 0;
-      for (let i = 0; i < tickArrayLower.ticks.length; i += 1) {
-        totalSupply += tickArrayLower.ticks[i].liquidityNet;
-      }
+      positions.forEach((position) => {
+        const amounts = PoolUtil.getTokenAmountsFromLiquidity(
+          position.liquidity,
+          whirlpoolData.sqrtPrice,
+          PriceMath.tickIndexToSqrtPriceX64(position.tickLowerIndex),
+          PriceMath.tickIndexToSqrtPriceX64(position.tickUpperIndex),
+          false,
+        );
+
+        console.log({ amounts });
+
+        reserveToken0 = reserveToken0.add(amounts.tokenA);
+        reserveToken1 = reserveToken1.add(amounts.tokenB);
+        totalSupply = totalSupply.add(new BN(position.liquidity));
+        // totalSupply += position.liquidity;
+      });
+
+      console.log({
+        reserveToken0,
+        reserveToken1,
+        totalSupply,
+        str1: reserveToken0.toString(),
+        str2: reserveToken1.toString(),
+      });
+
+      // const tickArrayLower = await whirlpoolCtx.fetcher.getTickArray(
+      //   TICK_ARRAY_LOWER,
+      // );
 
       const address1 = whirlpoolTokenA.mint.toString();
       const address2 = ADDRESSES.svm.olasAddress;
       // console.log(address1, address2, whirlpoolTokenA.supply);
 
-      const reserveOlas = (areAddressesEqual(address1, address2)
-        ? whirlpoolTokenA.supply
-        : whirlpoolTokenB.supply);
+      const reserveOlas = areAddressesEqual(address1, address2)
+        ? reserveToken0
+        : reserveToken1;
       // console.log(reserveOlas, totalSupply);
 
+      console.log({
+        reserveOlas: reserveOlas.toNumber(),
+        totalSupply: totalSupply.toNumber(),
+        divValue: reserveOlas.div(totalSupply).toNumber(),
+        divValueNumber: ((reserveOlas / totalSupply) * 2) * 10 ** 18,
+      });
+
       const priceLP = round(
-        (Decimal(Number(reserveOlas)) / Decimal(totalSupply)) * 2,
+        reserveOlas.div(totalSupply).toNumber() * 2,
+        // (Decimal(Number(reserveOlas)) / Decimal(totalSupply)) * 2,
         18,
       );
+
+      console.log({ priceLP });
+
       return priceLP;
+      // return 0;
     },
-    [nodeProvider, whirlpoolQueryResult, getWhirlpoolData],
+    [nodeProvider, positions, getWhirlpoolData],
   );
 };
+
+/**
+ * [
+ * 38xeYUFRaUJb1FXYgAuNPqxc5p5nBGWmJx6yt4Y4tdRm,
+ *7pT7VNZQDkFFmAgme8dW9EBKQBVNYwohzrSndvJgqd8v
+ *
+ * ]
+ */
