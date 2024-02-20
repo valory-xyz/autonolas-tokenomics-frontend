@@ -27,7 +27,7 @@ import {
   TOKEN_VAULT_B,
   WHIRLPOOL,
   TICK_SPACING,
-} from './constants';
+} from '../constants';
 
 export const [tickLowerIndex, tickUpperIndex] = TickUtil.getFullRangeTickIndex(TICK_SPACING);
 

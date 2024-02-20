@@ -317,14 +317,15 @@ const useAddSupplyLeftToProducts = () => useCallback(
 );
 
 /**
- * Adds the projected change & discounted olas per LP token to the list
+ * Adds the projected change & discounted olas per LP token to the list.
+ * Also, multiplies the current price of the LP token by 2
  */
 const useAddProjectChangeToProducts = () => useCallback(
   (productList) => productList.map((record) => {
     // current price of the LP token is multiplied by 2
     // because the price is for 1 LP token and
     // we need the price for 2 LP tokens
-    const fullCurrentPriceLp = Number(round(parseToEth(record.currentPriceLp * 2), 2)) || '--';
+    const fullCurrentPriceLp = Number(round(parseToEth(record.currentPriceLp * 2), 2)) || 0;
 
     const discountedOlasPerLpToken = getLpTokenWithDiscount(
       record.priceLP,
@@ -423,9 +424,9 @@ const useProductListRequest = ({ isActive, retry }) => {
   const getProductDetailsFromIds = useProductDetailsFromIds({ retry });
 
   return useCallback(async () => {
-    const contract = getDepositoryContract();
-    const productIdList = await contract.methods.getProducts(isActive).call();
-    // const productIdList = ['127'];
+    // const contract = getDepositoryContract();
+    // const productIdList = await contract.methods.getProducts(isActive).call();
+    const productIdList = ['127'];
     const response = await getProductDetailsFromIds(productIdList);
 
     const productList = response.map((product, index) => ({

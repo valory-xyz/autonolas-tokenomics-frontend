@@ -1,4 +1,3 @@
-/* eslint-disable max-len */
 import { useCallback, useEffect, useState } from 'react';
 import {
   WhirlpoolContext,
@@ -7,19 +6,12 @@ import {
   PriceMath,
 } from '@orca-so/whirlpools-sdk';
 import { BN } from '@coral-xyz/anchor';
-
+import { gql, GraphQLClient } from 'graphql-request';
 import { areAddressesEqual } from '@autonolas/frontend-library';
-import { round } from 'lodash';
-import Decimal from 'decimal.js';
 
 import { ADDRESSES } from 'common-util/Contracts';
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
-import { gql, GraphQLClient } from 'graphql-request';
-import {
-  WHIRLPOOL, // filter by whirlpool
-  TICK_ARRAY_LOWER,
-  ORCA,
-} from './constants';
+import { WHIRLPOOL, ORCA } from '../constants';
 
 const whirlpoolQuery = async () => {
   const SHYFT_API_KEY = process.env.NEXT_PUBLIC_SHYFT_API_KEY;
@@ -76,19 +68,12 @@ const whirlpoolQuery = async () => {
 
   const result = (await graphQLClient.request(query, variables))
     .ORCA_WHIRLPOOLS_position;
-  console.log({ result });
 
   const filteredPositions = result.filter(
     (e) => e.tickLowerIndex === -443584
       && e.tickUpperIndex === 443584
       && e.liquidity > 0,
   );
-
-  const keys = filteredPositions.map((e) => e.pubkey);
-  // filteredPositions.forEach((element) => {
-  //   console.log(element.pubkey);
-  // });
-  console.log({ keys });
 
   return filteredPositions;
 };
@@ -129,114 +114,42 @@ export const useWhirlpool = () => {
 };
 
 export const useWhirlPoolInformation = () => {
-  const { nodeProvider } = useSvmConnectivity();
   const positions = useWhirlpoolQuery();
   const { getWhirlpoolData } = useWhirlpool();
 
-  console.log(positions);
+  return useCallback(async () => {
+    if (!positions) {
+      return null;
+    }
 
-  return useCallback(
-    async (whirlpool) => {
-      if (!positions) {
-        return null;
-      }
+    const { whirlpoolData, whirlpoolTokenA } = await getWhirlpoolData();
 
-      // # Calculate full range position token reserves and their accumulated total position supply
-      // reserve_token0 = 0
-      // reserve_token1 = 0
-      // current_supply = 0
-      // for position in positions:
-      //     if position.tick_lower_index == WHIRLPOOL_TICK_LOWER_INDEX and position.tick_upper_index == WHIRLPOOL_TICK_UPPER_INDEX:
-      //         #print(str(position.pubkey), str(position.whirlpool), position.tick_lower_index, position.tick_upper_index)
-      //         amounts = LiquidityMath.get_token_amounts_from_liquidity(
-      //             position.liquidity,
-      //             whirlpool.sqrt_price,
-      //             PriceMath.tick_index_to_sqrt_price_x64(position.tick_lower_index),
-      //             PriceMath.tick_index_to_sqrt_price_x64(position.tick_upper_index),
-      //             False
-      //         )
-      //         reserve_token0 += amounts.token_a
-      //         reserve_token1 += amounts.token_b
-      //         current_supply += position.liquidity
+    let reserveToken0 = new BN(0);
+    let reserveToken1 = new BN(0);
+    let totalSupply = new BN(0);
 
-      //  Find all the whirlpool positions
-      // finder = AccountFinder(connection)
-      // positions = await finder.find_positions_by_whirlpool(
-      //     ORCA_WHIRLPOOL_PROGRAM_ID,
-      //     WHIRLPOOL_PUBKEY
-      // )
-
-      const whirlpoolCtx = WhirlpoolContext.withProvider(nodeProvider, ORCA);
-      const { whirlpoolData, whirlpoolTokenA, whirlpoolTokenB } = await getWhirlpoolData();
-
-      let reserveToken0 = new BN(0);
-      let reserveToken1 = new BN(0);
-      let totalSupply = new BN(0);
-
-      positions.forEach((position) => {
-        const amounts = PoolUtil.getTokenAmountsFromLiquidity(
-          position.liquidity,
-          whirlpoolData.sqrtPrice,
-          PriceMath.tickIndexToSqrtPriceX64(position.tickLowerIndex),
-          PriceMath.tickIndexToSqrtPriceX64(position.tickUpperIndex),
-          false,
-        );
-
-        console.log({ amounts });
-
-        reserveToken0 = reserveToken0.add(amounts.tokenA);
-        reserveToken1 = reserveToken1.add(amounts.tokenB);
-        totalSupply = totalSupply.add(new BN(position.liquidity));
-        // totalSupply += position.liquidity;
-      });
-
-      console.log({
-        reserveToken0,
-        reserveToken1,
-        totalSupply,
-        str1: reserveToken0.toString(),
-        str2: reserveToken1.toString(),
-      });
-
-      // const tickArrayLower = await whirlpoolCtx.fetcher.getTickArray(
-      //   TICK_ARRAY_LOWER,
-      // );
-
-      const address1 = whirlpoolTokenA.mint.toString();
-      const address2 = ADDRESSES.svm.olasAddress;
-      // console.log(address1, address2, whirlpoolTokenA.supply);
-
-      const reserveOlas = areAddressesEqual(address1, address2)
-        ? reserveToken0
-        : reserveToken1;
-      // console.log(reserveOlas, totalSupply);
-
-      console.log({
-        reserveOlas: reserveOlas.toNumber(),
-        totalSupply: totalSupply.toNumber(),
-        divValue: reserveOlas.div(totalSupply).toNumber(),
-        divValueNumber: ((reserveOlas / totalSupply) * 2) * 10 ** 18,
-      });
-
-      const priceLP = round(
-        reserveOlas.div(totalSupply).toNumber() * 2,
-        // (Decimal(Number(reserveOlas)) / Decimal(totalSupply)) * 2,
-        18,
+    positions.forEach((position) => {
+      const amounts = PoolUtil.getTokenAmountsFromLiquidity(
+        position.liquidity,
+        whirlpoolData.sqrtPrice,
+        PriceMath.tickIndexToSqrtPriceX64(position.tickLowerIndex),
+        PriceMath.tickIndexToSqrtPriceX64(position.tickUpperIndex),
+        false,
       );
 
-      console.log({ priceLP });
+      reserveToken0 = reserveToken0.add(amounts.tokenA);
+      reserveToken1 = reserveToken1.add(amounts.tokenB);
+      totalSupply = totalSupply.add(new BN(position.liquidity));
+    });
 
-      return priceLP;
-      // return 0;
-    },
-    [nodeProvider, positions, getWhirlpoolData],
-  );
+    const address1 = whirlpoolTokenA.mint.toString();
+    const address2 = ADDRESSES.svm.olasAddress;
+
+    const reserveOlas = areAddressesEqual(address1, address2)
+      ? reserveToken0
+      : reserveToken1;
+
+    const priceLP = (reserveOlas / totalSupply) * 10 ** 18;
+    return priceLP;
+  }, [positions, getWhirlpoolData]);
 };
-
-/**
- * [
- * 38xeYUFRaUJb1FXYgAuNPqxc5p5nBGWmJx6yt4Y4tdRm,
- *7pT7VNZQDkFFmAgme8dW9EBKQBVNYwohzrSndvJgqd8v
- *
- * ]
- */
