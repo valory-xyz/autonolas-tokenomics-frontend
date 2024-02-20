@@ -94,7 +94,7 @@ const getProductEventsFn = async (eventName, retry) => {
   // Also, previous 200000 blocks means approximately 200000 * 15s = 50 days
   // Try to adjust the lookbackBlockCount if you are running into issues
   // such as events not being fetched.
-  const lookbackBlockCount = (getChainId() || 1) >= 100000 ? 50 : 300000;
+  const lookbackBlockCount = (getChainId() || 1) >= 100000 ? 50 : 350000;
   const chunkSize = retry > 0 ? 500 : 50000;
   const eventPromises = [];
   const delayBetweenRequestsInMs = 100;
