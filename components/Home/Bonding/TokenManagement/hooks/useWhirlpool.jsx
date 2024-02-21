@@ -118,12 +118,9 @@ export const useWhirlPoolInformation = () => {
   const { getWhirlpoolData } = useWhirlpool();
 
   return useCallback(async () => {
-    if (!positions) {
-      return null;
-    }
+    if (!positions) return null;
 
     const { whirlpoolData, whirlpoolTokenA } = await getWhirlpoolData();
-
     let reserveToken0 = new BN(0);
     let reserveToken1 = new BN(0);
     let totalSupply = new BN(0);
