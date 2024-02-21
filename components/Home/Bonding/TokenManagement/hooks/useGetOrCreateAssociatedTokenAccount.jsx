@@ -49,7 +49,6 @@ export const useGetOrCreateAssociatedTokenAccount = () => {
   const { connection } = useConnection();
   const { svmWalletPublicKey } = useSvmConnectivity();
   const { signTransaction } = useWallet();
-  // const { signTransaction } = useAnchorWallet();
 
   return useCallback(
     async (mintToken, owner = svmWalletPublicKey) => {

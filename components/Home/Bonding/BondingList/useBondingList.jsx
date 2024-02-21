@@ -182,6 +182,7 @@ const useAddCurrentLpPriceToProducts = () => {
 
   return useCallback(
     async (productList) => {
+      console.log('productList', productList);
       const contract = getDepositoryContract();
 
       const currentLpPricePromiseList = [];
@@ -212,6 +213,10 @@ const useAddCurrentLpPriceToProducts = () => {
             if (dex === DEX.BALANCER) {
               currentLpPrice = getCurrentPriceBalancer(productList[i].token);
               currentLpPricePromiseList.push(currentLpPrice);
+
+              // TODO: Uncomment to check for Solana, delete once WSOL is live
+              // currentLpPrice = getCurrentPriceForSvm(productList[i].token);
+              // currentLpPricePromiseList.push(currentLpPrice);
             } else if (dex === DEX.SOLANA) {
               currentLpPrice = getCurrentPriceForSvm(productList[i].token);
               currentLpPricePromiseList.push(currentLpPrice);
@@ -313,14 +318,15 @@ const useAddSupplyLeftToProducts = () => useCallback(
 );
 
 /**
- * Adds the projected change & discounted olas per LP token to the list
+ * Adds the projected change & discounted olas per LP token to the list.
+ * Also, multiplies the current price of the LP token by 2
  */
 const useAddProjectChangeToProducts = () => useCallback(
   (productList) => productList.map((record) => {
     // current price of the LP token is multiplied by 2
     // because the price is for 1 LP token and
     // we need the price for 2 LP tokens
-    const fullCurrentPriceLp = Number(round(parseToEth(record.currentPriceLp * 2), 2)) || '--';
+    const fullCurrentPriceLp = Number(round(parseToEth(record.currentPriceLp * 2), 2)) || 0;
 
     const discountedOlasPerLpToken = getLpTokenWithDiscount(
       record.priceLP,
@@ -415,7 +421,7 @@ const useProductDetailsFromIds = ({ retry }) => {
 /**
  * fetches product list based on the active/inactive status
  */
-const useProductListRequest = ({ retry }) => {
+const useProductListRequest = ({ isActive, retry }) => {
   const getProductDetailsFromIds = useProductDetailsFromIds({ retry });
 
   return useCallback(async () => {
@@ -431,7 +437,7 @@ const useProductListRequest = ({ retry }) => {
     }));
 
     return productList;
-  }, [getProductDetailsFromIds]);
+  }, [getProductDetailsFromIds, isActive]);
 };
 
 export const useProducts = ({ isActive }) => {
@@ -442,7 +448,7 @@ export const useProducts = ({ isActive }) => {
   const [productDetails, setProductDetails] = useState(null); // if `not null`, open deposit modal
 
   const { chainId } = useHelpers();
-  const getProductListRequest = useProductListRequest({ retry });
+  const getProductListRequest = useProductListRequest({ isActive, retry });
 
   const depositoryAddress = ADDRESSES[chainId].depository;
 

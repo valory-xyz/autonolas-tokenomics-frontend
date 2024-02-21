@@ -33,7 +33,7 @@ import {
   WHIRLPOOL,
   TICK_SPACING,
   POSITION_MINT,
-} from './constants';
+} from '../constants';
 
 export const [tickLowerIndex, tickUpperIndex] = TickUtil.getFullRangeTickIndex(TICK_SPACING);
 const TOKEN_MINT_ERROR = 'You do not have the correct token account, please try again.';
@@ -53,7 +53,7 @@ const useBridgedTokenAccount = () => {
   }, [svmWalletPublicKey]);
 };
 
-export const useWithdrawTokenManagement = () => {
+export const useWsolWithdraw = () => {
   const { svmWalletPublicKey, nodeProvider } = useSvmConnectivity();
   const { getWhirlpoolData } = useWhirlpool();
   const getBridgedTokenAccount = useBridgedTokenAccount();

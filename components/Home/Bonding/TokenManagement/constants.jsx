@@ -46,3 +46,6 @@ export const TICK_ARRAY_UPPER = new web3.PublicKey(
   'J3eMJUQWLmSsG5VnXVFHCGwakpKmzi4jkNvi3vbCZQ3o',
 );
 export const TICK_SPACING = 64;
+export const WHIRLPOOL_CONFIG_ID = new web3.PublicKey(
+  '2LecshUwdy9xi7meFgHtFJQNSKk4KdTrcpvaB56dP2NQ',
+);
