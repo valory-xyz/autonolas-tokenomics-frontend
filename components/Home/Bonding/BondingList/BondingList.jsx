@@ -363,7 +363,7 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
           productId={productDetails?.id}
           productToken={productDetails?.token}
           productLpPrice={getLpTokenWithDiscount(
-            productDetails?.priceLP,
+            productDetails?.priceLp,
             productDetails?.discount,
           )}
           productSupply={productDetails?.supply}

@@ -11,6 +11,8 @@ import {
 } from 'common-util/functions';
 import { getDepositoryContract, ADDRESSES } from 'common-util/Contracts';
 
+const { BigNumber } = ethers;
+
 export const getProductValueFromEvent = (product, events, keyName) => {
   if ((events || []).length === 0) {
     return product[keyName];
@@ -29,8 +31,8 @@ export const getProductValueFromEvent = (product, events, keyName) => {
 
 /**
  *
- * @param {BigNumber} lpTokenValue
- * @param {Number} discount
+ * @param {Number | String} lpTokenValue
+ * @param {Number | String} discount
  * @returns {BigNumber}
  */
 export const getLpTokenWithDiscount = (lpTokenValue, discount) => {
@@ -80,6 +82,23 @@ const getProductEventsNonMemoized = async (eventName, retry) => {
  * returns events for the product creation
  */
 export const getProductEvents = memoize(getProductEventsNonMemoized);
+
+/**
+ *
+ * @param {Number | String} reserveOlas
+ * @param {Number | String} totalSupply
+ */
+export const getCalculatedPriceLp = (reserveOlas, totalSupply) => {
+  const reserveOlasBG = BigNumber.from(reserveOlas.toString());
+  const totalSupplyBG = BigNumber.from(totalSupply.toString());
+
+  const priceLp = reserveOlasBG
+    .mul(`${10 ** 18}`)
+    .div(totalSupplyBG)
+    .toString();
+
+  return priceLp;
+};
 
 /**
  * Function to get the link to the LP token

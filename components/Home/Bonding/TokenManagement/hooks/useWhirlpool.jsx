@@ -5,13 +5,13 @@ import {
   PoolUtil,
   PriceMath,
 } from '@orca-so/whirlpools-sdk';
-import { BigNumber } from 'ethers';
 import { BN } from '@coral-xyz/anchor';
 import { gql, GraphQLClient } from 'graphql-request';
 import { areAddressesEqual } from '@autonolas/frontend-library';
 
 import { ADDRESSES } from 'common-util/Contracts';
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
+import { getCalculatedPriceLp } from '../../BondingList/utils';
 import { WHIRLPOOL, ORCA } from '../constants';
 
 const whirlpoolQuery = async () => {
@@ -147,14 +147,6 @@ export const useWhirlPoolInformation = () => {
       ? reserveToken0
       : reserveToken1;
 
-    const reserveOlasBG = BigNumber.from(reserveOlas.toString());
-    const totalSupplyBG = BigNumber.from(totalSupply.toString());
-
-    const priceLP = reserveOlasBG
-      .mul(`${10 ** 18}`)
-      .div(totalSupplyBG)
-      .toString();
-
-    return priceLP;
+    return getCalculatedPriceLp(reserveOlas, totalSupply);
   }, [positions, getWhirlpoolData]);
 };

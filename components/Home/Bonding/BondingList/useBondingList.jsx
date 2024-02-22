@@ -28,6 +28,7 @@ import {
   getLpTokenLink,
   getCurrentPriceLpLink,
   getProductEvents,
+  getCalculatedPriceLp,
 } from './utils';
 import { useWhirlPoolInformation } from '../TokenManagement/hooks/useWhirlpool';
 
@@ -154,11 +155,10 @@ const getCurrentPriceBalancerFn = memoize(async (tokenAddress) => {
   const totalSupply = pool.totalShares;
   const firstPoolTokenAddress = pool.tokens[0].address;
   const olasTokenAddress = ADDRESSES[lpChainId].olasAddress;
-  const reservesOLAS = (areAddressesEqual(firstPoolTokenAddress, olasTokenAddress)
+  const reservesOlas = (areAddressesEqual(firstPoolTokenAddress, olasTokenAddress)
     ? pool.tokens[0].balance
     : pool.tokens[1].balance) * 1.0;
-  const priceLP = (reservesOLAS * 10 ** 18) / totalSupply;
-  return priceLP;
+  return getCalculatedPriceLp(reservesOlas, totalSupply);
 });
 
 /**
@@ -175,9 +175,10 @@ const useAddCurrentLpPriceToProducts = () => {
     // @Aleks, I think the below code is not needed and updated
     // because we already know the poolId for solana.
     // const tokenInfo = await getLpTokenDetails(tokenAddress);
-    // const priceLP = await getCurrentPriceWhirlpool(tokenInfo.poolId);
-    const priceLP = await getCurrentPriceWhirlpool(LP_PAIRS.svm.poolId);
-    return priceLP;
+
+    // const priceLp = await getCurrentPriceWhirlpool(tokenInfo.poolId);
+    const priceLp = await getCurrentPriceWhirlpool(LP_PAIRS.svm.poolId);
+    return priceLp;
   }, [getCurrentPriceWhirlpool]);
 
   return useCallback(
@@ -210,12 +211,13 @@ const useAddCurrentLpPriceToProducts = () => {
             //   currentLpPricePromiseList.push(currentLpPricePromise);
             // } else
             if (dex === DEX.BALANCER) {
-              currentLpPrice = getCurrentPriceBalancer(productList[i].token);
-              currentLpPricePromiseList.push(currentLpPrice);
+              // currentLpPrice = getCurrentPriceBalancer(productList[i].token);
+              // currentLpPricePromiseList.push(currentLpPrice);
+              // console.log('currentLpPrice', productList[i].token);
 
               // TODO: Uncomment to check for Solana, delete once WSOL is live
-              // currentLpPrice = getCurrentPriceForSvm(productList[i].token);
-              // currentLpPricePromiseList.push(currentLpPrice);
+              currentLpPrice = getCurrentPriceForSvm(productList[i].token);
+              currentLpPricePromiseList.push(currentLpPrice);
             } else if (dex === DEX.SOLANA) {
               currentLpPrice = getCurrentPriceForSvm(productList[i].token);
               currentLpPricePromiseList.push(currentLpPrice);
@@ -291,7 +293,7 @@ const getLpTokenNamesForProducts = async (productList, events) => {
  * output: [{
  *   ...list,
  *   supplyLeft,
- *   priceLP
+ *   priceLp
  * }]
  */
 const useAddSupplyLeftToProducts = () => useCallback(
@@ -321,11 +323,11 @@ const useAddSupplyLeftToProducts = () => useCallback(
 
     const supplyLeft = productSupply / Number(eventSupply);
 
-    const priceLP = product.token !== ADDRESS_ZERO
-      ? product.priceLP
-      : createProductEvent.returnValues?.priceLP || 0;
+    const priceLp = product.token !== ADDRESS_ZERO
+      ? product.priceLp
+      : createProductEvent.returnValues?.priceLp || 0;
 
-    return { ...product, supplyLeft, priceLP };
+    return { ...product, supplyLeft, priceLp };
   }),
   [],
 );
@@ -350,7 +352,7 @@ const useAddProjectChangeToProducts = () => useCallback(
     const fullCurrentPriceLp = Number(round(parseToEth(record.currentPriceLp * 2), 2)) || 0;
 
     const discountedOlasPerLpToken = getLpTokenWithDiscount(
-      record.priceLP,
+      record.priceLp || 0,
       record.discount || 0,
     );
 
@@ -408,7 +410,11 @@ const useProductDetailsFromIds = ({ retry }) => {
       }
 
       const response = await Promise.all(allListPromise);
-      const list = response.map((e, i) => ({ ...e, id: productIdList[i] }));
+      const list = response.map((e, i) => ({
+        ...e,
+        id: productIdList[i],
+        priceLp: e.priceLP,
+      }));
 
       const withDiscount = await addDiscountToProductList(list);
 
