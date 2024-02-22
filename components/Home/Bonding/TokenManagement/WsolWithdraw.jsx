@@ -31,14 +31,14 @@ export const WsolWithDraw = () => {
   }, [form]);
 
   useEffect(() => {
-    const tempMaxAmountFn = async () => {
+    const setMaxAmountFn = async () => {
       const tempAmount = await getMaxAmount();
       if (!isNil(tempAmount)) {
         setMaxAmount(tempAmount);
       }
     };
 
-    if (isSvmWalletConnected) tempMaxAmountFn();
+    if (isSvmWalletConnected) setMaxAmountFn();
   }, [isSvmWalletConnected, getMaxAmount]);
 
   const onAmountAndSlippageChange = async () => {

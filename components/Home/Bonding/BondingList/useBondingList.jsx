@@ -28,7 +28,6 @@ import {
   getLpTokenLink,
   getCurrentPriceLpLink,
   getProductEvents,
-  getCalculatedPriceLp,
 } from './utils';
 import { useWhirlPoolInformation } from '../TokenManagement/hooks/useWhirlpool';
 
@@ -67,7 +66,7 @@ export const LP_PAIRS = {
   svm: {
     lpChainId: 'svm',
     name: 'OLAS-WSOL',
-    originAddress: '', // TODO: will be sent later- origin address is the position
+    originAddress: '', // TODO: will be sent later - origin address is the position
     dex: DEX.SOLANA,
     poolId: ADDRESSES.svm.balancerVault,
   },
@@ -95,10 +94,9 @@ const getLastIDFRequest = async () => {
  * and the mirrored one from other mainnets.
  *
  * @returns {Object} { lpChainId, originAddress, dex, name, poolId }
- * }
  */
 const getLpTokenDetails = memoize(async (address) => {
-  // TODO: check for solana
+  // TODO: update for solana once the WSOL is live
   const chainId = getChainId();
 
   const currentLpPairDetails = Object.keys(LP_PAIRS).find(
@@ -140,6 +138,9 @@ const getLpTokenDetails = memoize(async (address) => {
   };
 });
 
+/**
+ * Fetches the current "price of the LP token" from Balancer
+ */
 const getCurrentPriceBalancerFn = memoize(async (tokenAddress) => {
   const { lpChainId, poolId } = await getLpTokenDetails(tokenAddress);
   const balancerConfig = { network: lpChainId, rpcUrl: RPC_URLS[lpChainId] };
@@ -158,7 +159,8 @@ const getCurrentPriceBalancerFn = memoize(async (tokenAddress) => {
   const reservesOlas = (areAddressesEqual(firstPoolTokenAddress, olasTokenAddress)
     ? pool.tokens[0].balance
     : pool.tokens[1].balance) * 1.0;
-  return getCalculatedPriceLp(reservesOlas, totalSupply);
+  const priceLP = (reservesOlas * 10 ** 18) / totalSupply;
+  return priceLP;
 });
 
 /**
@@ -172,11 +174,6 @@ const useAddCurrentLpPriceToProducts = () => {
   ]);
 
   const getCurrentPriceForSvm = useCallback(async () => {
-    // @Aleks, I think the below code is not needed and updated
-    // because we already know the poolId for solana.
-    // const tokenInfo = await getLpTokenDetails(tokenAddress);
-
-    // const priceLp = await getCurrentPriceWhirlpool(tokenInfo.poolId);
     const priceLp = await getCurrentPriceWhirlpool(LP_PAIRS.svm.poolId);
     return priceLp;
   }, [getCurrentPriceWhirlpool]);
@@ -211,12 +208,11 @@ const useAddCurrentLpPriceToProducts = () => {
             //   currentLpPricePromiseList.push(currentLpPricePromise);
             // } else
             if (dex === DEX.BALANCER) {
-              // currentLpPrice = getCurrentPriceBalancer(productList[i].token);
-              // currentLpPricePromiseList.push(currentLpPrice);
-              // console.log('currentLpPrice', productList[i].token);
+              currentLpPrice = getCurrentPriceBalancer(productList[i].token);
+              currentLpPricePromiseList.push(currentLpPrice);
 
               // TODO: Uncomment to check for Solana, delete once WSOL is live
-              currentLpPrice = getCurrentPriceForSvm(productList[i].token);
+              // currentLpPrice = getCurrentPriceForSvm(productList[i].token);
               currentLpPricePromiseList.push(currentLpPrice);
             } else if (dex === DEX.SOLANA) {
               currentLpPrice = getCurrentPriceForSvm(productList[i].token);
@@ -351,14 +347,14 @@ const useAddProjectChangeToProducts = () => useCallback(
     // we need the price for 2 LP tokens
     const fullCurrentPriceLp = Number(round(parseToEth(record.currentPriceLp * 2), 2)) || 0;
 
-    const discountedOlasPerLpToken = getLpTokenWithDiscount(
+    const discountedOlasPerLpTokenInBg = getLpTokenWithDiscount(
       record.priceLp || 0,
       record.discount || 0,
     );
 
     // parse to eth and round to 2 decimal places
     const roundedDiscountedOlasPerLpToken = round(
-      parseToEth(discountedOlasPerLpToken),
+      parseToEth(discountedOlasPerLpTokenInBg),
       2,
     );
 
@@ -454,9 +450,8 @@ const useProductListRequest = ({ isActive, retry }) => {
   const getProductDetailsFromIds = useProductDetailsFromIds({ retry });
 
   return useCallback(async () => {
-    // const contract = getDepositoryContract();
-    // const productIdList = await contract.methods.getProducts(isActive).call();
-    const productIdList = ['127'];
+    const contract = getDepositoryContract();
+    const productIdList = await contract.methods.getProducts(isActive).call();
     const response = await getProductDetailsFromIds(productIdList);
 
     const productList = response.map((product, index) => ({

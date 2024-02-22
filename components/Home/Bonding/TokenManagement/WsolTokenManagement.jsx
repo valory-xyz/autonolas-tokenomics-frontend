@@ -1,26 +1,15 @@
 import { useState } from 'react';
 import PropTypes from 'prop-types';
 import {
-  Button, Modal, Flex, Tabs, Tooltip,
+  Button, Modal, Flex, Tabs,
 } from 'antd';
 
 import { SolanaWallet } from 'common-util/Login/SolanaWallet';
 import { WsolDeposit } from './WsolDeposit';
 import { WsolWithDraw } from './WsolWithdraw';
 
-const IS_MANAGEMENT_ENABLED = true;
-
 export const WsolTokenManagement = ({ lpToken, lpTokenLink }) => {
   const [isManageModalVisible, setIsManageModalVisible] = useState(false);
-  const manageButton = (
-    <Button
-      type="primary"
-      disabled={!IS_MANAGEMENT_ENABLED}
-      onClick={() => setIsManageModalVisible(true)}
-    >
-      Manage
-    </Button>
-  );
 
   return (
     <>
@@ -28,11 +17,9 @@ export const WsolTokenManagement = ({ lpToken, lpTokenLink }) => {
         <a href={lpTokenLink} target="_blank" rel="noreferrer">
           {lpToken}
         </a>
-        {IS_MANAGEMENT_ENABLED ? (
-          manageButton
-        ) : (
-          <Tooltip title="Coming soon">{manageButton}</Tooltip>
-        )}
+        <Button type="primary" onClick={() => setIsManageModalVisible(true)}>
+          Manage
+        </Button>
       </Flex>
 
       <Modal

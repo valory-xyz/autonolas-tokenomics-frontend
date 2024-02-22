@@ -35,7 +35,6 @@ export const useWsolDeposit = () => {
   const { nodeProvider, svmWalletPublicKey } = useSvmConnectivity();
   const { getWhirlpoolData } = useWhirlpool();
   const customGetOrCreateAssociatedTokenAccount = useGetOrCreateAssociatedTokenAccount();
-
   const program = new Program(idl, PROGRAM_ID, nodeProvider);
 
   const getDepositIncreaseLiquidityQuote = async ({ wsol, slippage }) => {
@@ -43,7 +42,7 @@ export const useWsolDeposit = () => {
     const slippageTolerance = Percentage.fromDecimal(new Decimal(slippage));
     const inputTokenAmount = DecimalUtil.toBN(new Decimal(wsol), 9);
 
-    const quote = increaseLiquidityQuoteByInputTokenWithParams({
+    return increaseLiquidityQuoteByInputTokenWithParams({
       tokenMintA: whirlpoolTokenA.mint,
       tokenMintB: whirlpoolTokenB.mint,
       sqrtPrice: whirlpoolData.sqrtPrice,
@@ -54,8 +53,6 @@ export const useWsolDeposit = () => {
       inputTokenAmount,
       slippageTolerance,
     });
-
-    return quote;
   };
 
   const getDepositTransformedQuote = async (quote) => {
@@ -72,7 +69,6 @@ export const useWsolDeposit = () => {
     ).toFixed(whirlpoolTokenB.decimals);
 
     const liquidity = quote.liquidityAmount.toString();
-
     return { solMax, olasMax, liquidity };
   };
 
@@ -95,9 +91,6 @@ export const useWsolDeposit = () => {
       svmWalletPublicKey,
     );
 
-    // console.log('Token Owner Account A:', tokenOwnerAccountA.toString());
-    // console.log('Token Owner Account B:', tokenOwnerAccountB.toString());
-
     // Check if the user has the correct token account
     // and it is required to deposit
     if (
@@ -112,13 +105,11 @@ export const useWsolDeposit = () => {
       BRIDGED_TOKEN_MINT,
       svmWalletPublicKey,
     );
-    // console.log(
-    //   'User ATA for bridged:',
-    //   bridgedTokenAccount.address.toBase58(),
-    // );
 
     if (!bridgedTokenAccount) {
-      notifyError('You do not have the bridged token account, please try again.');
+      notifyError(
+        'You do not have the bridged token account, please try again.',
+      );
       return;
     }
 
@@ -140,15 +131,17 @@ export const useWsolDeposit = () => {
           lockbox: LOCKBOX,
           whirlpoolProgram: ORCA,
         })
-        // .signers([userWallet])
         .rpc();
 
       notifySuccess('Deposit successful', signature);
-      // console.log('Deposit Signature:', signature);
     } catch (error) {
       console.error(error);
     }
   };
 
-  return { getDepositIncreaseLiquidityQuote, getDepositTransformedQuote, deposit };
+  return {
+    getDepositIncreaseLiquidityQuote,
+    getDepositTransformedQuote,
+    deposit,
+  };
 };

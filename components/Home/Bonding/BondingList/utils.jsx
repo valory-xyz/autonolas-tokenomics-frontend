@@ -33,12 +33,11 @@ export const getProductValueFromEvent = (product, events, keyName) => {
  *
  * @param {Number | String} lpTokenValue
  * @param {Number | String} discount
- * @returns {BigNumber}
  */
 export const getLpTokenWithDiscount = (lpTokenValue, discount) => {
   const price = ethers.BigNumber.from(lpTokenValue);
-  const discountedPrice = price.add(price.mul(discount).div(100));
-  return discountedPrice;
+  const discountedPriceInBg = price.add(price.mul(discount).div(100));
+  return discountedPriceInBg;
 };
 
 const getProductEventsNonMemoized = async (eventName, retry) => {
@@ -51,7 +50,7 @@ const getProductEventsNonMemoized = async (eventName, retry) => {
   // Also, previous 200000 blocks means approximately 200000 * 15s = 50 days
   // Try to adjust the lookbackBlockCount if you are running into issues
   // such as events not being fetched.
-  const lookbackBlockCount = (getChainId() || 1) >= 100000 ? 50 : 300000;
+  const lookbackBlockCount = (getChainId() || 1) >= 100000 ? 50 : 350000;
   const chunkSize = retry > 0 ? 500 : 50000;
   const eventPromises = [];
   const delayBetweenRequestsInMs = 100;

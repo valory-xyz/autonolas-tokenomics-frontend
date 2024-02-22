@@ -58,7 +58,6 @@ export const useWsolWithdraw = () => {
   const { getWhirlpoolData } = useWhirlpool();
   const getBridgedTokenAccount = useBridgedTokenAccount();
   const customGetOrCreateAssociatedTokenAccount = useGetOrCreateAssociatedTokenAccount();
-
   const program = new Program(idl, PROGRAM_ID, nodeProvider);
 
   const withdrawTransformedQuote = async (quote) => {
@@ -82,7 +81,7 @@ export const useWsolWithdraw = () => {
     const slippageTolerance = Percentage.fromDecimal(new Decimal(slippage));
     const liquidity = DecimalUtil.toBN(new Decimal(amount), 9);
 
-    const quote = decreaseLiquidityQuoteByLiquidityWithParams({
+    return decreaseLiquidityQuoteByLiquidityWithParams({
       sqrtPrice: whirlpoolData.sqrtPrice,
       tickCurrentIndex: whirlpoolData.tickCurrentIndex,
       tickLowerIndex,
@@ -90,8 +89,6 @@ export const useWsolWithdraw = () => {
       liquidity,
       slippageTolerance,
     });
-
-    return quote;
   };
 
   /**
@@ -116,13 +113,6 @@ export const useWsolWithdraw = () => {
     tokenAccounts.value.forEach((tokenAccount) => {
       const accountData = AccountLayout.decode(tokenAccount.account.data);
       if (accountData.mint.toString() === BRIDGED_TOKEN_MINT.toString()) {
-        // console.log(
-        //   'Bridged Token Accounts:',
-        //   tokenAccount.pubkey,
-        //   accountData,
-        //   bridgedTokenAccount,
-        // );
-
         if (tokenAccount.pubkey.toString() === bridgedTokenAccount) {
           maxAmount = accountData.amount.toString();
         }
@@ -159,7 +149,6 @@ export const useWsolWithdraw = () => {
       notifyError(TOKEN_MINT_ERROR);
       return;
     }
-    // console.log('User ATA for tokenA:', tokenOwnerAccountA.address.toBase58());
 
     // Get the tokenB ATA of the userWallet address, and if it does not exist, create it
     const tokenOwnerAccountB = await customGetOrCreateAssociatedTokenAccount(
@@ -170,7 +159,6 @@ export const useWsolWithdraw = () => {
       notifyError(TOKEN_MINT_ERROR);
       return;
     }
-    // console.log('User ATA for tokenB:', tokenOwnerAccountB.address.toBase58());
 
     const quote = await withdrawDecreaseLiquidityQuote({ amount, slippage });
     try {

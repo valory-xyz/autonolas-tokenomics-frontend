@@ -76,8 +76,7 @@ const getColumns = (
       dataIndex: 'lpTokenName',
       key: 'lpTokenName',
       render: (x, data) => {
-        if (x === LP_PAIRS['0x36B203Cb3086269f005a4b987772452243c0767f'].name) {
-          // if (x === LP_PAIRS.svm.name) { // TODO: uncomment once the LP token is available
+        if (x !== LP_PAIRS.svm.name) {
           return (
             <WsolTokenManagement lpToken={x} lpTokenLink={data.lpTokenLink} />
           );
@@ -362,7 +361,7 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
         <Deposit
           productId={productDetails?.id}
           productToken={productDetails?.token}
-          productLpPrice={getLpTokenWithDiscount(
+          productLpPriceInBg={getLpTokenWithDiscount(
             productDetails?.priceLp,
             productDetails?.discount,
           )}

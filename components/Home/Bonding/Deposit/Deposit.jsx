@@ -22,7 +22,7 @@ const fullWidth = { width: '100%' };
 export const Deposit = ({
   productId,
   productToken,
-  productLpPrice,
+  productLpPriceInBg,
   productSupply,
   getProducts,
   closeModal,
@@ -117,7 +117,7 @@ export const Deposit = ({
 
   const getRemainingLpSupply = () => {
     const supplyInWei = BigNumber.from(productSupply);
-    const remainingSupply = supplyInWei.mul(ONE_ETH).div(productLpPrice);
+    const remainingSupply = supplyInWei.mul(ONE_ETH).div(productLpPriceInBg);
     if (remainingSupply.lt(lpBalance)) return remainingSupply;
     return lpBalance;
   };
@@ -138,7 +138,7 @@ export const Deposit = ({
     const tokenAmountWei = BigNumber.from(parseToWei(tokenAmountInputValue));
     const olasPayout = tokenAmountInputValue
       ? Number(
-        BigNumber.from(productLpPrice)
+        BigNumber.from(productLpPriceInBg)
           .mul(tokenAmountWei)
           .div(ONE_ETH)
           .div(ONE_ETH),
@@ -275,7 +275,7 @@ Deposit.propTypes = {
   productId: PropTypes.string,
   productToken: PropTypes.string,
   productSupply: PropTypes.string,
-  productLpPrice: PropTypes.shape({}),
+  productLpPriceInBg: PropTypes.shape({}),
   closeModal: PropTypes.func,
   getProducts: PropTypes.func,
 };
@@ -283,7 +283,7 @@ Deposit.propTypes = {
 Deposit.defaultProps = {
   productId: undefined,
   productToken: null,
-  productLpPrice: null,
+  productLpPriceInBg: null,
   productSupply: null,
   closeModal: () => {},
   getProducts: () => {},

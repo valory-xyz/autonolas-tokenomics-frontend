@@ -17,16 +17,13 @@ import { WHIRLPOOL, ORCA } from '../constants';
 const whirlpoolQuery = async () => {
   const SHYFT_API_KEY = process.env.NEXT_PUBLIC_SHYFT_API_KEY;
   if (!SHYFT_API_KEY) {
-    throw new Error('SHYFT_API_KEY is not set');
+    throw new Error('SHYFT_API_KEY is not available');
   }
 
   const endpoint = `https://programs.shyft.to/v0/graphql/?api_key=${SHYFT_API_KEY}`;
   const graphQLClient = new GraphQLClient(endpoint, {
     method: 'POST',
-    jsonSerializer: {
-      parse: JSON.parse,
-      stringify: JSON.stringify,
-    },
+    jsonSerializer: { parse: JSON.parse, stringify: JSON.stringify },
   });
 
   // Can build queries using Hasura: https://docs.shyft.to/solana-indexers/instant-graphql-apis/getting-started
