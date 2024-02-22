@@ -77,7 +77,7 @@ export const WsolDeposit = () => {
   const isDepositButtonDisabled = isEstimating || isDepositing || !isSvmWalletConnected;
   const estimatedOutput = `${
     getCommaSeparatedNumber(estimatedQuote?.liquidity) || '--'
-  } LP Tokens`;
+  } Bridged Tokens`;
 
   return (
     <Form

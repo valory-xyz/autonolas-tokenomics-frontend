@@ -103,7 +103,7 @@ export const WsolWithDraw = () => {
         rules={[{ required: true, message: 'Please input a valid amount' }]}
         label={(
           <>
-            Amount
+            Bridged Tokens Amount
             <Button
               size="small"
               type="primary"

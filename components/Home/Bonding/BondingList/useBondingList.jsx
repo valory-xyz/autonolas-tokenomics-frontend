@@ -182,7 +182,6 @@ const useAddCurrentLpPriceToProducts = () => {
 
   return useCallback(
     async (productList) => {
-      console.log('productList', productList);
       const contract = getDepositoryContract();
 
       const currentLpPricePromiseList = [];
@@ -235,10 +234,17 @@ const useAddCurrentLpPriceToProducts = () => {
 };
 
 /**
- * Fetches the LP token name for the product list
+ * Fetches the LP token details for the product list and adds
+ * the following details to the list
  * @example
  * input: [{ token: '0x', ...others }]
- * output: [{ token: '0x', lpTokenName: 'OLAS-ETH', ...others }]
+ * output: [{
+ *   ...others,
+ *   currentPriceLpLink: 'https://...',
+ *   lpChainId: xx,
+ *   lpTokenLink: https://...,
+ *   lpTokenName: 'OLAS-ETH',
+ * }]
  */
 const getLpTokenNamesForProducts = async (productList, events) => {
   const lpTokenNamePromiseList = [];
@@ -280,6 +286,13 @@ const getLpTokenNamesForProducts = async (productList, events) => {
 
 /**
  * hook to add the supply left to the products
+ * @example
+ * input: [{ list }]
+ * output: [{
+ *   ...list,
+ *   supplyLeft,
+ *   priceLP
+ * }]
  */
 const useAddSupplyLeftToProducts = () => useCallback(
   async (list, createProductEvents, closedProductEvents = []) => list.map((product) => {
@@ -320,6 +333,14 @@ const useAddSupplyLeftToProducts = () => useCallback(
 /**
  * Adds the projected change & discounted olas per LP token to the list.
  * Also, multiplies the current price of the LP token by 2
+ * @example input: [{ ...list }]
+ * @example output: [
+ *  { ...list,
+ *    fullCurrentPriceLp,
+ *    roundedDiscountedOlasPerLpToken,
+ *    projectedChange
+ *  }
+ * ]
  */
 const useAddProjectChangeToProducts = () => useCallback(
   (productList) => productList.map((record) => {
@@ -388,6 +409,7 @@ const useProductDetailsFromIds = ({ retry }) => {
 
       const response = await Promise.all(allListPromise);
       const list = response.map((e, i) => ({ ...e, id: productIdList[i] }));
+
       const withDiscount = await addDiscountToProductList(list);
 
       const withCurrentLpPrice = await addCurrentLpPriceToProducts(
@@ -406,6 +428,7 @@ const useProductDetailsFromIds = ({ retry }) => {
       );
 
       const withProjectedChange = addProjectedChange(withSupplyList);
+
       return withProjectedChange;
     },
     [
@@ -450,8 +473,6 @@ export const useProducts = ({ isActive }) => {
   const { chainId } = useHelpers();
   const getProductListRequest = useProductListRequest({ isActive, retry });
 
-  const depositoryAddress = ADDRESSES[chainId].depository;
-
   const getProducts = useCallback(async () => {
     try {
       setErrorState(false);
@@ -472,20 +493,30 @@ export const useProducts = ({ isActive }) => {
     }
   }, [retry, isActive, getProductListRequest]);
 
-  // fetch the bonding list
   useEffect(() => {
     getProducts();
   }, [getProducts]);
+
+  const handleProductDetails = useCallback(
+    (row) => {
+      setProductDetails(row);
+    },
+    [setProductDetails],
+  );
+
+  const handleRetry = useCallback(() => {
+    setRetry((prev) => prev + 1);
+  }, [setRetry]);
 
   return {
     isLoading,
     errorState,
     filteredProducts,
     retry,
-    setRetry,
+    handleRetry,
     productDetails,
-    setProductDetails,
-    depositoryAddress,
+    handleProductDetails,
+    depositoryAddress: ADDRESSES[chainId].depository,
     refetch: getProducts,
   };
 };

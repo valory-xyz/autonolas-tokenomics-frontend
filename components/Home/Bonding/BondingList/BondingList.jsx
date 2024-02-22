@@ -75,7 +75,6 @@ const getColumns = (
       title: getTitle('LP Token', 'LP token address enabled by the Treasury'),
       dataIndex: 'lpTokenName',
       key: 'lpTokenName',
-      // width: 180,
       render: (x, data) => {
         if (x === LP_PAIRS['0x36B203Cb3086269f005a4b987772452243c0767f'].name) {
           // if (x === LP_PAIRS.svm.name) { // TODO: uncomment once the LP token is available
@@ -273,19 +272,19 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
     errorState,
     filteredProducts,
     retry,
-    setRetry,
+    handleRetry,
     productDetails,
-    setProductDetails,
+    handleProductDetails,
     depositoryAddress,
     refetch,
   } = useProducts({ isActive });
 
   const onBondClick = (row) => {
-    setProductDetails(row);
+    handleProductDetails(row);
   };
 
   const onModalClose = () => {
-    setProductDetails(null);
+    handleProductDetails(null);
   };
 
   const sortList = (list) => list.sort((a, b) => {
@@ -301,10 +300,6 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
       : sortedList;
 
     return processedList;
-  };
-
-  const handleRetry = () => {
-    setRetry((prevRetry) => prevRetry + 1);
   };
 
   if (errorState) {
