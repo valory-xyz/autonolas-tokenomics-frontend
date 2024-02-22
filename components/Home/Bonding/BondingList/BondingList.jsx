@@ -76,7 +76,7 @@ const getColumns = (
       dataIndex: 'lpTokenName',
       key: 'lpTokenName',
       render: (x, data) => {
-        if (x !== LP_PAIRS.svm.name) {
+        if (x === LP_PAIRS.svm.name) {
           return (
             <WsolTokenManagement lpToken={x} lpTokenLink={data.lpTokenLink} />
           );
