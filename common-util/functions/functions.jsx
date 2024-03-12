@@ -14,6 +14,7 @@ import {
 
 import { RPC_URLS } from 'common-util/Contracts';
 import { SUPPORTED_CHAINS } from 'common-util/Login';
+import { isAddressProhibited } from './utils';
 
 const getSupportedChains = () => (process.env.NEXT_PUBLIC_IS_CONNECTED_TO_LOCAL === 'true'
   ? [...SUPPORTED_CHAINS, { id: LOCAL_FORK_ID }]
@@ -38,10 +39,16 @@ export const getChainId = (chainId = null) => {
   return getChainIdFn(getSupportedChains(), chainId);
 };
 
-export const sendTransaction = (fn, account) => sendTransactionFn(fn, account, {
-  supportedChains: getSupportedChains(),
-  rpcUrls: RPC_URLS,
-});
+export const sendTransaction = (fn, account) => {
+  if (isAddressProhibited(account)) {
+    return Promise.reject(new Error('Something went wrong!'));
+  }
+
+  return sendTransactionFn(fn, account, {
+    supportedChains: getSupportedChains(),
+    rpcUrls: RPC_URLS,
+  });
+};
 
 /**
  * https://docs.ethers.org/v5/api/utils/constants/#constants-MaxUint256
