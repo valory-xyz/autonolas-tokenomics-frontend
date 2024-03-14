@@ -26,7 +26,7 @@ const columns = [
     key: 'pendingRelativeReward',
   },
   {
-    title: 'Pending Topup',
+    title: 'Pending Topup (OLAS)',
     dataIndex: 'pendingRelativeTopUp',
     key: 'pendingRelativeTopUp',
   },
