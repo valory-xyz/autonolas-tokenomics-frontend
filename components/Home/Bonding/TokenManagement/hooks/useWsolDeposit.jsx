@@ -20,6 +20,7 @@ import {
   ORCA,
   PDA_POSITION_ACCOUNT,
   POSITION,
+  POSITION_MINT,
   PROGRAM_ID,
   TICK_ARRAY_LOWER,
   TICK_ARRAY_UPPER,
@@ -118,6 +119,7 @@ export const useWsolDeposit = () => {
         .deposit(quote.liquidityAmount, quote.tokenMaxA, quote.tokenMaxB)
         .accounts({
           position: POSITION,
+          poistionMint: POSITION_MINT,
           pdaPositionAccount: PDA_POSITION_ACCOUNT,
           whirlpool: WHIRLPOOL,
           tokenOwnerAccountA,
