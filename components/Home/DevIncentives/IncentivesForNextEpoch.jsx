@@ -25,12 +25,11 @@ const columns = [
     dataIndex: 'pendingRelativeReward',
     key: 'pendingRelativeReward',
   },
-  // TODO: do the calculation later, as it is complicated
-  // {
-  //   title: 'Pending Topup',
-  //   dataIndex: 'pendingRelativeTopUp',
-  //   key: 'pendingRelativeTopUp',
-  // },
+  {
+    title: 'Pending Topup',
+    dataIndex: 'pendingRelativeTopUp',
+    key: 'pendingRelativeTopUp',
+  },
 ];
 
 export const IncentivesForNextEpoch = () => {
