@@ -14,6 +14,10 @@ import {
   getComponentContract,
 } from 'common-util/Contracts';
 
+const fixTo8DecimalPlaces = (value) => {
+  if (Number.isNaN(Number(value))) return 0;
+  return Number(value) > 0 ? Number(value).toFixed(8) : 0;
+};
 /**
  * fetches the owners of the units
  */
@@ -86,17 +90,14 @@ const getEpochTokenomics = async (epochNum) => {
 
 // Structure for component / agent point with tokenomics-related statistics
 // struct UnitPoint {
-// // Summation of all the relative OLAS top-ups accumulated by
-// each component / agent in a service
-//   uint96 sumUnitTopUpsOLAS; [0]
-//   uint32 numNewUnits; // Number of new units [1]
+//   uint96 sumUnitTopUpsOLAS; // [0]
+//   uint32 numNewUnits;       // Number of new units [1]
 //   uint8 rewardUnitFraction; // Reward component / agent fraction [2]
-//   uint8 topUpUnitFraction; // Top-up component / agent fraction [3]
+//   uint8 topUpUnitFraction;  // Top-up component / agent fraction [3]
 // }
 const getUnitPointReq = async ({ lastPoint, num }) => {
   const contract = getTokenomicsContract();
   const response = await contract.methods.getUnitPoint(lastPoint, num).call();
-  console.log('getUnitPointReq: ', response);
   return response;
 };
 
@@ -133,8 +134,6 @@ export const getMapUnitIncentivesRequest = async ({ unitType, unitId }) => {
     .mapUnitIncentives(unitType, unitId)
     .call();
 
-  console.log(response);
-
   const currentEpochCounter = await getEpochCounter();
 
   // Get the unit points of the last epoch
@@ -150,11 +149,11 @@ export const getMapUnitIncentivesRequest = async ({ unitType, unitId }) => {
 
   // Struct for component / agent incentive balances
   // struct IncentiveBalances {
-  //   uint96 reward; // Reward in ETH [0]
+  //   uint96 reward;                // Reward in ETH [0]
   //   uint96 pendingRelativeReward; // Pending relative reward in ETH [1]
-  //   uint96 topUp; // Top-up in OLAS [2]
-  //   uint96 pendingRelativeTopUp; // Pending relative top-up [3]
-  //   uint32 lastEpoch;  // Last epoch number the information was updated [4]
+  //   uint96 topUp;                 // Top-up in OLAS [2]
+  //   uint96 pendingRelativeTopUp;  // Pending relative top-up [3]
+  //   uint32 lastEpoch;             // Last epoch number the information was updated [4]
   // }
   const { pendingRelativeReward, pendingRelativeTopUp, lastEpoch } = response;
 
@@ -207,37 +206,25 @@ export const getMapUnitIncentivesRequest = async ({ unitType, unitId }) => {
     const epochLength = await getEpochLength();
     const isValid = await canShowCheckpoint(true);
 
-    console.log({
-      totalIncentivesInEth: totalIncentives,
-      inflationPerEpochInEth: parseToEth(inflationPerEpoch),
-      inflationPerSecondInEth: parseToEth(inflationPerSecond),
-      epochLength,
-      isValid,
-    });
-
     const totalTopUps = isValid
       ? parseToEth(inflationPerSecond) * epochLength
       : parseToEth(inflationPerEpoch);
     totalIncentives *= totalTopUps;
-    console.log({ totalTopUps });
 
     const componentSumIncentivesInEth = parseToEth(cSumUnitTopUpsOLAS) * 100;
     const agentSumIncentivesInEth = parseToEth(aSumUnitTopUpsOLAS) * 100;
 
     componentTopUp = (totalIncentives * cTopupFraction) / componentSumIncentivesInEth;
     agentPendingTopUp = (totalIncentives * aTopupFraction) / agentSumIncentivesInEth;
-    console.log({
-      aTopupFraction,
-      aSumUnitTopUpsOLASInEth: parseToEth(aSumUnitTopUpsOLAS),
-      agentPendingTopUp,
-    });
   }
 
   return {
-    pendingRelativeReward:
+    pendingRelativeReward: fixTo8DecimalPlaces(
       unitType === UNIT_TYPES.COMPONENT ? componentReward : agentReward,
-    pendingRelativeTopUp:
+    ),
+    pendingRelativeTopUp: fixTo8DecimalPlaces(
       unitType === UNIT_TYPES.COMPONENT ? componentTopUp : agentPendingTopUp,
+    ),
     id: '0',
     key: '0',
   };
