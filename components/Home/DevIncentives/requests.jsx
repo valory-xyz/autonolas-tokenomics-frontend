@@ -157,9 +157,6 @@ export const getMapUnitIncentivesRequest = async ({ unitType, unitId }) => {
   // }
   const { pendingRelativeReward, pendingRelativeTopUp, lastEpoch } = response;
 
-  // let agentTotalIncentives = 0;
-  // let pendingRelativeRewardTemp = 0;
-
   const rewardInEth = parseToEth(pendingRelativeReward);
   const isCurrentEpochWithReward = currentEpochCounter === Number(lastEpoch) && rewardInEth > 0;
 
@@ -187,7 +184,7 @@ export const getMapUnitIncentivesRequest = async ({ unitType, unitId }) => {
 
   /**
    * for unitType agent(0) & component(1),
-   * the below formula is used to calculate the incentives
+   * the below calulcation is done to get the reward and topup
    */
   const componentReward = (rewardInEth * cRewardFraction) / 100;
   const agentReward = (rewardInEth * aRewardFraction) / 100;
