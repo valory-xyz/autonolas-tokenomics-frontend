@@ -8,12 +8,10 @@ import {
   MAX_AMOUNT,
   ADDRESS_ZERO,
   ONE_ETH,
-  getEthersProvider,
   sendTransaction,
   getChainId,
   isL1Network,
   parseToEth,
-  delay,
 } from 'common-util/functions';
 import {
   getDepositoryContract,
@@ -24,6 +22,7 @@ import {
   ADDRESSES,
   RPC_URLS,
 } from 'common-util/Contracts';
+import { gql, GraphQLClient } from 'graphql-request';
 import {
   getProductValueFromEvent,
   getLpTokenWithDiscount,
@@ -81,53 +80,53 @@ const getBondingProgramsRequest = async ({ isActive }) => {
   return response;
 };
 
-/**
- * returns events for the product creation
- */
-const getProductEventsFn = async (eventName, retry) => {
-  const contract = getDepositoryContract();
-  const provider = getEthersProvider();
-  const block = await provider.getBlock('latest');
+const getCreateProductEventsFn = async () => {
+  const graphQLClient = new GraphQLClient(process.env.NEXT_PUBLIC_GRAPH_ENDPOINT_MAINNET, {
+    method: 'POST',
+    jsonSerializer: {
+      parse: JSON.parse,
+      stringify: JSON.stringify,
+    },
+  });
 
-  // handle forked chains with very high chain IDs because they are
-  // bad at handling large event lookbacks, hence 50 blocks.
-  // Also, previous 200000 blocks means approximately 200000 * 15s = 50 days
-  // Try to adjust the lookbackBlockCount if you are running into issues
-  // such as events not being fetched.
-  const lookbackBlockCount = (getChainId() || 1) >= 100000
-    ? 50
-    : Number(process.env.NEXT_PUBLIC_LOOKBACK) || 400000; // fetch from .env or default to 400000
-  const chunkSize = retry > 0 ? 500 : 50000;
-  const eventPromises = [];
-  const delayBetweenRequestsInMs = 100;
+  const query = gql`
+  query GetCreateProducts {
+    createProducts(first: 1000) {
+      productId
+      token
+      priceLP
+      supply
+      vesting
+    }
+  }`;
 
-  for (
-    let fromBlock = block.number - lookbackBlockCount;
-    fromBlock <= block.number;
-    fromBlock += chunkSize
-  ) {
-    const toBlock = Math.min(fromBlock + chunkSize - 1, block.number);
-    eventPromises.push(
-      contract
-        .getPastEvents(eventName, {
-          fromBlock,
-          toBlock,
-        })
-        .then((events) => ({ fromBlock, toBlock, events })),
-    );
-  }
-
-  // Introduce delays between each chunk request without using await inside the loop
-  const eventsChunks = await Promise.all(
-    /* eslint-disable-next-line max-len */
-    eventPromises.map((p, index) => p.then((result) => delay(index * delayBetweenRequestsInMs).then(() => result.events))),
-  );
-
-  const events = eventsChunks.flat();
-
-  return events;
+  const res = await graphQLClient.request(query);
+  return res.createProducts;
 };
-const getProductEvents = memoize(getProductEventsFn);
+const getCreateProductEvents = memoize(getCreateProductEventsFn);
+
+const getCloseProductEventsFn = async () => {
+  const graphQLClient = new GraphQLClient(process.env.NEXT_PUBLIC_GRAPH_ENDPOINT_MAINNET, {
+    method: 'POST',
+    jsonSerializer: {
+      parse: JSON.parse,
+      stringify: JSON.stringify,
+    },
+  });
+
+  const query = gql`
+  query GetCloseProducts {
+    closeProducts(first: 1000) {
+      productId
+      token
+      supply
+    }
+  }`;
+
+  const res = await graphQLClient.request(query);
+  return res.closeProducts;
+};
+const getCloseProductEvents = memoize(getCloseProductEventsFn);
 
 /**
  * Fetches detials of the LP token.
@@ -329,17 +328,17 @@ const getCurrentLpPriceForProducts = async (productList) => {
   }));
 };
 
-export const getListWithSupplyList = async (
+export const getListWithSupplyList = (
   list,
   createProductEvents,
   closedProductEvents = [],
 ) => list.map((product) => {
   const createProductEvent = createProductEvents?.find(
-    (event) => event?.returnValues?.productId === `${product.id}`,
+    (event) => event.productId === `${product.id}`,
   );
 
   const closeProductEvent = closedProductEvents?.find(
-    (event) => event?.returnValues?.productId === `${product.id}`,
+    (event) => event.productId === `${product.id}`,
   );
 
   // Should not happen but we will warn if it does
@@ -348,21 +347,21 @@ export const getListWithSupplyList = async (
   }
 
   const eventSupply = Number(
-    ethers.BigNumber.from(createProductEvent.returnValues.supply).div(
+    ethers.BigNumber.from(createProductEvent.supply).div(
       ONE_ETH,
     ),
   );
   const productSupply = !closeProductEvent
     ? Number(ethers.BigNumber.from(product.supply).div(ONE_ETH))
     : Number(
-      ethers.BigNumber.from(closeProductEvent.returnValues.supply).div(
+      ethers.BigNumber.from(closeProductEvent.supply).div(
         ONE_ETH,
       ),
     );
   const supplyLeft = productSupply / eventSupply;
   const priceLP = product.token !== ADDRESS_ZERO
     ? product.priceLP
-    : createProductEvent?.returnValues?.priceLP || 0;
+    : createProductEvent?.priceLP || 0;
 
   return { ...product, supplyLeft, priceLP };
 });
@@ -406,7 +405,7 @@ const getLpPriceWithProjectedChange = (list) => list.map((record) => {
 /**
  *
  */
-const getProductDetailsFromIds = async ({ productIdList }, retry) => {
+const getProductDetailsFromIds = async ({ productIdList }) => {
   const contract = getDepositoryContract();
 
   const allListPromise = [];
@@ -430,15 +429,15 @@ const getProductDetailsFromIds = async ({ productIdList }, retry) => {
     productList,
   );
 
-  const createEventList = await getProductEvents('CreateProduct', retry);
-  const closedEventList = await getProductEvents('CloseProduct', retry);
+  const createEventList = await getCreateProductEvents();
+  const closedEventList = await getCloseProductEvents();
 
   const listWithLpTokens = await getLpTokenNamesForProducts(
     listWithCurrentLpPrice,
     createEventList,
   );
 
-  const listWithSupplyList = await getListWithSupplyList(
+  const listWithSupplyList = getListWithSupplyList(
     listWithLpTokens,
     createEventList,
     closedEventList,
@@ -452,15 +451,13 @@ const getProductDetailsFromIds = async ({ productIdList }, retry) => {
 /**
  * fetches product list based on the active/inactive status
  */
-export const getProductListRequest = async ({ isActive }, retry) => {
+export const getProductListRequest = async ({ isActive }) => {
   const productIdList = await getBondingProgramsRequest({ isActive });
-  const response = await getProductDetailsFromIds({ productIdList }, retry);
-  const discount = await getLastIDFRequest(); // discount factor is same for all the products
+  const response = await getProductDetailsFromIds({ productIdList });
 
   const productList = response.map((product, index) => ({
     id: productIdList[index],
     key: productIdList[index],
-    discount,
     ...product,
   }));
 
