@@ -110,19 +110,13 @@ const getEpochLength = async () => {
 };
 
 const getEpochDetails = async () => {
-  try {
-    const epCounter = await getEpochCounter();
-    const epTokenomics = await getEpochTokenomics(Number(epCounter) - 1);
-    const epochLen = await getEpochLength();
-    const blockTimestamp = await getBlockTimestamp();
-    const timeDiff = blockTimestamp - epTokenomics.endTime;
+  const epCounter = await getEpochCounter();
+  const epTokenomics = await getEpochTokenomics(Number(epCounter) - 1);
+  const epochLen = await getEpochLength();
+  const blockTimestamp = await getBlockTimestamp();
+  const timeDiff = blockTimestamp - epTokenomics.endTime;
 
-    return { timeDiff, epochLen };
-  } catch (error) {
-    console.error(error);
-  }
-
-  return { timeDiff: 0, epochLen: 0 };
+  return { timeDiff, epochLen };
 };
 
 export const canShowCheckpoint = async () => {
