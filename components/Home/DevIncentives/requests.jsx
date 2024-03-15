@@ -16,8 +16,9 @@ import {
 } from 'common-util/Contracts';
 
 const fixTo8DecimalPlaces = (value) => {
-  if (Number.isNaN(Number(value))) return 0;
-  return Number(value) > 0 ? Number(value).toFixed(8) : 0;
+  const numeralValue = Number(value);
+  if (Number.isNaN(numeralValue)) return 0;
+  return numeralValue > 0 ? numeralValue.toFixed(8) : 0;
 };
 /**
  * fetches the owners of the units
