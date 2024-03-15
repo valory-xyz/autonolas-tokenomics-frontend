@@ -13,10 +13,10 @@ export const getProductValueFromEvent = (product, events, keyName) => {
   }
 
   const event = events?.find(
-    (e) => e?.returnValues?.productId === `${product.id}`,
+    (e) => e?.productId === `${product.id}`,
   );
   if (!event) notifyError('Product not found in the event list');
-  return event.returnValues[keyName];
+  return event[keyName];
 };
 
 // FUNCTIONS FOR CALCULATIONS

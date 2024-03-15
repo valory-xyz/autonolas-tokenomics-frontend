@@ -247,19 +247,11 @@ const NoProducts = () => (
   </>
 );
 
-const ThisCanTakeUpTo30Seconds = () => (
-  <>
-    <br />
-    This can take up to 30 seconds
-  </>
-);
-
 export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
   const { account, chainId } = useHelpers();
   const [isLoading, setIsLoading] = useState(false);
   const [errorState, setErrorState] = useState(false);
   const [filteredProducts, setFilteredProducts] = useState([]);
-  const [retry, setRetry] = useState(0);
 
   // if productDetails is `not null`, then open the deposit modal
   const [productDetails, setProductDetails] = useState(null);
@@ -274,7 +266,6 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
 
       const filteredProductList = await getProductListRequest(
         { isActive },
-        retry,
       );
       setFilteredProducts(filteredProductList);
     } catch (error) {
@@ -290,7 +281,7 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
   // fetch the bonding list
   useEffect(() => {
     getProducts();
-  }, [account, chainId, bondingProgramType, retry]);
+  }, [account, chainId, bondingProgramType]);
 
   const onBondClick = (row) => {
     setProductDetails(row);
@@ -316,7 +307,7 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
   };
 
   const handleRetry = () => {
-    setRetry((prevRetry) => prevRetry + 1);
+    getProducts();
   };
 
   if (errorState) {
@@ -365,7 +356,6 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
           tip: (
             <Typography className="mt-8">
               Loading products
-              {retry > 0 && <ThisCanTakeUpTo30Seconds />}
             </Typography>
           ),
           indicator: <Spin active />,
