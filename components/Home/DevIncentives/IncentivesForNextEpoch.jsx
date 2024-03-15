@@ -121,6 +121,7 @@ export const IncentivesForNextEpoch = () => {
         <Col lg={10} xs={24}>
           {pendingIncentives.length > 0 && (
             <Table
+              loading={isLoading}
               columns={columns}
               dataSource={pendingIncentives}
               bordered
