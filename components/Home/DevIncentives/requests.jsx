@@ -1,3 +1,4 @@
+import { BigNumber } from 'ethers';
 import { notifyError } from '@autonolas/frontend-library';
 
 import { UNIT_TYPES } from 'util/constants';
@@ -157,8 +158,8 @@ export const getMapUnitIncentivesRequest = async ({ unitType, unitId }) => {
   // }
   const { pendingRelativeReward, pendingRelativeTopUp, lastEpoch } = response;
 
-  const rewardInEth = parseToEth(pendingRelativeReward);
-  const isCurrentEpochWithReward = currentEpochCounter === Number(lastEpoch) && rewardInEth > 0;
+  const rewardInBn = BigNumber.from(pendingRelativeReward);
+  const isCurrentEpochWithReward = currentEpochCounter === Number(lastEpoch) && rewardInBn.gt(0);
 
   // if the current epoch is not the last epoch, return 0
   if (!isCurrentEpochWithReward) {
@@ -186,10 +187,10 @@ export const getMapUnitIncentivesRequest = async ({ unitType, unitId }) => {
    * for unitType agent(0) & component(1),
    * the below calulcation is done to get the reward and topup
    */
-  const componentReward = (rewardInEth * cRewardFraction) / 100;
-  const agentReward = (rewardInEth * aRewardFraction) / 100;
+  const componentReward = rewardInBn.mul(cRewardFraction).div(100).toString();
+  const agentReward = rewardInBn.mul(aRewardFraction).div(100).toString();
 
-  let totalIncentives = parseToEth(pendingRelativeTopUp);
+  let totalIncentives = BigNumber.from(pendingRelativeTopUp);
   let componentTopUp = 0;
   let agentPendingTopUp = 0;
 
@@ -204,24 +205,33 @@ export const getMapUnitIncentivesRequest = async ({ unitType, unitId }) => {
     const isValid = await canShowCheckpoint(true);
 
     const totalTopUps = isValid
-      ? parseToEth(inflationPerSecond) * epochLength
-      : parseToEth(inflationPerEpoch);
-    totalIncentives *= totalTopUps;
+      ? BigNumber.from(inflationPerSecond).mul(epochLength)
+      : BigNumber.from(inflationPerEpoch);
+    totalIncentives = totalIncentives.mul(totalTopUps);
 
-    const componentSumIncentivesInEth = parseToEth(cSumUnitTopUpsOLAS) * 100;
-    const agentSumIncentivesInEth = parseToEth(aSumUnitTopUpsOLAS) * 100;
+    const componentSumIncentivesInBn = BigNumber.from(cSumUnitTopUpsOLAS).mul(100);
+    const agentSumIncentivesInBn = BigNumber.from(aSumUnitTopUpsOLAS).mul(100);
 
-    componentTopUp = (totalIncentives * cTopupFraction) / componentSumIncentivesInEth;
-    agentPendingTopUp = (totalIncentives * aTopupFraction) / agentSumIncentivesInEth;
+    componentTopUp = totalIncentives
+      .mul(cTopupFraction)
+      .div(componentSumIncentivesInBn)
+      .toString();
+    agentPendingTopUp = totalIncentives
+      .mul(aTopupFraction)
+      .div(agentSumIncentivesInBn)
+      .toString();
   }
 
+  const pendingRelativeTopUpInEth = parseToEth(
+    unitType === UNIT_TYPES.COMPONENT ? componentReward : agentReward,
+  );
+  const componentTopUpInEth = parseToEth(
+    unitType === UNIT_TYPES.COMPONENT ? componentTopUp : agentPendingTopUp,
+  );
+
   return {
-    pendingRelativeReward: fixTo8DecimalPlaces(
-      unitType === UNIT_TYPES.COMPONENT ? componentReward : agentReward,
-    ),
-    pendingRelativeTopUp: fixTo8DecimalPlaces(
-      unitType === UNIT_TYPES.COMPONENT ? componentTopUp : agentPendingTopUp,
-    ),
+    pendingRelativeReward: fixTo8DecimalPlaces(pendingRelativeTopUpInEth),
+    pendingRelativeTopUp: fixTo8DecimalPlaces(componentTopUpInEth),
     id: '0',
     key: '0',
   };
