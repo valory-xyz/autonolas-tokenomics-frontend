@@ -12,7 +12,7 @@ import { FormList } from './FormList';
 const { Text } = Typography;
 
 export const DynamicFormContainer = styled.div`
-  max-width: 700px;
+  max-width: 720px;
   .ant-input-number {
     width: 200px;
   }
