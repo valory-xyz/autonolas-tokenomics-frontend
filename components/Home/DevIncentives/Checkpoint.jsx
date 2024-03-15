@@ -16,10 +16,7 @@ export const Checkpoint = () => {
   const [isCheckpointVisible, setIsCheckpointVisible] = useState(false);
 
   const getIfCheckpointVisible = async () => {
-    const value = await canShowCheckpoint({
-      account,
-      chainId,
-    });
+    const value = await canShowCheckpoint();
     setIsCheckpointVisible(value);
   };
 

@@ -108,9 +108,7 @@ const getEpochLength = async () => {
   return parseInt(response, 10);
 };
 
-export const canShowCheckpoint = async (
-  checkOnlyIfEpochLenIsGreater = false,
-) => {
+const getEpochDetails = async () => {
   try {
     const epCounter = await getEpochCounter();
     const epTokenomics = await getEpochTokenomics(Number(epCounter) - 1);
@@ -118,9 +116,18 @@ export const canShowCheckpoint = async (
     const blockTimestamp = await getBlockTimestamp();
     const timeDiff = blockTimestamp - epTokenomics.endTime;
 
-    return checkOnlyIfEpochLenIsGreater
-      ? timeDiff > epochLen
-      : timeDiff >= epochLen;
+    return { timeDiff, epochLen };
+  } catch (error) {
+    console.error(error);
+  }
+
+  return { timeDiff: 0, epochLen: 0 };
+};
+
+export const canShowCheckpoint = async () => {
+  try {
+    const { timeDiff, epochLen } = await getEpochDetails();
+    return timeDiff >= epochLen;
   } catch (error) {
     console.error(error);
   }
@@ -128,17 +135,10 @@ export const canShowCheckpoint = async (
   return false;
 };
 
-export const getActualEpochTimeLength = async () => {
+const getActualEpochTimeLength = async () => {
   try {
-    const epCounter = await getEpochCounter();
-    const epTokenomics = await getEpochTokenomics(Number(epCounter) - 1);
-    const epochLen = await getEpochLength();
-    const blockTimestamp = await getBlockTimestamp();
-    const timeDiff = blockTimestamp - epTokenomics.endTime;
-
-    return timeDiff > epochLen
-      ? timeDiff
-      : epochLen;
+    const { timeDiff, epochLen } = await getEpochDetails();
+    return timeDiff > epochLen ? timeDiff : epochLen;
   } catch (error) {
     console.error(error);
   }
