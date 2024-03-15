@@ -128,6 +128,24 @@ export const canShowCheckpoint = async (
   return false;
 };
 
+export const getActualEpochTimeLength = async () => {
+  try {
+    const epCounter = await getEpochCounter();
+    const epTokenomics = await getEpochTokenomics(Number(epCounter) - 1);
+    const epochLen = await getEpochLength();
+    const blockTimestamp = await getBlockTimestamp();
+    const timeDiff = blockTimestamp - epTokenomics.endTime;
+
+    return timeDiff > epochLen
+      ? timeDiff
+      : epochLen;
+  } catch (error) {
+    console.error(error);
+  }
+
+  return 0;
+};
+
 export const getMapUnitIncentivesRequest = async ({ unitType, unitId }) => {
   const contract = getTokenomicsContract();
 
@@ -195,18 +213,12 @@ export const getMapUnitIncentivesRequest = async ({ unitType, unitId }) => {
   let agentPendingTopUp = 0;
 
   if (pendingRelativeTopUp > 0) {
-    const inflationPerEpoch = await contract.methods
-      .getInflationPerEpoch()
-      .call();
     const inflationPerSecond = await contract.methods
       .inflationPerSecond()
       .call();
-    const epochLength = await getEpochLength();
-    const isValid = await canShowCheckpoint(true);
+    const epochLength = await getActualEpochTimeLength();
 
-    const totalTopUps = isValid
-      ? BigNumber.from(inflationPerSecond).mul(epochLength)
-      : BigNumber.from(inflationPerEpoch);
+    const totalTopUps = BigNumber.from(inflationPerSecond).mul(epochLength);
     totalIncentives = totalIncentives.mul(totalTopUps);
 
     const componentSumIncentivesInBn = BigNumber.from(cSumUnitTopUpsOLAS).mul(100);
