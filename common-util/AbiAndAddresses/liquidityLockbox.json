@@ -4,7 +4,9 @@
   "instructions": [
     {
       "name": "initialize",
-      "docs": ["Initializes a Lockbox account that stores state data."],
+      "docs": [
+        "Initializes a Lockbox account that stores state data."
+      ],
       "accounts": [
         {
           "name": "signer",
@@ -44,7 +46,15 @@
           "name": "position",
           "isMut": false,
           "isSigner": false,
-          "relations": ["whirlpool"]
+          "relations": [
+            "whirlpool",
+            "position_mint"
+          ]
+        },
+        {
+          "name": "positionMint",
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "pdaPositionAccount",
@@ -77,7 +87,7 @@
     {
       "name": "deposit",
       "docs": [
-        "Deposits an NFT position under the Lockbox management and gets bridged tokens minted in return.",
+        "Deposits SOL and OLAS tokens to be added to the Lockbox position and gets bridged tokens minted in return.",
         "",
         "### Parameters",
         "- `liquidity_amount` - Requested liquidity amount.",
@@ -94,7 +104,15 @@
           "name": "position",
           "isMut": true,
           "isSigner": false,
-          "relations": ["whirlpool"]
+          "relations": [
+            "whirlpool",
+            "position_mint"
+          ]
+        },
+        {
+          "name": "positionMint",
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "pdaPositionAccount",
@@ -130,13 +148,17 @@
           "name": "tickArrayLower",
           "isMut": true,
           "isSigner": false,
-          "relations": ["whirlpool"]
+          "relations": [
+            "whirlpool"
+          ]
         },
         {
           "name": "tickArrayUpper",
           "isMut": true,
           "isSigner": false,
-          "relations": ["whirlpool"]
+          "relations": [
+            "whirlpool"
+          ]
         },
         {
           "name": "bridgedTokenMint",
@@ -214,7 +236,10 @@
           "name": "position",
           "isMut": true,
           "isSigner": false,
-          "relations": ["whirlpool", "position_mint"]
+          "relations": [
+            "whirlpool",
+            "position_mint"
+          ]
         },
         {
           "name": "pdaPositionAccount",
@@ -260,13 +285,17 @@
           "name": "tickArrayLower",
           "isMut": true,
           "isSigner": false,
-          "relations": ["whirlpool"]
+          "relations": [
+            "whirlpool"
+          ]
         },
         {
           "name": "tickArrayUpper",
           "isMut": true,
           "isSigner": false,
-          "relations": ["whirlpool"]
+          "relations": [
+            "whirlpool"
+          ]
         },
         {
           "name": "lockbox",
@@ -309,7 +338,10 @@
           {
             "name": "bump",
             "type": {
-              "array": ["u8", 1]
+              "array": [
+                "u8",
+                1
+              ]
             }
           },
           {
