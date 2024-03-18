@@ -1,4 +1,4 @@
-import { ethers } from 'ethers';
+import { ethers, BigNumber } from 'ethers';
 import { BalancerSDK } from '@balancer-labs/sdk';
 import { memoize, round } from 'lodash';
 import { areAddressesEqual } from '@autonolas/frontend-library';
@@ -12,6 +12,7 @@ import {
   getChainId,
   isL1Network,
   parseToEth,
+  delay,
 } from 'common-util/functions';
 import {
   getDepositoryContract,
@@ -30,7 +31,7 @@ import {
 
 const LP_PAIRS = {
   // gnosis-chain
-  '0x27df632fd0dcf191C418c803801D521cd579F18e': {
+  '0x27df632fd0dcf191c418c803801d521cd579f18e': {
     lpChainId: 100,
     name: 'OLAS-WXDAI',
     originAddress: '0x79C872Ed3Acb3fc5770dd8a0cD9Cd5dB3B3Ac985',
@@ -39,7 +40,7 @@ const LP_PAIRS = {
       '0x79c872ed3acb3fc5770dd8a0cd9cd5db3b3ac985000200000000000000000067',
   },
   // polygon
-  '0xf9825A563222f9eFC81e369311DAdb13D68e60a4': {
+  '0xf9825a563222f9efc81e369311dadb13d68e60a4': {
     lpChainId: 137,
     name: 'OLAS-WMATIC',
     originAddress: '0x62309056c759c36879Cde93693E7903bF415E4Bc',
@@ -48,7 +49,7 @@ const LP_PAIRS = {
       '0x62309056c759c36879cde93693e7903bf415e4bc000200000000000000000d5f',
   },
   // arbitrum
-  '0x36B203Cb3086269f005a4b987772452243c0767f': {
+  '0x36b203cb3086269f005a4b987772452243c0767f': {
     lpChainId: 42161,
     name: 'OLAS-WETH',
     originAddress: '0xaf8912a3c4f55a8584b67df30ee0ddf0e60e01f8',
@@ -104,6 +105,38 @@ const getCreateProductEventsFn = async () => {
   return res.createProducts;
 };
 const getCreateProductEvents = memoize(getCreateProductEventsFn);
+
+const getCreateBondsFn = async (productIds) => {
+  const graphQLClient = new GraphQLClient(process.env.NEXT_PUBLIC_GRAPH_ENDPOINT_MAINNET, {
+    method: 'POST',
+    jsonSerializer: {
+      parse: JSON.parse,
+      stringify: JSON.stringify,
+    },
+  });
+
+  const query = gql`
+  query GetCreateBonds($productIds: [String!]!) {
+    createBonds(first: 1000, where: { productId_in: $productIds }) {
+      token
+      id
+      bondId
+      amountOLAS
+      tokenAmount
+      productId
+      maturity
+    }
+  }`;
+
+  const variables = {
+    productIds,
+  };
+
+  const res = await graphQLClient.request(query, variables);
+  return res.createBonds;
+};
+
+const getCreateBonds = memoize(getCreateBondsFn);
 
 const getCloseProductEventsFn = async () => {
   const graphQLClient = new GraphQLClient(process.env.NEXT_PUBLIC_GRAPH_ENDPOINT_MAINNET, {
@@ -299,6 +332,9 @@ const getCurrentLpPriceForProducts = async (productList) => {
         const currentLpPricePromise = contract.methods
           .getCurrentPriceLP(productList[i].token)
           .call();
+        // TODO: fix this properly with subgraph
+        // eslint-disable-next-line no-await-in-loop
+        await delay(50);
         currentLpPricePromiseList.push(currentLpPricePromise);
       } else {
         let currentLpPrice = null;
@@ -406,31 +442,39 @@ const getLpPriceWithProjectedChange = (list) => list.map((record) => {
  *
  */
 const getProductDetailsFromIds = async ({ productIdList }) => {
-  const contract = getDepositoryContract();
+  const createEventList = await getCreateProductEvents();
+  const closedEventList = await getCloseProductEvents();
 
-  const allListPromise = [];
-  for (let i = 0; i < productIdList.length; i += 1) {
-    const id = productIdList[i];
-    const allListResult = contract.methods.mapBondProducts(id).call();
-    allListPromise.push(allListResult);
-  }
+  const filteredProducts = createEventList.filter(
+    (event) => productIdList.includes(event.productId),
+  );
+
+  const bonds = await getCreateBonds(productIdList);
+
+  const filteredBonds = bonds.reduce((acc, curr) => {
+    if (!acc[curr.productId]) {
+      acc[curr.productId] = curr.amountOLAS;
+    } else {
+      const prevOlas = BigNumber.from(acc[curr.productId]);
+      const newOlas = BigNumber.from(curr.amountOLAS);
+      acc[curr.productId] = prevOlas.add(newOlas).toString();
+    }
+    return acc;
+  }, {});
 
   // discount factor is same for all the products
   const discount = await getLastIDFRequest();
 
-  const response = await Promise.all(allListPromise);
-  const productList = response.map((product, index) => ({
+  const productList = filteredProducts.map((product) => ({
     ...product,
     discount,
-    id: productIdList[index],
+    id: product.productId,
+    supply: BigNumber.from(product.supply).sub(BigNumber.from(filteredBonds[product.productId] || '0')).toString(),
   }));
 
   const listWithCurrentLpPrice = await getCurrentLpPriceForProducts(
     productList,
   );
-
-  const createEventList = await getCreateProductEvents();
-  const closedEventList = await getCloseProductEvents();
 
   const listWithLpTokens = await getLpTokenNamesForProducts(
     listWithCurrentLpPrice,
