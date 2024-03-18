@@ -128,11 +128,7 @@ const getCreateBondsFn = async (productIds) => {
     }
   }`;
 
-  const variables = {
-    productIds,
-  };
-
-  const res = await graphQLClient.request(query, variables);
+  const res = await graphQLClient.request(query, { productIds });
   return res.createBonds;
 };
 
@@ -451,26 +447,41 @@ const getProductDetailsFromIds = async ({ productIdList }) => {
 
   const bonds = await getCreateBonds(productIdList);
 
-  const filteredBonds = bonds.reduce((acc, curr) => {
-    if (!acc[curr.productId]) {
-      acc[curr.productId] = curr.amountOLAS;
+  // Calculate the total amount of OLAS tokens per productId
+  const calculatedTokens = bonds.reduce((acc, bond) => {
+    const { productId, amountOLAS } = bond;
+
+    if (!acc[productId]) {
+      acc[productId] = amountOLAS;
     } else {
-      const prevOlas = BigNumber.from(acc[curr.productId]);
-      const newOlas = BigNumber.from(curr.amountOLAS);
-      acc[curr.productId] = prevOlas.add(newOlas).toString();
+      // add the amountOLAS to the existing value
+      const previousOlas = BigNumber.from(acc[productId]);
+      const newOlas = BigNumber.from(amountOLAS);
+      acc[productId] = previousOlas.add(newOlas).toString();
     }
+
     return acc;
   }, {});
 
   // discount factor is same for all the products
   const discount = await getLastIDFRequest();
 
-  const productList = filteredProducts.map((product) => ({
-    ...product,
-    discount,
-    id: product.productId,
-    supply: BigNumber.from(product.supply).sub(BigNumber.from(filteredBonds[product.productId] || '0')).toString(),
-  }));
+  const productList = filteredProducts.map((product) => {
+    let { supply } = product;
+    const calculatedTokenAmount = calculatedTokens[product.productId];
+
+    // Decrease the token supply by the amount of the payout
+    if (calculatedTokenAmount) {
+      supply = BigNumber.from(supply).sub(BigNumber.from(calculatedTokenAmount)).toString();
+    }
+
+    return {
+      ...product,
+      discount,
+      id: product.productId,
+      supply,
+    };
+  });
 
   const listWithCurrentLpPrice = await getCurrentLpPriceForProducts(
     productList,
