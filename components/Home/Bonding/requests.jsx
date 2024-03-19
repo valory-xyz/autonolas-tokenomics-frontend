@@ -12,6 +12,7 @@ import {
   getChainId,
   isL1Network,
   parseToEth,
+  delay,
 } from 'common-util/functions';
 import {
   getDepositoryContract,
@@ -402,51 +403,55 @@ const getLpPriceWithProjectedChange = (list) => list.map((record) => {
   };
 });
 
-/**
- *
- */
+const MAX_CONCURRENT_REQUESTS = 5;
+
+/* eslint-disable */
 const getProductDetailsFromIds = async ({ productIdList }) => {
   const contract = getDepositoryContract();
-
-  const allListPromise = [];
-  for (let i = 0; i < productIdList.length; i += 1) {
-    const id = productIdList[i];
-    const allListResult = contract.methods.mapBondProducts(id).call();
-    allListPromise.push(allListResult);
-  }
-
-  // discount factor is same for all the products
   const discount = await getLastIDFRequest();
-
-  const response = await Promise.all(allListPromise);
-  const productList = response.map((product, index) => ({
-    ...product,
-    discount,
-    id: productIdList[index],
-  }));
-
-  const listWithCurrentLpPrice = await getCurrentLpPriceForProducts(
-    productList,
-  );
 
   const createEventList = await getCreateProductEvents();
   const closedEventList = await getCloseProductEvents();
 
-  const listWithLpTokens = await getLpTokenNamesForProducts(
-    listWithCurrentLpPrice,
-    createEventList,
-  );
+  const productDetails = [];
 
-  const listWithSupplyList = getListWithSupplyList(
-    listWithLpTokens,
-    createEventList,
-    closedEventList,
-  );
+  // Split productIdList into chunks to limit concurrent requests
+  for (let i = 0; i < productIdList.length; i += MAX_CONCURRENT_REQUESTS) {
+    const slicedIds = productIdList.slice(i, i + MAX_CONCURRENT_REQUESTS);
 
-  const listWithProjectedChange = getLpPriceWithProjectedChange(listWithSupplyList);
+    const allListPromise = slicedIds.map((id) => contract.methods.mapBondProducts(id).call());
 
-  return listWithProjectedChange;
+    const response = await Promise.all(allListPromise);
+    const chunkProductList = response.map((product, index) => ({
+      ...product,
+      discount,
+      id: slicedIds[index],
+    }));
+    
+    const chunkWithCurrentLpPrice = await getCurrentLpPriceForProducts(chunkProductList);
+
+    const chunkWithLpTokens = await getLpTokenNamesForProducts(
+      chunkWithCurrentLpPrice,
+      createEventList,
+    );
+
+    const chunkWithSupplyList = getListWithSupplyList(
+      chunkWithLpTokens,
+      createEventList,
+      closedEventList,
+    );
+
+    const chunkWithProjectedChange = getLpPriceWithProjectedChange(chunkWithSupplyList);
+
+    productDetails.push(...chunkWithProjectedChange);
+
+    // To avoid to many requests error
+    await delay(100)
+  }
+
+  return productDetails;
 };
+/* eslint-enable */
 
 /**
  * fetches product list based on the active/inactive status
