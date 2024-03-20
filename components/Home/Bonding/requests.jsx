@@ -1,8 +1,9 @@
 import { ethers } from 'ethers';
-import { BalancerSDK } from '@balancer-labs/sdk';
 import { memoize, round } from 'lodash';
+import { gql, GraphQLClient } from 'graphql-request';
+import { BalancerSDK } from '@balancer-labs/sdk';
 import { areAddressesEqual } from '@autonolas/frontend-library';
-
+import { multicall } from '@wagmi/core';
 import { DEX } from 'util/constants';
 import {
   MAX_AMOUNT,
@@ -22,7 +23,7 @@ import {
   ADDRESSES,
   RPC_URLS,
 } from 'common-util/Contracts';
-import { gql, GraphQLClient } from 'graphql-request';
+import { DEPOSITORY } from 'common-util/AbiAndAddresses';
 import {
   getProductValueFromEvent,
   getLpTokenWithDiscount,
@@ -285,21 +286,23 @@ const getCurrentPriceBalancerFn = async (tokenAddress) => {
 const getCurrentPriceBalancer = memoize(getCurrentPriceBalancerFn);
 
 const getCurrentLpPriceForProducts = async (productList) => {
-  const contract = getDepositoryContract();
+  const chainId = getChainId();
+  const multicallRequests = {};
+  const otherRequests = {};
 
-  const currentLpPricePromiseList = [];
   for (let i = 0; i < productList.length; i += 1) {
     if (productList[i].token === ADDRESS_ZERO) {
-      currentLpPricePromiseList.push(0);
+      otherRequests[i] = 0;
     } else {
-      /* eslint-disable-next-line no-await-in-loop */
+      // eslint-disable-next-line no-await-in-loop
       const { lpChainId, dex } = await getLpTokenDetails(productList[i].token);
-
       if (isL1Network(lpChainId)) {
-        const currentLpPricePromise = contract.methods
-          .getCurrentPriceLP(productList[i].token)
-          .call();
-        currentLpPricePromiseList.push(currentLpPricePromise);
+        multicallRequests[i] = ({
+          address: DEPOSITORY.addresses[chainId],
+          abi: DEPOSITORY.abi,
+          functionName: 'getCurrentPriceLP',
+          args: [productList[i].token],
+        });
       } else {
         let currentLpPrice = null;
         // NOTE: It could be uniswap for other chains hence this if case.
@@ -312,7 +315,7 @@ const getCurrentLpPriceForProducts = async (productList) => {
         // } else
         if (dex === DEX.BALANCER) {
           currentLpPrice = getCurrentPriceBalancer(productList[i].token);
-          currentLpPricePromiseList.push(currentLpPrice);
+          otherRequests[i] = currentLpPrice;
         } else {
           throw new Error('Dex not supported');
         }
@@ -320,7 +323,21 @@ const getCurrentLpPriceForProducts = async (productList) => {
     }
   }
 
-  const resolvedList = await Promise.all(currentLpPricePromiseList);
+  const multicallResponses = await multicall({
+    contracts: Object.values(multicallRequests),
+  });
+  const otherResponses = await Promise.all(Object.values(otherRequests));
+
+  const resolvedList = [];
+
+  // Combine multicall responses with other responses into resolvedList
+  Object.keys(multicallRequests).forEach((index) => {
+    resolvedList[index] = multicallResponses.shift().toString();
+  });
+
+  Object.keys(otherRequests).forEach((index) => {
+    resolvedList[index] = otherResponses.shift();
+  });
 
   return productList.map((record, index) => ({
     ...record,
@@ -402,28 +419,33 @@ const getLpPriceWithProjectedChange = (list) => list.map((record) => {
   };
 });
 
-/**
- *
- */
 const getProductDetailsFromIds = async ({ productIdList }) => {
-  const contract = getDepositoryContract();
+  const chainId = getChainId();
 
-  const allListPromise = [];
-  for (let i = 0; i < productIdList.length; i += 1) {
-    const id = productIdList[i];
-    const allListResult = contract.methods.mapBondProducts(id).call();
-    allListPromise.push(allListResult);
-  }
+  const response = await multicall({
+    contracts: productIdList.map((id) => ({
+      address: DEPOSITORY.addresses[chainId],
+      abi: DEPOSITORY.abi,
+      functionName: 'mapBondProducts',
+      args: [id],
+    })),
+  });
 
   // discount factor is same for all the products
   const discount = await getLastIDFRequest();
 
-  const response = await Promise.all(allListPromise);
-  const productList = response.map((product, index) => ({
-    ...product,
-    discount,
-    id: productIdList[index],
-  }));
+  const productList = response.map(({ result: product }, index) => {
+    const [priceLP, vesting, token, supply] = product;
+
+    return {
+      id: productIdList[index],
+      discount,
+      priceLP,
+      vesting,
+      token,
+      supply,
+    };
+  });
 
   const listWithCurrentLpPrice = await getCurrentLpPriceForProducts(
     productList,
