@@ -6,7 +6,6 @@ import { areAddressesEqual } from '@autonolas/frontend-library';
 import { multicall } from '@wagmi/core';
 import { DEX } from 'util/constants';
 import {
-  MAX_AMOUNT,
   ADDRESS_ZERO,
   ONE_ETH,
   sendTransaction,
@@ -82,24 +81,28 @@ const getBondingProgramsRequest = async ({ isActive }) => {
 };
 
 const getCreateProductEventsFn = async () => {
-  const graphQLClient = new GraphQLClient(process.env.NEXT_PUBLIC_GRAPH_ENDPOINT_MAINNET, {
-    method: 'POST',
-    jsonSerializer: {
-      parse: JSON.parse,
-      stringify: JSON.stringify,
+  const graphQLClient = new GraphQLClient(
+    process.env.NEXT_PUBLIC_GRAPH_ENDPOINT_MAINNET,
+    {
+      method: 'POST',
+      jsonSerializer: {
+        parse: JSON.parse,
+        stringify: JSON.stringify,
+      },
     },
-  });
+  );
 
   const query = gql`
-  query GetCreateProducts {
-    createProducts(first: 1000) {
-      productId
-      token
-      priceLP
-      supply
-      vesting
+    query GetCreateProducts {
+      createProducts(first: 1000) {
+        productId
+        token
+        priceLP
+        supply
+        vesting
+      }
     }
-  }`;
+  `;
 
   const res = await graphQLClient.request(query);
   return res.createProducts;
@@ -107,22 +110,26 @@ const getCreateProductEventsFn = async () => {
 const getCreateProductEvents = memoize(getCreateProductEventsFn);
 
 const getCloseProductEventsFn = async () => {
-  const graphQLClient = new GraphQLClient(process.env.NEXT_PUBLIC_GRAPH_ENDPOINT_MAINNET, {
-    method: 'POST',
-    jsonSerializer: {
-      parse: JSON.parse,
-      stringify: JSON.stringify,
+  const graphQLClient = new GraphQLClient(
+    process.env.NEXT_PUBLIC_GRAPH_ENDPOINT_MAINNET,
+    {
+      method: 'POST',
+      jsonSerializer: {
+        parse: JSON.parse,
+        stringify: JSON.stringify,
+      },
     },
-  });
+  );
 
   const query = gql`
-  query GetCloseProducts {
-    closeProducts(first: 1000) {
-      productId
-      token
-      supply
+    query GetCloseProducts {
+      closeProducts(first: 1000) {
+        productId
+        token
+        supply
+      }
     }
-  }`;
+  `;
 
   const res = await graphQLClient.request(query);
   return res.closeProducts;
@@ -297,12 +304,12 @@ const getCurrentLpPriceForProducts = async (productList) => {
       // eslint-disable-next-line no-await-in-loop
       const { lpChainId, dex } = await getLpTokenDetails(productList[i].token);
       if (isL1Network(lpChainId)) {
-        multicallRequests[i] = ({
+        multicallRequests[i] = {
           address: DEPOSITORY.addresses[chainId],
           abi: DEPOSITORY.abi,
           functionName: 'getCurrentPriceLP',
           args: [productList[i].token],
-        });
+        };
       } else {
         let currentLpPrice = null;
         // NOTE: It could be uniswap for other chains hence this if case.
@@ -364,17 +371,11 @@ export const getListWithSupplyList = (
   }
 
   const eventSupply = Number(
-    ethers.BigNumber.from(createProductEvent.supply).div(
-      ONE_ETH,
-    ),
+    ethers.BigNumber.from(createProductEvent.supply).div(ONE_ETH),
   );
   const productSupply = !closeProductEvent
     ? Number(ethers.BigNumber.from(product.supply).div(ONE_ETH))
-    : Number(
-      ethers.BigNumber.from(closeProductEvent.supply).div(
-        ONE_ETH,
-      ),
-    );
+    : Number(ethers.BigNumber.from(closeProductEvent.supply).div(ONE_ETH));
   const supplyLeft = productSupply / eventSupply;
   const priceLP = product.token !== ADDRESS_ZERO
     ? product.priceLP
@@ -509,12 +510,17 @@ export const hasSufficientTokenRequest = async ({
 /**
  * Approves the treasury contract to spend the token
  */
-export const approveRequest = async ({ account, chainId, token }) => {
+export const approveRequest = async ({
+  account,
+  chainId,
+  token,
+  amountToApprove,
+}) => {
   const contract = getUniswapV2PairContract(token);
   const treasuryAddress = ADDRESSES[chainId].treasury;
 
   const fn = contract.methods
-    .approve(treasuryAddress, MAX_AMOUNT)
+    .approve(treasuryAddress, amountToApprove)
     .send({ from: account });
 
   const response = await sendTransaction(fn, account);

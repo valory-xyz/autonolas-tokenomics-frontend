@@ -43,11 +43,6 @@ export const sendTransaction = (fn, account) => sendTransactionFn(fn, account, {
   rpcUrls: RPC_URLS,
 });
 
-/**
- * https://docs.ethers.org/v5/api/utils/constants/#constants-MaxUint256
- */
-export const MAX_AMOUNT = ethers.constants.MaxUint256;
-
 export const ADDRESS_ZERO = ethers.constants.AddressZero;
 
 export const ONE_ETH = ethers.constants.WeiPerEther;
