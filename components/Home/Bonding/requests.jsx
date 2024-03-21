@@ -332,7 +332,7 @@ const getCurrentLpPriceForProducts = async (productList) => {
 
   // Combine multicall responses with other responses into resolvedList
   Object.keys(multicallRequests).forEach((index) => {
-    resolvedList[index] = multicallResponses.shift().toString();
+    resolvedList[index] = multicallResponses.shift().result.toString();
   });
 
   Object.keys(otherRequests).forEach((index) => {
