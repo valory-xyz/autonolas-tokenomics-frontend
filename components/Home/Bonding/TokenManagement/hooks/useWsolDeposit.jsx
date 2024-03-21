@@ -7,6 +7,7 @@ import {
   TickUtil,
 } from '@orca-so/whirlpools-sdk';
 import { getAssociatedTokenAddress } from '@solana/spl-token';
+import { SystemProgram, Transaction, sendAndConfirmTransaction } from '@solana/web3.js';
 import { notifyError, notifySuccess } from '@autonolas/frontend-library';
 
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
@@ -92,6 +93,32 @@ export const useWsolDeposit = () => {
       svmWalletPublicKey,
     );
 
+    // TODO check for lamports balance to be bigger than solMax
+    const balance = await connection.getBalance(svmWalletPublicKey);
+    if (solMax > balance) {
+        notification.error("Not enough SOL")
+    }
+
+    // TODO check for OLAS amount to be bigger or equal than olasMax
+      let tokenAccounts = await provider.connection.getTokenAccountsByOwner(
+        svmWalletPublicKey,
+        { programId: TOKEN_PROGRAM_ID }
+      );
+
+      let olasAmount;
+      tokenAccounts.value.forEach((tokenAccount) => {
+        const accountData = AccountLayout.decode(tokenAccount.account.data);
+        if (accountData.mint.toString() == ADDRESSES.svm.olasAddress.toString() {
+          // accountData.amount.toString()
+          olasAmount =  accountData.amount.toNumber();
+        }
+      });
+
+      // TODO check that there is enough OLAS
+      if (olasMax > olasAmount) {
+        notification.error("Not enough OLAS")
+      }
+
     // Check if the user has the correct token account
     // and it is required to deposit
     if (
@@ -112,6 +139,33 @@ export const useWsolDeposit = () => {
         'You do not have the bridged token account, please try again.',
       );
       return;
+    }
+
+    // Transfer SOL to associated token account and use SyncNative to update wrapped SOL balance
+    // Wrap the required amount of SOL by transferring SOL to WSOL ATA and syncing native
+    const solTransferTransaction = new Transaction()
+      .add(
+        SystemProgram.transfer({
+            fromPubkey: svmWalletPublicKey,
+            toPubkey: tokenOwnerAccountA.address,
+            lamports: quote.tokenMaxA.toNumber() // TODO check the actual argument type
+          }),
+          createSyncNativeInstruction(
+            tokenOwnerAccountA.address
+          )
+      )
+
+    try {
+        // TODO userWallet - sign transaction
+        const signature = await sendAndConfirmTransaction(provider.connection, solTransferTransaction, [userWallet]);
+        // TODO probably use configureAndSendCurrentTransaction
+    } catch (error) {
+        if (error instanceof Error && "message" in error) {
+            console.error("Program Error:", error);
+            console.error("Error Message:", error.message);
+        } else {
+            console.error("Transaction Error:", error);
+        }
     }
 
     try {
@@ -141,9 +195,24 @@ export const useWsolDeposit = () => {
     }
   };
 
+  tokenAccounts = await provider.connection.getTokenAccountsByOwner(
+    svmWalletPublicKey,
+    { programId: TOKEN_PROGRAM_ID }
+  );
+
+  let bridgedTokenAmount;
+  tokenAccounts.value.forEach((tokenAccount) => {
+    const accountData = AccountLayout.decode(tokenAccount.account.data);
+    if (accountData.mint.toString() == BRIDGED_TOKEN_MINT.toString() {
+      // accountData.amount.toString()
+      bridgedTokenAmount = accountData.amount.toNumber();
+    }
+  });
+
   return {
     getDepositIncreaseLiquidityQuote,
     getDepositTransformedQuote,
     deposit,
+    bridgedTokenAmount
   };
 };

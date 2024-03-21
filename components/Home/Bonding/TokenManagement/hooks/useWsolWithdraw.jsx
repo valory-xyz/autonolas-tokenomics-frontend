@@ -114,7 +114,7 @@ export const useWsolWithdraw = () => {
       const accountData = AccountLayout.decode(tokenAccount.account.data);
       if (accountData.mint.toString() === BRIDGED_TOKEN_MINT.toString()) {
         if (tokenAccount.pubkey.toString() === bridgedTokenAccount) {
-          maxAmount = accountData.amount.toString();
+          maxAmount = accountData.amount.toNumber();
         }
       }
     });

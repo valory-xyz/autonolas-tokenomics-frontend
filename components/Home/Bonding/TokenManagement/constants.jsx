@@ -3,7 +3,7 @@ import { web3 } from '@coral-xyz/anchor';
 import { ADDRESSES } from 'common-util/Contracts';
 
 export const PROGRAM_ID = new web3.PublicKey(
-  '7ahQGWysExobjeZ91RTsNqTCN3kWyHGZ43ud2vB7VVoZ',
+  '1BoXeb8hobfLCHNsyCoG1jpEv41ez4w4eDrJ48N1jY3',
 );
 export const ORCA = new web3.PublicKey(
   'whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc',
@@ -13,25 +13,25 @@ export const SOL = new web3.PublicKey(
   'So11111111111111111111111111111111111111112',
 );
 export const BRIDGED_TOKEN_MINT = new web3.PublicKey(
-  'So11111111111111111111111111111111111111112', // TODO: dummy address for now, real one will be added later
+  'CeZ77ti3nPAmcgRkBkUC1JcoAhR8jRti2DHaCcuyUnzR',
 );
 export const PDA_POSITION_ACCOUNT = new web3.PublicKey(
-  'So11111111111111111111111111111111111111112', // TODO: dummy address for now, real one will be added later
+  'sVFBxraUUqmiVFeruh1M7bZS9yuNcoH7Nysh3YTSnZJ',
 );
 export const FEE_COLLECTOR_TOKEN_OWNER_ACCOUNT_A = new web3.PublicKey(
-  'So11111111111111111111111111111111111111112', // TODO: dummy address for now, real one will be added later
+  'Gn7oD4PmQth4ehA4b8PpHzq5v1UXPL61jAZd6CSuPvFU',
 );
 export const FEE_COLLECTOR_TOKEN_OWNER_ACCOUNT_B = new web3.PublicKey(
-  'So11111111111111111111111111111111111111112', // TODO: dummy address for now, real one will be added later
+  'FPaBgHbaJR39WBNn6xZRAmurQCBH9QSNWZ5Kk26cGs9d',
 );
 export const LOCKBOX = new web3.PublicKey(
-  'So11111111111111111111111111111111111111112', // TODO: dummy address for now, real one will be added later
+  '3UaaD3puPemoZk7qFYJWWCvmN6diS7P63YR4Si9QRpaW',
 );
 export const POSITION = new web3.PublicKey(
-  'So11111111111111111111111111111111111111112', // TODO: dummy address for now, real one will be added later
+  'EHQbFx7m5gPBqXXiViNBfHJDRUuFgqqYsLzuWu18ckaR',
 );
 export const POSITION_MINT = new web3.PublicKey(
-  'So11111111111111111111111111111111111111112', // TODO: dummy address for now, real one will be added later
+  '36WxSP8trn5czobJaa2Ka7jN58B7sCN7xx2HDom6TDEh',
 );
 export const TOKEN_VAULT_A = new web3.PublicKey(
   'CLA8hU8SkdCZ9cJVLMfZQfcgAsywZ9txBJ6qrRAqthLx',
