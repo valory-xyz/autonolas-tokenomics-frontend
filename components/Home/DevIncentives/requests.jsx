@@ -1,3 +1,4 @@
+import { BigNumber } from 'ethers';
 import { notifyError } from '@autonolas/frontend-library';
 
 import { UNIT_TYPES } from 'util/constants';
@@ -14,6 +15,11 @@ import {
   getComponentContract,
 } from 'common-util/Contracts';
 
+const fixTo8DecimalPlaces = (value) => {
+  const numeralValue = Number(value);
+  if (Number.isNaN(numeralValue)) return 0;
+  return numeralValue > 0 ? numeralValue.toFixed(8) : 0;
+};
 /**
  * fetches the owners of the units
  */
@@ -78,12 +84,19 @@ export const getEpochCounter = async () => {
   return parseInt(response, 10);
 };
 
-const getEpochTokenomics = async ({ lastPoint }) => {
+const getEpochTokenomics = async (epochNum) => {
   const contract = getTokenomicsContract();
-  const response = await contract.methods.mapEpochTokenomics(lastPoint).call();
+  const response = await contract.methods.mapEpochTokenomics(epochNum).call();
   return response;
 };
 
+// Structure for component / agent point with tokenomics-related statistics
+// struct UnitPoint {
+//   uint96 sumUnitTopUpsOLAS; // [0]
+//   uint32 numNewUnits;       // Number of new units [1]
+//   uint8 rewardUnitFraction; // Reward component / agent fraction [2]
+//   uint8 topUpUnitFraction;  // Top-up component / agent fraction [3]
+// }
 const getUnitPointReq = async ({ lastPoint, num }) => {
   const contract = getTokenomicsContract();
   const response = await contract.methods.getUnitPoint(lastPoint, num).call();
@@ -96,25 +109,36 @@ const getEpochLength = async () => {
   return parseInt(response, 10);
 };
 
+const getEpochDetails = async () => {
+  const epCounter = await getEpochCounter();
+  const epTokenomics = await getEpochTokenomics(Number(epCounter) - 1);
+  const epochLen = await getEpochLength();
+  const blockTimestamp = await getBlockTimestamp();
+  const timeDiff = blockTimestamp - epTokenomics.endTime;
+
+  return { timeDiff, epochLen };
+};
+
 export const canShowCheckpoint = async () => {
   try {
-    const epCounter = await getEpochCounter();
-    const epTokenomics = await getEpochTokenomics({
-      lastPoint: Number(epCounter) - 1,
-    });
-    const epochLen = await getEpochLength();
-    const blockTimestamp = await getBlockTimestamp();
-    const { endTime } = epTokenomics;
-
-    if (blockTimestamp - endTime >= epochLen) {
-      return true;
-    }
-    return false;
+    const { timeDiff, epochLen } = await getEpochDetails();
+    return timeDiff >= epochLen;
   } catch (error) {
     console.error(error);
   }
 
   return false;
+};
+
+const getActualEpochTimeLength = async () => {
+  try {
+    const { timeDiff, epochLen } = await getEpochDetails();
+    return timeDiff > epochLen ? timeDiff : epochLen;
+  } catch (error) {
+    console.error(error);
+  }
+
+  return 0;
 };
 
 export const getMapUnitIncentivesRequest = async ({ unitType, unitId }) => {
@@ -137,45 +161,84 @@ export const getMapUnitIncentivesRequest = async ({ unitType, unitId }) => {
     num: 1,
   });
 
+  // Struct for component / agent incentive balances
+  // struct IncentiveBalances {
+  //   uint96 reward;                // Reward in ETH [0]
+  //   uint96 pendingRelativeReward; // Pending relative reward in ETH [1]
+  //   uint96 topUp;                 // Top-up in OLAS [2]
+  //   uint96 pendingRelativeTopUp;  // Pending relative top-up [3]
+  //   uint32 lastEpoch;             // Last epoch number the information was updated [4]
+  // }
   const { pendingRelativeReward, pendingRelativeTopUp, lastEpoch } = response;
 
-  // if the current epoch is the last epoch, calculate the incentives
-  if (currentEpochCounter === lastEpoch) {
-    const {
-      rewardUnitFraction: aRewardFraction,
-      topUpUnitFraction: aTopupFraction,
-    } = agentInfo;
-    const {
-      rewardUnitFraction: cRewardFraction,
-      topUpUnitFraction: cTopupFraction,
-    } = componentInfo;
+  const rewardInBn = BigNumber.from(pendingRelativeReward);
+  const isCurrentEpochWithReward = currentEpochCounter === Number(lastEpoch) && rewardInBn.gt(0);
 
-    /**
-     * for unitType agent(0) & component(1),
-     * the below formula is used to calculate the incentives
-     */
-    const componentPendingReward = (parseToEth(pendingRelativeReward) * cRewardFraction) / 100;
-    const agentPendingReward = (parseToEth(pendingRelativeReward) * aRewardFraction) / 100;
-    const componentPendingTopUp = (parseToEth(pendingRelativeTopUp) * cTopupFraction) / 100;
-    const agentPendingTopUp = (parseToEth(pendingRelativeTopUp) * aTopupFraction) / 100;
-
+  // if the current epoch is not the last epoch, return 0
+  if (!isCurrentEpochWithReward) {
     return {
-      pendingRelativeReward:
-        unitType === UNIT_TYPES.COMPONENT
-          ? componentPendingReward
-          : agentPendingReward,
-      pendingRelativeTopUp:
-        unitType === UNIT_TYPES.COMPONENT
-          ? componentPendingTopUp
-          : agentPendingTopUp,
+      pendingRelativeReward: 0,
+      pendingRelativeTopUp: 0,
       id: '0',
       key: '0',
     };
   }
 
+  // if the current epoch is the last epoch, calculate the incentives
+  const {
+    rewardUnitFraction: cRewardFraction,
+    topUpUnitFraction: cTopupFraction,
+    sumUnitTopUpsOLAS: cSumUnitTopUpsOLAS,
+  } = componentInfo;
+  const {
+    rewardUnitFraction: aRewardFraction,
+    topUpUnitFraction: aTopupFraction,
+    sumUnitTopUpsOLAS: aSumUnitTopUpsOLAS,
+  } = agentInfo;
+
+  /**
+   * for unitType agent(0) & component(1),
+   * the below calulcation is done to get the reward and topup
+   */
+  const componentReward = rewardInBn.mul(cRewardFraction).div(100).toString();
+  const agentReward = rewardInBn.mul(aRewardFraction).div(100).toString();
+
+  let totalIncentives = BigNumber.from(pendingRelativeTopUp);
+  let componentTopUp = 0;
+  let agentPendingTopUp = 0;
+
+  if (pendingRelativeTopUp > 0) {
+    const inflationPerSecond = await contract.methods
+      .inflationPerSecond()
+      .call();
+    const epochLength = await getActualEpochTimeLength();
+
+    const totalTopUps = BigNumber.from(inflationPerSecond).mul(epochLength);
+    totalIncentives = totalIncentives.mul(totalTopUps);
+
+    const componentSumIncentivesInBn = BigNumber.from(cSumUnitTopUpsOLAS).mul(100);
+    const agentSumIncentivesInBn = BigNumber.from(aSumUnitTopUpsOLAS).mul(100);
+
+    componentTopUp = totalIncentives
+      .mul(cTopupFraction)
+      .div(componentSumIncentivesInBn)
+      .toString();
+    agentPendingTopUp = totalIncentives
+      .mul(aTopupFraction)
+      .div(agentSumIncentivesInBn)
+      .toString();
+  }
+
+  const pendingRelativeTopUpInEth = parseToEth(
+    unitType === UNIT_TYPES.COMPONENT ? componentReward : agentReward,
+  );
+  const componentTopUpInEth = parseToEth(
+    unitType === UNIT_TYPES.COMPONENT ? componentTopUp : agentPendingTopUp,
+  );
+
   return {
-    pendingRelativeReward: 0,
-    pendingRelativeTopUp: 0,
+    pendingRelativeReward: fixTo8DecimalPlaces(pendingRelativeTopUpInEth),
+    pendingRelativeTopUp: fixTo8DecimalPlaces(componentTopUpInEth),
     id: '0',
     key: '0',
   };
@@ -190,9 +253,7 @@ export const getPausedValueRequest = async () => {
 export const getLastEpochRequest = async () => {
   try {
     const epCounter = await getEpochCounter();
-    const prevEpochPoint = await getEpochTokenomics({
-      lastPoint: Number(epCounter) - 1,
-    });
+    const prevEpochPoint = await getEpochTokenomics(Number(epCounter) - 1);
 
     const prevEpochEndTime = prevEpochPoint.endTime;
     const epochLen = await getEpochLength();

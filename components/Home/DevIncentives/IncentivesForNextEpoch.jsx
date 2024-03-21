@@ -25,12 +25,11 @@ const columns = [
     dataIndex: 'pendingRelativeReward',
     key: 'pendingRelativeReward',
   },
-  // TODO: do the calculation later, as it is complicated
-  // {
-  //   title: 'Pending Topup',
-  //   dataIndex: 'pendingRelativeTopUp',
-  //   key: 'pendingRelativeTopUp',
-  // },
+  {
+    title: 'Pending Topup (OLAS)',
+    dataIndex: 'pendingRelativeTopUp',
+    key: 'pendingRelativeTopUp',
+  },
 ];
 
 export const IncentivesForNextEpoch = () => {
@@ -122,6 +121,7 @@ export const IncentivesForNextEpoch = () => {
         <Col lg={10} xs={24}>
           {pendingIncentives.length > 0 && (
             <Table
+              loading={isLoading}
               columns={columns}
               dataSource={pendingIncentives}
               bordered

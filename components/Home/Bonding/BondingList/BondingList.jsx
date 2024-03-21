@@ -254,13 +254,6 @@ const NoProducts = () => (
   </>
 );
 
-const ThisCanTakeUpTo30Seconds = () => (
-  <>
-    <br />
-    This can take up to 30 seconds
-  </>
-);
-
 export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
   const { account } = useHelpers();
 
@@ -270,7 +263,6 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
     isLoading,
     errorState,
     filteredProducts,
-    retry,
     handleRetry,
     productDetails,
     handleProductDetails,
@@ -347,7 +339,6 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
           tip: (
             <Typography className="mt-8">
               Loading products
-              {retry > 0 && <ThisCanTakeUpTo30Seconds />}
             </Typography>
           ),
           indicator: <Spin active />,

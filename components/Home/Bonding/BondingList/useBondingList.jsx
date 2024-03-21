@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ethers } from 'ethers';
-import { memoize, round, get } from 'lodash';
+import { memoize, round } from 'lodash';
 import { BalancerSDK } from '@balancer-labs/sdk';
 import { areAddressesEqual } from '@autonolas/frontend-library';
+import { gql, GraphQLClient } from 'graphql-request';
+import { multicall } from '@wagmi/core';
 
 import { DEX } from 'util/constants';
 import {
@@ -22,17 +24,16 @@ import {
   RPC_URLS,
 } from 'common-util/Contracts';
 import { useHelpers } from 'common-util/hooks/useHelpers';
+import { DEPOSITORY } from 'common-util/AbiAndAddresses';
 import {
   getProductValueFromEvent,
   getLpTokenWithDiscount,
   getLpTokenLink,
   getCurrentPriceLpLink,
-  getProductEvents,
 } from './utils';
 import { useWhirlPoolInformation } from '../TokenManagement/hooks/useWhirlpool';
 
 const { BigNumber } = ethers;
-const SUPPLY = 'returnValues.supply';
 
 export const LP_PAIRS = {
   // gnosis-chain
@@ -87,6 +88,54 @@ const getLastIDFRequest = async () => {
   const discount = ((firstDiv * 1.0) / Number(ONE_ETH)) * 100;
   return discount;
 };
+
+const getCreateProductEventsFn = async () => {
+  const graphQLClient = new GraphQLClient(process.env.NEXT_PUBLIC_GRAPH_ENDPOINT_MAINNET, {
+    method: 'POST',
+    jsonSerializer: {
+      parse: JSON.parse,
+      stringify: JSON.stringify,
+    },
+  });
+
+  const query = gql`
+  query GetCreateProducts {
+    createProducts(first: 1000) {
+      productId
+      token
+      priceLP
+      supply
+      vesting
+    }
+  }`;
+
+  const res = await graphQLClient.request(query);
+  return res.createProducts;
+};
+const getCreateProductEvents = memoize(getCreateProductEventsFn);
+
+const getCloseProductEventsFn = async () => {
+  const graphQLClient = new GraphQLClient(process.env.NEXT_PUBLIC_GRAPH_ENDPOINT_MAINNET, {
+    method: 'POST',
+    jsonSerializer: {
+      parse: JSON.parse,
+      stringify: JSON.stringify,
+    },
+  });
+
+  const query = gql`
+  query GetCloseProducts {
+    closeProducts(first: 1000) {
+      productId
+      token
+      supply
+    }
+  }`;
+
+  const res = await graphQLClient.request(query);
+  return res.closeProducts;
+};
+const getCloseProductEvents = memoize(getCloseProductEventsFn);
 
 /**
  * Fetches detials of the LP token.
@@ -159,8 +208,8 @@ const getCurrentPriceBalancerFn = memoize(async (tokenAddress) => {
   const reservesOlas = (areAddressesEqual(firstPoolTokenAddress, olasTokenAddress)
     ? pool.tokens[0].balance
     : pool.tokens[1].balance) * 1.0;
-  const priceLP = (reservesOlas * 10 ** 18) / totalSupply;
-  return priceLP;
+  const priceLp = (reservesOlas * 10 ** 18) / totalSupply;
+  return priceLp;
 });
 
 /**
@@ -295,11 +344,11 @@ const getLpTokenNamesForProducts = async (productList, events) => {
 const useAddSupplyLeftToProducts = () => useCallback(
   async (list, createProductEvents, closedProductEvents = []) => list.map((product) => {
     const createProductEvent = createProductEvents?.find(
-      (event) => event?.returnValues?.productId === `${product.id}`,
+      (event) => event.productId === `${product.id}`,
     );
 
     const closeProductEvent = closedProductEvents?.find(
-      (event) => event?.returnValues?.productId === `${product.id}`,
+      (event) => event.productId === `${product.id}`,
     );
 
     // Should not happen but we will warn if it does
@@ -309,19 +358,21 @@ const useAddSupplyLeftToProducts = () => useCallback(
       );
     }
 
-    const createEventSupply = get(createProductEvent, SUPPLY, 0);
-    const eventSupply = BigNumber.from(createEventSupply).div(ONE_ETH);
+    const eventSupply = Number(
+      ethers.BigNumber.from(createProductEvent.supply).div(
+        ONE_ETH,
+      ),
+    );
 
-    const closeProductSupply = get(closeProductEvent, SUPPLY, 0);
     const productSupply = !closeProductEvent
-      ? Number(BigNumber.from(product.supply).div(ONE_ETH))
-      : Number(BigNumber.from(closeProductSupply).div(ONE_ETH));
+      ? Number(ethers.BigNumber.from(product.supply).div(ONE_ETH))
+      : Number(BigNumber.from(closeProductEvent.supply).div(ONE_ETH));
 
     const supplyLeft = productSupply / Number(eventSupply);
 
     const priceLp = product.token !== ADDRESS_ZERO
       ? product.priceLp
-      : createProductEvent.returnValues?.priceLp || 0;
+      : createProductEvent?.priceLp || 0;
 
     return { ...product, supplyLeft, priceLp };
   }),
@@ -375,67 +426,68 @@ const useAddProjectChangeToProducts = () => useCallback(
   [],
 );
 
-const useAddDiscountToProductList = () => useCallback(async (productList) => {
-  const discount = await getLastIDFRequest(); // discount factor is same for all the products
-  return productList.map((e) => ({ ...e, discount }));
-}, []);
-
 /**
  * Fetches product details from the product ids and updates the list
  * to include other details such as the LP token name, supply left, etc.
  * and returns the updated list.
  */
-const useProductDetailsFromIds = ({ retry }) => {
-  const addDiscountToProductList = useAddDiscountToProductList();
+const useProductDetailsFromIds = () => {
   const addSupplyLeftToProducts = useAddSupplyLeftToProducts();
   const addCurrentLpPriceToProducts = useAddCurrentLpPriceToProducts();
   const addProjectedChange = useAddProjectChangeToProducts();
 
   return useCallback(
     async (productIdList) => {
-      const contract = getDepositoryContract();
+      const chainId = getChainId();
 
-      const createEventList = await getProductEvents('CreateProduct', retry);
-      const closedEventList = await getProductEvents('CloseProduct', retry);
+      const response = await multicall({
+        contracts: productIdList.map((id) => ({
+          address: DEPOSITORY.addresses[chainId],
+          abi: DEPOSITORY.abi,
+          functionName: 'mapBondProducts',
+          args: [id],
+        })),
+      });
 
-      const allListPromise = [];
-      for (let i = 0; i < productIdList.length; i += 1) {
-        const id = productIdList[i];
-        const allListResult = contract.methods.mapBondProducts(id).call();
-        allListPromise.push(allListResult);
-      }
+      // discount factor is same for all the products
+      const discount = await getLastIDFRequest();
 
-      const response = await Promise.all(allListPromise);
-      const list = response.map((e, i) => ({
-        ...e,
-        id: productIdList[i],
-        priceLp: e.priceLP,
-      }));
+      const productList = response.map(({ result: product }, index) => {
+        const [priceLP, vesting, token, supply] = product;
 
-      const withDiscount = await addDiscountToProductList(list);
+        return {
+          id: productIdList[index],
+          discount,
+          priceLp: priceLP,
+          vesting,
+          token,
+          supply,
+        };
+      });
 
-      const withCurrentLpPrice = await addCurrentLpPriceToProducts(
-        withDiscount,
+      const listWithCurrentLpPrice = await addCurrentLpPriceToProducts(
+        productList,
       );
 
-      const withLpTokens = await getLpTokenNamesForProducts(
-        withCurrentLpPrice,
+      const createEventList = await getCreateProductEvents();
+      const closedEventList = await getCloseProductEvents();
+
+      const listWithLpTokens = await getLpTokenNamesForProducts(
+        listWithCurrentLpPrice,
         createEventList,
       );
 
-      const withSupplyList = await addSupplyLeftToProducts(
-        withLpTokens,
+      const listWithSupplyList = await addSupplyLeftToProducts(
+        listWithLpTokens,
         createEventList,
         closedEventList,
       );
 
-      const withProjectedChange = addProjectedChange(withSupplyList);
+      const listWithProjectedChange = addProjectedChange(listWithSupplyList);
 
-      return withProjectedChange;
+      return listWithProjectedChange;
     },
     [
-      retry,
-      addDiscountToProductList,
       addCurrentLpPriceToProducts,
       addSupplyLeftToProducts,
       addProjectedChange,
