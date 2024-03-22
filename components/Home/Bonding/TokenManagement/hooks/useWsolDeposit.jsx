@@ -6,12 +6,26 @@ import {
   increaseLiquidityQuoteByInputTokenWithParams,
   TickUtil,
 } from '@orca-so/whirlpools-sdk';
-import { getAssociatedTokenAddress } from '@solana/spl-token';
-import { SystemProgram, Transaction, sendAndConfirmTransaction } from '@solana/web3.js';
+import {
+  AccountLayout,
+  TOKEN_PROGRAM_ID,
+  createSyncNativeInstruction,
+  getAssociatedTokenAddress,
+} from '@solana/spl-token';
+import {
+  // LAMPORTS_PER_SOL,
+  SystemProgram,
+  Transaction,
+} from '@solana/web3.js';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { notifyError, notifySuccess } from '@autonolas/frontend-library';
 
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
-import { SVM_EMPTY_ADDRESS } from '../utils';
+import { ADDRESSES } from 'common-util/Contracts';
+import {
+  SVM_EMPTY_ADDRESS,
+  configureAndSendCurrentTransaction,
+} from '../utils';
 import { useGetOrCreateAssociatedTokenAccount } from './useGetOrCreateAssociatedTokenAccount';
 import { useWhirlpool } from './useWhirlpool';
 import {
@@ -31,11 +45,47 @@ import {
   TICK_SPACING,
 } from '../constants';
 
+const getOlasAmount = async (connection, walletPublicKey) => {
+  const tokenAccounts = await connection.getTokenAccountsByOwner(
+    walletPublicKey,
+    { programId: TOKEN_PROGRAM_ID },
+  );
+
+  let olasAmount = 0n; // TODO: check with @kupermind what is olasAmount is null or 0
+  tokenAccounts.value.forEach((tokenAccount) => {
+    const accountData = AccountLayout.decode(tokenAccount.account.data);
+    if (accountData.mint.toString() === ADDRESSES.svm.olasAddress.toString()) {
+      olasAmount = accountData.amount;
+    }
+  });
+
+  return olasAmount;
+};
+
+const getBridgeTokenAmount = async (connection, walletPublicKey) => {
+  const tokenAccounts = await connection.getTokenAccountsByOwner(
+    walletPublicKey,
+    { programId: TOKEN_PROGRAM_ID },
+  );
+
+  let bridgedTokenAmount = 0n;
+  tokenAccounts.value.forEach((tokenAccount) => {
+    const accountData = AccountLayout.decode(tokenAccount.account.data);
+    if (accountData.mint.toString() === BRIDGED_TOKEN_MINT.toString()) {
+      bridgedTokenAmount = accountData.amount;
+    }
+  });
+
+  return bridgedTokenAmount;
+};
+
 export const [tickLowerIndex, tickUpperIndex] = TickUtil.getFullRangeTickIndex(TICK_SPACING);
 
 export const useWsolDeposit = () => {
-  const { nodeProvider, svmWalletPublicKey } = useSvmConnectivity();
+  const { nodeProvider, svmWalletPublicKey, connection } = useSvmConnectivity();
   const { getWhirlpoolData } = useWhirlpool();
+  const { signTransaction } = useWallet();
+
   const customGetOrCreateAssociatedTokenAccount = useGetOrCreateAssociatedTokenAccount();
   const program = new Program(idl, PROGRAM_ID, nodeProvider);
 
@@ -77,11 +127,12 @@ export const useWsolDeposit = () => {
   const deposit = async ({ wsol, slippage }) => {
     if (!svmWalletPublicKey) {
       notifyError('Please connect your phantom wallet');
-      return;
+      return null;
     }
 
     const { whirlpoolTokenA, whirlpoolTokenB } = await getWhirlpoolData();
-    const quote = getDepositIncreaseLiquidityQuote({ wsol, slippage });
+    const quote = await getDepositIncreaseLiquidityQuote({ wsol, slippage });
+    const { solMax, olasMax } = await getDepositTransformedQuote(quote);
 
     const tokenOwnerAccountA = await getAssociatedTokenAddress(
       whirlpoolTokenA.mint,
@@ -93,31 +144,24 @@ export const useWsolDeposit = () => {
       svmWalletPublicKey,
     );
 
-    // TODO check for lamports balance to be bigger than solMax
     const balance = await connection.getBalance(svmWalletPublicKey);
+    // const balanceInSol = (balance / LAMPORTS_PER_SOL); // TODO: check with @kupermind
+
+    // Check if the user has enough SOL balance
     if (solMax > balance) {
-        notification.error("Not enough SOL")
+      notifyError('Not enough SOL balance');
+      return null;
     }
 
-    // TODO check for OLAS amount to be bigger or equal than olasMax
-      let tokenAccounts = await provider.connection.getTokenAccountsByOwner(
-        svmWalletPublicKey,
-        { programId: TOKEN_PROGRAM_ID }
-      );
-
-      let olasAmount;
-      tokenAccounts.value.forEach((tokenAccount) => {
-        const accountData = AccountLayout.decode(tokenAccount.account.data);
-        if (accountData.mint.toString() == ADDRESSES.svm.olasAddress.toString() {
-          // accountData.amount.toString()
-          olasAmount =  accountData.amount.toNumber();
-        }
-      });
-
-      // TODO check that there is enough OLAS
-      if (olasMax > olasAmount) {
-        notification.error("Not enough OLAS")
-      }
+    // Check if the user has enough OLAS
+    const olasAmount = await getOlasAmount(connection, svmWalletPublicKey);
+    const noEnoughOlas = DecimalUtil.fromBN(olasMax).greaterThan(
+      DecimalUtil.fromBN(olasAmount),
+    );
+    if (noEnoughOlas) {
+      notifyError('Not enough OLAS balance');
+      return null;
+    }
 
     // Check if the user has the correct token account
     // and it is required to deposit
@@ -126,7 +170,7 @@ export const useWsolDeposit = () => {
       || tokenOwnerAccountB === SVM_EMPTY_ADDRESS
     ) {
       notifyError('You do not have the correct token account');
-      return;
+      return null;
     }
 
     const bridgedTokenAccount = await customGetOrCreateAssociatedTokenAccount(
@@ -138,34 +182,37 @@ export const useWsolDeposit = () => {
       notifyError(
         'You do not have the bridged token account, please try again.',
       );
-      return;
+      return null;
     }
 
     // Transfer SOL to associated token account and use SyncNative to update wrapped SOL balance
     // Wrap the required amount of SOL by transferring SOL to WSOL ATA and syncing native
-    const solTransferTransaction = new Transaction()
-      .add(
-        SystemProgram.transfer({
-            fromPubkey: svmWalletPublicKey,
-            toPubkey: tokenOwnerAccountA.address,
-            lamports: quote.tokenMaxA.toNumber() // TODO check the actual argument type
-          }),
-          createSyncNativeInstruction(
-            tokenOwnerAccountA.address
-          )
-      )
+    const solTransferTransaction = new Transaction().add(
+      SystemProgram.transfer({
+        fromPubkey: svmWalletPublicKey,
+        toPubkey: tokenOwnerAccountA.address,
+        lamports: quote.tokenMaxA,
+      }),
+      createSyncNativeInstruction(tokenOwnerAccountA.address),
+    );
 
     try {
-        // TODO userWallet - sign transaction
-        const signature = await sendAndConfirmTransaction(provider.connection, solTransferTransaction, [userWallet]);
-        // TODO probably use configureAndSendCurrentTransaction
+      const signature = await configureAndSendCurrentTransaction(
+        solTransferTransaction,
+        connection,
+        svmWalletPublicKey,
+        signTransaction,
+      );
+      notifySuccess('SOL transfer successful', signature);
     } catch (error) {
-        if (error instanceof Error && "message" in error) {
-            console.error("Program Error:", error);
-            console.error("Error Message:", error.message);
-        } else {
-            console.error("Transaction Error:", error);
-        }
+      notifyError('Error transferring SOL to WSOL ATA');
+
+      if (error instanceof Error && 'message' in error) {
+        console.error('Program Error:', error);
+        console.error('Error Message:', error.message);
+      } else {
+        console.error('Transaction Error:', error);
+      }
     }
 
     try {
@@ -193,26 +240,17 @@ export const useWsolDeposit = () => {
     } catch (error) {
       console.error(error);
     }
+
+    const bridgedToken = await getBridgeTokenAmount(
+      connection,
+      svmWalletPublicKey,
+    );
+    return bridgedToken.toString();
   };
-
-  tokenAccounts = await provider.connection.getTokenAccountsByOwner(
-    svmWalletPublicKey,
-    { programId: TOKEN_PROGRAM_ID }
-  );
-
-  let bridgedTokenAmount;
-  tokenAccounts.value.forEach((tokenAccount) => {
-    const accountData = AccountLayout.decode(tokenAccount.account.data);
-    if (accountData.mint.toString() == BRIDGED_TOKEN_MINT.toString() {
-      // accountData.amount.toString()
-      bridgedTokenAmount = accountData.amount.toNumber();
-    }
-  });
 
   return {
     getDepositIncreaseLiquidityQuote,
     getDepositTransformedQuote,
     deposit,
-    bridgedTokenAmount
   };
 };

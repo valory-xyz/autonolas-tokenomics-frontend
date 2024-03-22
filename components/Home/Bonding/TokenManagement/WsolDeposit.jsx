@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
-  Button, Form, InputNumber, Flex, Typography, Spin,
+  Button, Form, InputNumber, Flex, Typography, Spin, Alert,
 } from 'antd';
 import pDebounce from 'p-debounce';
 import { isNumber } from 'lodash';
@@ -21,6 +21,7 @@ export const WsolDeposit = () => {
   const [estimatedQuote, setEstimatedQuote] = useState(null);
   const [isEstimating, setIsEstimating] = useState(false);
   const [isDepositing, setIsDepositing] = useState(false);
+  const [bridgedTokenAmount, setBridgedTokenAmount] = useState(null);
 
   const {
     getDepositIncreaseLiquidityQuote: fn,
@@ -65,7 +66,10 @@ export const WsolDeposit = () => {
       const wsol = form.getFieldValue('wsol');
       const slippage = form.getFieldValue('slippage');
 
-      await deposit({ slippage, wsol });
+      const bridgedToken = await deposit({ slippage, wsol });
+      if (bridgedToken) {
+        setBridgedTokenAmount(bridgedToken);
+      }
     } catch (error) {
       notifyError('Failed to deposit');
       console.error(error);
@@ -80,75 +84,94 @@ export const WsolDeposit = () => {
   } Bridged Tokens`;
 
   return (
-    <Form
-      form={form}
-      name="manage"
-      layout="vertical"
-      className="mt-16"
-      onFinish={handleDeposit}
-    >
-      <Form.Item
-        name="wsol"
-        label="WSOL"
-        rules={[
-          { required: true, message: 'Please input a valid amount of WSOL' },
-        ]}
+    <>
+      <Form
+        form={form}
+        name="manage"
+        layout="vertical"
+        className="mt-16"
+        onFinish={handleDeposit}
       >
-        <InputNumber
-          min={0}
-          className="full-width"
-          onChange={onWsolAndSlippageChange}
-        />
-      </Form.Item>
-
-      <Form.Item
-        name="olas"
-        label="OLAS"
-        rules={[
-          { required: true, message: 'Please input a valid amount of OLAS' },
-        ]}
-      >
-        <InputNumber disabled className="full-width" />
-      </Form.Item>
-
-      <Form.Item
-        name="slippage"
-        label="Slippage"
-        rules={[
-          {
-            required: true,
-            message: 'Please input a valid amount of slippage',
-          },
-          { validator: slippageValidator },
-        ]}
-      >
-        <InputNumber
-          min={0}
-          step={0.01}
-          disabled={isEstimating}
-          suffix="%"
-          className="full-width"
-          onChange={onWsolAndSlippageChange}
-        />
-      </Form.Item>
-
-      <Form.Item>
-        <Spin spinning={isEstimating} size="small">
-          <Flex vertical gap="small" className="mb-16">
-            <Text strong>ESTIMATED OUTPUT</Text>
-            <Text>{estimatedOutput}</Text>
-          </Flex>
-        </Spin>
-
-        <Button
-          type="primary"
-          htmlType="submit"
-          loading={isDepositing}
-          disabled={isDepositButtonDisabled}
+        <Form.Item
+          name="wsol"
+          label="WSOL"
+          rules={[
+            { required: true, message: 'Please input a valid amount of WSOL' },
+          ]}
         >
-          Deposit
-        </Button>
-      </Form.Item>
-    </Form>
+          <InputNumber
+            min={0}
+            className="full-width"
+            onChange={onWsolAndSlippageChange}
+          />
+        </Form.Item>
+
+        <Form.Item
+          name="olas"
+          label="OLAS"
+          rules={[
+            { required: true, message: 'Please input a valid amount of OLAS' },
+          ]}
+        >
+          <InputNumber disabled className="full-width" />
+        </Form.Item>
+
+        <Form.Item
+          name="slippage"
+          label="Slippage"
+          rules={[
+            {
+              required: true,
+              message: 'Please input a valid amount of slippage',
+            },
+            { validator: slippageValidator },
+          ]}
+        >
+          <InputNumber
+            min={0}
+            step={0.01}
+            disabled={isEstimating}
+            suffix="%"
+            className="full-width"
+            onChange={onWsolAndSlippageChange}
+          />
+        </Form.Item>
+
+        <Form.Item>
+          <Spin spinning={isEstimating} size="small">
+            <Flex vertical gap="small" className="mb-16">
+              <Text strong>ESTIMATED OUTPUT</Text>
+              <Text>{estimatedOutput}</Text>
+            </Flex>
+          </Spin>
+
+          <Button
+            type="primary"
+            htmlType="submit"
+            loading={isDepositing}
+            disabled={isDepositButtonDisabled}
+          >
+            Deposit
+          </Button>
+        </Form.Item>
+      </Form>
+
+      {bridgedTokenAmount && (
+        <Alert
+          message={(
+            <>
+              You received
+              <Text strong>
+                {` ${getCommaSeparatedNumber(
+                  bridgedTokenAmount,
+                )} Bridged Tokens`}
+              </Text>
+            </>
+          )}
+          type="success"
+          showIcon
+        />
+      )}
+    </>
   );
 };

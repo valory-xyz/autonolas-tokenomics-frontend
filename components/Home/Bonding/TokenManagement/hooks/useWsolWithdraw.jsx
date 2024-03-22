@@ -2,7 +2,6 @@ import { useCallback } from 'react';
 import { Program } from '@coral-xyz/anchor';
 import idl from 'common-util/AbiAndAddresses/liquidityLockbox.json';
 import { DecimalUtil, Percentage } from '@orca-so/common-sdk';
-import Decimal from 'decimal.js';
 import {
   decreaseLiquidityQuoteByLiquidityWithParams,
   TickUtil,
@@ -12,6 +11,7 @@ import {
   getAssociatedTokenAddress,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
+import Decimal from 'decimal.js';
 import { notifyError, notifySuccess } from '@autonolas/frontend-library';
 
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
@@ -106,7 +106,7 @@ export const useWsolWithdraw = () => {
       { programId: TOKEN_PROGRAM_ID },
     );
 
-    let maxAmount = -1; // initialize to -1
+    let maxAmountInBn = -1n; // initialize to -1
 
     // Iterate through the token accounts of the user
     // to find the bridged token account
@@ -114,16 +114,17 @@ export const useWsolWithdraw = () => {
       const accountData = AccountLayout.decode(tokenAccount.account.data);
       if (accountData.mint.toString() === BRIDGED_TOKEN_MINT.toString()) {
         if (tokenAccount.pubkey.toString() === bridgedTokenAccount) {
-          maxAmount = accountData.amount.toNumber();
+          maxAmountInBn = accountData.amount;
         }
       }
     });
 
-    if (maxAmount === -1) {
+    if (maxAmountInBn === -1n) {
       notifyError('You do not have the bridged token account yet');
       return null;
     }
 
+    const maxAmount = Number(maxAmountInBn.toString());
     return maxAmount;
   }, [svmWalletPublicKey, nodeProvider, getBridgedTokenAccount]);
 

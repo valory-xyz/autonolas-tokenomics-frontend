@@ -71,7 +71,7 @@ export const WsolWithDraw = () => {
     const amount = form.getFieldValue('amount');
     const slippage = form.getFieldValue('slippage');
     if (amount > maxAmount) {
-      notifyError('Amount exceeds max');
+      notifyError('Amount exceeds the maximum limit');
       return;
     }
 

@@ -1,5 +1,3 @@
-/* eslint-disable max-len */
-/* eslint-disable no-param-reassign */
 import { useCallback } from 'react';
 import { Transaction } from '@solana/web3.js';
 import {
@@ -10,37 +8,7 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { notifyError, notifySuccess } from '@autonolas/frontend-library';
 
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
-
-/**
- *
- * function to configure and send current transaction (ref: https://stackoverflow.com/a/73943145)
- *
- * @param {import("@solana/web3.js").Transaction} transaction
- * @param {import("@solana/web3.js").Connection} connection
- * @param {import("@solana/web3.js").PublicKey} feePayer
- * @param {import("@solana/wallet-adapter-base").SignerWalletAdapterProps['signTransaction']} signTransaction
- *
- */
-const configureAndSendCurrentTransaction = async (
-  transaction,
-  connection,
-  feePayer,
-  signTransaction,
-) => {
-  const blockHash = await connection.getLatestBlockhash();
-
-  transaction.feePayer = feePayer;
-  transaction.recentBlockhash = blockHash.blockhash;
-
-  const signed = await signTransaction(transaction);
-  const signature = await connection.sendRawTransaction(signed.serialize());
-  await connection.confirmTransaction({
-    blockhash: blockHash.blockhash,
-    lastValidBlockHeight: blockHash.lastValidBlockHeight,
-    signature,
-  });
-  return signature;
-};
+import { configureAndSendCurrentTransaction } from '../utils';
 
 /**
  * hook to get or create associated token account
