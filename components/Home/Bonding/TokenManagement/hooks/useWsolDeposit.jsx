@@ -16,6 +16,7 @@ import {
   // LAMPORTS_PER_SOL,
   SystemProgram,
   Transaction,
+  // sendAndConfirmTransaction,
 } from '@solana/web3.js';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { notifyError, notifySuccess } from '@autonolas/frontend-library';
@@ -163,11 +164,19 @@ export const useWsolDeposit = () => {
       return null;
     }
 
+    console.log({
+      quote,
+      solMax,
+      olasMax,
+      tokenOwnerAccountA: tokenOwnerAccountA.toString(),
+      tokenOwnerAccountB: tokenOwnerAccountB.toString(),
+    });
+
     // Check if the user has the correct token account
     // and it is required to deposit
     if (
-      tokenOwnerAccountA === SVM_EMPTY_ADDRESS
-      || tokenOwnerAccountB === SVM_EMPTY_ADDRESS
+      tokenOwnerAccountA.toString() === SVM_EMPTY_ADDRESS
+      || tokenOwnerAccountB.toString() === SVM_EMPTY_ADDRESS
     ) {
       notifyError('You do not have the correct token account');
       return null;
@@ -178,6 +187,8 @@ export const useWsolDeposit = () => {
       svmWalletPublicKey,
     );
 
+    console.log({ bridgedTokenAccount: bridgedTokenAccount.toString() });
+
     if (!bridgedTokenAccount) {
       notifyError(
         'You do not have the bridged token account, please try again.',
@@ -187,22 +198,33 @@ export const useWsolDeposit = () => {
 
     // Transfer SOL to associated token account and use SyncNative to update wrapped SOL balance
     // Wrap the required amount of SOL by transferring SOL to WSOL ATA and syncing native
-    const solTransferTransaction = new Transaction().add(
-      SystemProgram.transfer({
-        fromPubkey: svmWalletPublicKey,
-        toPubkey: tokenOwnerAccountA.address,
-        lamports: quote.tokenMaxA,
-      }),
-      createSyncNativeInstruction(tokenOwnerAccountA.address),
-    );
 
+    const solTransferTransaction = [];
+
+    const systemInstruction = SystemProgram.transfer({
+      fromPubkey: svmWalletPublicKey,
+      toPubkey: tokenOwnerAccountA,
+      lamports: quote.tokenMaxA,
+    });
+    solTransferTransaction.push(systemInstruction);
+
+    const syncNativeInstruction = createSyncNativeInstruction(tokenOwnerAccountA);
+    solTransferTransaction.push(syncNativeInstruction);
+
+    const transaction = new Transaction().add(...solTransferTransaction);
+    console.log('solTransferTransaction:', {
+      systemInstruction,
+      syncNativeInstruction,
+      transaction,
+    });
     try {
       const signature = await configureAndSendCurrentTransaction(
-        solTransferTransaction,
+        transaction,
         connection,
         svmWalletPublicKey,
         signTransaction,
       );
+
       notifySuccess('SOL transfer successful', signature);
     } catch (error) {
       notifyError('Error transferring SOL to WSOL ATA');
@@ -213,6 +235,8 @@ export const useWsolDeposit = () => {
       } else {
         console.error('Transaction Error:', error);
       }
+
+      return null;
     }
 
     try {
@@ -229,7 +253,7 @@ export const useWsolDeposit = () => {
           tokenVaultB: TOKEN_VAULT_B,
           tickArrayLower: TICK_ARRAY_LOWER,
           tickArrayUpper: TICK_ARRAY_UPPER,
-          bridgedTokenAccount: bridgedTokenAccount.address,
+          bridgedTokenAccount,
           bridgedTokenMint: BRIDGED_TOKEN_MINT,
           lockbox: LOCKBOX,
           whirlpoolProgram: ORCA,
