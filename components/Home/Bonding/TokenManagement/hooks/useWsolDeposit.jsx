@@ -23,7 +23,6 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { notifyError, notifySuccess } from '@autonolas/frontend-library';
 
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
-import { ADDRESSES } from 'common-util/Contracts';
 import {
   SVM_EMPTY_ADDRESS,
   configureAndSendCurrentTransaction,
@@ -206,6 +205,7 @@ export const useWsolDeposit = () => {
           whirlpoolTokenA.mint,
         ),
       );
+
       try {
         const signature = await configureAndSendCurrentTransaction(
           ataTransaction,
@@ -222,65 +222,66 @@ export const useWsolDeposit = () => {
 
       needToWrap = true;
     } else {
-        // Check if the user has enough WSOL
-        const wsolAmount = await getOlasAmount(connection, svmWalletPublicKey, whirlpoolTokenA.mint);
-        const noEnoughSol = DecimalUtil.fromBN(solMax).greaterThan(
-          DecimalUtil.fromBN(wsolAmount),
-        );
-        if (noEnoughSol) {
-          needToWrap = true;
-        }
+      // Check if the user has enough WSOL
+      const wsolAmount = await getOlasAmount(connection, svmWalletPublicKey, whirlpoolTokenA.mint);
+      const noEnoughWsol = DecimalUtil.fromBN(solMax).greaterThan(
+        DecimalUtil.fromBN(wsolAmount),
+      );
+      if (noEnoughWsol) {
+        needToWrap = true;
+      }
     }
 
     if (needToWrap) {
-        const balance = await connection.getBalance(svmWalletPublicKey);
+      const balance = await connection.getBalance(svmWalletPublicKey);
 
-        // Check if the user has enough SOL balance
-        if (solMax > balance) {
-          notifyError('Not enough SOL balance');
-          return null;
-        }
+      // Check if the user has enough SOL balance
+      if (solMax > balance) {
+        notifyError('Not enough SOL balance');
+        return null;
+      }
 
-        const solTransferTransaction = [];
+      const solTransferTransaction = [];
 
-        const systemInstruction = SystemProgram.transfer({
-          fromPubkey: svmWalletPublicKey,
-          toPubkey: tokenOwnerAccountA,
-          lamports: quote.tokenMaxA,
-        });
-        solTransferTransaction.push(systemInstruction);
+      const systemInstruction = SystemProgram.transfer({
+        fromPubkey: svmWalletPublicKey,
+        toPubkey: tokenOwnerAccountA,
+        lamports: quote.tokenMaxA,
+      });
+      solTransferTransaction.push(systemInstruction);
 
-        const syncNativeInstruction = createSyncNativeInstruction(tokenOwnerAccountA);
-        solTransferTransaction.push(syncNativeInstruction);
+      const syncNativeInstruction = createSyncNativeInstruction(tokenOwnerAccountA);
+      solTransferTransaction.push(syncNativeInstruction);
 
-        const transaction = new Transaction().add(...solTransferTransaction);
-        console.log('solTransferTransaction:', {
-          systemInstruction,
-          syncNativeInstruction,
+      const transaction = new Transaction().add(...solTransferTransaction);
+      console.log('solTransferTransaction:', {
+        systemInstruction,
+        syncNativeInstruction,
+        transaction,
+      });
+
+      try {
+        const signature = await configureAndSendCurrentTransaction(
           transaction,
-        });
-        try {
-          const signature = await configureAndSendCurrentTransaction(
-            transaction,
-            connection,
-            svmWalletPublicKey,
-            signTransaction,
-          );
+          connection,
+          svmWalletPublicKey,
+          signTransaction,
+        );
 
-          notifySuccess('SOL transfer successful', signature);
-          console.log('Signature: (after SOL transfer)', signature);
-        } catch (error) {
-          notifyError('Error transferring SOL to WSOL ATA');
+        notifySuccess('SOL transfer successful', signature);
+        console.log('Signature: (after SOL transfer)', signature);
+      } catch (error) {
+        notifyError('Error transferring SOL to WSOL ATA');
 
-          if (error instanceof Error && 'message' in error) {
-            console.error('Program Error:', error);
-            console.error('Error Message:', error.message);
-          } else {
-            console.error('Transaction Error:', error);
-          }
-
-          return null;
+        if (error instanceof Error && 'message' in error) {
+          console.error('Program Error:', error);
+          console.error('Error Message:', error.message);
+        } else {
+          console.error('Transaction Error:', error);
         }
+
+        return null;
+      }
     }
 
     try {
