@@ -156,7 +156,7 @@ export const useWsolWithdraw = () => {
       whirlpoolTokenB.mint,
       svmWalletPublicKey,
     );
-    if (!tokenOwnerAccountA) {
+    if (!tokenOwnerAccountB) {
       notifyError(TOKEN_MINT_ERROR);
       return;
     }

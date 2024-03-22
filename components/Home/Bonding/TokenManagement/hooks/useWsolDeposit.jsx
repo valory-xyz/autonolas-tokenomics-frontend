@@ -9,6 +9,7 @@ import {
 import {
   AccountLayout,
   TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountInstruction,
   createSyncNativeInstruction,
   getAssociatedTokenAddress,
 } from '@solana/spl-token';
@@ -165,20 +166,9 @@ export const useWsolDeposit = () => {
       return null;
     }
 
-    console.log({
-      quote,
-      solMax,
-      olasMax,
-      tokenOwnerAccountA: tokenOwnerAccountA.toString(),
-      tokenOwnerAccountB: tokenOwnerAccountB.toString(),
-    });
-
     // Check if the user has the correct token account
     // and it is required to deposit
-    if (
-      tokenOwnerAccountA.toString() === SVM_EMPTY_ADDRESS
-      || tokenOwnerAccountB.toString() === SVM_EMPTY_ADDRESS
-    ) {
+    if (tokenOwnerAccountB.toString() === SVM_EMPTY_ADDRESS) {
       notifyError('You do not have the correct token account');
       return null;
     }
@@ -205,26 +195,38 @@ export const useWsolDeposit = () => {
       svmWalletPublicKey,
     );
 
+    console.log({
+      quote,
+      solMax,
+      olasMax,
+      tokenOwnerAccountA: tokenOwnerAccountA.toString(),
+      tokenOwnerAccountB: tokenOwnerAccountB.toString(),
+    });
+
     account = await connection.getAccountInfo(tokenOwnerAccountA);
     if (!account) {
-        // Create token account to hold wrapped SOL
-        const ataTransaction = new Transaction()
-          .add(
-            createAssociatedTokenAccountInstruction(
-              svmWalletPublicKey,
-              tokenOwnerAccountA,
-              svmWalletPublicKey,
-              whirlpoolTokenA.mint
-            )
-          );
-        try {
-          const signature = await configureAndSendCurrentTransaction(
-            ataTransaction,
-            connection,
-            svmWalletPublicKey,
-            signTransaction,
-          );
-        }
+      // Create token account to hold wrapped SOL
+      const ataTransaction = new Transaction().add(
+        createAssociatedTokenAccountInstruction(
+          svmWalletPublicKey,
+          tokenOwnerAccountA,
+          svmWalletPublicKey,
+          whirlpoolTokenA.mint,
+        ),
+      );
+      try {
+        const signature = await configureAndSendCurrentTransaction(
+          ataTransaction,
+          connection,
+          svmWalletPublicKey,
+          signTransaction,
+        );
+        console.log('Signature:', signature);
+      } catch (error) {
+        notifyError('Error creating token account for WSOL ATA');
+        console.error(error);
+        return null;
+      }
     }
 
     const solTransferTransaction = [];
@@ -254,6 +256,7 @@ export const useWsolDeposit = () => {
       );
 
       notifySuccess('SOL transfer successful', signature);
+      console.log('Signature: (after SOL transfer)', signature);
     } catch (error) {
       notifyError('Error transferring SOL to WSOL ATA');
 
@@ -290,10 +293,11 @@ export const useWsolDeposit = () => {
 
       notifySuccess('Deposit successful', signature);
     } catch (error) {
+      notifyError('Error depositing liquidity');
       console.error(error);
     }
 
-    //await closeAccount(connection, wallet, associatedTokenAccount, wallet.publicKey, wallet);
+    // await closeAccount(connection, wallet, associatedTokenAccount, wallet.publicKey, wallet);
 
     const bridgedToken = await getBridgeTokenAmount(
       connection,
