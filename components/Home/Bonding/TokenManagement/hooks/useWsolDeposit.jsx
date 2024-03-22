@@ -47,21 +47,21 @@ import {
   TICK_SPACING,
 } from '../constants';
 
-const getOlasAmount = async (connection, walletPublicKey) => {
+const getOlasAmount = async (connection, walletPublicKey, tokenAddress) => {
   const tokenAccounts = await connection.getTokenAccountsByOwner(
     walletPublicKey,
     { programId: TOKEN_PROGRAM_ID },
   );
 
-  let olasAmount = 0n; // TODO: check with @kupermind what is olasAmount is null or 0
+  let tokenAmount = 0n;
   tokenAccounts.value.forEach((tokenAccount) => {
     const accountData = AccountLayout.decode(tokenAccount.account.data);
-    if (accountData.mint.toString() === ADDRESSES.svm.olasAddress.toString()) {
-      olasAmount = accountData.amount;
+    if (accountData.mint.toString() === tokenAddress.toString()) {
+      tokenAmount = accountData.amount;
     }
   });
 
-  return olasAmount;
+  return tokenAmount;
 };
 
 const getBridgeTokenAmount = async (connection, walletPublicKey) => {
@@ -147,17 +147,8 @@ export const useWsolDeposit = () => {
       return null;
     }
 
-    const balance = await connection.getBalance(svmWalletPublicKey);
-    // const balanceInSol = (balance / LAMPORTS_PER_SOL); // TODO: check with @kupermind
-
-    // Check if the user has enough SOL balance
-    if (solMax > balance) {
-      notifyError('Not enough SOL balance');
-      return null;
-    }
-
     // Check if the user has enough OLAS
-    const olasAmount = await getOlasAmount(connection, svmWalletPublicKey);
+    const olasAmount = await getOlasAmount(connection, svmWalletPublicKey, whirlpoolTokenB.mint);
     const noEnoughOlas = DecimalUtil.fromBN(olasMax).greaterThan(
       DecimalUtil.fromBN(olasAmount),
     );
@@ -203,6 +194,7 @@ export const useWsolDeposit = () => {
       tokenOwnerAccountB: tokenOwnerAccountB.toString(),
     });
 
+    let needToWrap = false;
     account = await connection.getAccountInfo(tokenOwnerAccountA);
     if (!account) {
       // Create token account to hold wrapped SOL
@@ -227,47 +219,68 @@ export const useWsolDeposit = () => {
         console.error(error);
         return null;
       }
+
+      needToWrap = true;
+    } else {
+        // Check if the user has enough WSOL
+        const wsolAmount = await getOlasAmount(connection, svmWalletPublicKey, whirlpoolTokenA.mint);
+        const noEnoughSol = DecimalUtil.fromBN(solMax).greaterThan(
+          DecimalUtil.fromBN(wsolAmount),
+        );
+        if (noEnoughSol) {
+          needToWrap = true;
+        }
     }
 
-    const solTransferTransaction = [];
+    if (needToWrap) {
+        const balance = await connection.getBalance(svmWalletPublicKey);
 
-    const systemInstruction = SystemProgram.transfer({
-      fromPubkey: svmWalletPublicKey,
-      toPubkey: tokenOwnerAccountA,
-      lamports: quote.tokenMaxA,
-    });
-    solTransferTransaction.push(systemInstruction);
+        // Check if the user has enough SOL balance
+        if (solMax > balance) {
+          notifyError('Not enough SOL balance');
+          return null;
+        }
 
-    const syncNativeInstruction = createSyncNativeInstruction(tokenOwnerAccountA);
-    solTransferTransaction.push(syncNativeInstruction);
+        const solTransferTransaction = [];
 
-    const transaction = new Transaction().add(...solTransferTransaction);
-    console.log('solTransferTransaction:', {
-      systemInstruction,
-      syncNativeInstruction,
-      transaction,
-    });
-    try {
-      const signature = await configureAndSendCurrentTransaction(
-        transaction,
-        connection,
-        svmWalletPublicKey,
-        signTransaction,
-      );
+        const systemInstruction = SystemProgram.transfer({
+          fromPubkey: svmWalletPublicKey,
+          toPubkey: tokenOwnerAccountA,
+          lamports: quote.tokenMaxA,
+        });
+        solTransferTransaction.push(systemInstruction);
 
-      notifySuccess('SOL transfer successful', signature);
-      console.log('Signature: (after SOL transfer)', signature);
-    } catch (error) {
-      notifyError('Error transferring SOL to WSOL ATA');
+        const syncNativeInstruction = createSyncNativeInstruction(tokenOwnerAccountA);
+        solTransferTransaction.push(syncNativeInstruction);
 
-      if (error instanceof Error && 'message' in error) {
-        console.error('Program Error:', error);
-        console.error('Error Message:', error.message);
-      } else {
-        console.error('Transaction Error:', error);
-      }
+        const transaction = new Transaction().add(...solTransferTransaction);
+        console.log('solTransferTransaction:', {
+          systemInstruction,
+          syncNativeInstruction,
+          transaction,
+        });
+        try {
+          const signature = await configureAndSendCurrentTransaction(
+            transaction,
+            connection,
+            svmWalletPublicKey,
+            signTransaction,
+          );
 
-      return null;
+          notifySuccess('SOL transfer successful', signature);
+          console.log('Signature: (after SOL transfer)', signature);
+        } catch (error) {
+          notifyError('Error transferring SOL to WSOL ATA');
+
+          if (error instanceof Error && 'message' in error) {
+            console.error('Program Error:', error);
+            console.error('Error Message:', error.message);
+          } else {
+            console.error('Transaction Error:', error);
+          }
+
+          return null;
+        }
     }
 
     try {
