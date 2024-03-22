@@ -67,7 +67,7 @@ export const WsolDeposit = () => {
       const slippage = form.getFieldValue('slippage');
 
       const bridgedToken = await deposit({ slippage, wsol });
-      if (bridgedToken) {
+      if (Number(bridgedToken) > 0) {
         setBridgedTokenAmount(bridgedToken);
       }
     } catch (error) {
