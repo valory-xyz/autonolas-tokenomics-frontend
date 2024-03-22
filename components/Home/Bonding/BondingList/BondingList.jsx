@@ -76,7 +76,10 @@ const getColumns = (
       dataIndex: 'lpTokenName',
       key: 'lpTokenName',
       render: (x, data) => {
-        if (x === LP_PAIRS.svm.name) {
+        const isValid = data.id === '127' || x === LP_PAIRS.svm.name; // TODO: remove - dummy
+        // const isValid = x !== LP_PAIRS.svm.name;
+        // const isValid = x !== LP_PAIRS.svm.name; // TODO: should be `x === LP_PAIRS.svm.name`
+        if (isValid) {
           return (
             <WsolTokenManagement lpToken={x} lpTokenLink={data.lpTokenLink} />
           );
@@ -93,7 +96,7 @@ const getColumns = (
       title: getTitle('Current Price of LP Token', 'Denominated in OLAS'),
       dataIndex: 'fullCurrentPriceLp',
       key: 'fullCurrentPriceLp',
-      width: 180,
+      width: 140,
       render: (x, details) => (
         <a
           href={details.currentPriceLpLink}
@@ -336,11 +339,7 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
         bordered
         loading={{
           spinning: isLoading,
-          tip: (
-            <Typography className="mt-8">
-              Loading products
-            </Typography>
-          ),
+          tip: <Typography className="mt-8">Loading products</Typography>,
           indicator: <Spin active />,
         }}
         pagination={false}

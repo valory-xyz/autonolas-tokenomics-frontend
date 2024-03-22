@@ -79,9 +79,7 @@ export const WsolDeposit = () => {
   };
 
   const isDepositButtonDisabled = isEstimating || isDepositing || !isSvmWalletConnected;
-  const estimatedOutput = `${
-    getCommaSeparatedNumber(estimatedQuote?.liquidity) || '--'
-  } Bridged Tokens`;
+  const estimatedOutput = getCommaSeparatedNumber(estimatedQuote?.liquidity) || '--';
 
   return (
     <>
@@ -141,7 +139,7 @@ export const WsolDeposit = () => {
           <Spin spinning={isEstimating} size="small">
             <Flex vertical gap="small" className="mb-16">
               <Text strong>ESTIMATED OUTPUT</Text>
-              <Text>{estimatedOutput}</Text>
+              <Text>{`${estimatedOutput} Bridged Tokens`}</Text>
             </Flex>
           </Spin>
 
