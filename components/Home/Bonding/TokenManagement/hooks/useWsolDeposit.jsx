@@ -135,15 +135,16 @@ export const useWsolDeposit = () => {
     const quote = await getDepositIncreaseLiquidityQuote({ wsol, slippage });
     const { solMax, olasMax } = await getDepositTransformedQuote(quote);
 
-    const tokenOwnerAccountA = await getAssociatedTokenAddress(
-      whirlpoolTokenA.mint,
-      svmWalletPublicKey,
-    );
-
+    // OLAS associated token account MUST always exist when the person bonds
     const tokenOwnerAccountB = await getAssociatedTokenAddress(
       whirlpoolTokenB.mint,
       svmWalletPublicKey,
     );
+    let account = await connection.getAccountInfo(tokenOwnerAccountB);
+    if (!account) {
+      notifyError('OLAS Associated token account does not exist');
+      return null;
+    }
 
     const balance = await connection.getBalance(svmWalletPublicKey);
     // const balanceInSol = (balance / LAMPORTS_PER_SOL); // TODO: check with @kupermind
@@ -198,6 +199,33 @@ export const useWsolDeposit = () => {
 
     // Transfer SOL to associated token account and use SyncNative to update wrapped SOL balance
     // Wrap the required amount of SOL by transferring SOL to WSOL ATA and syncing native
+
+    const tokenOwnerAccountA = await getAssociatedTokenAddress(
+      whirlpoolTokenA.mint,
+      svmWalletPublicKey,
+    );
+
+    account = await connection.getAccountInfo(tokenOwnerAccountA);
+    if (!account) {
+        // Create token account to hold wrapped SOL
+        const ataTransaction = new Transaction()
+          .add(
+            createAssociatedTokenAccountInstruction(
+              svmWalletPublicKey,
+              tokenOwnerAccountA,
+              svmWalletPublicKey,
+              whirlpoolTokenA.mint
+            )
+          );
+        try {
+          const signature = await configureAndSendCurrentTransaction(
+            ataTransaction,
+            connection,
+            svmWalletPublicKey,
+            signTransaction,
+          );
+        }
+    }
 
     const solTransferTransaction = [];
 
@@ -264,6 +292,8 @@ export const useWsolDeposit = () => {
     } catch (error) {
       console.error(error);
     }
+
+    //await closeAccount(connection, wallet, associatedTokenAccount, wallet.publicKey, wallet);
 
     const bridgedToken = await getBridgeTokenAmount(
       connection,
