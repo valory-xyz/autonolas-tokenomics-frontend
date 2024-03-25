@@ -416,6 +416,13 @@ const useAddProjectChangeToProducts = () => useCallback(
       2,
     );
 
+    // console.log({
+    //   fullCurrentPriceLp,
+    //   discountedOlasPerLpTokenInBg,
+    //   roundedDiscountedOlasPerLpToken,
+    //   projectedChange,
+    // });
+
     return {
       ...record,
       fullCurrentPriceLp,
@@ -504,6 +511,7 @@ const useProductListRequest = ({ isActive, retry }) => {
   return useCallback(async () => {
     const contract = getDepositoryContract();
     const productIdList = await contract.methods.getProducts(isActive).call();
+    // const productIdList = ['142'];
     const response = await getProductDetailsFromIds(productIdList);
 
     const productList = response.map((product, index) => ({

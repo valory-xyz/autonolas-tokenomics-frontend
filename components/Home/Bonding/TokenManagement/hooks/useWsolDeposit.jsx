@@ -83,12 +83,14 @@ const getBridgeTokenAmount = async (connection, walletPublicKey) => {
 export const [tickLowerIndex, tickUpperIndex] = TickUtil.getFullRangeTickIndex(TICK_SPACING);
 
 export const useWsolDeposit = () => {
-  const { nodeProvider, svmWalletPublicKey, connection } = useSvmConnectivity();
+  const {
+    nodeProvider, svmWalletPublicKey, connection, anchorProvider,
+  } = useSvmConnectivity();
   const { getWhirlpoolData } = useWhirlpool();
   const { signTransaction } = useWallet();
 
   const customGetOrCreateAssociatedTokenAccount = useGetOrCreateAssociatedTokenAccount();
-  const program = new Program(idl, PROGRAM_ID, nodeProvider);
+  const program = new Program(idl, PROGRAM_ID, anchorProvider);
 
   const getDepositIncreaseLiquidityQuote = async ({ wsol, slippage }) => {
     const { whirlpoolData, whirlpoolTokenA, whirlpoolTokenB } = await getWhirlpoolData();
@@ -305,7 +307,8 @@ export const useWsolDeposit = () => {
         })
         .rpc();
 
-      notifySuccess('Deposit successful', signature);
+      notifySuccess('Deposit successful');
+      console.log(signature);
     } catch (error) {
       notifyError('Error depositing liquidity');
       console.error(error);

@@ -33,6 +33,9 @@ export const WsolWithDraw = () => {
   useEffect(() => {
     const setMaxAmountFn = async () => {
       const tempAmount = await getMaxAmount();
+
+      // TODO: Divide the tempAmount by 10^8
+      // check if any library is used
       if (!isNil(tempAmount)) {
         setMaxAmount(tempAmount);
       }
@@ -100,6 +103,7 @@ export const WsolWithDraw = () => {
     >
       <Form.Item
         name="amount"
+        // TODO: should not be greater than maxAmount
         rules={[{ required: true, message: 'Please input a valid amount' }]}
         label={(
           <>
@@ -171,3 +175,5 @@ export const WsolWithDraw = () => {
     </Form>
   );
 };
+
+// TODO: after withdrawing, reset the form

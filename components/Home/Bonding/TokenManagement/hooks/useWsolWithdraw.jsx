@@ -54,11 +54,11 @@ const useBridgedTokenAccount = () => {
 };
 
 export const useWsolWithdraw = () => {
-  const { svmWalletPublicKey, nodeProvider } = useSvmConnectivity();
+  const { svmWalletPublicKey, nodeProvider, anchorProvider } = useSvmConnectivity();
   const { getWhirlpoolData } = useWhirlpool();
   const getBridgedTokenAccount = useBridgedTokenAccount();
   const customGetOrCreateAssociatedTokenAccount = useGetOrCreateAssociatedTokenAccount();
-  const program = new Program(idl, PROGRAM_ID, nodeProvider);
+  const program = new Program(idl, PROGRAM_ID, anchorProvider);
 
   const withdrawTransformedQuote = async (quote) => {
     const { whirlpoolTokenA, whirlpoolTokenB } = await getWhirlpoolData();
@@ -79,7 +79,8 @@ export const useWsolWithdraw = () => {
   const withdrawDecreaseLiquidityQuote = async ({ amount, slippage }) => {
     const { whirlpoolData } = await getWhirlpoolData();
     const slippageTolerance = Percentage.fromDecimal(new Decimal(slippage));
-    const liquidity = DecimalUtil.toBN(new Decimal(amount), 9);
+    // const liquidity = DecimalUtil.toBN(new Decimal(amount), 9);
+    const liquidity = DecimalUtil.toBN(new Decimal(amount), 0);
 
     return decreaseLiquidityQuoteByLiquidityWithParams({
       sqrtPrice: whirlpoolData.sqrtPrice,
@@ -101,23 +102,42 @@ export const useWsolWithdraw = () => {
     const bridgedTokenAccount = await getBridgedTokenAccount();
     if (!bridgedTokenAccount) return null;
 
-    const tokenAccounts = await nodeProvider.connection.getTokenAccountsByOwner(
+    const tokenAccounts = await anchorProvider.connection.getTokenAccountsByOwner(
       svmWalletPublicKey,
       { programId: TOKEN_PROGRAM_ID },
     );
 
+    console.log('tokenAccounts', tokenAccounts);
+
     let maxAmountInBn = -1n; // initialize to -1
+
+    console.log({
+      bridgedTokenAccount: bridgedTokenAccount.toString(),
+    });
 
     // Iterate through the token accounts of the user
     // to find the bridged token account
-    tokenAccounts.value.forEach((tokenAccount) => {
+    tokenAccounts.value.forEach((tokenAccount, index) => {
       const accountData = AccountLayout.decode(tokenAccount.account.data);
+
+      console.log({
+        accountData,
+        mint: accountData.mint.toString(),
+        bridgedTokenMint: BRIDGED_TOKEN_MINT.toString(),
+        tokenAccount: tokenAccount.pubkey.toString(),
+        amount: accountData.amount,
+      });
+
       if (accountData.mint.toString() === BRIDGED_TOKEN_MINT.toString()) {
-        if (tokenAccount.pubkey.toString() === bridgedTokenAccount) {
+        console.log(`${index + 1}: `, accountData.mint.toString(), BRIDGED_TOKEN_MINT.toString());
+
+        if (tokenAccount.pubkey.toString() === bridgedTokenAccount.toString()) {
           maxAmountInBn = accountData.amount;
         }
       }
     });
+
+    console.log('maxAmountInBn', maxAmountInBn);
 
     if (maxAmountInBn === -1n) {
       notifyError('You do not have the bridged token account yet');
@@ -125,6 +145,9 @@ export const useWsolWithdraw = () => {
     }
 
     const maxAmount = Number(maxAmountInBn.toString());
+
+    console.log('maxAmount', maxAmount);
+
     return maxAmount;
   }, [svmWalletPublicKey, nodeProvider, getBridgedTokenAccount]);
 
@@ -163,8 +186,17 @@ export const useWsolWithdraw = () => {
 
     const quote = await withdrawDecreaseLiquidityQuote({ amount, slippage });
     try {
+      console.log({
+        quote,
+        liquidityAmount: quote.liquidityAmount.toString(),
+
+        tokenMinA: quote.tokenMinA.toString(),
+
+        tokenMinB: quote.tokenMinB.toString(),
+      });
+
       const signature = await program.methods
-        .withdraw(amount, quote.tokenMinA, quote.tokenMinB)
+        .withdraw(quote.liquidityAmount, quote.tokenMinA, quote.tokenMinB)
         .accounts({
           lockbox: LOCKBOX,
           whirlpoolProgram: ORCA,
@@ -175,8 +207,8 @@ export const useWsolWithdraw = () => {
           bridgedTokenAccount,
           bridgedTokenMint: BRIDGED_TOKEN_MINT,
           pdaPositionAccount: PDA_POSITION_ACCOUNT,
-          tokenOwnerAccountA: tokenOwnerAccountA.address,
-          tokenOwnerAccountB: tokenOwnerAccountB.address,
+          tokenOwnerAccountA,
+          tokenOwnerAccountB,
           feeCollectorTokenOwnerAccountA: FEE_COLLECTOR_TOKEN_OWNER_ACCOUNT_A,
           feeCollectorTokenOwnerAccountB: FEE_COLLECTOR_TOKEN_OWNER_ACCOUNT_B,
           tokenVaultA: TOKEN_VAULT_A,
