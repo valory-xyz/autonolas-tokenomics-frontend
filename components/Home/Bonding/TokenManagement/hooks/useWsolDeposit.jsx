@@ -10,12 +10,7 @@ import {
   createSyncNativeInstruction,
   getAssociatedTokenAddress,
 } from '@solana/spl-token';
-import {
-  // LAMPORTS_PER_SOL,
-  SystemProgram,
-  Transaction,
-  // sendAndConfirmTransaction,
-} from '@solana/web3.js';
+import { SystemProgram, Transaction } from '@solana/web3.js';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { notifyError, notifySuccess } from '@autonolas/frontend-library';
 
@@ -150,7 +145,6 @@ export const useWsolDeposit = () => {
   };
 
   const checkIfNoEnoughOlas = async (whirlpoolTokenB, olasMax) => {
-    // Check if the user has enough OLAS
     const olasAmount = await getOlasAmount(
       connection,
       svmWalletPublicKey,
@@ -177,6 +171,7 @@ export const useWsolDeposit = () => {
       whirlpoolTokenB.mint,
       svmWalletPublicKey,
     );
+
     const accountInfo = await connection.getAccountInfo(tokenOwnerAccountB);
     if (!accountInfo) {
       notifyError('OLAS Associated token account does not exist');
@@ -184,14 +179,12 @@ export const useWsolDeposit = () => {
     }
 
     const noEnoughOlas = await checkIfNoEnoughOlas(whirlpoolTokenB, olasMax);
-
     if (noEnoughOlas) {
       notifyError('Not enough OLAS balance');
       return null;
     }
 
-    // Check if the user has the correct token account
-    // and it is required to deposit
+    // Check if the user has the correct token account and it is required to deposit
     if (tokenOwnerAccountB.toString() === SVM_EMPTY_ADDRESS) {
       notifyError('You do not have the correct token account');
       return null;
@@ -201,7 +194,6 @@ export const useWsolDeposit = () => {
       BRIDGED_TOKEN_MINT,
       svmWalletPublicKey,
     );
-
     if (!bridgedTokenAccount) {
       notifyError(
         'You do not have the bridged token account, please try again.',
@@ -313,7 +305,7 @@ export const useWsolDeposit = () => {
 
       notifySuccess('Deposit successful');
     } catch (error) {
-      notifyError('Error depositing liquidity');
+      notifyError('Failed to deposit');
       console.error(error);
     }
 

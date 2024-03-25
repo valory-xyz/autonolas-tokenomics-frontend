@@ -25,14 +25,14 @@ import {
 } from 'common-util/Contracts';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { DEPOSITORY } from 'common-util/AbiAndAddresses';
+import { useWhirlPoolInformation } from '../TokenManagement/hooks/useWhirlpool';
+import { POSITION } from '../TokenManagement/constants';
 import {
   getProductValueFromEvent,
   getLpTokenWithDiscount,
   getLpTokenLink,
   getCurrentPriceLpLink,
 } from './utils';
-import { useWhirlPoolInformation } from '../TokenManagement/hooks/useWhirlpool';
-import { POSITION } from '../TokenManagement/constants';
 
 const { BigNumber } = ethers;
 
@@ -154,9 +154,6 @@ const getCloseProductEvents = memoize(getCloseProductEventsFn);
  * @returns {Object} { lpChainId, originAddress, dex, name, poolId }
  */
 const getLpTokenDetails = memoize(async (address) => {
-  // TODO: update for solana once the WSOL is live
-  const chainId = getChainId();
-
   const currentLpPairDetails = Object.keys(LP_PAIRS).find(
     (key) => key === address,
   );
@@ -168,9 +165,8 @@ const getLpTokenDetails = memoize(async (address) => {
 
   window.console.warn('LP pair not found in the LP_PAIRS list');
 
-  // if the address is not in the LP_PAIRS list
-  // (mainnet and goerli)
-
+  // if the address is not in the LP_PAIRS list (mainnet and goerli)
+  const chainId = getChainId();
   let tokenSymbol = null;
   try {
     const contract = getUniswapV2PairContract(address);
@@ -419,13 +415,6 @@ const useAddProjectChangeToProducts = () => useCallback(
       2,
     );
 
-    // console.log({
-    //   fullCurrentPriceLp,
-    //   discountedOlasPerLpTokenInBg,
-    //   roundedDiscountedOlasPerLpToken,
-    //   projectedChange,
-    // });
-
     return {
       ...record,
       fullCurrentPriceLp,
@@ -504,13 +493,12 @@ const useProductDetailsFromIds = () => {
 /**
  * fetches product list based on the active/inactive status
  */
-const useProductListRequest = ({ isActive, retry }) => {
-  const getProductDetailsFromIds = useProductDetailsFromIds({ retry });
+const useProductListRequest = ({ isActive }) => {
+  const getProductDetailsFromIds = useProductDetailsFromIds();
 
   return useCallback(async () => {
     const contract = getDepositoryContract();
     const productIdList = await contract.methods.getProducts(isActive).call();
-    // const productIdList = ['142'];
     const response = await getProductDetailsFromIds(productIdList);
 
     const productList = response.map((product, index) => ({
@@ -527,11 +515,10 @@ export const useProducts = ({ isActive }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorState, setErrorState] = useState(false);
   const [filteredProducts, setFilteredProducts] = useState([]);
-  const [retry, setRetry] = useState(0);
   const [productDetails, setProductDetails] = useState(null); // if `not null`, open deposit modal
 
   const { chainId } = useHelpers();
-  const getProductListRequest = useProductListRequest({ isActive, retry });
+  const getProductListRequest = useProductListRequest({ isActive });
 
   const getProducts = useCallback(async () => {
     try {
@@ -540,7 +527,6 @@ export const useProducts = ({ isActive }) => {
 
       const filteredProductList = await getProductListRequest({
         isActive,
-        retry,
       });
       setFilteredProducts(filteredProductList);
     } catch (e) {
@@ -551,7 +537,7 @@ export const useProducts = ({ isActive }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [retry, isActive, getProductListRequest]);
+  }, [isActive, getProductListRequest]);
 
   useEffect(() => {
     getProducts();
@@ -564,16 +550,10 @@ export const useProducts = ({ isActive }) => {
     [setProductDetails],
   );
 
-  const handleRetry = useCallback(() => {
-    setRetry((prev) => prev + 1);
-  }, [setRetry]);
-
   return {
     isLoading,
     errorState,
     filteredProducts,
-    retry,
-    handleRetry,
     productDetails,
     handleProductDetails,
     depositoryAddress: ADDRESSES[chainId].depository,

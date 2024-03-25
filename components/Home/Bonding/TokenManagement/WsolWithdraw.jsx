@@ -1,11 +1,13 @@
-import { useCallback, useEffect, useState } from 'react';
+import {
+  useCallback, useEffect, useMemo, useState,
+} from 'react';
 import {
   Button, Form, InputNumber, Spin,
 } from 'antd';
 import pDebounce from 'p-debounce';
 import { isNil, isNumber } from 'lodash';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { notifyError, notifySuccess } from '@autonolas/frontend-library';
+import { notifyError } from '@autonolas/frontend-library';
 
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
 import { useWsolWithdraw } from './hooks/useWsolWithdraw';
@@ -42,10 +44,10 @@ export const WsolWithDraw = () => {
     if (isSvmWalletConnected) setMaxAmountFn();
   }, [isSvmWalletConnected, getMaxAmount]);
 
-  // update max amount on initial load
+  // set max amount on initial load
   useEffect(() => updateMaxAmount(), [updateMaxAmount]);
 
-  const onAmountAndSlippageChange = async () => {
+  const onAmountAndSlippageChange = useCallback(async () => {
     const amount = form.getFieldValue('amount');
     const slippage = form.getFieldValue('slippage');
 
@@ -72,14 +74,14 @@ export const WsolWithDraw = () => {
     } finally {
       setIsEstimating(false);
     }
-  };
+  }, [form, getDecreaseLiquidityQuote, withdrawTransformedQuote]);
 
-  const onMaxClick = () => {
+  const onMaxClick = useCallback(() => {
     form.setFieldsValue({ amount: maxAmount });
     onAmountAndSlippageChange();
-  };
+  }, [form, maxAmount, onAmountAndSlippageChange]);
 
-  const handleWithdraw = async () => {
+  const handleWithdraw = useCallback(async () => {
     if (!isSvmWalletConnected) {
       notifyError('Please connect your wallet');
       return;
@@ -97,7 +99,6 @@ export const WsolWithDraw = () => {
 
       const actualAmount = amount * LAMPORTS_PER_SOL;
       await withdraw({ amount: actualAmount, slippage });
-      notifySuccess('Withdraw successful');
 
       // reset form fields after successful withdraw
       form.setFieldsValue({
@@ -110,15 +111,20 @@ export const WsolWithDraw = () => {
       // re-fetch max amount
       updateMaxAmount();
     } catch (error) {
-      notifyError('Failed to withdraw');
       console.error(error);
     } finally {
       setIsWithdrawing(false);
     }
-  };
+  }, [form, maxAmount, updateMaxAmount, withdraw, isSvmWalletConnected]);
 
-  const isMaxButtonDisabled = isEstimating || isWithdrawing || !isSvmWalletConnected;
-  const isWithdrawButtonDisabled = isEstimating || isWithdrawing || !isSvmWalletConnected;
+  const isMaxButtonDisabled = useMemo(
+    () => isEstimating || isWithdrawing || !isSvmWalletConnected,
+    [isEstimating, isWithdrawing, isSvmWalletConnected],
+  );
+  const isWithdrawButtonDisabled = useMemo(
+    () => isEstimating || isWithdrawing || !isSvmWalletConnected,
+    [isEstimating, isWithdrawing, isSvmWalletConnected],
+  );
 
   return (
     <Form

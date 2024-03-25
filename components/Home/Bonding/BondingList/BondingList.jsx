@@ -76,8 +76,9 @@ const getColumns = (
       dataIndex: 'lpTokenName',
       key: 'lpTokenName',
       render: (x, data) => {
-        const isValid = data.id === '127' || x === LP_PAIRS.svm.name; // TODO: remove - dummy
-        // const isValid = x === LP_PAIRS.svm.name;
+        // TODO; remove `NEXT_PUBLIC_SOLANA_LOCKBOX_TEST` check once the lockbox is live
+        const isValid = x === LP_PAIRS.svm.name
+          || process.env.NEXT_PUBLIC_SOLANA_LOCKBOX_TEST === 'true';
         if (isValid) {
           return (
             <WsolTokenManagement lpToken={x} lpTokenLink={data.lpTokenLink} />
@@ -265,7 +266,6 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
     isLoading,
     errorState,
     filteredProducts,
-    handleRetry,
     productDetails,
     handleProductDetails,
     depositoryAddress,
@@ -303,7 +303,9 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
             <>
               <Text className="mb-8">Couldn&apos;t fetch products</Text>
               <br />
-              <Button onClick={handleRetry}>Try again</Button>
+              <Button onClick={() => window.location.reload()}>
+                Try again
+              </Button>
             </>
           )}
           image={(

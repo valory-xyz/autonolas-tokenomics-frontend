@@ -31,8 +31,8 @@ export const WsolDeposit = () => {
   } = useWsolDeposit();
   const getDepositQuote = pDebounce(fn, 500);
 
+  // initially, set default slippage value
   useEffect(() => {
-    // initially, set default slippage value
     form.setFieldsValue({ slippage: DEFAULT_SLIPPAGE });
   }, [form]);
 
@@ -72,7 +72,6 @@ export const WsolDeposit = () => {
         setBridgedTokenAmount(bridgedToken / LAMPORTS_PER_SOL);
       }
     } catch (error) {
-      notifyError('Failed to deposit');
       console.error(error);
     } finally {
       setIsDepositing(false);

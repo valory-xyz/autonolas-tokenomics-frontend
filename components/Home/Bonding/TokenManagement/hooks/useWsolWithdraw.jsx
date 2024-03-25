@@ -9,7 +9,7 @@ import {
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import Decimal from 'decimal.js';
-import { notifyError } from '@autonolas/frontend-library';
+import { notifyError, notifySuccess } from '@autonolas/frontend-library';
 
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
 import { useGetOrCreateAssociatedTokenAccount } from './useGetOrCreateAssociatedTokenAccount';
@@ -77,7 +77,6 @@ export const useWsolWithdraw = () => {
   const withdrawDecreaseLiquidityQuote = async ({ amount, slippage }) => {
     const { whirlpoolData } = await getWhirlpoolData();
     const slippageTolerance = Percentage.fromDecimal(new Decimal(slippage));
-    // const liquidity = DecimalUtil.toBN(new Decimal(amount), 9);
     const liquidity = DecimalUtil.toBN(new Decimal(amount), 0);
 
     return decreaseLiquidityQuoteByLiquidityWithParams({
@@ -107,8 +106,7 @@ export const useWsolWithdraw = () => {
 
     let maxAmountInBn = -1n; // initialize to -1
 
-    // Iterate through the token accounts of the user
-    // to find the bridged token account
+    // Iterate through the token accounts of the user to find the bridged token account
     tokenAccounts.value.forEach((tokenAccount) => {
       const accountData = AccountLayout.decode(tokenAccount.account.data);
       if (accountData.mint.toString() === BRIDGED_TOKEN_MINT.toString()) {
@@ -119,7 +117,9 @@ export const useWsolWithdraw = () => {
     });
 
     if (maxAmountInBn === -1n) {
-      notifyError('You do not have the bridged token account yet');
+      notifyError(
+        'You do not have the bridged token account, please try again.',
+      );
       return null;
     }
 
@@ -144,7 +144,6 @@ export const useWsolWithdraw = () => {
       whirlpoolTokenA.mint,
       svmWalletPublicKey,
     );
-
     if (!tokenOwnerAccountA) {
       notifyError(TOKEN_MINT_ERROR);
       return;
@@ -184,7 +183,10 @@ export const useWsolWithdraw = () => {
           tickArrayUpper: TICK_ARRAY_UPPER,
         })
         .rpc();
+
+      notifySuccess('Withdraw successful');
     } catch (error) {
+      notifyError('Failed to withdraw');
       console.error(error);
     }
   };
