@@ -8,7 +8,7 @@ import {
 
 import { BONDING_PRODUCTS } from 'util/constants';
 import { useScreen } from '@autonolas/frontend-library';
-import { BondingList } from './Bonding/BondingList';
+import { BondingList } from './Bonding/BondingList/BondingList';
 
 const { Title } = Typography;
 
