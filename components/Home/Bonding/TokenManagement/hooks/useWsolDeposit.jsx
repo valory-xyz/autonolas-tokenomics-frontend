@@ -208,10 +208,10 @@ export const useWsolDeposit = () => {
       svmWalletPublicKey,
     );
 
-    let needToWrap = false;
+    let isWrapRequired = false;
     const newAccountInfo = await connection.getAccountInfo(tokenOwnerAccountA);
     if (!newAccountInfo) {
-      needToWrap = true;
+      isWrapRequired = true;
 
       // Create token account to hold wrapped SOL
       const ataTransaction = new Transaction().add(
@@ -247,11 +247,11 @@ export const useWsolDeposit = () => {
       );
 
       if (noEnoughWsol) {
-        needToWrap = true;
+        isWrapRequired = true;
       }
     }
 
-    if (needToWrap) {
+    if (isWrapRequired) {
       const balance = await connection.getBalance(svmWalletPublicKey);
 
       // Check if the user has enough SOL balance
