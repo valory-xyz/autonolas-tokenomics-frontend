@@ -2,10 +2,7 @@ import { useCallback } from 'react';
 import { Program } from '@coral-xyz/anchor';
 import idl from 'common-util/AbiAndAddresses/liquidityLockbox.json';
 import { DecimalUtil, Percentage } from '@orca-so/common-sdk';
-import {
-  decreaseLiquidityQuoteByLiquidityWithParams,
-  TickUtil,
-} from '@orca-so/whirlpools-sdk';
+import { decreaseLiquidityQuoteByLiquidityWithParams } from '@orca-so/whirlpools-sdk';
 import {
   AccountLayout,
   getAssociatedTokenAddress,
@@ -31,11 +28,12 @@ import {
   TOKEN_VAULT_A,
   TOKEN_VAULT_B,
   WHIRLPOOL,
-  TICK_SPACING,
   POSITION_MINT,
+  tickLowerIndex,
+  tickUpperIndex,
+  CONNECT_SVM_WALLET,
 } from '../constants';
 
-export const [tickLowerIndex, tickUpperIndex] = TickUtil.getFullRangeTickIndex(TICK_SPACING);
 const TOKEN_MINT_ERROR = 'You do not have the correct token account, please try again.';
 
 const useBridgedTokenAccount = () => {
@@ -54,7 +52,7 @@ const useBridgedTokenAccount = () => {
 };
 
 export const useWsolWithdraw = () => {
-  const { svmWalletPublicKey, nodeProvider, anchorProvider } = useSvmConnectivity();
+  const { svmWalletPublicKey, anchorProvider } = useSvmConnectivity();
   const { getWhirlpoolData } = useWhirlpool();
   const getBridgedTokenAccount = useBridgedTokenAccount();
   const customGetOrCreateAssociatedTokenAccount = useGetOrCreateAssociatedTokenAccount();
@@ -107,37 +105,18 @@ export const useWsolWithdraw = () => {
       { programId: TOKEN_PROGRAM_ID },
     );
 
-    console.log('tokenAccounts', tokenAccounts);
-
     let maxAmountInBn = -1n; // initialize to -1
-
-    console.log({
-      bridgedTokenAccount: bridgedTokenAccount.toString(),
-    });
 
     // Iterate through the token accounts of the user
     // to find the bridged token account
-    tokenAccounts.value.forEach((tokenAccount, index) => {
+    tokenAccounts.value.forEach((tokenAccount) => {
       const accountData = AccountLayout.decode(tokenAccount.account.data);
-
-      console.log({
-        accountData,
-        mint: accountData.mint.toString(),
-        bridgedTokenMint: BRIDGED_TOKEN_MINT.toString(),
-        tokenAccount: tokenAccount.pubkey.toString(),
-        amount: accountData.amount,
-      });
-
       if (accountData.mint.toString() === BRIDGED_TOKEN_MINT.toString()) {
-        console.log(`${index + 1}: `, accountData.mint.toString(), BRIDGED_TOKEN_MINT.toString());
-
         if (tokenAccount.pubkey.toString() === bridgedTokenAccount.toString()) {
           maxAmountInBn = accountData.amount;
         }
       }
     });
-
-    console.log('maxAmountInBn', maxAmountInBn);
 
     if (maxAmountInBn === -1n) {
       notifyError('You do not have the bridged token account yet');
@@ -145,11 +124,8 @@ export const useWsolWithdraw = () => {
     }
 
     const maxAmount = Number(maxAmountInBn.toString());
-
-    console.log('maxAmount', maxAmount);
-
     return maxAmount;
-  }, [svmWalletPublicKey, nodeProvider, getBridgedTokenAccount]);
+  }, [svmWalletPublicKey, anchorProvider, getBridgedTokenAccount]);
 
   /**
    * Withdraw from the lockbox
@@ -157,7 +133,7 @@ export const useWsolWithdraw = () => {
   const withdraw = async ({ amount, slippage, userWallet }) => {
     const bridgedTokenAccount = await getBridgedTokenAccount({ userWallet });
     if (!bridgedTokenAccount) {
-      notifyError('Please connect your phantom wallet');
+      notifyError(CONNECT_SVM_WALLET);
       return;
     }
 
@@ -186,15 +162,6 @@ export const useWsolWithdraw = () => {
 
     const quote = await withdrawDecreaseLiquidityQuote({ amount, slippage });
     try {
-      console.log({
-        quote,
-        liquidityAmount: quote.liquidityAmount.toString(),
-
-        tokenMinA: quote.tokenMinA.toString(),
-
-        tokenMinB: quote.tokenMinB.toString(),
-      });
-
       const signature = await program.methods
         .withdraw(quote.liquidityAmount, quote.tokenMinA, quote.tokenMinB)
         .accounts({
@@ -216,7 +183,6 @@ export const useWsolWithdraw = () => {
           tickArrayLower: TICK_ARRAY_LOWER,
           tickArrayUpper: TICK_ARRAY_UPPER,
         })
-        // .signers([userWallet])
         .rpc();
 
       notifySuccess('Withdraw successful', signature);

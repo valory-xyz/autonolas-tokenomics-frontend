@@ -9,6 +9,7 @@ import { notifyError, notifySuccess } from '@autonolas/frontend-library';
 
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
 import { configureAndSendCurrentTransaction } from '../utils';
+import { CONNECT_SVM_WALLET } from '../constants';
 
 /**
  * hook to get or create associated token account
@@ -22,7 +23,7 @@ export const useGetOrCreateAssociatedTokenAccount = () => {
     async (mintToken, owner = svmWalletPublicKey) => {
       try {
         if (!svmWalletPublicKey || !signTransaction) {
-          notifyError('Please connect your phantom wallet');
+          notifyError(CONNECT_SVM_WALLET);
           return null;
         }
 
@@ -31,8 +32,8 @@ export const useGetOrCreateAssociatedTokenAccount = () => {
           owner,
         );
 
-        let account = await connection.getAccountInfo(associatedToken);
-        if (account) return associatedToken;
+        const accountInfo = await connection.getAccountInfo(associatedToken);
+        if (accountInfo) return associatedToken;
 
         // Create the associated token account if it does not exist
         const transactionInstructions = [];
@@ -46,16 +47,16 @@ export const useGetOrCreateAssociatedTokenAccount = () => {
         );
 
         const transaction = new Transaction().add(...transactionInstructions);
-        const signature = await configureAndSendCurrentTransaction(
+        await configureAndSendCurrentTransaction(
           transaction,
           connection,
           svmWalletPublicKey,
           signTransaction,
         );
 
-        notifySuccess('Associated token account created', signature); // TODO: remove if not needed
-        account = await connection.getAccountInfo(associatedToken);
-        return account;
+        notifySuccess('Associated token account created');
+        const newAccountInfo = await connection.getAccountInfo(associatedToken);
+        return newAccountInfo;
       } catch (error) {
         console.error(error);
         return null;

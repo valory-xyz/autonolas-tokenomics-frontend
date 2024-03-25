@@ -4,7 +4,8 @@ import {
 } from 'antd';
 import pDebounce from 'p-debounce';
 import { isNil, isNumber } from 'lodash';
-import { notifyError } from '@autonolas/frontend-library';
+import { LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { notifyError, notifySuccess } from '@autonolas/frontend-library';
 
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
 import { useWsolWithdraw } from './hooks/useWsolWithdraw';
@@ -33,11 +34,8 @@ export const WsolWithDraw = () => {
   useEffect(() => {
     const setMaxAmountFn = async () => {
       const tempAmount = await getMaxAmount();
-
-      // TODO: Divide the tempAmount by 10^8
-      // check if any library is used
       if (!isNil(tempAmount)) {
-        setMaxAmount(tempAmount);
+        setMaxAmount(tempAmount / LAMPORTS_PER_SOL);
       }
     };
 
@@ -68,8 +66,16 @@ export const WsolWithDraw = () => {
     }
   };
 
+  const onMaxClick = () => {
+    form.setFieldsValue({ amount: maxAmount });
+    onAmountAndSlippageChange();
+  };
+
   const handleWithdraw = async () => {
-    if (!isSvmWalletConnected) return;
+    if (!isSvmWalletConnected) {
+      notifyError('Please connect your wallet');
+      return;
+    }
 
     const amount = form.getFieldValue('amount');
     const slippage = form.getFieldValue('slippage');
@@ -81,7 +87,17 @@ export const WsolWithDraw = () => {
     try {
       setIsWithdrawing(true);
 
-      await withdraw({ amount, slippage });
+      const actualAmount = amount * LAMPORTS_PER_SOL;
+      await withdraw({ amount: actualAmount, slippage });
+      notifySuccess('Withdraw successful');
+
+      // reset form fields after successful withdraw
+      form.setFieldsValue({
+        amount: undefined,
+        slippage: DEFAULT_SLIPPAGE,
+        olas: undefined,
+        wsol: undefined,
+      });
     } catch (error) {
       notifyError('Failed to withdraw');
       console.error(error);
@@ -90,7 +106,7 @@ export const WsolWithDraw = () => {
     }
   };
 
-  const isMaxButtonDisabled = isEstimating || isWithdrawing || !isSvmWalletConnected || !maxAmount;
+  const isMaxButtonDisabled = isEstimating || isWithdrawing || !isSvmWalletConnected;
   const isWithdrawButtonDisabled = isEstimating || isWithdrawing || !isSvmWalletConnected;
 
   return (
@@ -103,8 +119,22 @@ export const WsolWithDraw = () => {
     >
       <Form.Item
         name="amount"
-        // TODO: should not be greater than maxAmount
-        rules={[{ required: true, message: 'Please input a valid amount' }]}
+        rules={[
+          { required: true, message: 'Please input a valid amount' },
+          {
+            validator: (_, value) => {
+              if (!isSvmWalletConnected) return Promise.resolve();
+
+              if (value > maxAmount) {
+                return Promise.reject(
+                  new Error('Amount cannot exceed the maximum limit'),
+                );
+              }
+
+              return Promise.resolve();
+            },
+          },
+        ]}
         label={(
           <>
             Bridged Tokens Amount
@@ -114,7 +144,7 @@ export const WsolWithDraw = () => {
               ghost
               className="ml-8"
               disabled={isMaxButtonDisabled}
-              onClick={() => form.setFieldsValue({ amount: maxAmount })}
+              onClick={onMaxClick}
             >
               Max
             </Button>
@@ -122,7 +152,6 @@ export const WsolWithDraw = () => {
         )}
       >
         <InputNumber
-          min={1}
           className="full-width"
           onChange={onAmountAndSlippageChange}
         />
@@ -175,5 +204,3 @@ export const WsolWithDraw = () => {
     </Form>
   );
 };
-
-// TODO: after withdrawing, reset the form

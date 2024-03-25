@@ -32,6 +32,7 @@ import {
   getCurrentPriceLpLink,
 } from './utils';
 import { useWhirlPoolInformation } from '../TokenManagement/hooks/useWhirlpool';
+import { POSITION } from '../TokenManagement/constants';
 
 const { BigNumber } = ethers;
 
@@ -67,7 +68,7 @@ export const LP_PAIRS = {
   svm: {
     lpChainId: 'svm',
     name: 'OLAS-WSOL',
-    originAddress: '', // TODO: will be sent later - origin address is the position
+    originAddress: POSITION.toString(),
     dex: DEX.SOLANA,
     poolId: ADDRESSES.svm.balancerVault,
   },
@@ -90,24 +91,28 @@ const getLastIDFRequest = async () => {
 };
 
 const getCreateProductEventsFn = async () => {
-  const graphQLClient = new GraphQLClient(process.env.NEXT_PUBLIC_GRAPH_ENDPOINT_MAINNET, {
-    method: 'POST',
-    jsonSerializer: {
-      parse: JSON.parse,
-      stringify: JSON.stringify,
+  const graphQLClient = new GraphQLClient(
+    process.env.NEXT_PUBLIC_GRAPH_ENDPOINT_MAINNET,
+    {
+      method: 'POST',
+      jsonSerializer: {
+        parse: JSON.parse,
+        stringify: JSON.stringify,
+      },
     },
-  });
+  );
 
   const query = gql`
-  query GetCreateProducts {
-    createProducts(first: 1000) {
-      productId
-      token
-      priceLP
-      supply
-      vesting
+    query GetCreateProducts {
+      createProducts(first: 1000) {
+        productId
+        token
+        priceLP
+        supply
+        vesting
+      }
     }
-  }`;
+  `;
 
   const res = await graphQLClient.request(query);
   return res.createProducts;
@@ -115,22 +120,26 @@ const getCreateProductEventsFn = async () => {
 const getCreateProductEvents = memoize(getCreateProductEventsFn);
 
 const getCloseProductEventsFn = async () => {
-  const graphQLClient = new GraphQLClient(process.env.NEXT_PUBLIC_GRAPH_ENDPOINT_MAINNET, {
-    method: 'POST',
-    jsonSerializer: {
-      parse: JSON.parse,
-      stringify: JSON.stringify,
+  const graphQLClient = new GraphQLClient(
+    process.env.NEXT_PUBLIC_GRAPH_ENDPOINT_MAINNET,
+    {
+      method: 'POST',
+      jsonSerializer: {
+        parse: JSON.parse,
+        stringify: JSON.stringify,
+      },
     },
-  });
+  );
 
   const query = gql`
-  query GetCloseProducts {
-    closeProducts(first: 1000) {
-      productId
-      token
-      supply
+    query GetCloseProducts {
+      closeProducts(first: 1000) {
+        productId
+        token
+        supply
+      }
     }
-  }`;
+  `;
 
   const res = await graphQLClient.request(query);
   return res.closeProducts;
@@ -359,9 +368,7 @@ const useAddSupplyLeftToProducts = () => useCallback(
     }
 
     const eventSupply = Number(
-      ethers.BigNumber.from(createProductEvent.supply).div(
-        ONE_ETH,
-      ),
+      ethers.BigNumber.from(createProductEvent.supply).div(ONE_ETH),
     );
 
     const productSupply = !closeProductEvent
@@ -494,11 +501,7 @@ const useProductDetailsFromIds = () => {
 
       return listWithProjectedChange;
     },
-    [
-      addCurrentLpPriceToProducts,
-      addSupplyLeftToProducts,
-      addProjectedChange,
-    ],
+    [addCurrentLpPriceToProducts, addSupplyLeftToProducts, addProjectedChange],
   );
 };
 

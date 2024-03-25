@@ -4,6 +4,7 @@ import {
 } from 'antd';
 import pDebounce from 'p-debounce';
 import { isNumber } from 'lodash';
+import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import {
   getCommaSeparatedNumber,
   notifyError,
@@ -68,7 +69,7 @@ export const WsolDeposit = () => {
 
       const bridgedToken = await deposit({ slippage, wsol });
       if (Number(bridgedToken) > 0) {
-        setBridgedTokenAmount(bridgedToken);
+        setBridgedTokenAmount(bridgedToken / LAMPORTS_PER_SOL);
       }
     } catch (error) {
       notifyError('Failed to deposit');
@@ -79,7 +80,9 @@ export const WsolDeposit = () => {
   };
 
   const isDepositButtonDisabled = isEstimating || isDepositing || !isSvmWalletConnected;
-  const estimatedOutput = getCommaSeparatedNumber(estimatedQuote?.liquidity) || '--';
+  const estimatedOutput = getCommaSeparatedNumber(
+    (estimatedQuote?.liquidity || 0) / LAMPORTS_PER_SOL,
+  ) || '--';
 
   return (
     <>

@@ -77,8 +77,7 @@ const getColumns = (
       key: 'lpTokenName',
       render: (x, data) => {
         const isValid = data.id === '127' || x === LP_PAIRS.svm.name; // TODO: remove - dummy
-        // const isValid = x !== LP_PAIRS.svm.name;
-        // const isValid = x !== LP_PAIRS.svm.name; // TODO: should be `x === LP_PAIRS.svm.name`
+        // const isValid = x === LP_PAIRS.svm.name;
         if (isValid) {
           return (
             <WsolTokenManagement lpToken={x} lpTokenLink={data.lpTokenLink} />

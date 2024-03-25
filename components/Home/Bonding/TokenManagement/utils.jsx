@@ -21,6 +21,7 @@ export const slippageValidator = (_, value) => {
  * @param {import("@solana/web3.js").PublicKey} feePayer
  * @param {import("@solana/wallet-adapter-base").SignerWalletAdapterProps['signTransaction']} signTransaction
  *
+ * @returns {Promise<string>} signature
  */
 export const configureAndSendCurrentTransaction = async (
   transaction,

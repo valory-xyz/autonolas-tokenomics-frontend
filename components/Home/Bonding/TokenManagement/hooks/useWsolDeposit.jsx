@@ -2,10 +2,7 @@ import { Program } from '@coral-xyz/anchor';
 import idl from 'common-util/AbiAndAddresses/liquidityLockbox.json';
 import { DecimalUtil, Percentage } from '@orca-so/common-sdk';
 import Decimal from 'decimal.js';
-import {
-  increaseLiquidityQuoteByInputTokenWithParams,
-  TickUtil,
-} from '@orca-so/whirlpools-sdk';
+import { increaseLiquidityQuoteByInputTokenWithParams } from '@orca-so/whirlpools-sdk';
 import {
   AccountLayout,
   TOKEN_PROGRAM_ID,
@@ -43,7 +40,9 @@ import {
   TOKEN_VAULT_A,
   TOKEN_VAULT_B,
   WHIRLPOOL,
-  TICK_SPACING,
+  tickLowerIndex,
+  tickUpperIndex,
+  CONNECT_SVM_WALLET,
 } from '../constants';
 
 const getOlasAmount = async (connection, walletPublicKey, tokenAddress) => {
@@ -80,12 +79,17 @@ const getBridgeTokenAmount = async (connection, walletPublicKey) => {
   return bridgedTokenAmount;
 };
 
-export const [tickLowerIndex, tickUpperIndex] = TickUtil.getFullRangeTickIndex(TICK_SPACING);
+const logSolTransferError = (error) => {
+  if (error instanceof Error && 'message' in error) {
+    console.error('Program Error:', error);
+    console.error('Error Message:', error.message);
+  } else {
+    console.error('Transaction Error:', error);
+  }
+};
 
 export const useWsolDeposit = () => {
-  const {
-    nodeProvider, svmWalletPublicKey, connection, anchorProvider,
-  } = useSvmConnectivity();
+  const { svmWalletPublicKey, connection, anchorProvider } = useSvmConnectivity();
   const { getWhirlpoolData } = useWhirlpool();
   const { signTransaction } = useWallet();
 
@@ -129,7 +133,7 @@ export const useWsolDeposit = () => {
 
   const deposit = async ({ wsol, slippage }) => {
     if (!svmWalletPublicKey) {
-      notifyError('Please connect your phantom wallet');
+      notifyError(CONNECT_SVM_WALLET);
       return null;
     }
 
@@ -142,14 +146,18 @@ export const useWsolDeposit = () => {
       whirlpoolTokenB.mint,
       svmWalletPublicKey,
     );
-    let account = await connection.getAccountInfo(tokenOwnerAccountB);
-    if (!account) {
+    const accountInfo = await connection.getAccountInfo(tokenOwnerAccountB);
+    if (!accountInfo) {
       notifyError('OLAS Associated token account does not exist');
       return null;
     }
 
     // Check if the user has enough OLAS
-    const olasAmount = await getOlasAmount(connection, svmWalletPublicKey, whirlpoolTokenB.mint);
+    const olasAmount = await getOlasAmount(
+      connection,
+      svmWalletPublicKey,
+      whirlpoolTokenB.mint,
+    );
     const noEnoughOlas = DecimalUtil.fromBN(olasMax).greaterThan(
       DecimalUtil.fromBN(olasAmount),
     );
@@ -170,8 +178,6 @@ export const useWsolDeposit = () => {
       svmWalletPublicKey,
     );
 
-    console.log({ bridgedTokenAccount: bridgedTokenAccount.toString() });
-
     if (!bridgedTokenAccount) {
       notifyError(
         'You do not have the bridged token account, please try again.',
@@ -181,23 +187,16 @@ export const useWsolDeposit = () => {
 
     // Transfer SOL to associated token account and use SyncNative to update wrapped SOL balance
     // Wrap the required amount of SOL by transferring SOL to WSOL ATA and syncing native
-
     const tokenOwnerAccountA = await getAssociatedTokenAddress(
       whirlpoolTokenA.mint,
       svmWalletPublicKey,
     );
 
-    console.log({
-      quote,
-      solMax,
-      olasMax,
-      tokenOwnerAccountA: tokenOwnerAccountA.toString(),
-      tokenOwnerAccountB: tokenOwnerAccountB.toString(),
-    });
-
     let needToWrap = false;
-    account = await connection.getAccountInfo(tokenOwnerAccountA);
-    if (!account) {
+    const newAccountInfo = await connection.getAccountInfo(tokenOwnerAccountA);
+    if (!newAccountInfo) {
+      needToWrap = true;
+
       // Create token account to hold wrapped SOL
       const ataTransaction = new Transaction().add(
         createAssociatedTokenAccountInstruction(
@@ -209,26 +208,28 @@ export const useWsolDeposit = () => {
       );
 
       try {
-        const signature = await configureAndSendCurrentTransaction(
+        await configureAndSendCurrentTransaction(
           ataTransaction,
           connection,
           svmWalletPublicKey,
           signTransaction,
         );
-        console.log('Signature:', signature);
       } catch (error) {
         notifyError('Error creating token account for WSOL ATA');
         console.error(error);
         return null;
       }
-
-      needToWrap = true;
     } else {
       // Check if the user has enough WSOL
-      const wsolAmount = await getOlasAmount(connection, svmWalletPublicKey, whirlpoolTokenA.mint);
+      const wsolAmount = await getOlasAmount(
+        connection,
+        svmWalletPublicKey,
+        whirlpoolTokenA.mint,
+      );
       const noEnoughWsol = DecimalUtil.fromBN(solMax).greaterThan(
         DecimalUtil.fromBN(wsolAmount),
       );
+
       if (noEnoughWsol) {
         needToWrap = true;
       }
@@ -244,50 +245,36 @@ export const useWsolDeposit = () => {
       }
 
       const solTransferTransaction = [];
-
-      const systemInstruction = SystemProgram.transfer({
-        fromPubkey: svmWalletPublicKey,
-        toPubkey: tokenOwnerAccountA,
-        lamports: quote.tokenMaxA,
-      });
-      solTransferTransaction.push(systemInstruction);
-
-      const syncNativeInstruction = createSyncNativeInstruction(tokenOwnerAccountA);
-      solTransferTransaction.push(syncNativeInstruction);
-
+      solTransferTransaction.push(
+        SystemProgram.transfer({
+          fromPubkey: svmWalletPublicKey,
+          toPubkey: tokenOwnerAccountA,
+          lamports: quote.tokenMaxA,
+        }),
+      );
+      solTransferTransaction.push(
+        createSyncNativeInstruction(tokenOwnerAccountA),
+      );
       const transaction = new Transaction().add(...solTransferTransaction);
-      console.log('solTransferTransaction:', {
-        systemInstruction,
-        syncNativeInstruction,
-        transaction,
-      });
 
       try {
-        const signature = await configureAndSendCurrentTransaction(
+        await configureAndSendCurrentTransaction(
           transaction,
           connection,
           svmWalletPublicKey,
           signTransaction,
         );
 
-        notifySuccess('SOL transfer successful', signature);
-        console.log('Signature: (after SOL transfer)', signature);
+        notifySuccess('SOL transfer successful');
       } catch (error) {
         notifyError('Error transferring SOL to WSOL ATA');
-
-        if (error instanceof Error && 'message' in error) {
-          console.error('Program Error:', error);
-          console.error('Error Message:', error.message);
-        } else {
-          console.error('Transaction Error:', error);
-        }
-
+        logSolTransferError();
         return null;
       }
     }
 
     try {
-      const signature = await program.methods
+      await program.methods
         .deposit(quote.liquidityAmount, quote.tokenMaxA, quote.tokenMaxB)
         .accounts({
           position: POSITION,
@@ -308,13 +295,10 @@ export const useWsolDeposit = () => {
         .rpc();
 
       notifySuccess('Deposit successful');
-      console.log(signature);
     } catch (error) {
       notifyError('Error depositing liquidity');
       console.error(error);
     }
-
-    // await closeAccount(connection, wallet, associatedTokenAccount, wallet.publicKey, wallet);
 
     const bridgedToken = await getBridgeTokenAmount(
       connection,
