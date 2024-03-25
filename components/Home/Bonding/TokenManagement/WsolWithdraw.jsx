@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Button, Form, InputNumber, Spin,
 } from 'antd';
@@ -31,7 +31,7 @@ export const WsolWithDraw = () => {
     form.setFieldsValue({ slippage: DEFAULT_SLIPPAGE });
   }, [form]);
 
-  useEffect(() => {
+  const updateMaxAmount = useCallback(async () => {
     const setMaxAmountFn = async () => {
       const tempAmount = await getMaxAmount();
       if (!isNil(tempAmount)) {
@@ -42,6 +42,9 @@ export const WsolWithDraw = () => {
     if (isSvmWalletConnected) setMaxAmountFn();
   }, [isSvmWalletConnected, getMaxAmount]);
 
+  // update max amount on initial load
+  useEffect(() => updateMaxAmount(), [updateMaxAmount]);
+
   const onAmountAndSlippageChange = async () => {
     const amount = form.getFieldValue('amount');
     const slippage = form.getFieldValue('slippage');
@@ -50,7 +53,12 @@ export const WsolWithDraw = () => {
 
     try {
       setIsEstimating(true);
-      const quote = await getDecreaseLiquidityQuote({ amount, slippage });
+
+      const actualAmount = amount * LAMPORTS_PER_SOL;
+      const quote = await getDecreaseLiquidityQuote({
+        amount: actualAmount,
+        slippage,
+      });
       const transformedQuote = await withdrawTransformedQuote(quote);
 
       // update olas and wsol value
@@ -98,6 +106,9 @@ export const WsolWithDraw = () => {
         olas: undefined,
         wsol: undefined,
       });
+
+      // re-fetch max amount
+      updateMaxAmount();
     } catch (error) {
       notifyError('Failed to withdraw');
       console.error(error);

@@ -9,7 +9,7 @@ import {
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import Decimal from 'decimal.js';
-import { notifyError, notifySuccess } from '@autonolas/frontend-library';
+import { notifyError } from '@autonolas/frontend-library';
 
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
 import { useGetOrCreateAssociatedTokenAccount } from './useGetOrCreateAssociatedTokenAccount';
@@ -162,7 +162,7 @@ export const useWsolWithdraw = () => {
 
     const quote = await withdrawDecreaseLiquidityQuote({ amount, slippage });
     try {
-      const signature = await program.methods
+      await program.methods
         .withdraw(quote.liquidityAmount, quote.tokenMinA, quote.tokenMinB)
         .accounts({
           lockbox: LOCKBOX,
@@ -184,8 +184,6 @@ export const useWsolWithdraw = () => {
           tickArrayUpper: TICK_ARRAY_UPPER,
         })
         .rpc();
-
-      notifySuccess('Withdraw successful', signature);
     } catch (error) {
       console.error(error);
     }

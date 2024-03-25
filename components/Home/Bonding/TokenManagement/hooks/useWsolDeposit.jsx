@@ -79,6 +79,24 @@ const getBridgeTokenAmount = async (connection, walletPublicKey) => {
   return bridgedTokenAmount;
 };
 
+const createSolTransferTransaction = (
+  walletKey,
+  tokenOwnerAccountA,
+  tokenMaxA,
+) => {
+  const solTransferTransaction = [];
+  solTransferTransaction.push(
+    SystemProgram.transfer({
+      fromPubkey: walletKey,
+      toPubkey: tokenOwnerAccountA,
+      lamports: tokenMaxA,
+    }),
+  );
+  solTransferTransaction.push(createSyncNativeInstruction(tokenOwnerAccountA));
+  const transaction = new Transaction().add(...solTransferTransaction);
+  return transaction;
+};
+
 const logSolTransferError = (error) => {
   if (error instanceof Error && 'message' in error) {
     console.error('Program Error:', error);
@@ -131,6 +149,19 @@ export const useWsolDeposit = () => {
     return { solMax, olasMax, liquidity };
   };
 
+  const checkIfNoEnoughOlas = async (whirlpoolTokenB, olasMax) => {
+    // Check if the user has enough OLAS
+    const olasAmount = await getOlasAmount(
+      connection,
+      svmWalletPublicKey,
+      whirlpoolTokenB.mint,
+    );
+    const noEnoughOlas = DecimalUtil.fromBN(olasMax).greaterThan(
+      DecimalUtil.fromBN(olasAmount),
+    );
+    return noEnoughOlas;
+  };
+
   const deposit = async ({ wsol, slippage }) => {
     if (!svmWalletPublicKey) {
       notifyError(CONNECT_SVM_WALLET);
@@ -152,15 +183,8 @@ export const useWsolDeposit = () => {
       return null;
     }
 
-    // Check if the user has enough OLAS
-    const olasAmount = await getOlasAmount(
-      connection,
-      svmWalletPublicKey,
-      whirlpoolTokenB.mint,
-    );
-    const noEnoughOlas = DecimalUtil.fromBN(olasMax).greaterThan(
-      DecimalUtil.fromBN(olasAmount),
-    );
+    const noEnoughOlas = await checkIfNoEnoughOlas(whirlpoolTokenB, olasMax);
+
     if (noEnoughOlas) {
       notifyError('Not enough OLAS balance');
       return null;
@@ -244,18 +268,11 @@ export const useWsolDeposit = () => {
         return null;
       }
 
-      const solTransferTransaction = [];
-      solTransferTransaction.push(
-        SystemProgram.transfer({
-          fromPubkey: svmWalletPublicKey,
-          toPubkey: tokenOwnerAccountA,
-          lamports: quote.tokenMaxA,
-        }),
+      const transaction = createSolTransferTransaction(
+        svmWalletPublicKey,
+        tokenOwnerAccountA,
+        quote.tokenMaxA,
       );
-      solTransferTransaction.push(
-        createSyncNativeInstruction(tokenOwnerAccountA),
-      );
-      const transaction = new Transaction().add(...solTransferTransaction);
 
       try {
         await configureAndSendCurrentTransaction(

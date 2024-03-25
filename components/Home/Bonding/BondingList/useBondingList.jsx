@@ -268,10 +268,6 @@ const useAddCurrentLpPriceToProducts = () => {
             if (dex === DEX.BALANCER) {
               currentLpPrice = getCurrentPriceBalancer(productList[i].token);
               currentLpPricePromiseList.push(currentLpPrice);
-
-              // TODO: Uncomment to check for Solana, delete once WSOL is live
-              // currentLpPrice = getCurrentPriceForSvm(productList[i].token);
-              currentLpPricePromiseList.push(currentLpPrice);
             } else if (dex === DEX.SOLANA) {
               currentLpPrice = getCurrentPriceForSvm(productList[i].token);
               currentLpPricePromiseList.push(currentLpPrice);
