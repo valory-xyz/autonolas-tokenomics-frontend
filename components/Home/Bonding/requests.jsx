@@ -56,6 +56,14 @@ const LP_PAIRS = {
     poolId:
       '0xaf8912a3c4f55a8584b67df30ee0ddf0e60e01f80002000000000000000004fc',
   },
+  // optimism
+  TODO: {
+    lpChainId: 10,
+    name: 'OLAS-WETH', // check?
+    originAddress: 'TODO',
+    dex: DEX.BALANCER,
+    poolId: 'TODO',
+  },
 };
 
 /**
@@ -233,6 +241,10 @@ const getLpTokenNamesForProducts = async (productList, events) => {
         if (lpChainId === 42161) {
           return `https://app.balancer.fi/#/arbitrum/pool/${poolId}`;
         }
+
+        if (lpChainId === 10) {
+          return `https://app.balancer.fi/#/optimism/pool/${poolId}`;
+        }
       }
 
       return new Error('Dex not supported');
@@ -255,6 +267,10 @@ const getLpTokenNamesForProducts = async (productList, events) => {
 
         if (lpChainId === 42161) {
           return `https://arbiscan.io/address/${ADDRESSES[lpChainId].balancerVault}#readContract#F10`;
+        }
+
+        if (lpChainId === 10) {
+          return `https://optimistic.etherscan.io/address/${ADDRESSES[lpChainId].balancerVault}#readContract#F10`;
         }
       }
 
