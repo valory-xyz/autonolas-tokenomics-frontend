@@ -57,12 +57,13 @@ const LP_PAIRS = {
       '0xaf8912a3c4f55a8584b67df30ee0ddf0e60e01f80002000000000000000004fc',
   },
   // optimism
-  TODO: {
+  '0x2FD007a534eB7527b535a1DF35aba6bD2a8b660F': {
     lpChainId: 10,
-    name: 'OLAS-WETH', // check?
+    name: 'WETH-OLAS',
     originAddress: '0x5bb3e58887264b667f915130fd04bbb56116c278',
     dex: DEX.BALANCER,
-    poolId: '0x5bb3e58887264b667f915130fd04bbb56116c27800020000000000000000012a',
+    poolId:
+      '0x5bb3e58887264b667f915130fd04bbb56116c27800020000000000000000012a',
   },
 };
 
