@@ -60,9 +60,9 @@ const LP_PAIRS = {
   TODO: {
     lpChainId: 10,
     name: 'OLAS-WETH', // check?
-    originAddress: 'TODO',
+    originAddress: '0x5bb3e58887264b667f915130fd04bbb56116c278',
     dex: DEX.BALANCER,
-    poolId: 'TODO',
+    poolId: '0x5bb3e58887264b667f915130fd04bbb56116c27800020000000000000000012a',
   },
 };
 
@@ -270,7 +270,7 @@ const getLpTokenNamesForProducts = async (productList, events) => {
         }
 
         if (lpChainId === 10) {
-          return `https://optimistic.etherscan.io/address/${ADDRESSES[lpChainId].balancerVault}#readContract#F10`;
+          return `https://optimistic.etherscan.io/address/${ADDRESSES[lpChainId].balancerVault}#readContract#F17`;
         }
       }
 

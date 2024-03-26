@@ -80,8 +80,8 @@ export const ADDRESSES = {
 
   // optimism
   10: {
-    olasAddress: 'TODO',
-    balancerVault: 'TODO',
+    olasAddress: '0xFC2E6e6BCbd49ccf3A5f029c79984372DcBFE527',
+    balancerVault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
   },
 
   [LOCAL_CHAIN_ID]: LOCAL_ADDRESSES,
