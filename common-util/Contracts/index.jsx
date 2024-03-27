@@ -178,6 +178,7 @@ export const getServiceContract = () => {
 export const RPC_URLS = {
   1: process.env.NEXT_PUBLIC_MAINNET_URL,
   5: process.env.NEXT_PUBLIC_GOERLI_URL,
+  10: process.env.NEXT_PUBLIC_OPTIMISM_URL,
   100: process.env.NEXT_PUBLIC_GNOSIS_URL,
   137: process.env.NEXT_PUBLIC_POLYGON_URL,
   [LOCAL_FORK_ID]: 'http://127.0.0.1:8545',
