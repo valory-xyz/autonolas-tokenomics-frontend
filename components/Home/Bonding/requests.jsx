@@ -271,7 +271,7 @@ const getLpTokenNamesForProducts = async (productList, events) => {
         }
 
         if (lpChainId === 10) {
-          return `https://optimistic.etherscan.io/address/${ADDRESSES[lpChainId].balancerVault}#readContract#F17`;
+          return `https://optimistic.etherscan.io/address/${ADDRESSES[lpChainId].balancerVault}#readContract#F10`;
         }
       }
 
