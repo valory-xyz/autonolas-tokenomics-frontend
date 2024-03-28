@@ -4,6 +4,7 @@ import { gql, GraphQLClient } from 'graphql-request';
 import { BalancerSDK } from '@balancer-labs/sdk';
 import { areAddressesEqual } from '@autonolas/frontend-library';
 import { multicall } from '@wagmi/core';
+
 import { DEX } from 'util/constants';
 import {
   ADDRESS_ZERO,
@@ -28,6 +29,13 @@ import {
   getLpTokenWithDiscount,
 } from './requestsHelpers';
 
+/**
+ *
+ * @returns {Object} {
+ *   lpChainId,
+ *   originAddress is pool address
+ * }
+ */
 const LP_PAIRS = {
   // gnosis-chain
   '0x27df632fd0dcf191C418c803801D521cd579F18e': {
