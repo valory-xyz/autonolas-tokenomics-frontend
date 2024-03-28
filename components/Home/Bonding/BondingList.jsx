@@ -66,10 +66,7 @@ const getColumns = (
       title: 'Network',
       dataIndex: 'lpChainId',
       key: 'lpChainId',
-      render: (x) => {
-        if (x === 42161) return 'Arbitrum';
-        return getNetworkName(x);
-      },
+      render: (x) => getNetworkName(x),
     },
     {
       title: getTitle('LP Token', 'LP token address enabled by the Treasury'),
