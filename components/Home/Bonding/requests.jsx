@@ -13,6 +13,7 @@ import {
   getChainId,
   isL1Network,
   parseToEth,
+  getEstimatedGasLimit,
 } from 'common-util/functions';
 import {
   getDepositoryContract,
@@ -544,9 +545,10 @@ export const approveRequest = async ({
   const contract = getUniswapV2PairContract(token);
   const treasuryAddress = ADDRESSES[chainId].treasury;
 
-  const fn = contract.methods
-    .approve(treasuryAddress, amountToApprove)
-    .send({ from: account });
+  const fnApprove = contract.methods
+    .approve(treasuryAddress, amountToApprove);
+  const estimatedGas = await getEstimatedGasLimit(fnApprove, account);
+  const fn = await fnApprove.send({ from: account, gasLimit: estimatedGas });
 
   const response = await sendTransaction(fn, account);
   return response;
