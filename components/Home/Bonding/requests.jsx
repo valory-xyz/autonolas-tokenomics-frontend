@@ -4,6 +4,7 @@ import { gql, GraphQLClient } from 'graphql-request';
 import { BalancerSDK } from '@balancer-labs/sdk';
 import { areAddressesEqual } from '@autonolas/frontend-library';
 import { multicall } from '@wagmi/core';
+
 import { DEX } from 'util/constants';
 import {
   ADDRESS_ZERO,
@@ -28,6 +29,13 @@ import {
   getLpTokenWithDiscount,
 } from './requestsHelpers';
 
+/**
+ *
+ * @returns {Object} {
+ *   lpChainId,
+ *   originAddress is pool address
+ * }
+ */
 const LP_PAIRS = {
   // gnosis-chain
   '0x27df632fd0dcf191C418c803801D521cd579F18e': {
@@ -55,6 +63,15 @@ const LP_PAIRS = {
     dex: DEX.BALANCER,
     poolId:
       '0xaf8912a3c4f55a8584b67df30ee0ddf0e60e01f80002000000000000000004fc',
+  },
+  // optimism
+  '0x2FD007a534eB7527b535a1DF35aba6bD2a8b660F': {
+    lpChainId: 10,
+    name: 'WETH-OLAS',
+    originAddress: '0x5bb3e58887264b667f915130fd04bbb56116c278',
+    dex: DEX.BALANCER,
+    poolId:
+      '0x5bb3e58887264b667f915130fd04bbb56116c27800020000000000000000012a',
   },
 };
 
@@ -233,6 +250,10 @@ const getLpTokenNamesForProducts = async (productList, events) => {
         if (lpChainId === 42161) {
           return `https://app.balancer.fi/#/arbitrum/pool/${poolId}`;
         }
+
+        if (lpChainId === 10) {
+          return `https://app.balancer.fi/#/optimism/pool/${poolId}`;
+        }
       }
 
       return new Error('Dex not supported');
@@ -255,6 +276,10 @@ const getLpTokenNamesForProducts = async (productList, events) => {
 
         if (lpChainId === 42161) {
           return `https://arbiscan.io/address/${ADDRESSES[lpChainId].balancerVault}#readContract#F10`;
+        }
+
+        if (lpChainId === 10) {
+          return `https://optimistic.etherscan.io/address/${ADDRESSES[lpChainId].balancerVault}#readContract#F10`;
         }
       }
 
