@@ -251,6 +251,11 @@ export const Deposit = ({
               loading={isLoading}
               onClick={async () => {
                 try {
+                  if (!account) {
+                    notifyError('Please connect your wallet');
+                    return;
+                  }
+
                   setIsLoading(true);
                   await approveRequest({
                     account,
