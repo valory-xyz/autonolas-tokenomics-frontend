@@ -82,7 +82,6 @@ const LP_PAIRS = {
     dex: DEX.BALANCER,
     poolId:
       '0x5332584890d6e415a6dc910254d6430b8aab7e69000200000000000000000103',
-    decimals: 6,
   },
 };
 
