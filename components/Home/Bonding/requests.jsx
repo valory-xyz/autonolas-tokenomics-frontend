@@ -74,6 +74,15 @@ const LP_PAIRS = {
     poolId:
       '0x5bb3e58887264b667f915130fd04bbb56116c27800020000000000000000012a',
   },
+  // base
+  '0x9946d6FD1210D85EC613Ca956F142D911C97a074': {
+    lpChainId: 8453,
+    name: 'OLAS-USDC',
+    originAddress: '0x5332584890d6e415a6dc910254d6430b8aab7e69',
+    dex: DEX.BALANCER,
+    poolId:
+      '0x5332584890d6e415a6dc910254d6430b8aab7e69000200000000000000000103',
+  },
 };
 
 /**
@@ -255,6 +264,10 @@ const getLpTokenNamesForProducts = async (productList, events) => {
         if (lpChainId === 10) {
           return `https://app.balancer.fi/#/optimism/pool/${poolId}`;
         }
+
+        if (lpChainId === 8453) {
+          return `https://app.balancer.fi/#/base/pool/${poolId}`;
+        }
       }
 
       return new Error('Dex not supported');
@@ -281,6 +294,10 @@ const getLpTokenNamesForProducts = async (productList, events) => {
 
         if (lpChainId === 10) {
           return `https://optimistic.etherscan.io/address/${ADDRESSES[lpChainId].balancerVault}#readContract#F10`;
+        }
+
+        if (lpChainId === 8453) {
+          return `https://basescan.org/address/${ADDRESSES[lpChainId].balancerVault}#readContract#F10`;
         }
       }
 
@@ -545,8 +562,7 @@ export const approveRequest = async ({
   const contract = getUniswapV2PairContract(token);
   const treasuryAddress = ADDRESSES[chainId].treasury;
 
-  const fnApprove = contract.methods
-    .approve(treasuryAddress, amountToApprove);
+  const fnApprove = contract.methods.approve(treasuryAddress, amountToApprove);
   const estimatedGas = await getEstimatedGasLimit(fnApprove, account);
   const fn = await fnApprove.send({ from: account, gasLimit: estimatedGas });
 
