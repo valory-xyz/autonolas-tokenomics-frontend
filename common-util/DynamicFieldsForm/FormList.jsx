@@ -8,6 +8,7 @@ import {
   Typography,
   Grid,
 } from 'antd';
+
 import {
   MinusCircleOutlined,
   PlusOutlined,
@@ -48,7 +49,9 @@ export const FormList = ({
             <Space key={field.key} align="baseline">
               <Form.Item
                 noStyle
-                shouldUpdate={(prevValues, curValues) => prevValues.units !== curValues.units}
+                shouldUpdate={(prevValues, curValues) =>
+                  prevValues.units !== curValues.units
+                }
               >
                 {() => (
                   <Form.Item

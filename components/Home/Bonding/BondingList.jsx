@@ -1,17 +1,8 @@
 import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import {
-  Button,
-  Empty,
-  Popconfirm,
-  Spin,
-  Table,
-  Tag,
-  Tooltip,
-  Typography,
-} from 'antd';
+import { Empty, Popconfirm, Spin, Table, Tag, Tooltip, Typography } from 'antd';
+import Button from 'antd/es/button/button';
 import { round, isNaN, remove } from 'lodash';
-import { COLOR, NA, getNetworkName } from '@autonolas/frontend-library';
 import {
   ExclamationCircleTwoTone,
   QuestionCircleOutlined,
@@ -19,9 +10,9 @@ import {
 } from '@ant-design/icons';
 import styled from 'styled-components';
 
-import { BONDING_PRODUCTS } from 'util/constants';
+import { BONDING_PRODUCTS } from 'common-util/constants/constants';
 import { notifySpecificError, parseToEth } from 'common-util/functions';
-import { useHelpers } from 'common-util/hooks/useHelpers';
+import { useHelpers } from 'hooks/useHelpers';
 import { ADDRESSES } from 'common-util/Contracts';
 import { Deposit } from './Deposit';
 import { getProductListRequest } from './requests';
@@ -131,8 +122,7 @@ const getColumns = (
         return (
           <Text style={{ color: projectedChange > 0 ? 'green' : 'red' }}>
             {projectedChange > 0 && '+'}
-            {projectedChange}
-            %
+            {projectedChange}%
           </Text>
         );
       },
@@ -261,12 +251,11 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
       setErrorState(false);
       setIsLoading(true);
 
-      const filteredProductList = await getProductListRequest(
-        { isActive },
-      );
+      const filteredProductList = await getProductListRequest({ isActive });
       setFilteredProducts(filteredProductList);
     } catch (error) {
-      const errorMessage = typeof error?.message === 'string' ? error.message : null;
+      const errorMessage =
+        typeof error?.message === 'string' ? error.message : null;
       setErrorState(true);
       notifySpecificError('Error while fetching products', errorMessage);
       console.error(error, errorMessage);
@@ -288,11 +277,12 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
     setProductDetails(null);
   };
 
-  const sortList = (list) => list.sort((a, b) => {
-    if (isNaN(a.projectedChange)) return 1;
-    if (isNaN(b.projectedChange)) return -1;
-    return b.projectedChange - a.projectedChange;
-  });
+  const sortList = (list) =>
+    list.sort((a, b) => {
+      if (isNaN(a.projectedChange)) return 1;
+      if (isNaN(b.projectedChange)) return -1;
+      return b.projectedChange - a.projectedChange;
+    });
 
   const getProductsDataSource = () => {
     const sortedList = sortList(filteredProducts);
@@ -311,19 +301,19 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
     return (
       <Container className="mt-16">
         <Empty
-          description={(
+          description={
             <>
               <Text className="mb-8">Couldn&apos;t fetch products</Text>
               <br />
               <Button onClick={handleRetry}>Try again</Button>
             </>
-          )}
-          image={(
+          }
+          image={
             <ExclamationCircleTwoTone
               style={{ fontSize: '7rem' }}
               twoToneColor={COLOR.GREY_1}
             />
-          )}
+          }
         />
       </Container>
     );
@@ -350,11 +340,7 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
         bordered
         loading={{
           spinning: isLoading,
-          tip: (
-            <Typography className="mt-8">
-              Loading products
-            </Typography>
-          ),
+          tip: <Typography className="mt-8">Loading products</Typography>,
           indicator: <Spin active />,
         }}
         pagination={false}

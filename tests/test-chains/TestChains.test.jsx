@@ -18,7 +18,8 @@ const localArtifacts = [
 ];
 
 // Registries repository
-const registriesRepo = 'https://raw.githubusercontent.com/valory-xyz/autonolas-tokenomics/main/';
+const registriesRepo =
+  'https://raw.githubusercontent.com/valory-xyz/autonolas-tokenomics/main/';
 
 describe('test-chains/TestChains.jsx', () => {
   it('check contract addresses and ABIs', async () => {
@@ -57,7 +58,8 @@ describe('test-chains/TestChains.jsx', () => {
             expect(localABI).toBe(remoteABI);
 
             // Check the address
-            const localAddress = localArtifacts[k].addresses[parsedConfig[i].chainId];
+            const localAddress =
+              localArtifacts[k].addresses[parsedConfig[i].chainId];
             expect(localAddress).toBe(contracts[j].address);
           }
         }

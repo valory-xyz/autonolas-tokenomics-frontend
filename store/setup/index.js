@@ -19,7 +19,7 @@ export default (state = initialState, { data, type } = {}) => {
     case syncTypes.SET_ACCOUNT:
     case syncTypes.SET_BALANCE:
     case syncTypes.SET_LOGIN_ERROR:
-    case syncTypes.SET_CHAIND_ID:
+    case syncTypes.SET_CHAIN_ID:
     case syncTypes.SET_STORE_STATE: {
       return { ...state, ...data };
     }

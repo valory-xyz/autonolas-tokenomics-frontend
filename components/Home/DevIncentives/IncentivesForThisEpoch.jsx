@@ -1,18 +1,16 @@
 import { useState } from 'react';
-import {
-  Row, Col, Table, Typography, Alert,
-} from 'antd';
+import { Row, Col, Table, Typography, Alert } from 'antd';
 import { round, toLower } from 'lodash';
 import { notifyError } from '@autonolas/frontend-library';
 
-import { FORM_TYPES, UNIT_TYPES } from 'util/constants';
+import { FORM_TYPES, UNIT_TYPES } from 'common-util/constants/constants';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
 import {
   notifySpecificError,
   parseToEth,
   sortUnitIdsAndTypes,
 } from 'common-util/functions';
-import { useHelpers } from 'common-util/hooks/useHelpers';
+import { useHelpers } from 'hooks/useHelpers';
 import { getOwnerIncentivesRequest, getOwnersForUnits } from './requests';
 import { RewardAndTopUpContainer } from './styles';
 
@@ -90,7 +88,8 @@ export const IncentivesForThisEpoch = () => {
         if (indexesWithDifferentOwner.length !== 0) {
           const ids = indexesWithDifferentOwner
             .map((e) => {
-              const type = unitTypes[e] === UNIT_TYPES.AGENT ? 'Agent ID' : 'Component ID';
+              const type =
+                unitTypes[e] === UNIT_TYPES.AGENT ? 'Agent ID' : 'Component ID';
               return `${type} ${unitIds[e]}`;
             })
             .join(', ');

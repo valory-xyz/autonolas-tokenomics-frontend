@@ -12,9 +12,7 @@ export const getProductValueFromEvent = (product, events, keyName) => {
     return product[keyName];
   }
 
-  const event = events?.find(
-    (e) => e?.productId === `${product.id}`,
-  );
+  const event = events?.find((e) => e?.productId === `${product.id}`);
   if (!event) notifyError('Product not found in the event list');
   return event[keyName];
 };

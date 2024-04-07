@@ -1,4 +1,3 @@
-/* eslint-disable max-len */
 import { ethers } from 'ethers';
 import { isObject } from 'lodash';
 import {
@@ -15,9 +14,10 @@ import {
 import { RPC_URLS } from 'common-util/Contracts';
 import { SUPPORTED_CHAINS } from 'common-util/Login';
 
-const getSupportedChains = () => (process.env.NEXT_PUBLIC_IS_CONNECTED_TO_LOCAL === 'true'
-  ? [...SUPPORTED_CHAINS, { id: LOCAL_FORK_ID }]
-  : SUPPORTED_CHAINS);
+const getSupportedChains = () =>
+  process.env.NEXT_PUBLIC_IS_CONNECTED_TO_LOCAL === 'true'
+    ? [...SUPPORTED_CHAINS, { id: LOCAL_FORK_ID }]
+    : SUPPORTED_CHAINS;
 
 /**
  * re-usable functions
@@ -25,11 +25,14 @@ const getSupportedChains = () => (process.env.NEXT_PUBLIC_IS_CONNECTED_TO_LOCAL 
 
 export const getProvider = () => getProviderFn(getSupportedChains(), RPC_URLS);
 
-export const getEthersProvider = () => getEthersProviderFn(getSupportedChains(), RPC_URLS);
+export const getEthersProvider = () =>
+  getEthersProviderFn(getSupportedChains(), RPC_URLS);
 
-export const getIsValidChainId = (chainId) => getIsValidChainIdFn(getSupportedChains(), chainId);
+export const getIsValidChainId = (chainId) =>
+  getIsValidChainIdFn(getSupportedChains(), chainId);
 
-export const getChainIdOrDefaultToMainnet = (chainId) => getChainIdOrDefaultToMainnetFn(getSupportedChains(), chainId);
+export const getChainIdOrDefaultToMainnet = (chainId) =>
+  getChainIdOrDefaultToMainnetFn(getSupportedChains(), chainId);
 
 export const getChainId = (chainId = null) => {
   if (process.env.NEXT_PUBLIC_IS_CONNECTED_TO_LOCAL === 'true') {
@@ -38,10 +41,11 @@ export const getChainId = (chainId = null) => {
   return getChainIdFn(getSupportedChains(), chainId);
 };
 
-export const sendTransaction = (fn, account) => sendTransactionFn(fn, account, {
-  supportedChains: getSupportedChains(),
-  rpcUrls: RPC_URLS,
-});
+export const sendTransaction = (fn, account) =>
+  sendTransactionFn(fn, account, {
+    supportedChains: getSupportedChains(),
+    rpcUrls: RPC_URLS,
+  });
 
 export const ADDRESS_ZERO = ethers.constants.AddressZero;
 
@@ -51,12 +55,14 @@ export const ONE_ETH = ethers.constants.WeiPerEther;
  * Same as `formatToEth` but doesn't fixes the decimal to 8
  * @returns {String} eg: 1000000000000000000 => 1
  */
-export const parseToEth = (amount) => (amount ? ethers.utils.formatEther(`${amount}`) : 0);
+export const parseToEth = (amount) =>
+  amount ? ethers.utils.formatEther(`${amount}`) : 0;
 
 /**
  * multiplies the amount by 10^18
  */
-export const parseToWei = (amount) => ethers.utils.parseUnits(`${amount}`, 18).toString();
+export const parseToWei = (amount) =>
+  ethers.utils.parseUnits(`${amount}`, 18).toString();
 
 // create a function to specific error message based on error code
 const getErrorMessage = (error) => {
@@ -111,7 +117,8 @@ export const getBlockTimestamp = async (block = 'latest') => {
   return temp.timestamp * 1;
 };
 
-export const isL1Network = (chainId) => chainId === 1 || chainId === 5 || chainId === LOCAL_FORK_ID;
+export const isL1Network = (chainId) =>
+  chainId === 1 || chainId === 5 || chainId === LOCAL_FORK_ID;
 
 /**
  * Creates a promise that resolves after a specified number of milliseconds.
@@ -120,6 +127,7 @@ export const isL1Network = (chainId) => chainId === 1 || chainId === 5 || chainI
  * @param {number} ms - The number of milliseconds to wait before resolving the promise.
  * @returns {Promise<string>} A promise that resolves with the string 'done' after the delay.
  */
-export const delay = (ms) => new Promise((resolve) => {
-  setTimeout(() => resolve('done'), ms);
-});
+export const delay = (ms) =>
+  new Promise((resolve) => {
+    setTimeout(() => resolve('done'), ms);
+  });

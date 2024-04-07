@@ -1,5 +1,4 @@
 import { createGlobalStyle } from 'styled-components';
-import { MEDIA_QUERY, COLOR } from '@autonolas/frontend-library';
 
 // const GlobalStyles = styled.div`
 const GlobalStyle = createGlobalStyle`
@@ -22,9 +21,6 @@ const GlobalStyle = createGlobalStyle`
   h6 {
     margin-top: 0;
   }
-
-  background-size: 100%;
-  background-color: ${COLOR.WHITE};
 
   /* common */
   .m-0 {
@@ -78,9 +74,6 @@ const GlobalStyle = createGlobalStyle`
   }
 
   /* layout */
-  .ant-layout {
-    background: ${COLOR.WHITE};
-  }
   .ant-layout-header {
     display: flex;
     align-items: center;

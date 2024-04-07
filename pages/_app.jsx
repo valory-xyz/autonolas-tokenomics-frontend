@@ -1,18 +1,15 @@
 import Head from 'next/head';
 import { createWrapper } from 'next-redux-wrapper';
-import { ConfigProvider } from 'antd';
+
 import PropTypes from 'prop-types';
 
-/** wagmi config */
-import { WagmiConfig as WagmiConfigProvider } from 'wagmi';
-import { wagmiConfig } from 'common-util/Login/config';
-
-/** antd theme config */
 import Layout from 'components/Layout';
 import GlobalStyle from 'components/GlobalStyles';
-import { THEME_CONFIG } from '@autonolas/frontend-library';
 import { useRouter } from 'next/router';
 import initStore from '../store';
+import Web3ModalProvider from 'context/Web3ModalProvider';
+
+import { THEME_CONFIG } from 'common-util/constants/constants';
 
 const MyApp = ({ Component, pageProps }) => {
   const router = useRouter();
@@ -29,23 +26,15 @@ const MyApp = ({ Component, pageProps }) => {
         {isNotLegal ? (
           <Component {...pageProps} />
         ) : (
-          <WagmiConfigProvider config={wagmiConfig}>
+          <Web3ModalProvider>
             <Layout>
               <Component {...pageProps} />
             </Layout>
-          </WagmiConfigProvider>
+          </Web3ModalProvider>
         )}
       </ConfigProvider>
     </>
   );
-};
-
-MyApp.getInitialProps = async ({ Component, ctx }) => {
-  const pageProps = Component.getInitialProps
-    ? await Component.getInitialProps(ctx)
-    : {};
-
-  return { pageProps };
 };
 
 MyApp.propTypes = {

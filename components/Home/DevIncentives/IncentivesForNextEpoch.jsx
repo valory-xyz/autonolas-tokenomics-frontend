@@ -12,7 +12,7 @@ import {
 } from 'antd';
 import { notifyError } from '@autonolas/frontend-library';
 
-import { useHelpers } from 'common-util/hooks/useHelpers';
+import { useHelpers } from 'hooks/useHelpers';
 import { getMapUnitIncentivesRequest } from './requests';
 import { MapPendingIncentivesContainer } from './styles';
 

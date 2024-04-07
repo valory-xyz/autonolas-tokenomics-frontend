@@ -7,7 +7,7 @@ import {
 } from '@autonolas/frontend-library';
 
 import { ADDRESSES } from 'common-util/Contracts';
-import { useHelpers } from 'common-util/hooks/useHelpers';
+import { useHelpers } from 'hooks/useHelpers';
 import Socials from './Socials';
 import { ContractsInfoContainer } from './styles';
 
@@ -68,9 +68,8 @@ const ContractInfo = () => {
     </div>
   );
 
-  const {
-    textOne, addressOne, textTwo, addressTwo,
-  } = getCurrentPageAddresses();
+  const { textOne, addressOne, textTwo, addressTwo } =
+    getCurrentPageAddresses();
 
   return (
     <ContractsInfoContainer>

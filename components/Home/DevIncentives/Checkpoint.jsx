@@ -3,7 +3,7 @@ import { Alert, Button, Typography } from 'antd';
 import { notifySuccess } from '@autonolas/frontend-library';
 
 import { notifySpecificError } from 'common-util/functions';
-import { useHelpers } from 'common-util/hooks/useHelpers';
+import { useHelpers } from 'hooks/useHelpers';
 import { canShowCheckpoint, checkpointRequest } from './requests';
 import { CheckpointContainer } from './styles';
 

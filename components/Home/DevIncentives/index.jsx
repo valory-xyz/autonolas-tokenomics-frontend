@@ -1,11 +1,10 @@
-import { Typography } from 'antd';
+import Title from 'antd/es/typography/Title';
+import Paragraph from 'antd/es/typography/Paragraph';
 
 import { ClaimIncentives } from './ClaimIncentives';
 import { IncentivesForThisEpoch } from './IncentivesForThisEpoch';
 import { IncentivesForNextEpoch } from './IncentivesForNextEpoch';
 import { Checkpoint } from './Checkpoint';
-
-const { Title, Paragraph } = Typography;
 
 export const DevIncentives = () => (
   <div>

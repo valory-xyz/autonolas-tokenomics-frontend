@@ -1,24 +1,19 @@
 import { useState, useEffect } from 'react';
-import { ethers } from 'ethers';
 import { Alert, Button, Typography } from 'antd';
-import { isNumber } from 'lodash';
-import {
-  getFullFormattedDate,
-  notifySuccess,
-  NA,
-} from '@autonolas/frontend-library';
+
+import { ethers } from 'ethers';
+
+import { BigNumber } from 'ethers/utils';
 
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
-import {
-  parseToEth,
-  parseToWei,
-  sortUnitIdsAndTypes,
-} from 'common-util/functions';
-import { useHelpers } from 'common-util/hooks/useHelpers';
+
+import { useHelpers } from 'hooks/useHelpers';
+
 import {
   getEpochCounter,
   getLastEpochRequest,
 } from '../DevIncentives/requests';
+
 import {
   checkServicesNotTerminatedOrNotDeployed,
   checkpointRequest,
@@ -26,6 +21,7 @@ import {
   getVeOlasThresholdRequest,
   minAcceptedEthRequest,
 } from './requests';
+
 import { DonateContainer, EpochStatus, EpochCheckpointRow } from './styles';
 
 const { Title, Paragraph, Text } = Typography;
@@ -98,9 +94,8 @@ export const DepositServiceDonation = () => {
         totalAmount,
       };
 
-      const invalidServices = await checkServicesNotTerminatedOrNotDeployed(
-        serviceIds,
-      );
+      const invalidServices =
+        await checkServicesNotTerminatedOrNotDeployed(serviceIds);
 
       // deposit only if all services are deployed or terminated
       if (invalidServices.length === 0) {
@@ -154,7 +149,8 @@ export const DepositServiceDonation = () => {
   };
 
   // disable checkpoint button if expected end time is in the future
-  const isExpectedEndTimeInFuture = (epochDetails?.nextEpochEndTime || 0) * 1000 > Date.now();
+  const isExpectedEndTimeInFuture =
+    (epochDetails?.nextEpochEndTime || 0) * 1000 > Date.now();
 
   return (
     <DonateContainer>
@@ -169,7 +165,7 @@ export const DepositServiceDonation = () => {
         <Alert
           showIcon
           type="info"
-          message={(
+          message={
             <>
               To boost rewards of devs with freshly minted OLAS, you must hold
               at least&nbsp;
@@ -185,7 +181,7 @@ export const DepositServiceDonation = () => {
               </Text>
               &nbsp;of donations is required to trigger boosts.
             </>
-          )}
+          }
           className="mb-16"
         />
 

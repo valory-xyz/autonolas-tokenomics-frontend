@@ -9,7 +9,7 @@ const prohibitedCountriesCode = Object.values(prohibitedCountries);
  * @param {NextRequest} request
  */
 export default function validateCountryMiddleware(request) {
-  const country = request.geo?.country;
+  const { country } = request.geo;
   const isProhibited = prohibitedCountriesCode.includes(country);
 
   // if already on the not-legal page, don't redirect

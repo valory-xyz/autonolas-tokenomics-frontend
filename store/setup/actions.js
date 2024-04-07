@@ -11,7 +11,7 @@ export const setUserBalance = (balance) => ({
 });
 
 export const setChainId = (chainId) => ({
-  type: syncTypes.SET_CHAIND_ID,
+  type: syncTypes.SET_CHAIN_ID,
   data: { chainId },
 });
 

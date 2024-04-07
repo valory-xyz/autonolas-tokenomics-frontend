@@ -7,7 +7,7 @@ import {
   notifySpecificError,
   sortUnitIdsAndTypes,
 } from 'common-util/functions';
-import { useHelpers } from 'common-util/hooks/useHelpers';
+import { useHelpers } from 'hooks/useHelpers';
 import { claimOwnerIncentivesRequest, getPausedValueRequest } from './requests';
 
 const { Title } = Typography;

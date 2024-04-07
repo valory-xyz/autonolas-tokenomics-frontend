@@ -1,12 +1,12 @@
-module.exports = {
-  reactStrictMode: true,
-  compiler: {
-    styledComponents: true,
-  },
-  pages: {
-    '*': {
-      maxChunkSize: 30000,
-    },
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
+const config = {
+  //webpack required for web3modal
+  webpack: (config) => {
+    config.externals.push('pino-pretty', 'lokijs', 'encoding');
+    return config;
   },
   async headers() {
     return [
@@ -34,3 +34,5 @@ module.exports = {
     ];
   },
 };
+
+module.exports = withBundleAnalyzer(config);

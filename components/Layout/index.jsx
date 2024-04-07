@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
 import PropTypes from 'prop-types';
-import { Layout, Menu } from 'antd';
-import { ExportOutlined } from '@ant-design/icons';
+import Layout from 'antd/lib/layout';
+import Menu from 'antd/lib/menu';
+import ExportOutlined from '@ant-design/icons';
 import styled from 'styled-components';
 import { COLOR } from '@autonolas/frontend-library';
 
-import { useHelpers } from 'common-util/hooks/useHelpers';
+import { useHelpers } from 'hooks/useHelpers';
+
 import Login from '../Login';
 import Footer from './Footer';
 import { CustomLayout, Logo, DocsLink } from './styles';
