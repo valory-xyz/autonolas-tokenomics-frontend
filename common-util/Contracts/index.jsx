@@ -15,6 +15,7 @@ import {
   SERVICE_REGISTRY,
   ERC20_ABI,
 } from 'common-util/AbiAndAddresses';
+import { base, gnosis, goerli, mainnet, optimism, polygon } from 'viem/chains';
 
 const LOCAL_ADDRESSES = {
   dispenser: '0x4c5859f0F772848b2D91F1D83E2Fe57935348029',
@@ -182,10 +183,11 @@ export const getServiceContract = () => {
 };
 
 export const RPC_URLS = {
-  1: process.env.NEXT_PUBLIC_MAINNET_URL,
-  5: process.env.NEXT_PUBLIC_GOERLI_URL,
-  10: process.env.NEXT_PUBLIC_OPTIMISM_URL,
-  100: process.env.NEXT_PUBLIC_GNOSIS_URL,
-  137: process.env.NEXT_PUBLIC_POLYGON_URL,
+  1: mainnet.rpcUrls.default.http[0],
+  5: goerli.rpcUrls.default.http[0],
+  10: optimism.rpcUrls.default.http[0],
+  100: gnosis.rpcUrls.default.http[0],
+  137: polygon.rpcUrls.default.http[0],
+  8453: base.rpcUrls.default.http[0],
   [LOCAL_FORK_ID]: 'http://127.0.0.1:8545',
 };

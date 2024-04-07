@@ -3,6 +3,5 @@ coverage
 .next
 .DS_Store
 .env
-.env.local
-.vscode/
 ganache_data
+.swc

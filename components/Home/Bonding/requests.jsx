@@ -3,7 +3,7 @@ import { memoize, round } from 'lodash';
 import { gql, GraphQLClient } from 'graphql-request';
 import { BalancerSDK } from '@balancer-labs/sdk';
 import { areAddressesEqual } from '@autonolas/frontend-library';
-import { multicall } from '@wagmi/core';
+import { fallbackClient } from 'common-util/config/wagmi';
 
 import { DEX } from 'util/constants';
 import {
@@ -327,9 +327,10 @@ const getCurrentPriceBalancerFn = async (tokenAddress) => {
   }
 
   const totalSupply = pool.totalShares;
-  const reservesOLAS = (areAddressesEqual(pool.tokens[0].address, ADDRESSES[lpChainId].olasAddress)
-    ? pool.tokens[0].balance
-    : pool.tokens[1].balance) * 1.0;
+  const reservesOLAS =
+    (areAddressesEqual(pool.tokens[0].address, ADDRESSES[lpChainId].olasAddress)
+      ? pool.tokens[0].balance
+      : pool.tokens[1].balance) * 1.0;
   const priceLP = (reservesOLAS * 10 ** 18) / totalSupply;
   return priceLP;
 };
@@ -373,7 +374,7 @@ const getCurrentLpPriceForProducts = async (productList) => {
     }
   }
 
-  const multicallResponses = await multicall({
+  const multicallResponses = await fallbackClient.multicall({
     contracts: Object.values(multicallRequests),
   });
   const otherResponses = await Promise.all(Object.values(otherRequests));
@@ -399,79 +400,84 @@ export const getListWithSupplyList = (
   list,
   createProductEvents,
   closedProductEvents = [],
-) => list.map((product) => {
-  const createProductEvent = createProductEvents?.find(
-    (event) => event.productId === `${product.id}`,
-  );
+) =>
+  list.map((product) => {
+    const createProductEvent = createProductEvents?.find(
+      (event) => event.productId === `${product.id}`,
+    );
 
-  const closeProductEvent = closedProductEvents?.find(
-    (event) => event.productId === `${product.id}`,
-  );
+    const closeProductEvent = closedProductEvents?.find(
+      (event) => event.productId === `${product.id}`,
+    );
 
-  // Should not happen but we will warn if it does
-  if (!createProductEvent) {
-    window.console.warn(`Product ${product.id} not found in the event list`);
-  }
+    // Should not happen but we will warn if it does
+    if (!createProductEvent) {
+      window.console.warn(`Product ${product.id} not found in the event list`);
+    }
 
-  const eventSupply = Number(
-    ethers.BigNumber.from(createProductEvent.supply).div(ONE_ETH),
-  );
-  const productSupply = !closeProductEvent
-    ? Number(ethers.BigNumber.from(product.supply).div(ONE_ETH))
-    : Number(ethers.BigNumber.from(closeProductEvent.supply).div(ONE_ETH));
-  const supplyLeft = productSupply / eventSupply;
-  const priceLP = product.token !== ADDRESS_ZERO
-    ? product.priceLP
-    : createProductEvent?.priceLP || 0;
+    const eventSupply = Number(
+      ethers.BigNumber.from(createProductEvent.supply).div(ONE_ETH),
+    );
+    const productSupply = !closeProductEvent
+      ? Number(ethers.BigNumber.from(product.supply).div(ONE_ETH))
+      : Number(ethers.BigNumber.from(closeProductEvent.supply).div(ONE_ETH));
+    const supplyLeft = productSupply / eventSupply;
+    const priceLP =
+      product.token !== ADDRESS_ZERO
+        ? product.priceLP
+        : createProductEvent?.priceLP || 0;
 
-  return { ...product, supplyLeft, priceLP };
-});
+    return { ...product, supplyLeft, priceLP };
+  });
 
 /**
  * Adds the projected change & discounted olas per LP token to the list
  */
-const getLpPriceWithProjectedChange = (list) => list.map((record) => {
-  // current price of the LP token is multiplied by 2
-  // because the price is for 1 LP token and
-  // we need the price for 2 LP tokens
-  const fullCurrentPriceLp = Number(round(parseToEth(record.currentPriceLp * 2), 2)) || '--';
+const getLpPriceWithProjectedChange = (list) =>
+  list.map((record) => {
+    // current price of the LP token is multiplied by 2
+    // because the price is for 1 LP token and
+    // we need the price for 2 LP tokens
+    const fullCurrentPriceLp =
+      Number(round(parseToEth(record.currentPriceLp * 2), 2)) || '--';
 
-  const discountedOlasPerLpToken = getLpTokenWithDiscount(
-    record.priceLP,
-    record?.discount || 0,
-  );
+    const discountedOlasPerLpToken = getLpTokenWithDiscount(
+      record.priceLP,
+      record?.discount || 0,
+    );
 
-  // parse to eth and round to 2 decimal places
-  const roundedDiscountedOlasPerLpToken = round(
-    parseToEth(discountedOlasPerLpToken),
-    2,
-  );
+    // parse to eth and round to 2 decimal places
+    const roundedDiscountedOlasPerLpToken = round(
+      parseToEth(discountedOlasPerLpToken),
+      2,
+    );
 
-  // calculate the projected change
-  const projectedChange = round(
-    ((roundedDiscountedOlasPerLpToken - fullCurrentPriceLp)
-        / fullCurrentPriceLp)
-        * 100,
-    2,
-  );
+    // calculate the projected change
+    const projectedChange = round(
+      ((roundedDiscountedOlasPerLpToken - fullCurrentPriceLp) /
+        fullCurrentPriceLp) *
+        100,
+      2,
+    );
 
-  return {
-    ...record,
-    fullCurrentPriceLp,
-    roundedDiscountedOlasPerLpToken,
-    projectedChange,
-  };
-});
+    return {
+      ...record,
+      fullCurrentPriceLp,
+      roundedDiscountedOlasPerLpToken,
+      projectedChange,
+    };
+  });
 
 const getProductDetailsFromIds = async ({ productIdList }) => {
   const chainId = getChainId();
 
-  const response = await multicall({
+  const response = await fallbackClient.multicall({
     contracts: productIdList.map((id) => ({
       address: DEPOSITORY.addresses[chainId],
       abi: DEPOSITORY.abi,
       functionName: 'mapBondProducts',
       args: [id],
+      allowFailure: true,
     })),
   });
 
@@ -491,9 +497,8 @@ const getProductDetailsFromIds = async ({ productIdList }) => {
     };
   });
 
-  const listWithCurrentLpPrice = await getCurrentLpPriceForProducts(
-    productList,
-  );
+  const listWithCurrentLpPrice =
+    await getCurrentLpPriceForProducts(productList);
 
   const createEventList = await getCreateProductEvents();
   const closedEventList = await getCloseProductEvents();
@@ -509,7 +514,8 @@ const getProductDetailsFromIds = async ({ productIdList }) => {
     closedEventList,
   );
 
-  const listWithProjectedChange = getLpPriceWithProjectedChange(listWithSupplyList);
+  const listWithProjectedChange =
+    getLpPriceWithProjectedChange(listWithSupplyList);
 
   return listWithProjectedChange;
 };

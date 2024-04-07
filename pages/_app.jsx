@@ -3,15 +3,12 @@ import { createWrapper } from 'next-redux-wrapper';
 import { ConfigProvider } from 'antd';
 import PropTypes from 'prop-types';
 
-/** wagmi config */
-import { WagmiConfig as WagmiConfigProvider } from 'wagmi';
-import { wagmiConfig } from 'common-util/Login/config';
-
 /** antd theme config */
 import Layout from 'components/Layout';
 import GlobalStyle from 'components/GlobalStyles';
 import { THEME_CONFIG } from '@autonolas/frontend-library';
 import { useRouter } from 'next/router';
+import Web3ModalProvider from '../context/Web3ModalProvider';
 import initStore from '../store';
 
 const MyApp = ({ Component, pageProps }) => {
@@ -29,20 +26,20 @@ const MyApp = ({ Component, pageProps }) => {
         {isNotLegal ? (
           <Component {...pageProps} />
         ) : (
-          <WagmiConfigProvider config={wagmiConfig}>
+          <Web3ModalProvider>
             <Layout>
               <Component {...pageProps} />
             </Layout>
-          </WagmiConfigProvider>
+          </Web3ModalProvider>
         )}
       </ConfigProvider>
     </>
   );
 };
 
-MyApp.getInitialProps = async ({ Component, ctx }) => {
-  const pageProps = Component.getInitialProps
-    ? await Component.getInitialProps(ctx)
+MyApp.getStaticProps = async ({ Component, ctx }) => {
+  const pageProps = Component.getStaticProps
+    ? await Component.getStaticProps(ctx)
     : {};
 
   return { pageProps };
