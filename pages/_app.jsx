@@ -37,14 +37,6 @@ const MyApp = ({ Component, pageProps }) => {
   );
 };
 
-MyApp.getStaticProps = async ({ Component, ctx }) => {
-  const pageProps = Component.getStaticProps
-    ? await Component.getStaticProps(ctx)
-    : {};
-
-  return { pageProps };
-};
-
 MyApp.propTypes = {
   Component: PropTypes.oneOfType([PropTypes.func, PropTypes.shape({})])
     .isRequired,

@@ -1,7 +1,12 @@
-module.exports = {
+/** @type {import('next').NextConfig} */
+const NextConfig = {
   reactStrictMode: true,
   compiler: {
-    styledComponents: true,
+    styledComponents: {
+      ssr: true,
+      displayName: true,
+      minify: true,
+    },
   },
   async headers() {
     return [
@@ -29,3 +34,4 @@ module.exports = {
     ];
   },
 };
+module.exports = NextConfig;

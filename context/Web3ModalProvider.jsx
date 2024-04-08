@@ -26,9 +26,9 @@ createWeb3Modal({
   },
 });
 
-export default function Web3ModalProvider({ children, initialState }) {
+export default function Web3ModalProvider({ children }) {
   return (
-    <WagmiProvider config={wagmiConfig} initialState={initialState}>
+    <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     </WagmiProvider>
   );
