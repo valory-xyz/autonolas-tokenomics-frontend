@@ -8,6 +8,15 @@ const NextConfig = {
       minify: true,
     },
   },
+  redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/donate',
+        permanent: false,
+      },
+    ];
+  },
   async headers() {
     return [
       {

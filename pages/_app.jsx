@@ -1,13 +1,12 @@
-import Head from 'next/head';
 import { createWrapper } from 'next-redux-wrapper';
-import { ConfigProvider } from 'antd';
 import PropTypes from 'prop-types';
+import GlobalStyle from 'components/GlobalStyles';
+import Head from 'next/head';
 
 /** antd theme config */
 import Layout from 'components/Layout';
-import GlobalStyle from 'components/GlobalStyles';
-import { THEME_CONFIG } from '@autonolas/frontend-library';
 import { useRouter } from 'next/router';
+import { MountedConfigProvider } from '../context/ConfigProvider';
 import Web3ModalProvider from '../context/Web3ModalProvider';
 import initStore from '../store';
 
@@ -17,12 +16,12 @@ const MyApp = ({ Component, pageProps }) => {
 
   return (
     <>
-      <GlobalStyle />
       <Head>
         <title>Olas Tokenomics</title>
         <meta name="title" content="Olas Tokenomics" />
       </Head>
-      <ConfigProvider theme={THEME_CONFIG}>
+      <GlobalStyle />
+      <MountedConfigProvider>
         {isNotLegal ? (
           <Component {...pageProps} />
         ) : (
@@ -32,7 +31,7 @@ const MyApp = ({ Component, pageProps }) => {
             </Layout>
           </Web3ModalProvider>
         )}
-      </ConfigProvider>
+      </MountedConfigProvider>
     </>
   );
 };

@@ -8,6 +8,7 @@ import styled from 'styled-components';
 import { COLOR } from '@autonolas/frontend-library';
 
 import { useHelpers } from 'common-util/hooks/useHelpers';
+import Link from 'next/link';
 import Login from '../Login';
 import Footer from './Footer';
 import { CustomLayout, Logo, DocsLink } from './styles';
@@ -50,10 +51,12 @@ const NavigationBar = ({ children }) => {
     <CustomLayout pathname={router.pathname}>
       <StyledHeader>
         <div className="column-1">
-          <Logo data-testid="tokenomics-logo">
-            <LogoSvg />
-            <span>Tokenomics</span>
-          </Logo>
+          <Link href="/">
+            <Logo data-testid="tokenomics-logo">
+              <LogoSvg />
+              <span>Tokenomics</span>
+            </Logo>
+          </Link>
         </div>
 
         <Menu
