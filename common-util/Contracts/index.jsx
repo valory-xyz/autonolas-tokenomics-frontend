@@ -194,5 +194,7 @@ export const RPC_URLS = {
   10: process.env.NEXT_PUBLIC_OPTIMISM_URL,
   100: process.env.NEXT_PUBLIC_GNOSIS_URL,
   137: process.env.NEXT_PUBLIC_POLYGON_URL,
+  42161: process.env.NEXT_PUBLIC_ARBITRUM_URL,
+  8453: process.env.NEXT_PUBLIC_BASE_URL,
   [LOCAL_FORK_ID]: 'http://127.0.0.1:8545',
 };
