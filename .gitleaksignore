@@ -10,3 +10,5 @@ bc87efea151df7a3d2c8e61a2644d2b9ceeaa396:common-util/AbiAndAddresses/tokenomics.
 a9adae070555266a5155a51250eff13e918f43f0:common-util/Contracts/index.jsx:generic-api-key:43
 00bef6706f518a64eb82c47807a12e81ecb9c39f:common-util/Contracts/index.jsx:generic-api-key:23
 2006db156dae601f21f7e36950d47945f9595d0f:components/Home/Bonding/requests.jsx:generic-api-key:389
+09e65614f59427663058b77790f013e354cbc261:common-util/constants/constants.js:generic-api-key:27
+92a5a46052a44e1af1a892cd41b1341a9398ca15:common-util/constants/constants.js:generic-api-key:20
