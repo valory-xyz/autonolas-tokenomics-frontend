@@ -28,11 +28,6 @@ export const WsolWithDraw = () => {
   } = useWsolWithdraw();
   const getDecreaseLiquidityQuote = pDebounce(fn, 500);
 
-  // initially, set default slippage value
-  useEffect(() => {
-    form.setFieldsValue({ slippage: DEFAULT_SLIPPAGE });
-  }, [form]);
-
   const updateMaxAmount = useCallback(async () => {
     const setMaxAmountFn = async () => {
       const tempAmount = await getMaxAmount();
@@ -101,12 +96,7 @@ export const WsolWithDraw = () => {
       await withdraw({ amount: actualAmount, slippage });
 
       // reset form fields after successful withdraw
-      form.setFieldsValue({
-        amount: undefined,
-        slippage: DEFAULT_SLIPPAGE,
-        olas: undefined,
-        wsol: undefined,
-      });
+      form.resetFields();
 
       // re-fetch max amount
       updateMaxAmount();
@@ -177,6 +167,7 @@ export const WsolWithDraw = () => {
       <Form.Item
         name="slippage"
         label="Slippage"
+        initialValue={DEFAULT_SLIPPAGE}
         rules={[
           { required: true, message: 'Please input a valid slippage' },
           { validator: slippageValidator },

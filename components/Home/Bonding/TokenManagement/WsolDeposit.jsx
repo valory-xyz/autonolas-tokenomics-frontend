@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   Button, Form, InputNumber, Flex, Typography, Spin, Alert,
 } from 'antd';
@@ -30,11 +30,6 @@ export const WsolDeposit = () => {
     deposit,
   } = useWsolDeposit();
   const getDepositQuote = pDebounce(fn, 500);
-
-  // initially, set default slippage value
-  useEffect(() => {
-    form.setFieldsValue({ slippage: DEFAULT_SLIPPAGE });
-  }, [form]);
 
   const onWsolAndSlippageChange = async () => {
     const wsol = form.getFieldValue('wsol');
@@ -119,6 +114,7 @@ export const WsolDeposit = () => {
         <Form.Item
           name="slippage"
           label="Slippage"
+          initialValue={DEFAULT_SLIPPAGE}
           rules={[
             {
               required: true,
