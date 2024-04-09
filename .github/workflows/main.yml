@@ -1,4 +1,4 @@
-name: Lint
+name: Build and Scan
 on:
   push:
     branches:
@@ -19,7 +19,7 @@ jobs:
           node-version: '20'
       - name: Install modules
         run: yarn
-      - name: Run ESLint
+      - name: Build
         run: yarn build
       
 

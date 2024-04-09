@@ -22,7 +22,6 @@ export const fallbackClient = createPublicClient({
 
 export const wagmiConfig = createConfig({
   autoConnect: true,
-  // logger: { warn: null },
   chains: SUPPORTED_CHAINS,
   connectors: [
     injected(),
@@ -33,5 +32,4 @@ export const wagmiConfig = createConfig({
     (acc, chain) => Object.assign(acc, { [chain.id]: http() }),
     {},
   ),
-  // webSocketPublicClient,
 });

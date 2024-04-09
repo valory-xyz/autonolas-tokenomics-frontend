@@ -149,11 +149,7 @@ export const LoginV2 = ({
     <LoginContainer>
       <w3m-network-button />
       &nbsp;&nbsp;
-      <w3m-button
-        avatar="hide"
-        balance={screens.xs ? 'hide' : 'show'}
-        icon={screens.xs ? 'hide' : 'show'}
-      />
+      <w3m-button balance={screens.xs ? 'hide' : 'show'} />
     </LoginContainer>
   );
 };
