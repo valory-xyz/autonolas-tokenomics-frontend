@@ -17,8 +17,7 @@ const PATHS_NOT_TO_SHOW = ['/docs', '/disclaimer', '/not-legal'];
 
 const ContractInfo = () => {
   const { chainId } = useHelpers();
-  const router = useRouter();
-  const { pathname } = router;
+  const { pathname } = useRouter();
 
   if (!chainId) return <ContractsInfoContainer />;
 

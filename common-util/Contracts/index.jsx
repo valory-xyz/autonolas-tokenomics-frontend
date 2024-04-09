@@ -15,7 +15,7 @@ import {
   SERVICE_REGISTRY,
   ERC20_ABI,
 } from 'common-util/AbiAndAddresses';
-import { base, gnosis, goerli, mainnet, optimism, polygon } from 'viem/chains';
+import { arbitrum, base, gnosis, goerli, mainnet, optimism, polygon } from 'viem/chains';
 
 const LOCAL_ADDRESSES = {
   dispenser: '0x4c5859f0F772848b2D91F1D83E2Fe57935348029',
@@ -89,6 +89,13 @@ export const ADDRESSES = {
   8453: {
     olasAddress: '0x54330d28ca3357F294334BDC454a032e7f353416',
     balancerVault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
+  },
+
+  // solana
+  svm: {
+    olasAddress: 'Ez3nzG9ofodYCvEmw73XhQ87LWNYVRM2s7diB5tBZPyM',
+    balancerVault: '5dMKUYJDsjZkAD3wiV3ViQkuq9pSmWQ5eAzcQLtDnUT3', // whirpool address
+    wsolAddress: 'So11111111111111111111111111111111111111112',
   },
 
   [LOCAL_CHAIN_ID]: LOCAL_ADDRESSES,
@@ -183,11 +190,12 @@ export const getServiceContract = () => {
 };
 
 export const RPC_URLS = {
-  1: process.env.NEXT_PUBLIC_MAINNET_URL ?? mainnet.rpcUrls.default.http[0],
-  5: process.env.NEXT_PUBLIC_GOERLI_URL ?? goerli.rpcUrls.default.http[0],
-  10: process.env.NEXT_PUBLIC_OPTIMISM_URL ?? optimism.rpcUrls.default.http[0],
-  100: process.env.NEXT_PUBLIC_GNOSIS_URL ?? gnosis.rpcUrls.default.http[0],
-  137: process.env.NEXT_PUBLIC_POLYGON_URL ?? polygon.rpcUrls.default.http[0],
-  8453: process.env.NEXT_PUBLIC_BASE_URL ?? base.rpcUrls.default.http[0],
+  1: mainnet.rpcUrls.default.http[0],
+  5: goerli.rpcUrls.default.http[0],
+  10: optimism.rpcUrls.default.http[0],
+  100: gnosis.rpcUrls.default.http[0],
+  137: polygon.rpcUrls.default.http[0],
+  8453: base.rpcUrls.default.http[0],
+  42161: arbitrum.rpcUrls.default.http[0],
   [LOCAL_FORK_ID]: 'http://127.0.0.1:8545',
 };

@@ -23,6 +23,12 @@ const GlobalStyle = createGlobalStyle`
     margin-top: 0;
   }
 
+  html {
+    /* uncomment for dark mode */
+    /* background-color: ${COLOR.WHITE}; */
+    /* filter: invert(1) hue-rotate(180deg); */
+  }
+
   background-size: 100%;
   background-color: ${COLOR.WHITE};
 
@@ -64,6 +70,9 @@ const GlobalStyle = createGlobalStyle`
   .ml-16 {
     margin-left: 16px;
   }
+  .mt-8 {
+    margin-top: 8px;
+  }
   .mt-16 {
     margin-top: 16px;
   }
@@ -75,6 +84,9 @@ const GlobalStyle = createGlobalStyle`
   }
   .hide-only-sm {
     display: initial;
+  }
+  .full-width {
+    width: 100%;
   }
 
   /* layout */
@@ -101,6 +113,11 @@ const GlobalStyle = createGlobalStyle`
       }
       .ant-menu-item-selected {
         font-weight: bold;
+      }
+    }
+    ${MEDIA_QUERY.mobileM} {
+      &.ant-menu-horizontal {
+        line-height: 2;
       }
     }
   }
