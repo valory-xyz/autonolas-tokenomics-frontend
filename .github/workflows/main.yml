@@ -20,7 +20,7 @@ jobs:
       - name: Install modules
         run: yarn
       - name: Lint
-        run: yarn build
+        run: yarn lint
       - name: Test
         run: yarn test
       
