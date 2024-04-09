@@ -1,4 +1,4 @@
-name: Build and Scan
+name: Lint and Scan
 on:
   push:
     branches:
@@ -19,12 +19,14 @@ jobs:
           node-version: '20'
       - name: Install modules
         run: yarn
-      - name: Build
+      - name: Lint
         run: yarn build
+      - name: Test
+        run: yarn test
       
 
   scan:
-    name: gitleaks
+    name: Gitleaks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
