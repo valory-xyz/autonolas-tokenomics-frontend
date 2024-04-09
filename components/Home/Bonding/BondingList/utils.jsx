@@ -1,5 +1,7 @@
 import { ethers } from 'ethers';
 import { notifyError } from '@autonolas/frontend-library';
+import { gql, GraphQLClient } from 'graphql-request';
+import { memoize } from 'lodash';
 
 import { DEX } from 'util/constants';
 import { ADDRESS_ZERO } from 'common-util/functions';
@@ -125,3 +127,65 @@ export const getCurrentPriceLpLink = ({ lpDex, lpChainId }) => {
 
   return new Error('Dex not supported');
 };
+
+const getCreateProductEventsFn = async () => {
+  const graphQLClient = new GraphQLClient(
+    process.env.NEXT_PUBLIC_GRAPH_ENDPOINT_MAINNET,
+    {
+      method: 'POST',
+      jsonSerializer: {
+        parse: JSON.parse,
+        stringify: JSON.stringify,
+      },
+    },
+  );
+
+  const query = gql`
+    query GetCreateProducts {
+      createProducts(first: 1000) {
+        productId
+        token
+        priceLP
+        supply
+        vesting
+      }
+    }
+  `;
+
+  const res = await graphQLClient.request(query);
+  return res.createProducts;
+};
+/**
+ * function to get the create product events
+ */
+export const getCreateProductEvents = memoize(getCreateProductEventsFn);
+
+const getCloseProductEventsFn = async () => {
+  const graphQLClient = new GraphQLClient(
+    process.env.NEXT_PUBLIC_GRAPH_ENDPOINT_MAINNET,
+    {
+      method: 'POST',
+      jsonSerializer: {
+        parse: JSON.parse,
+        stringify: JSON.stringify,
+      },
+    },
+  );
+
+  const query = gql`
+    query GetCloseProducts {
+      closeProducts(first: 1000) {
+        productId
+        token
+        supply
+      }
+    }
+  `;
+
+  const res = await graphQLClient.request(query);
+  return res.closeProducts;
+};
+/**
+ * function to get the close product events
+ */
+export const getCloseProductEvents = memoize(getCloseProductEventsFn);

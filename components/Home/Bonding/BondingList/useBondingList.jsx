@@ -3,7 +3,6 @@ import { ethers } from 'ethers';
 import { memoize, round } from 'lodash';
 import { BalancerSDK } from '@balancer-labs/sdk';
 import { areAddressesEqual } from '@autonolas/frontend-library';
-import { gql, GraphQLClient } from 'graphql-request';
 import { multicall } from '@wagmi/core';
 
 import { DEX } from 'util/constants';
@@ -32,6 +31,8 @@ import {
   getLpTokenWithDiscount,
   getLpTokenLink,
   getCurrentPriceLpLink,
+  getCreateProductEvents,
+  getCloseProductEvents,
 } from './utils';
 
 const { BigNumber } = ethers;
@@ -114,62 +115,6 @@ const getLastIDFRequest = async () => {
   const discount = ((firstDiv * 1.0) / Number(ONE_ETH)) * 100;
   return discount;
 };
-
-const getCreateProductEventsFn = async () => {
-  const graphQLClient = new GraphQLClient(
-    process.env.NEXT_PUBLIC_GRAPH_ENDPOINT_MAINNET,
-    {
-      method: 'POST',
-      jsonSerializer: {
-        parse: JSON.parse,
-        stringify: JSON.stringify,
-      },
-    },
-  );
-
-  const query = gql`
-    query GetCreateProducts {
-      createProducts(first: 1000) {
-        productId
-        token
-        priceLP
-        supply
-        vesting
-      }
-    }
-  `;
-
-  const res = await graphQLClient.request(query);
-  return res.createProducts;
-};
-const getCreateProductEvents = memoize(getCreateProductEventsFn);
-
-const getCloseProductEventsFn = async () => {
-  const graphQLClient = new GraphQLClient(
-    process.env.NEXT_PUBLIC_GRAPH_ENDPOINT_MAINNET,
-    {
-      method: 'POST',
-      jsonSerializer: {
-        parse: JSON.parse,
-        stringify: JSON.stringify,
-      },
-    },
-  );
-
-  const query = gql`
-    query GetCloseProducts {
-      closeProducts(first: 1000) {
-        productId
-        token
-        supply
-      }
-    }
-  `;
-
-  const res = await graphQLClient.request(query);
-  return res.closeProducts;
-};
-const getCloseProductEvents = memoize(getCloseProductEventsFn);
 
 /**
  * Fetches detials of the LP token.
