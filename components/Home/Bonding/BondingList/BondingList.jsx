@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import {
   Button,
@@ -20,12 +19,12 @@ import {
 import styled from 'styled-components';
 
 import { BONDING_PRODUCTS } from 'util/constants';
-import { notifySpecificError, parseToEth } from 'common-util/functions';
+import { parseToEth } from 'common-util/functions';
 import { useHelpers } from 'common-util/hooks/useHelpers';
-import { ADDRESSES } from 'common-util/Contracts';
-import { Deposit } from './Deposit';
-import { getProductListRequest } from './requests';
-import { getLpTokenWithDiscount } from './requestsHelpers';
+import { Deposit } from '../Deposit/Deposit';
+import { WsolTokenManagement } from '../TokenManagement/WsolTokenManagement';
+import { LP_PAIRS, useProducts } from './useBondingList';
+import { getLpTokenWithDiscount } from './utils';
 
 const { Text } = Typography;
 
@@ -72,9 +71,14 @@ const getColumns = (
       title: getTitle('LP Token', 'LP token address enabled by the Treasury'),
       dataIndex: 'lpTokenName',
       key: 'lpTokenName',
-      width: 180,
       render: (x, data) => {
-        if (!x) return NA;
+        const isValid = x === LP_PAIRS.svm.name;
+        if (isValid) {
+          return (
+            <WsolTokenManagement lpToken={x} lpTokenLink={data.lpTokenLink} />
+          );
+        }
+
         return (
           <a href={data.lpTokenLink} target="_blank" rel="noreferrer">
             {x}
@@ -86,7 +90,7 @@ const getColumns = (
       title: getTitle('Current Price of LP Token', 'Denominated in OLAS'),
       dataIndex: 'fullCurrentPriceLp',
       key: 'fullCurrentPriceLp',
-      width: 180,
+      width: 140,
       render: (x, details) => (
         <a
           href={details.currentPriceLpLink}
@@ -141,6 +145,7 @@ const getColumns = (
       title: getTitle('Vesting', 'The bond vesting time to withdraw OLAS'),
       dataIndex: 'vesting',
       key: 'vesting',
+      width: 120,
       render: (seconds) => (
         <a
           href={`https://etherscan.io/address/${depositoryAddress}#readContract#F10`}
@@ -158,6 +163,7 @@ const getColumns = (
       ),
       dataIndex: 'supply',
       key: 'supply',
+      width: 200,
       render: (x, row) => {
         const supplyLeftInPercent = isNaN(row.supplyLeft)
           ? 0
@@ -186,6 +192,7 @@ const getColumns = (
       ),
       dataIndex: 'bondForOlas',
       key: 'bondForOlas',
+      width: 160,
       render: (_, row) => {
         // disabled if there is no supply or if the user is not connected
         const isBondButtonDisabled = !hideEmptyProducts || !acc;
@@ -245,47 +252,26 @@ const NoProducts = () => (
 );
 
 export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
-  const { account, chainId } = useHelpers();
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorState, setErrorState] = useState(false);
-  const [filteredProducts, setFilteredProducts] = useState([]);
-
-  // if productDetails is `not null`, then open the deposit modal
-  const [productDetails, setProductDetails] = useState(null);
+  const { account } = useHelpers();
 
   const isActive = bondingProgramType === BONDING_PRODUCTS.ACTIVE;
-  const depositoryAddress = ADDRESSES[chainId].depository;
 
-  const getProducts = async () => {
-    try {
-      setErrorState(false);
-      setIsLoading(true);
-
-      const filteredProductList = await getProductListRequest(
-        { isActive },
-      );
-      setFilteredProducts(filteredProductList);
-    } catch (error) {
-      const errorMessage = typeof error?.message === 'string' ? error.message : null;
-      setErrorState(true);
-      notifySpecificError('Error while fetching products', errorMessage);
-      console.error(error, errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // fetch the bonding list
-  useEffect(() => {
-    getProducts();
-  }, [account, chainId, bondingProgramType]);
+  const {
+    isLoading,
+    errorState,
+    filteredProducts,
+    productDetails,
+    handleProductDetails,
+    depositoryAddress,
+    refetch,
+  } = useProducts({ isActive });
 
   const onBondClick = (row) => {
-    setProductDetails(row);
+    handleProductDetails(row);
   };
 
   const onModalClose = () => {
-    setProductDetails(null);
+    handleProductDetails(null);
   };
 
   const sortList = (list) => list.sort((a, b) => {
@@ -303,10 +289,6 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
     return processedList;
   };
 
-  const handleRetry = () => {
-    getProducts();
-  };
-
   if (errorState) {
     return (
       <Container className="mt-16">
@@ -315,7 +297,9 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
             <>
               <Text className="mb-8">Couldn&apos;t fetch products</Text>
               <br />
-              <Button onClick={handleRetry}>Try again</Button>
+              <Button onClick={() => window.location.reload()}>
+                Try again
+              </Button>
             </>
           )}
           image={(
@@ -350,11 +334,7 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
         bordered
         loading={{
           spinning: isLoading,
-          tip: (
-            <Typography className="mt-8">
-              Loading products
-            </Typography>
-          ),
+          tip: <Typography className="mt-8">Loading products</Typography>,
           indicator: <Spin active />,
         }}
         pagination={false}
@@ -366,12 +346,12 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
         <Deposit
           productId={productDetails?.id}
           productToken={productDetails?.token}
-          productLpPrice={getLpTokenWithDiscount(
-            productDetails?.priceLP,
+          productLpPriceInBg={getLpTokenWithDiscount(
+            productDetails?.priceLp,
             productDetails?.discount,
           )}
           productSupply={productDetails?.supply}
-          getProducts={getProducts}
+          getProducts={refetch}
           closeModal={onModalClose}
         />
       )}
