@@ -78,6 +78,18 @@ export const ADDRESSES = {
     balancerVault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
   },
 
+  // optimism
+  10: {
+    olasAddress: '0xFC2E6e6BCbd49ccf3A5f029c79984372DcBFE527',
+    balancerVault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
+  },
+
+  // base
+  8453: {
+    olasAddress: '0x54330d28ca3357F294334BDC454a032e7f353416',
+    balancerVault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
+  },
+
   // solana
   svm: {
     olasAddress: 'Ez3nzG9ofodYCvEmw73XhQ87LWNYVRM2s7diB5tBZPyM',
@@ -179,6 +191,7 @@ export const getServiceContract = () => {
 export const RPC_URLS = {
   1: process.env.NEXT_PUBLIC_MAINNET_URL,
   5: process.env.NEXT_PUBLIC_GOERLI_URL,
+  10: process.env.NEXT_PUBLIC_OPTIMISM_URL,
   100: process.env.NEXT_PUBLIC_GNOSIS_URL,
   137: process.env.NEXT_PUBLIC_POLYGON_URL,
   [LOCAL_FORK_ID]: 'http://127.0.0.1:8545',

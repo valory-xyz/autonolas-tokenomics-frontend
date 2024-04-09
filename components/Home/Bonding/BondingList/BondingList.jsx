@@ -65,20 +65,14 @@ const getColumns = (
       title: 'Network',
       dataIndex: 'lpChainId',
       key: 'lpChainId',
-      width: 140,
-      render: (x) => {
-        if (x === 42161) return 'Arbitrum';
-        return getNetworkName(x);
-      },
+      render: (x) => getNetworkName(x),
     },
     {
       title: getTitle('LP Token', 'LP token address enabled by the Treasury'),
       dataIndex: 'lpTokenName',
       key: 'lpTokenName',
       render: (x, data) => {
-        // TODO; remove `NEXT_PUBLIC_SOLANA_LOCKBOX_TEST` check once the lockbox is live
-        const isValid = x === LP_PAIRS.svm.name
-          || process.env.NEXT_PUBLIC_SOLANA_LOCKBOX_TEST === 'true';
+        const isValid = x === LP_PAIRS.svm.name;
         if (isValid) {
           return (
             <WsolTokenManagement lpToken={x} lpTokenLink={data.lpTokenLink} />

@@ -71,6 +71,14 @@ export const getLpTokenLink = ({
     if (lpChainId === 42161) {
       return `https://app.balancer.fi/#/arbitrum/pool/${lpPoolId}`;
     }
+
+    if (lpChainId === 10) {
+      return `https://app.balancer.fi/#/optimism/pool/${lpPoolId}`;
+    }
+
+    if (lpChainId === 8453) {
+      return `https://app.balancer.fi/#/base/pool/${lpPoolId}`;
+    }
   }
 
   if (lpDex === DEX.SOLANA) {
@@ -100,6 +108,14 @@ export const getCurrentPriceLpLink = ({ lpDex, lpChainId }) => {
 
     if (lpChainId === 42161) {
       return `https://arbiscan.io/address/${ADDRESSES[lpChainId].balancerVault}#readContract#F10`;
+    }
+
+    if (lpChainId === 10) {
+      return `https://optimistic.etherscan.io/address/${ADDRESSES[lpChainId].balancerVault}#readContract#F10`;
+    }
+
+    if (lpChainId === 8453) {
+      return `https://basescan.org/address/${ADDRESSES[lpChainId].balancerVault}#readContract#F10`;
     }
   }
 

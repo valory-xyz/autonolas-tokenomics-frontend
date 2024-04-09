@@ -36,6 +36,13 @@ import {
 
 const { BigNumber } = ethers;
 
+/**
+ *
+ * @returns {Object} {
+ *   lpChainId,
+ *   originAddress is pool address
+ * }
+ */
 export const LP_PAIRS = {
   // gnosis-chain
   '0x27df632fd0dcf191C418c803801D521cd579F18e': {
@@ -63,6 +70,24 @@ export const LP_PAIRS = {
     dex: DEX.BALANCER,
     poolId:
       '0xaf8912a3c4f55a8584b67df30ee0ddf0e60e01f80002000000000000000004fc',
+  },
+  // optimism
+  '0x2FD007a534eB7527b535a1DF35aba6bD2a8b660F': {
+    lpChainId: 10,
+    name: 'WETH-OLAS',
+    originAddress: '0x5bb3e58887264b667f915130fd04bbb56116c278',
+    dex: DEX.BALANCER,
+    poolId:
+      '0x5bb3e58887264b667f915130fd04bbb56116c27800020000000000000000012a',
+  },
+  // base
+  '0x9946d6FD1210D85EC613Ca956F142D911C97a074': {
+    lpChainId: 8453,
+    name: 'OLAS-USDC',
+    originAddress: '0x5332584890d6e415a6dc910254d6430b8aab7e69',
+    dex: DEX.BALANCER,
+    poolId:
+      '0x5332584890d6e415a6dc910254d6430b8aab7e69000200000000000000000103',
   },
   // solana
   svm: {
@@ -234,12 +259,13 @@ const useAddCurrentLpPriceToProducts = () => {
 
   return useCallback(
     async (productList) => {
-      const contract = getDepositoryContract();
+      const chainId = getChainId();
+      const multicallRequests = {};
+      const otherRequests = {};
 
-      const currentLpPricePromiseList = [];
       for (let i = 0; i < productList.length; i += 1) {
         if (productList[i].token === ADDRESS_ZERO) {
-          currentLpPricePromiseList.push(0);
+          otherRequests[i] = 0;
         } else {
           /* eslint-disable-next-line no-await-in-loop */
           const { lpChainId, dex } = await getLpTokenDetails(
@@ -247,10 +273,12 @@ const useAddCurrentLpPriceToProducts = () => {
           );
 
           if (isL1Network(lpChainId)) {
-            const currentLpPricePromise = contract.methods
-              .getCurrentPriceLP(productList[i].token)
-              .call();
-            currentLpPricePromiseList.push(currentLpPricePromise);
+            multicallRequests[i] = {
+              address: DEPOSITORY.addresses[chainId],
+              abi: DEPOSITORY.abi,
+              functionName: 'getCurrentPriceLP',
+              args: [productList[i].token],
+            };
           } else {
             let currentLpPrice = null;
             // NOTE: It could be uniswap for other chains hence this if case.
@@ -263,10 +291,10 @@ const useAddCurrentLpPriceToProducts = () => {
             // } else
             if (dex === DEX.BALANCER) {
               currentLpPrice = getCurrentPriceBalancer(productList[i].token);
-              currentLpPricePromiseList.push(currentLpPrice);
+              otherRequests[i] = currentLpPrice;
             } else if (dex === DEX.SOLANA) {
               currentLpPrice = getCurrentPriceForSvm(productList[i].token);
-              currentLpPricePromiseList.push(currentLpPrice);
+              otherRequests[i] = currentLpPrice;
             } else {
               throw new Error('Dex not supported');
             }
@@ -274,8 +302,24 @@ const useAddCurrentLpPriceToProducts = () => {
         }
       }
 
-      const lpPrices = await Promise.all(currentLpPricePromiseList);
-      return productList.map((p, i) => ({ ...p, currentPriceLp: lpPrices[i] }));
+      const multicallResponses = await multicall({
+        contracts: Object.values(multicallRequests),
+      });
+      const otherResponses = await Promise.all(Object.values(otherRequests));
+
+      // Combine multicall responses with other responses into resolvedList
+      const resolvedList = [];
+      Object.keys(multicallRequests).forEach((index) => {
+        resolvedList[index] = multicallResponses.shift().result.toString();
+      });
+      Object.keys(otherRequests).forEach((index) => {
+        resolvedList[index] = otherResponses.shift();
+      });
+
+      return productList.map((product, index) => ({
+        ...product,
+        currentPriceLp: resolvedList[index],
+      }));
     },
     [getCurrentPriceBalancer, getCurrentPriceForSvm],
   );
@@ -360,11 +404,11 @@ const useAddSupplyLeftToProducts = () => useCallback(
     }
 
     const eventSupply = Number(
-      ethers.BigNumber.from(createProductEvent.supply).div(ONE_ETH),
+      BigNumber.from(createProductEvent.supply).div(ONE_ETH),
     );
 
     const productSupply = !closeProductEvent
-      ? Number(ethers.BigNumber.from(product.supply).div(ONE_ETH))
+      ? Number(BigNumber.from(product.supply).div(ONE_ETH))
       : Number(BigNumber.from(closeProductEvent.supply).div(ONE_ETH));
 
     const supplyLeft = productSupply / Number(eventSupply);

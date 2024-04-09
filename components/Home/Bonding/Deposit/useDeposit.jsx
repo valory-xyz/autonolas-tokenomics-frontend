@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { ethers } from 'ethers';
 
-import { MAX_AMOUNT, sendTransaction } from 'common-util/functions';
+import { getEstimatedGasLimit, sendTransaction } from 'common-util/functions';
 import {
   ADDRESSES,
   getDepositoryContract,
@@ -45,12 +45,18 @@ export const useDeposit = () => {
    * Approves the treasury contract to spend the token
    */
   const approveRequest = useCallback(
-    async ({ token }) => {
+    async ({ token, amountToApprove }) => {
       const contract = getUniswapV2PairContract(token);
       const treasuryAddress = ADDRESSES[chainId].treasury;
-      const fn = contract.methods
-        .approve(treasuryAddress, MAX_AMOUNT)
-        .send({ from: account });
+      const fnApprove = contract.methods.approve(
+        treasuryAddress,
+        amountToApprove,
+      );
+      const estimatedGas = await getEstimatedGasLimit(fnApprove, account);
+      const fn = await fnApprove.send({
+        from: account,
+        gasLimit: estimatedGas,
+      });
 
       const response = await sendTransaction(fn, account);
       return response;

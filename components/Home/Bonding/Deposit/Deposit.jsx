@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BigNumber } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 import PropTypes from 'prop-types';
 import { isNil } from 'lodash';
 import {
@@ -247,8 +247,19 @@ export const Deposit = ({
               loading={isLoading}
               onClick={async () => {
                 try {
+                  if (!account) {
+                    notifyError('Please connect your wallet');
+                    return;
+                  }
+
                   setIsLoading(true);
-                  await approveRequest({ token: productToken });
+                  await approveRequest({
+                    token: productToken,
+                    amountToApprove: ethers.utils.parseUnits(
+                      `${tokenAmountInputValue}`,
+                      'ether',
+                    ),
+                  });
 
                   // once approved, close the modal and call deposit helper
                   setIsApproveModalVisible(false);
