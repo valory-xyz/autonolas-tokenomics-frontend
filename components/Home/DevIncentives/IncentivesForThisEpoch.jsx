@@ -1,7 +1,5 @@
 import { useState } from 'react';
-import {
-  Row, Col, Table, Typography, Alert,
-} from 'antd';
+import { Row, Col, Table, Typography, Alert } from 'antd';
 import { round, toLower } from 'lodash';
 import { notifyError } from '@autonolas/frontend-library';
 
@@ -90,7 +88,8 @@ export const IncentivesForThisEpoch = () => {
         if (indexesWithDifferentOwner.length !== 0) {
           const ids = indexesWithDifferentOwner
             .map((e) => {
-              const type = unitTypes[e] === UNIT_TYPES.AGENT ? 'Agent ID' : 'Component ID';
+              const type =
+                unitTypes[e] === UNIT_TYPES.AGENT ? 'Agent ID' : 'Component ID';
               return `${type} ${unitIds[e]}`;
             })
             .join(', ');

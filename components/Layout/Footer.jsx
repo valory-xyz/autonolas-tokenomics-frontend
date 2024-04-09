@@ -67,9 +67,8 @@ const ContractInfo = () => {
     </div>
   );
 
-  const {
-    textOne, addressOne, textTwo, addressTwo,
-  } = getCurrentPageAddresses();
+  const { textOne, addressOne, textTwo, addressTwo } =
+    getCurrentPageAddresses();
 
   return (
     <ContractsInfoContainer>

@@ -30,8 +30,6 @@
     "@solana/wallet-adapter-react-ui": "^0.9.35",
     "@solana/wallet-adapter-wallets": "^0.19.26",
     "@solana/web3.js": "^1.90.0",
-    "@web3modal/ethereum": "^2.7.1",
-    "@web3modal/react": "^2.7.1",
     "antd": "^5.9.0",
     "decimal.js": "^10.4.3",
     "ethers": "^5.7.2",
