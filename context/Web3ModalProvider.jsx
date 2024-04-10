@@ -12,8 +12,6 @@ const queryClient = new QueryClient();
 createWeb3Modal({
   wagmiConfig,
   projectId: process.env.NEXT_PUBLIC_WALLET_PROJECT_ID,
-  enableAnalytics: false,
-  enableOnramp: false,
   themeMode: 'light',
   themeVariables: {
     '--w3m-font-family':
