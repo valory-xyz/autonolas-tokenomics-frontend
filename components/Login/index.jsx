@@ -21,7 +21,7 @@ const Login = () => {
     } else {
       dispatch(setLogout());
     }
-  }, [address]);
+  }, [address, data?.formatted, dispatch]);
 
   const onConnect = (response) => {
     dispatch(setUserAccount(response.address));

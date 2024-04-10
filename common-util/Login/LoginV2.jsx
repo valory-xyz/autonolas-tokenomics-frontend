@@ -36,9 +36,8 @@ export const LoginV2 = ({
 }) => {
   const dispatch = useDispatch();
   const { disconnect } = useDisconnect();
-  const { chain } = useAccount();
+  const { chainId } = useAccount();
 
-  const chainId = chain?.id;
   const { address, connector } = useAccount({
     onConnect: ({ address: currentAddress }) => {
       if (isAddressProhibited(currentAddress)) {
@@ -132,7 +131,7 @@ export const LoginV2 = ({
     if (connector && !isAddressProhibited(address)) {
       getData();
     }
-  }, [connector]);
+  }, [address, connector]);
 
   // Disconnect if the address is prohibited
   useEffect(() => {

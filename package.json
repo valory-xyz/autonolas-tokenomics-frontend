@@ -63,7 +63,6 @@
     "redux-mock-store": "^1.5.4"
   },
   "resolutions": {
-    "string-width": "^4.2.0",
-    "@wagmi/core": "latest"
+    "string-width": "^4.2.0"
   }
 }
