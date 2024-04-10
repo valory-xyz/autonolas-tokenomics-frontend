@@ -4,11 +4,12 @@ const nextJest = require('next/jest');
 const createJestConfig = nextJest({
   // Don't change, this is needed to load next.config.js and .env config
   dir: './',
-});
-
-const config = {
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   coverageProvider: 'v8',
   testEnvironment: 'jsdom',
-};
+  globals: {
+    fetch,
+  },
+});
 
-module.exports = createJestConfig(config);
+module.exports = createJestConfig();

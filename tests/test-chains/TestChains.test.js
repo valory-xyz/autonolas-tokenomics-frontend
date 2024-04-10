@@ -1,6 +1,6 @@
 /* eslint-disable jest/no-conditional-in-test */
 /* eslint-disable no-await-in-loop */
-import fetch from 'node-fetch';
+
 import {
   DEPOSITORY,
   DISPENSER,
