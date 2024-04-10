@@ -4,7 +4,6 @@ const NextConfig = {
   compiler: {
     styledComponents: {
       ssr: true,
-      displayName: true,
       minify: true,
     },
   },
