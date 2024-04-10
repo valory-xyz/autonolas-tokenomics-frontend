@@ -3,7 +3,7 @@ import { ethers } from 'ethers';
 import { memoize, round } from 'lodash';
 import { BalancerSDK } from '@balancer-labs/sdk';
 import { areAddressesEqual } from '@autonolas/frontend-library';
-import { multicall } from '@wagmi/core';
+import { usePublicClient } from 'wagmi';
 
 import { DEX } from 'util/constants';
 import {
@@ -193,6 +193,7 @@ const getCurrentPriceBalancerFn = memoize(async (tokenAddress) => {
  */
 const useAddCurrentLpPriceToProducts = () => {
   const getCurrentPriceWhirlpool = useWhirlPoolInformation();
+  const publicClient = usePublicClient();
 
   const getCurrentPriceBalancer = useCallback(getCurrentPriceBalancerFn, [
     getCurrentPriceBalancerFn,
@@ -248,7 +249,7 @@ const useAddCurrentLpPriceToProducts = () => {
         }
       }
 
-      const multicallResponses = await multicall({
+      const multicallResponses = await publicClient.multicall({
         contracts: Object.values(multicallRequests),
       });
       const otherResponses = await Promise.all(Object.values(otherRequests));
@@ -267,7 +268,7 @@ const useAddCurrentLpPriceToProducts = () => {
         currentPriceLp: resolvedList[index],
       }));
     },
-    [getCurrentPriceBalancer, getCurrentPriceForSvm],
+    [publicClient, getCurrentPriceBalancer, getCurrentPriceForSvm],
   );
 };
 
@@ -427,6 +428,7 @@ const useAddProjectChangeToProducts = () =>
  * and returns the updated list.
  */
 const useProductDetailsFromIds = () => {
+  const publicClient = usePublicClient();
   const addSupplyLeftToProducts = useAddSupplyLeftToProducts();
   const addCurrentLpPriceToProducts = useAddCurrentLpPriceToProducts();
   const addProjectedChange = useAddProjectChangeToProducts();
@@ -435,7 +437,7 @@ const useProductDetailsFromIds = () => {
     async (productIdList) => {
       const chainId = getChainId();
 
-      const response = await multicall({
+      const response = await publicClient.multicall({
         contracts: productIdList.map((id) => ({
           address: DEPOSITORY.addresses[chainId],
           abi: DEPOSITORY.abi,
@@ -481,7 +483,12 @@ const useProductDetailsFromIds = () => {
 
       return listWithProjectedChange;
     },
-    [addCurrentLpPriceToProducts, addSupplyLeftToProducts, addProjectedChange],
+    [
+      publicClient,
+      addCurrentLpPriceToProducts,
+      addSupplyLeftToProducts,
+      addProjectedChange,
+    ],
   );
 };
 

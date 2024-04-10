@@ -113,7 +113,7 @@ Layout.defaultProps = {
 const LayoutWithWalletProvider = (props) => (
   <ConnectionProvider endpoint={endpoint}>
     <WalletProvider wallets={wallets} autoConnect>
-      <Layout {...props}>{props.children}</Layout>
+      <Layout {...props} />
     </WalletProvider>
   </ConnectionProvider>
 );

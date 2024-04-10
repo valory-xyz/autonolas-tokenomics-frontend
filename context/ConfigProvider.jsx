@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 
 import { THEME_CONFIG } from '@autonolas/frontend-library';
 
-export const MountedConfigProvider = ({ children }) => {
+export const ThemeConfigProvider = ({ children }) => {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {

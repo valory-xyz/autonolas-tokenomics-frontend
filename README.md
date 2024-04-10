@@ -9,7 +9,7 @@ This repository contains code for the [Tokenomics App](https://tokenomics.olas.n
 
 ## Installation and Setup Instructions
 
-Clone down this repository. You will need `node` version ">=14" and `yarn` version ">=1" installed globally on your machine.
+Clone down this repository. You will need `node` version "20" and `yarn` version ">=1" installed globally on your machine.
 
 Installation:
 

@@ -6,10 +6,8 @@ import { WagmiProvider } from 'wagmi';
 import { wagmiConfig } from 'common-util/config/wagmi';
 import { COLOR } from '@autonolas/frontend-library';
 
-// Setup queryClient
 const queryClient = new QueryClient();
 
-// Create modal
 // eslint-disable-next-line jest/require-hook
 createWeb3Modal({
   wagmiConfig,
@@ -20,9 +18,9 @@ createWeb3Modal({
   themeVariables: {
     '--w3m-font-family':
       "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
-    '--w3m-border-radius-master': '1px',
     '--w3m-accent': COLOR.PRIMARY,
-    '--w3m-background-color': COLOR.PRIMARY,
+    '--w3m-border-radius-master': '0.7125px',
+    '--w3m-font-size-master': '11px',
   },
 });
 

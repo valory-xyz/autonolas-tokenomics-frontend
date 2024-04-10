@@ -25,7 +25,7 @@
   "plugins": ["prettier"],
   "rules": {
     "prettier/prettier": [
-      "warn",
+      "error",
       {
         "semi": true,
         "trailingComma": "all",

@@ -6,7 +6,7 @@ import Head from 'next/head';
 /** antd theme config */
 import Layout from 'components/Layout';
 import { useRouter } from 'next/router';
-import { MountedConfigProvider } from '../context/ConfigProvider';
+import { ThemeConfigProvider } from '../context/ConfigProvider';
 import Web3ModalProvider from '../context/Web3ModalProvider';
 import initStore from '../store';
 
@@ -21,7 +21,7 @@ const MyApp = ({ Component, pageProps }) => {
         <meta name="title" content="Olas Tokenomics" />
       </Head>
       <GlobalStyle />
-      <MountedConfigProvider>
+      <ThemeConfigProvider>
         {isNotLegal ? (
           <Component {...pageProps} />
         ) : (
@@ -31,7 +31,7 @@ const MyApp = ({ Component, pageProps }) => {
             </Layout>
           </Web3ModalProvider>
         )}
-      </MountedConfigProvider>
+      </ThemeConfigProvider>
     </>
   );
 };

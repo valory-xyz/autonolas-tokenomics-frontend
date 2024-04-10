@@ -1,4 +1,3 @@
-import { createPublicClient } from 'viem';
 import { http, createConfig } from 'wagmi';
 import { mainnet, goerli } from 'wagmi/chains';
 import { safe, walletConnect, injected } from 'wagmi/connectors';
@@ -14,11 +13,6 @@ const metadata = {
   url: 'https://tokenomics.olas.network', // origin must match your domain & subdomain
   icons: ['https://avatars.githubusercontent.com/u/37784886'],
 };
-
-export const fallbackClient = createPublicClient({
-  chain: mainnet,
-  transport: http(),
-});
 
 export const wagmiConfig = createConfig({
   autoConnect: true,

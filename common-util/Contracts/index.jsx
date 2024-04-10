@@ -15,7 +15,16 @@ import {
   SERVICE_REGISTRY,
   ERC20_ABI,
 } from 'common-util/AbiAndAddresses';
-import { arbitrum, base, gnosis, goerli, mainnet, optimism, polygon } from 'viem/chains';
+
+import {
+  arbitrum,
+  base,
+  gnosis,
+  goerli,
+  mainnet,
+  optimism,
+  polygon,
+} from 'wagmi/chains';
 
 const LOCAL_ADDRESSES = {
   dispenser: '0x4c5859f0F772848b2D91F1D83E2Fe57935348029',
