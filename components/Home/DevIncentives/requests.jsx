@@ -172,7 +172,8 @@ export const getMapUnitIncentivesRequest = async ({ unitType, unitId }) => {
   const { pendingRelativeReward, pendingRelativeTopUp, lastEpoch } = response;
 
   const rewardInBn = BigNumber.from(pendingRelativeReward);
-  const isCurrentEpochWithReward = currentEpochCounter === Number(lastEpoch) && rewardInBn.gt(0);
+  const isCurrentEpochWithReward =
+    currentEpochCounter === Number(lastEpoch) && rewardInBn.gt(0);
 
   // if the current epoch is not the last epoch, return 0
   if (!isCurrentEpochWithReward) {
@@ -216,7 +217,8 @@ export const getMapUnitIncentivesRequest = async ({ unitType, unitId }) => {
     const totalTopUps = BigNumber.from(inflationPerSecond).mul(epochLength);
     totalIncentives = totalIncentives.mul(totalTopUps);
 
-    const componentSumIncentivesInBn = BigNumber.from(cSumUnitTopUpsOLAS).mul(100);
+    const componentSumIncentivesInBn =
+      BigNumber.from(cSumUnitTopUpsOLAS).mul(100);
     const agentSumIncentivesInBn = BigNumber.from(aSumUnitTopUpsOLAS).mul(100);
 
     componentTopUp = totalIncentives

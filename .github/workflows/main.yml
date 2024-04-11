@@ -1,4 +1,4 @@
-name: Lint
+name: Lint and Scan
 on:
   push:
     branches:
@@ -13,15 +13,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '20'
       - name: Install modules
         run: yarn
-      - name: Run ESLint
-        run: ./node_modules/.bin/eslint . --ext .js,.jsx,.ts,.tsx
-      - name: Run test
+      - name: Lint
+        run: yarn lint
+      - name: Test
         run: yarn test
+      
 
   scan:
-    name: gitleaks
+    name: Gitleaks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

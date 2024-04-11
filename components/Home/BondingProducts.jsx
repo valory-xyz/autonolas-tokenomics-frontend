@@ -1,10 +1,6 @@
 import { useState } from 'react';
 import styled from 'styled-components';
-import {
-  Typography, Switch, Divider,
-  Radio,
-  Tooltip,
-} from 'antd';
+import { Typography, Switch, Divider, Radio, Tooltip } from 'antd';
 
 import { BONDING_PRODUCTS } from 'util/constants';
 import { useScreen } from '@autonolas/frontend-library';
@@ -30,7 +26,12 @@ const SwitchContainer = styled.div`
 const ResponsiveDivider = () => {
   const { isMobile } = useScreen();
 
-  return <StyledDivider isMobile={isMobile} type={isMobile ? 'horizontal' : 'vertical'} />;
+  return (
+    <StyledDivider
+      isMobile={isMobile}
+      type={isMobile ? 'horizontal' : 'vertical'}
+    />
+  );
 };
 
 export const BondingProducts = () => {
@@ -59,7 +60,9 @@ export const BondingProducts = () => {
         <Radio.Group onChange={onChange} value={bondingProgramType}>
           <Radio value={BONDING_PRODUCTS.ACTIVE}>Active</Radio>
           <Tooltip title="Currently displaying active products only. To view inactive products, call methods on the Depository contract via Etherscan.">
-            <Radio value={BONDING_PRODUCTS.INACTIVE} disabled>Inactive</Radio>
+            <Radio value={BONDING_PRODUCTS.INACTIVE} disabled>
+              Inactive
+            </Radio>
           </Tooltip>
         </Radio.Group>
         <ResponsiveDivider />

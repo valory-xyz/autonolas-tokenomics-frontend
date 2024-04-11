@@ -34,7 +34,8 @@ import {
   CONNECT_SVM_WALLET,
 } from '../constants';
 
-const TOKEN_MINT_ERROR = 'You do not have the correct token account, please try again.';
+const TOKEN_MINT_ERROR =
+  'You do not have the correct token account, please try again.';
 
 const useBridgedTokenAccount = () => {
   const { svmWalletPublicKey } = useSvmConnectivity();
@@ -55,7 +56,8 @@ export const useWsolWithdraw = () => {
   const { svmWalletPublicKey, anchorProvider } = useSvmConnectivity();
   const { getWhirlpoolData } = useWhirlpool();
   const getBridgedTokenAccount = useBridgedTokenAccount();
-  const customGetOrCreateAssociatedTokenAccount = useGetOrCreateAssociatedTokenAccount();
+  const customGetOrCreateAssociatedTokenAccount =
+    useGetOrCreateAssociatedTokenAccount();
   const program = new Program(idl, PROGRAM_ID, anchorProvider);
 
   const withdrawTransformedQuote = async (quote) => {
@@ -99,10 +101,11 @@ export const useWsolWithdraw = () => {
     const bridgedTokenAccount = await getBridgedTokenAccount();
     if (!bridgedTokenAccount) return null;
 
-    const tokenAccounts = await anchorProvider.connection.getTokenAccountsByOwner(
-      svmWalletPublicKey,
-      { programId: TOKEN_PROGRAM_ID },
-    );
+    const tokenAccounts =
+      await anchorProvider.connection.getTokenAccountsByOwner(
+        svmWalletPublicKey,
+        { programId: TOKEN_PROGRAM_ID },
+      );
 
     let maxAmountInBn = -1n; // initialize to -1
 

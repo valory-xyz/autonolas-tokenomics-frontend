@@ -1,19 +1,27 @@
-/* eslint-disable no-param-reassign */
-module.exports = {
+/** @type {import('next').NextConfig} */
+const NextConfig = {
   reactStrictMode: true,
   compiler: {
-    styledComponents: true,
-  },
-  pages: {
-    '*': {
-      maxChunkSize: 30000,
+    styledComponents: {
+      ssr: true,
+      minify: true,
     },
   },
   webpack(config) {
+    // eslint-disable-next-line no-param-reassign
     config.resolve.fallback = {
       fs: false,
     };
     return config;
+  },
+  redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/donate',
+        permanent: false,
+      },
+    ];
   },
   async headers() {
     return [
@@ -41,3 +49,4 @@ module.exports = {
     ];
   },
 };
+module.exports = NextConfig;

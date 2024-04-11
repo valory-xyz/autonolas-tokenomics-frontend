@@ -2,9 +2,7 @@ import { useEffect, useState } from 'react';
 import { BigNumber, ethers } from 'ethers';
 import PropTypes from 'prop-types';
 import { isNil } from 'lodash';
-import {
-  Form, InputNumber, Modal, Alert, Button, Typography, Tag,
-} from 'antd';
+import { Form, InputNumber, Modal, Alert, Button, Typography, Tag } from 'antd';
 import {
   COLOR,
   notifyError,
@@ -129,8 +127,8 @@ export const Deposit = ({
 
   const getOlasPayout = () => {
     if (
-      !tokenAmountInputValue
-      || tokenAmountInputValue > getRemainingLpSupplyInEth()
+      !tokenAmountInputValue ||
+      tokenAmountInputValue > getRemainingLpSupplyInEth()
     ) {
       return '--';
     }
@@ -138,11 +136,11 @@ export const Deposit = ({
     const tokenAmountWei = BigNumber.from(parseToWei(tokenAmountInputValue));
     const olasPayout = tokenAmountInputValue
       ? Number(
-        BigNumber.from(productLpPriceInBg)
-          .mul(tokenAmountWei)
-          .div(ONE_ETH)
-          .div(ONE_ETH),
-      )
+          BigNumber.from(productLpPriceInBg)
+            .mul(tokenAmountWei)
+            .div(ONE_ETH)
+            .div(ONE_ETH),
+        )
       : 0;
     return getCommaSeparatedNumber(olasPayout, 4);
   };

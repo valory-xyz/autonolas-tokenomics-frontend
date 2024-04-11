@@ -8,6 +8,7 @@ import {
 
 import { ADDRESSES } from 'common-util/Contracts';
 import { useHelpers } from 'common-util/hooks/useHelpers';
+import Image from 'next/image';
 import Socials from './Socials';
 import { ContractsInfoContainer } from './styles';
 
@@ -67,15 +68,14 @@ const ContractInfo = () => {
     </div>
   );
 
-  const {
-    textOne, addressOne, textTwo, addressTwo,
-  } = getCurrentPageAddresses();
+  const { textOne, addressOne, textTwo, addressTwo } =
+    getCurrentPageAddresses();
 
   return (
     <ContractsInfoContainer>
       {!PATHS_NOT_TO_SHOW.includes(pathname) && (
         <>
-          <img
+          <Image
             alt="Etherscan link"
             width={18}
             height={18}
