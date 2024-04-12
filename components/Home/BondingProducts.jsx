@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import styled from 'styled-components';
-import { Typography, Switch, Divider, Radio, Tooltip } from 'antd';
+import { Typography, Switch, Divider, Radio, Tooltip, Flex } from 'antd';
 import { useScreen } from '@autonolas/frontend-library';
 
 import { BONDING_PRODUCTS } from 'util/constants';
