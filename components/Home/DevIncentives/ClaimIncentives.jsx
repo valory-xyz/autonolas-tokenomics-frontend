@@ -3,8 +3,11 @@ import { Typography, Alert, Divider } from 'antd';
 import { COLOR, notifySuccess } from '@autonolas/frontend-library';
 
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
-import { notifySpecificError } from 'common-util/functions/errors';
-import { sortUnitIdsAndTypes } from 'common-util/functions/units';
+import {
+  notifySpecificError,
+  sortUnitIdsAndTypes,
+} from 'common-util/functions';
+
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { claimOwnerIncentivesRequest, getPausedValueRequest } from './requests';
 

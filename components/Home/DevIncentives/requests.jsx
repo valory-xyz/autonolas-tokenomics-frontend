@@ -1,9 +1,5 @@
 import { BigNumber } from 'ethers';
-import {
-  notifyError,
-  getBlockTimestamp,
-  sendTransaction,
-} from '@autonolas/frontend-library';
+import { notifyError, sendTransaction } from '@autonolas/frontend-library';
 
 import {
   parseToEth,
@@ -12,6 +8,7 @@ import {
   getTreasuryContract,
   getAgentContract,
   getComponentContract,
+  getBlockTimestamp,
 } from 'common-util/functions';
 
 import { UNIT_TYPES } from 'common-util/enums';
