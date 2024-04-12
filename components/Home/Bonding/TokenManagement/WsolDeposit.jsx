@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Button, Form, InputNumber, Flex, Typography, Spin, Alert } from 'antd';
 import pDebounce from 'p-debounce';
 import { isNumber } from 'lodash';
-import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import {
   getCommaSeparatedNumber,
   notifyError,
@@ -63,7 +62,7 @@ export const WsolDeposit = () => {
 
       const bridgedToken = await deposit({ slippage, wsol });
       if (Number(bridgedToken) > 0) {
-        setBridgedTokenAmount(bridgedToken / LAMPORTS_PER_SOL);
+        setBridgedTokenAmount(bridgedToken / DENOMINATOR);
       }
     } catch (error) {
       console.error(error);

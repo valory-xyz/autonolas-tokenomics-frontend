@@ -24,7 +24,7 @@ export const WsolWithDraw = () => {
   } = useWsolWithdraw();
   const getDecreaseLiquidityQuote = pDebounce(fn, 500);
 
-  const updateMaxAmount = useCallback(async () => {
+  const updateMaxAmount = useCallback(() => {
     const setMaxAmountFn = async () => {
       const tempAmount = await getMaxAmount();
       if (!isNil(tempAmount)) {
