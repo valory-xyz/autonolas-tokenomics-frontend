@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import PropTypes from 'prop-types';
-import { Button, Modal, Flex, Tabs } from 'antd';
+import { useState } from "react";
+import PropTypes from "prop-types";
+import { Button, Modal, Flex, Tabs } from "antd";
 
-import { SolanaWallet } from 'common-util/Login/SolanaWallet';
-import { WsolDeposit } from './WsolDeposit';
-import { WsolWithDraw } from './WsolWithdraw';
+import { SolanaWallet } from "common-util/Login/SolanaWallet";
+import { WsolDeposit } from "./WsolDeposit";
+import { WsolWithDraw } from "./WsolWithdraw";
 
 export const WsolTokenManagement = ({ lpToken, lpTokenLink }) => {
   const [isManageModalVisible, setIsManageModalVisible] = useState(false);
@@ -12,9 +12,12 @@ export const WsolTokenManagement = ({ lpToken, lpTokenLink }) => {
   return (
     <>
       <Flex justify="space-between" align="center" gap={12}>
-        <a href={lpTokenLink} target="_blank" rel="noreferrer">
-          {lpToken}
-        </a>
+        {process.env.NEXT_PUBLIC_SOLANA_LOCKBOX_TEST ? null : (
+          <a href={lpTokenLink} target="_blank" rel="noreferrer">
+            {lpToken}
+          </a>
+        )}
+
         <Button type="primary" onClick={() => setIsManageModalVisible(true)}>
           Manage
         </Button>
@@ -33,13 +36,13 @@ export const WsolTokenManagement = ({ lpToken, lpTokenLink }) => {
           tabBarExtraContent={<SolanaWallet />}
           items={[
             {
-              key: 'deposit',
-              label: 'Deposit',
+              key: "deposit",
+              label: "Deposit",
               children: <WsolDeposit />,
             },
             {
-              key: 'withdraw',
-              label: 'Withdraw',
+              key: "withdraw",
+              label: "Withdraw",
               children: <WsolWithDraw />,
             },
           ]}
@@ -56,5 +59,5 @@ WsolTokenManagement.propTypes = {
 
 WsolTokenManagement.defaultProps = {
   lpToken: 0,
-  lpTokenLink: '',
+  lpTokenLink: "",
 };
