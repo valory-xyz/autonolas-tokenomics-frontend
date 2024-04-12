@@ -7,7 +7,7 @@ import {
   TREASURY,
   TOKENOMICS,
   BOND_CALCULATOR,
-} from '../../common-util/abiAndAddresses';
+} from '..';
 
 const localArtifacts = [
   DEPOSITORY,
@@ -21,7 +21,7 @@ const localArtifacts = [
 const registriesRepo =
   'https://raw.githubusercontent.com/valory-xyz/autonolas-tokenomics/main/';
 
-describe('test-chains/TestChains.jsx', () => {
+describe('test-chains', () => {
   it('check contract addresses and ABIs', async () => {
     expect.hasAssertions();
 
