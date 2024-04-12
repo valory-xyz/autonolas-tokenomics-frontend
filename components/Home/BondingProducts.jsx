@@ -5,18 +5,18 @@ import { useScreen } from '@autonolas/frontend-library';
 
 import { BONDING_PRODUCTS } from 'util/constants';
 import { BondingList } from './Bonding/BondingList/BondingList';
-import { WsolTokenManagement } from "./Bonding/TokenManagement/WsolTokenManagement";
+import { WsolTokenManagement } from './Bonding/TokenManagement/WsolTokenManagement';
 
 const { Title } = Typography;
 
 const PageHeader = styled.div`
   align-items: center;
   margin-bottom: 12px;
-  display: ${(props) => (props.isMobile ? "block" : "flex")};
+  display: ${(props) => (props.isMobile ? 'block' : 'flex')};
 `;
 
 const StyledDivider = styled(Divider)`
-  margin: ${(props) => (props.isMobile ? "12px 0 " : "0 12px")};
+  margin: ${(props) => (props.isMobile ? '12px 0 ' : '0 12px ')};
 `;
 
 const SwitchContainer = styled.div`
@@ -30,7 +30,7 @@ const ResponsiveDivider = () => {
   return (
     <StyledDivider
       isMobile={isMobile}
-      type={isMobile ? "horizontal" : "vertical"}
+      type={isMobile ? 'horizontal' : 'vertical'}
     />
   );
 };
@@ -38,7 +38,7 @@ const ResponsiveDivider = () => {
 export const BondingProducts = () => {
   // if user not connected, show all products
   const [bondingProgramType, setProductType] = useState(
-    BONDING_PRODUCTS.ACTIVE
+    BONDING_PRODUCTS.ACTIVE,
   );
   const [hideEmptyProducts, setHideEmptyProducts] = useState(true);
   const { isMobile } = useScreen();
@@ -54,7 +54,7 @@ export const BondingProducts = () => {
   return (
     <>
       <PageHeader isMobile={isMobile}>
-        <Flex justify="space-between" align="center" style={{ width: "100%" }}>
+        <Flex justify="space-between" align="center" style={{ width: '100%' }}>
           <Flex>
             <Title level={4} className="mb-0 mt-0">
               Bonding Products

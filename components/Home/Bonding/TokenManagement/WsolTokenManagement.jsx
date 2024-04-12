@@ -36,13 +36,13 @@ export const WsolTokenManagement = ({ lpToken, lpTokenLink }) => {
           tabBarExtraContent={<SolanaWallet />}
           items={[
             {
-              key: "deposit",
-              label: "Deposit",
+              key: 'deposit',
+              label: 'Deposit',
               children: <WsolDeposit />,
             },
             {
-              key: "withdraw",
-              label: "Withdraw",
+              key: 'withdraw',
+              label: 'Withdraw',
               children: <WsolWithDraw />,
             },
           ]}
@@ -59,5 +59,5 @@ WsolTokenManagement.propTypes = {
 
 WsolTokenManagement.defaultProps = {
   lpToken: 0,
-  lpTokenLink: "",
+  lpTokenLink: '',
 };
