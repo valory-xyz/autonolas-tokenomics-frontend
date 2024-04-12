@@ -48,7 +48,13 @@
     "react/jsx-no-useless-fragment": [2, { "allowExpressions": true }],
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "warn",
-    "import/no-extraneous-dependencies": "error"
+    "import/no-extraneous-dependencies": "error",
+    "import/no-unresolved": [
+      2,
+      {
+        "ignore": ["util", "common-util", "components", "store"]
+      }
+    ]
   },
   "overrides": [
     {
