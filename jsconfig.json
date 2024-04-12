@@ -1,7 +1,15 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
-    "sourceMap": true
+    "sourceMap": true,
+    "paths": {
+      "common-util": ["./common-util/*"],
+      "components": ["./components/*"],
+      "util": ["./util/*"],
+      "static": ["./static/*"],
+      "images": ["./public/images/*"],
+      "store": ["./store/*"]
+    }
   },
   "exclude": ["node_modules"]
 }
