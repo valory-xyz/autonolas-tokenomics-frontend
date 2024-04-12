@@ -290,7 +290,7 @@ export const useWsolDeposit = () => {
         .deposit(quote.liquidityAmount, quote.tokenMaxA, quote.tokenMaxB)
         .accounts({
           position: POSITION,
-          poistionMint: POSITION_MINT,
+          positionMint: POSITION_MINT,
           pdaPositionAccount: PDA_POSITION_ACCOUNT,
           whirlpool: WHIRLPOOL,
           tokenOwnerAccountA,
