@@ -1,3 +1,4 @@
+import { LOCAL_FORK_ID } from '@autonolas/frontend-library';
 import {
   DISPENSER,
   DEPOSITORY,
@@ -8,8 +9,6 @@ import {
   TREASURY,
   TOKENOMICS,
 } from 'common-util/abiAndAddresses';
-
-import { LOCAL_FORK_ID } from '@autonolas/frontend-library';
 
 const LOCAL_ADDRESSES = {
   dispenser: '0x4c5859f0F772848b2D91F1D83E2Fe57935348029',

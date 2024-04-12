@@ -18,7 +18,7 @@ const whirlpoolQuery = async () => {
   const SHYFT_API_KEY = process.env.NEXT_PUBLIC_SHYFT_API_KEY;
   if (!SHYFT_API_KEY) {
     if (process.env.NODE_ENV === 'development') {
-      console.warn('SHYFT_API_KEY is not available');
+      console.error('SHYFT_API_KEY is not available');
       return {};
     }
     if (process.env.NODE_ENV === 'production')

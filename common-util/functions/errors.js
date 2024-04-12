@@ -1,6 +1,7 @@
 import isObject from 'lodash/isObject';
 import { notifyError as notifyErrorFn } from '@autonolas/frontend-library';
 // create a function to specific error message based on error code
+export const notifyError = notifyErrorFn;
 const getErrorMessage = (error) => {
   if (isObject(error)) {
     if ((error?.message || '').includes('OwnerOnly')) {
@@ -43,5 +44,3 @@ export const notifySpecificError = (error, desc) => {
   const description = getErrorDescription(desc);
   notifyError(message, description);
 };
-
-export const notifyError = notifyErrorFn;

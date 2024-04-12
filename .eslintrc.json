@@ -12,6 +12,11 @@
   "settings": {
     "react": {
       "version": "detect"
+    },
+    "import/resolver": {
+      "jsconfig": {
+        "config": "jsconfig.json"
+      }
     }
   },
   "parserOptions": {
