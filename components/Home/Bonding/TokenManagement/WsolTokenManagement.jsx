@@ -1,10 +1,10 @@
-import { useState } from "react";
-import PropTypes from "prop-types";
-import { Button, Modal, Flex, Tabs } from "antd";
+import { useState } from 'react';
+import PropTypes from 'prop-types';
+import { Button, Modal, Flex, Tabs } from 'antd';
 
-import { SolanaWallet } from "common-util/Login/SolanaWallet";
-import { WsolDeposit } from "./WsolDeposit";
-import { WsolWithDraw } from "./WsolWithdraw";
+import { SolanaWallet } from 'common-util/Login/SolanaWallet';
+import { WsolDeposit } from './WsolDeposit';
+import { WsolWithDraw } from './WsolWithdraw';
 
 export const WsolTokenManagement = ({ lpToken, lpTokenLink }) => {
   const [isManageModalVisible, setIsManageModalVisible] = useState(false);

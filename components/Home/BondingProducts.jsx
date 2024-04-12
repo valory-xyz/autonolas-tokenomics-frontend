@@ -1,10 +1,10 @@
-import { useState } from "react";
-import styled from "styled-components";
-import { Typography, Switch, Divider, Radio, Tooltip, Flex } from "antd";
+import { useState } from 'react';
+import styled from 'styled-components';
+import { Typography, Switch, Divider, Radio, Tooltip } from 'antd';
+import { useScreen } from '@autonolas/frontend-library';
 
-import { BONDING_PRODUCTS } from "util/constants";
-import { useScreen } from "@autonolas/frontend-library";
-import { BondingList } from "./Bonding/BondingList/BondingList";
+import { BONDING_PRODUCTS } from 'util/constants';
+import { BondingList } from './Bonding/BondingList/BondingList';
 import { WsolTokenManagement } from "./Bonding/TokenManagement/WsolTokenManagement";
 
 const { Title } = Typography;
