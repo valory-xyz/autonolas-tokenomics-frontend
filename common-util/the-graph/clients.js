@@ -14,6 +14,7 @@ export const AUTONOLAS_GRAPH_CLIENTS = {
   ),
 };
 
+// https://docs.balancer.fi/reference/subgraph/ for future subgraph endpoints
 export const BALANCER_GRAPH_CLIENTS = {
   1: new GraphQLClient(
     'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2',
