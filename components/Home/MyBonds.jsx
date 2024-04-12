@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Typography, Radio, Table, Button, ConfigProvider, Empty } from 'antd';
+import {
+  Typography, Radio, Table, Button, ConfigProvider, Empty,
+} from 'antd';
 import { round } from 'lodash';
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import {
@@ -27,12 +29,11 @@ const getBondsColumns = () => {
       title: 'Matured?',
       dataIndex: 'matured',
       key: 'matured',
-      render: (value) =>
-        value ? (
-          <CheckOutlined style={{ color: COLOR.PRIMARY, fontSize: 24 }} />
-        ) : (
-          <CloseOutlined style={{ color: COLOR.RED, fontSize: 24 }} />
-        ),
+      render: (value) => (value ? (
+        <CheckOutlined style={{ color: COLOR.PRIMARY, fontSize: 24 }} />
+      ) : (
+        <CloseOutlined style={{ color: COLOR.RED, fontSize: 24 }} />
+      )),
     },
     {
       title: 'Maturity Date',
@@ -170,16 +171,16 @@ export const MyBonds = () => {
           rowSelection={
             maturityType === BONDS.MATURED
               ? {
-                  type: 'checkbox',
-                  selectedRowKeys: selectedBondIds,
-                  onChange: (selectedRowKeys) => {
-                    setSelectedBondIds(selectedRowKeys);
-                  },
-                  // disable the checkbox if the bond is not matured
-                  getCheckboxProps: (record) => ({
-                    disabled: !record.matured,
-                  }),
-                }
+                type: 'checkbox',
+                selectedRowKeys: selectedBondIds,
+                onChange: (selectedRowKeys) => {
+                  setSelectedBondIds(selectedRowKeys);
+                },
+                // disable the checkbox if the bond is not matured
+                getCheckboxProps: (record) => ({
+                  disabled: !record.matured,
+                }),
+              }
               : undefined
           }
         />

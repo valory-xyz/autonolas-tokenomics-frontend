@@ -3,11 +3,12 @@
     "browser": true,
     "es6": true
   },
+  "parser": "@babel/eslint-parser",
   "extends": [
     "eslint:recommended",
+    "plugin:react/recommended",
     "airbnb",
-    "next/core-web-vitals",
-    "plugin:prettier/recommended"
+    "plugin:jest/all"
   ],
   "settings": {
     "react": {
@@ -21,20 +22,11 @@
     "ecmaVersion": 2018,
     "sourceType": "module"
   },
-  "plugins": ["prettier"],
+  "plugins": ["react", "jsx-a11y", "import", "jest", "react-hooks"],
   "rules": {
-    "prettier/prettier": [
-      "error",
-      {
-        "semi": true,
-        "trailingComma": "all",
-        "singleQuote": true,
-        "endOfLine": "auto"
-      }
-    ],
     "react/react-in-jsx-scope": "off",
-    "react/no-array-index-key": "off",
     "react/jsx-props-no-spreading": "off",
+    "react/no-array-index-key": "off",
     "arrow-parens": ["error"],
     "import/no-unresolved": [
       2,
@@ -44,6 +36,11 @@
     ],
     "no-console": ["warn", { "allow": ["error"] }],
     "import/prefer-default-export": "off",
+    "react/forbid-prop-types": "off",
+    "react/destructuring-assignment": "off",
+    "jest/no-hooks": "off",
+    "jest/prefer-expect-assertions": "off",
+    "jest/no-conditional-expect": "off",
     "react/function-component-definition": [
       2,
       {
@@ -52,21 +49,9 @@
       }
     ],
     "react/jsx-no-useless-fragment": [2, { "allowExpressions": true }],
-    "react-hooks/rules-of-hooks": "error",
-    "react-hooks/exhaustive-deps": "warn",
-    "import/no-extraneous-dependencies": "error"
-  },
-  "overrides": [
-    {
-      "files": ["**/*.test.*"],
-      "plugins": ["jest"],
-      "env": {
-        "jest/globals": true
-      },
-      "rules": {
-        "import/no-extraneous-dependencies": "off",
-        "no-untyped-mock-factory": "off"
-      }
-    }
-  ]
+    "no-untyped-mock-factory": "off",
+    "jest/no-untyped-mock-factory": "off",
+    "react-hooks/rules-of-hooks": "error", 
+    "react-hooks/exhaustive-deps": "warn" 
+  }
 }

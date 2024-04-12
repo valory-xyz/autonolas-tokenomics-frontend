@@ -102,18 +102,15 @@ const logSolTransferError = (error) => {
 };
 
 export const useWsolDeposit = () => {
-  const { svmWalletPublicKey, connection, anchorProvider } =
-    useSvmConnectivity();
+  const { svmWalletPublicKey, connection, anchorProvider } = useSvmConnectivity();
   const { getWhirlpoolData } = useWhirlpool();
   const { signTransaction } = useWallet();
 
-  const customGetOrCreateAssociatedTokenAccount =
-    useGetOrCreateAssociatedTokenAccount();
+  const customGetOrCreateAssociatedTokenAccount = useGetOrCreateAssociatedTokenAccount();
   const program = new Program(idl, PROGRAM_ID, anchorProvider);
 
   const getDepositIncreaseLiquidityQuote = async ({ wsol, slippage }) => {
-    const { whirlpoolData, whirlpoolTokenA, whirlpoolTokenB } =
-      await getWhirlpoolData();
+    const { whirlpoolData, whirlpoolTokenA, whirlpoolTokenB } = await getWhirlpoolData();
     const slippageTolerance = Percentage.fromDecimal(new Decimal(slippage));
     const inputTokenAmount = DecimalUtil.toBN(new Decimal(wsol), 9);
 

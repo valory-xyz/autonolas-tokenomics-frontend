@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Button, Form, InputNumber, Flex, Typography, Spin, Alert } from 'antd';
+import {
+  Button, Form, InputNumber, Flex, Typography, Spin, Alert,
+} from 'antd';
 import pDebounce from 'p-debounce';
 import { isNumber } from 'lodash';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
@@ -71,12 +73,10 @@ export const WsolDeposit = () => {
     }
   };
 
-  const isDepositButtonDisabled =
-    isEstimating || isDepositing || !isSvmWalletConnected;
-  const estimatedOutput =
-    getCommaSeparatedNumber(
-      (estimatedQuote?.liquidity || 0) / LAMPORTS_PER_SOL,
-    ) || '--';
+  const isDepositButtonDisabled = isEstimating || isDepositing || !isSvmWalletConnected;
+  const estimatedOutput = getCommaSeparatedNumber(
+    (estimatedQuote?.liquidity || 0) / LAMPORTS_PER_SOL,
+  ) || '--';
 
   return (
     <>
@@ -154,7 +154,7 @@ export const WsolDeposit = () => {
 
       {bridgedTokenAmount && (
         <Alert
-          message={
+          message={(
             <>
               You received
               <Text strong>
@@ -163,7 +163,7 @@ export const WsolDeposit = () => {
                 )} Bridged Tokens`}
               </Text>
             </>
-          }
+          )}
           type="success"
           showIcon
         />

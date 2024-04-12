@@ -3,9 +3,13 @@ import { useDispatch } from 'react-redux';
 import Web3 from 'web3';
 import PropTypes from 'prop-types';
 import { Grid } from 'antd';
-import { useAccount, useBalance, useDisconnect } from 'wagmi';
+import { Web3Modal, Web3Button, Web3NetworkSwitch } from '@web3modal/react';
+import {
+  useAccount, useNetwork, useBalance, useDisconnect,
+} from 'wagmi';
 import styled from 'styled-components';
 import {
+  COLOR,
   CannotConnectAddressOfacError,
   MEDIA_QUERY,
   notifyError,
@@ -17,6 +21,7 @@ import {
   getChainIdOrDefaultToMainnet,
   isAddressProhibited,
 } from 'common-util/functions';
+import { projectId, ethereumClient } from './config';
 
 const LoginContainer = styled.div`
   display: flex;
@@ -33,11 +38,13 @@ const { useBreakpoint } = Grid;
 export const LoginV2 = ({
   onConnect: onConnectCb,
   onDisconnect: onDisconnectCb,
+  theme = 'light',
 }) => {
   const dispatch = useDispatch();
   const { disconnect } = useDisconnect();
-  const { chainId } = useAccount();
+  const { chain } = useNetwork();
 
+  const chainId = chain?.id;
   const { address, connector } = useAccount({
     onConnect: ({ address: currentAddress }) => {
       if (isAddressProhibited(currentAddress)) {
@@ -85,9 +92,8 @@ export const LoginV2 = ({
       try {
         // This is the initial `provider` that is returned when
         // using web3Modal to connect. Can be MetaMask or WalletConnect.
-        const modalProvider =
-          connector?.options?.getProvider?.() ||
-          (await connector?.getProvider?.());
+        const modalProvider = connector?.options?.getProvider?.()
+          || (await connector?.getProvider?.());
 
         if (modalProvider) {
           // We plug the initial `provider` and get back
@@ -131,7 +137,7 @@ export const LoginV2 = ({
     if (connector && !isAddressProhibited(address)) {
       getData();
     }
-  }, [address, connector]);
+  }, [connector]);
 
   // Disconnect if the address is prohibited
   useEffect(() => {
@@ -146,9 +152,23 @@ export const LoginV2 = ({
 
   return (
     <LoginContainer>
-      <w3m-network-button />
+      <Web3NetworkSwitch />
       &nbsp;&nbsp;
-      <w3m-button balance={screens.xs ? 'hide' : 'show'} />
+      <Web3Button
+        avatar="hide"
+        balance={screens.xs ? 'hide' : 'show'}
+        icon={screens.xs ? 'hide' : 'show'}
+      />
+      <Web3Modal
+        projectId={projectId}
+        ethereumClient={ethereumClient}
+        themeMode={theme}
+        themeVariables={{
+          '--w3m-button-border-radius': '5px',
+          '--w3m-accent-color': COLOR.PRIMARY,
+          '--w3m-background-color': COLOR.PRIMARY,
+        }}
+      />
     </LoginContainer>
   );
 };
@@ -156,9 +176,11 @@ export const LoginV2 = ({
 LoginV2.propTypes = {
   onConnect: PropTypes.func,
   onDisconnect: PropTypes.func,
+  theme: PropTypes.string,
 };
 
 LoginV2.defaultProps = {
   onConnect: undefined,
   onDisconnect: undefined,
+  theme: 'light',
 };

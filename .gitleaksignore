@@ -9,7 +9,6 @@ bc87efea151df7a3d2c8e61a2644d2b9ceeaa396:common-util/AbiAndAddresses/tokenomics.
 0a7012fc4f0721642a8d80021cc4fb3729b95db4:common-util/AbiAndAddresses/tokenomics.jsx:generic-api-key:3
 a9adae070555266a5155a51250eff13e918f43f0:common-util/Contracts/index.jsx:generic-api-key:43
 00bef6706f518a64eb82c47807a12e81ecb9c39f:common-util/Contracts/index.jsx:generic-api-key:23
-0x5eb3Bc0a489C5A8288765d2336659EbCA68FCd00:components/Home/Products/Deposit.jsx:generic-api-key:25
 2006db156dae601f21f7e36950d47945f9595d0f:components/Home/Bonding/requests.jsx:generic-api-key:389
-92a5a46052a44e1af1a892cd41b1341a9398ca15:common-util/constants/constants.js:generic-api-key:20
 09e65614f59427663058b77790f013e354cbc261:common-util/constants/constants.js:generic-api-key:27
+92a5a46052a44e1af1a892cd41b1341a9398ca15:common-util/constants/constants.js:generic-api-key:20

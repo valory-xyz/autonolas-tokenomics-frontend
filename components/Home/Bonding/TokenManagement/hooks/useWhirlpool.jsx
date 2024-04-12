@@ -68,10 +68,9 @@ const whirlpoolQuery = async () => {
     .ORCA_WHIRLPOOLS_position;
 
   const filteredPositions = result.filter(
-    (e) =>
-      e.tickLowerIndex === -443584 &&
-      e.tickUpperIndex === 443584 &&
-      e.liquidity > 0,
+    (e) => e.tickLowerIndex === -443584
+      && e.tickUpperIndex === 443584
+      && e.liquidity > 0,
   );
 
   return filteredPositions;

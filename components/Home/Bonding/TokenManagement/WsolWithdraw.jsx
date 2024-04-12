@@ -1,5 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, Form, InputNumber, Spin } from 'antd';
+import {
+  useCallback, useEffect, useMemo, useState,
+} from 'react';
+import {
+  Button, Form, InputNumber, Spin,
+} from 'antd';
 import pDebounce from 'p-debounce';
 import { isNil, isNumber } from 'lodash';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
@@ -138,7 +142,7 @@ export const WsolWithDraw = () => {
             },
           },
         ]}
-        label={
+        label={(
           <>
             Bridged Tokens Amount
             <Button
@@ -152,7 +156,7 @@ export const WsolWithDraw = () => {
               Max
             </Button>
           </>
-        }
+        )}
       >
         <InputNumber
           className="full-width"

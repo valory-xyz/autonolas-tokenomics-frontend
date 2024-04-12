@@ -13,7 +13,6 @@ import {
 import { PhantomWalletAdapter } from '@solana/wallet-adapter-wallets';
 
 import { useHelpers } from 'common-util/hooks/useHelpers';
-import Link from 'next/link';
 import Login from '../Login';
 import Footer from './Footer';
 import { CustomLayout, Logo, DocsLink } from './styles';
@@ -59,12 +58,10 @@ const Layout = ({ children }) => {
     <CustomLayout pathname={router.pathname}>
       <StyledHeader>
         <div className="column-1">
-          <Link href="/">
-            <Logo data-testid="tokenomics-logo">
-              <LogoSvg />
-              <span>Tokenomics</span>
-            </Logo>
-          </Link>
+          <Logo data-testid="tokenomics-logo">
+            <LogoSvg />
+            <span>Tokenomics</span>
+          </Logo>
         </div>
 
         <Menu
@@ -113,7 +110,7 @@ Layout.defaultProps = {
 const LayoutWithWalletProvider = (props) => (
   <ConnectionProvider endpoint={endpoint}>
     <WalletProvider wallets={wallets} autoConnect>
-      <Layout {...props} />
+      <Layout {...props}>{props.children}</Layout>
     </WalletProvider>
   </ConnectionProvider>
 );

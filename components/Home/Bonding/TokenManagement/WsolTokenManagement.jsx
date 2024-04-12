@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import PropTypes from 'prop-types';
-import { Button, Modal, Flex, Tabs } from 'antd';
+import {
+  Button, Modal, Flex, Tabs,
+} from 'antd';
 
 import { SolanaWallet } from 'common-util/Login/SolanaWallet';
 import { WsolDeposit } from './WsolDeposit';

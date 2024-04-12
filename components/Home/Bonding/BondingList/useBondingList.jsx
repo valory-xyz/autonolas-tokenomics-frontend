@@ -3,7 +3,7 @@ import { ethers } from 'ethers';
 import { memoize, round } from 'lodash';
 import { BalancerSDK } from '@balancer-labs/sdk';
 import { areAddressesEqual } from '@autonolas/frontend-library';
-import { usePublicClient } from 'wagmi';
+import { multicall } from '@wagmi/core';
 
 import { DEX } from 'util/constants';
 import {
@@ -180,10 +180,9 @@ const getCurrentPriceBalancerFn = memoize(async (tokenAddress) => {
   const totalSupply = pool.totalShares;
   const firstPoolTokenAddress = pool.tokens[0].address;
   const olasTokenAddress = ADDRESSES[lpChainId].olasAddress;
-  const reservesOlas =
-    (areAddressesEqual(firstPoolTokenAddress, olasTokenAddress)
-      ? pool.tokens[0].balance
-      : pool.tokens[1].balance) * 1.0;
+  const reservesOlas = (areAddressesEqual(firstPoolTokenAddress, olasTokenAddress)
+    ? pool.tokens[0].balance
+    : pool.tokens[1].balance) * 1.0;
   const priceLp = (reservesOlas * 10 ** 18) / totalSupply;
   return priceLp;
 });
@@ -193,7 +192,6 @@ const getCurrentPriceBalancerFn = memoize(async (tokenAddress) => {
  */
 const useAddCurrentLpPriceToProducts = () => {
   const getCurrentPriceWhirlpool = useWhirlPoolInformation();
-  const publicClient = usePublicClient();
 
   const getCurrentPriceBalancer = useCallback(getCurrentPriceBalancerFn, [
     getCurrentPriceBalancerFn,
@@ -249,7 +247,7 @@ const useAddCurrentLpPriceToProducts = () => {
         }
       }
 
-      const multicallResponses = await publicClient.multicall({
+      const multicallResponses = await multicall({
         contracts: Object.values(multicallRequests),
       });
       const otherResponses = await Promise.all(Object.values(otherRequests));
@@ -268,7 +266,7 @@ const useAddCurrentLpPriceToProducts = () => {
         currentPriceLp: resolvedList[index],
       }));
     },
-    [publicClient, getCurrentPriceBalancer, getCurrentPriceForSvm],
+    [getCurrentPriceBalancer, getCurrentPriceForSvm],
   );
 };
 
@@ -333,44 +331,41 @@ const getLpTokenNamesForProducts = async (productList, events) => {
  *   priceLp
  * }]
  */
-const useAddSupplyLeftToProducts = () =>
-  useCallback(
-    async (list, createProductEvents, closedProductEvents = []) =>
-      list.map((product) => {
-        const createProductEvent = createProductEvents?.find(
-          (event) => event.productId === `${product.id}`,
-        );
+const useAddSupplyLeftToProducts = () => useCallback(
+  async (list, createProductEvents, closedProductEvents = []) => list.map((product) => {
+    const createProductEvent = createProductEvents?.find(
+      (event) => event.productId === `${product.id}`,
+    );
 
-        const closeProductEvent = closedProductEvents?.find(
-          (event) => event.productId === `${product.id}`,
-        );
+    const closeProductEvent = closedProductEvents?.find(
+      (event) => event.productId === `${product.id}`,
+    );
 
-        // Should not happen but we will warn if it does
-        if (!createProductEvent) {
-          window.console.warn(
-            `Product ${product.id} not found in the event list`,
-          );
-        }
+    // Should not happen but we will warn if it does
+    if (!createProductEvent) {
+      window.console.warn(
+        `Product ${product.id} not found in the event list`,
+      );
+    }
 
-        const eventSupply = Number(
-          BigNumber.from(createProductEvent.supply).div(ONE_ETH),
-        );
+    const eventSupply = Number(
+      BigNumber.from(createProductEvent.supply).div(ONE_ETH),
+    );
 
-        const productSupply = !closeProductEvent
-          ? Number(BigNumber.from(product.supply).div(ONE_ETH))
-          : Number(BigNumber.from(closeProductEvent.supply).div(ONE_ETH));
+    const productSupply = !closeProductEvent
+      ? Number(BigNumber.from(product.supply).div(ONE_ETH))
+      : Number(BigNumber.from(closeProductEvent.supply).div(ONE_ETH));
 
-        const supplyLeft = productSupply / Number(eventSupply);
+    const supplyLeft = productSupply / Number(eventSupply);
 
-        const priceLp =
-          product.token !== ADDRESS_ZERO
-            ? product.priceLp
-            : createProductEvent?.priceLp || 0;
+    const priceLp = product.token !== ADDRESS_ZERO
+      ? product.priceLp
+      : createProductEvent?.priceLp || 0;
 
-        return { ...product, supplyLeft, priceLp };
-      }),
-    [],
-  );
+    return { ...product, supplyLeft, priceLp };
+  }),
+  [],
+);
 
 /**
  * Adds the projected change & discounted olas per LP token to the list.
@@ -384,43 +379,40 @@ const useAddSupplyLeftToProducts = () =>
  *  }
  * ]
  */
-const useAddProjectChangeToProducts = () =>
-  useCallback(
-    (productList) =>
-      productList.map((record) => {
-        // current price of the LP token is multiplied by 2
-        // because the price is for 1 LP token and
-        // we need the price for 2 LP tokens
-        const fullCurrentPriceLp =
-          Number(round(parseToEth(record.currentPriceLp * 2), 2)) || 0;
+const useAddProjectChangeToProducts = () => useCallback(
+  (productList) => productList.map((record) => {
+    // current price of the LP token is multiplied by 2
+    // because the price is for 1 LP token and
+    // we need the price for 2 LP tokens
+    const fullCurrentPriceLp = Number(round(parseToEth(record.currentPriceLp * 2), 2)) || 0;
 
-        const discountedOlasPerLpTokenInBg = getLpTokenWithDiscount(
-          record.priceLp || 0,
-          record.discount || 0,
-        );
+    const discountedOlasPerLpTokenInBg = getLpTokenWithDiscount(
+      record.priceLp || 0,
+      record.discount || 0,
+    );
 
-        // parse to eth and round to 2 decimal places
-        const roundedDiscountedOlasPerLpToken = round(
-          parseToEth(discountedOlasPerLpTokenInBg),
-          2,
-        );
+    // parse to eth and round to 2 decimal places
+    const roundedDiscountedOlasPerLpToken = round(
+      parseToEth(discountedOlasPerLpTokenInBg),
+      2,
+    );
 
-        // calculate the projected change
-        const difference = roundedDiscountedOlasPerLpToken - fullCurrentPriceLp;
-        const projectedChange = round(
-          (difference / fullCurrentPriceLp) * 100,
-          2,
-        );
+    // calculate the projected change
+    const difference = roundedDiscountedOlasPerLpToken - fullCurrentPriceLp;
+    const projectedChange = round(
+      (difference / fullCurrentPriceLp) * 100,
+      2,
+    );
 
-        return {
-          ...record,
-          fullCurrentPriceLp,
-          roundedDiscountedOlasPerLpToken,
-          projectedChange,
-        };
-      }),
-    [],
-  );
+    return {
+      ...record,
+      fullCurrentPriceLp,
+      roundedDiscountedOlasPerLpToken,
+      projectedChange,
+    };
+  }),
+  [],
+);
 
 /**
  * Fetches product details from the product ids and updates the list
@@ -428,7 +420,6 @@ const useAddProjectChangeToProducts = () =>
  * and returns the updated list.
  */
 const useProductDetailsFromIds = () => {
-  const publicClient = usePublicClient();
   const addSupplyLeftToProducts = useAddSupplyLeftToProducts();
   const addCurrentLpPriceToProducts = useAddCurrentLpPriceToProducts();
   const addProjectedChange = useAddProjectChangeToProducts();
@@ -437,7 +428,7 @@ const useProductDetailsFromIds = () => {
     async (productIdList) => {
       const chainId = getChainId();
 
-      const response = await publicClient.multicall({
+      const response = await multicall({
         contracts: productIdList.map((id) => ({
           address: DEPOSITORY.addresses[chainId],
           abi: DEPOSITORY.abi,
@@ -462,8 +453,9 @@ const useProductDetailsFromIds = () => {
         };
       });
 
-      const listWithCurrentLpPrice =
-        await addCurrentLpPriceToProducts(productList);
+      const listWithCurrentLpPrice = await addCurrentLpPriceToProducts(
+        productList,
+      );
 
       const createEventList = await getCreateProductEvents();
       const closedEventList = await getCloseProductEvents();
@@ -483,12 +475,7 @@ const useProductDetailsFromIds = () => {
 
       return listWithProjectedChange;
     },
-    [
-      publicClient,
-      addCurrentLpPriceToProducts,
-      addSupplyLeftToProducts,
-      addProjectedChange,
-    ],
+    [addCurrentLpPriceToProducts, addSupplyLeftToProducts, addProjectedChange],
   );
 };
 

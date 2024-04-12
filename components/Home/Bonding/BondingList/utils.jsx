@@ -54,7 +54,9 @@ export const getCalculatedPriceLp = (reserveOlas, totalSupply) => {
 /**
  * Function to get the link to the LP token
  */
-export const getLpTokenLink = ({ lpDex, lpChainId, lpPoolId, productName }) => {
+export const getLpTokenLink = ({
+  lpDex, lpChainId, lpPoolId, productName,
+}) => {
   if (lpDex === DEX.UNISWAP) {
     return `https://v2.info.uniswap.org/pair/${productName}`;
   }

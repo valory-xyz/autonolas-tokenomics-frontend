@@ -7,9 +7,7 @@ import prohibitedAddresses from '../../data/prohibited-addresses.json';
  */
 export const sortUnitIdsAndTypes = (unitIds, unitTypes) => {
   const sortedUnitIds = [...unitIds].sort((a, b) => a - b);
-  const sortedUnitTypes = sortedUnitIds.map(
-    (e) => unitTypes[unitIds.indexOf(e)],
-  );
+  const sortedUnitTypes = sortedUnitIds.map((e) => unitTypes[unitIds.indexOf(e)]);
   return [sortedUnitIds, sortedUnitTypes];
 };
 

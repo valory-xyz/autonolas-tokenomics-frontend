@@ -17,18 +17,16 @@ export const useSvmConnectivity = () => {
   const anchorWallet = useAnchorWallet();
 
   const anchorProvider = useMemo(
-    () =>
-      new AnchorProvider(connection, anchorWallet, {
-        commitment: 'processed',
-      }),
+    () => new AnchorProvider(connection, anchorWallet, {
+      commitment: 'processed',
+    }),
     [connection, anchorWallet],
   );
 
   const nodeProvider = useMemo(
-    () =>
-      new AnchorProvider(connection, NODE_WALLET, {
-        commitment: 'processed',
-      }),
+    () => new AnchorProvider(connection, NODE_WALLET, {
+      commitment: 'processed',
+    }),
     [connection],
   );
 

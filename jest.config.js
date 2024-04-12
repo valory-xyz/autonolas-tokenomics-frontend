@@ -1,15 +1,9 @@
-const nextJest = require('next/jest');
-
-/** @type {import('jest').Config} */
-const createJestConfig = nextJest({
-  // Don't change, this is needed to load next.config.js and .env config
-  dir: './',
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-  coverageProvider: 'v8',
-  testEnvironment: 'jsdom',
-  globals: {
-    fetch,
+module.exports = {
+  verbose: true,
+  setupFilesAfterEnv: ['./jest.setup.js'],
+  moduleNameMapper: {
+    '\\.(css|less|sass|scss)$': '<rootDir>/__mocks__/styleMock.js',
+    '\\.(gif|ttf|eot|svg)$': '<rootDir>/__mocks__/fileMock.js',
   },
-});
-
-module.exports = createJestConfig();
+  testEnvironment: 'jsdom',
+};

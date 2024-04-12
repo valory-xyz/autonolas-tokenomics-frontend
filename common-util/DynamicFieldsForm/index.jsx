@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { Button, Form, Typography, Input } from 'antd';
+import {
+  Button, Form, Typography, Input,
+} from 'antd';
 import styled from 'styled-components';
 
 import { FORM_TYPES } from 'util/constants';

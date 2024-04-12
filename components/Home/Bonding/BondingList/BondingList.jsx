@@ -135,7 +135,8 @@ const getColumns = (
         return (
           <Text style={{ color: projectedChange > 0 ? 'green' : 'red' }}>
             {projectedChange > 0 && '+'}
-            {projectedChange}%
+            {projectedChange}
+            %
           </Text>
         );
       },
@@ -273,12 +274,11 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
     handleProductDetails(null);
   };
 
-  const sortList = (list) =>
-    list.sort((a, b) => {
-      if (isNaN(a.projectedChange)) return 1;
-      if (isNaN(b.projectedChange)) return -1;
-      return b.projectedChange - a.projectedChange;
-    });
+  const sortList = (list) => list.sort((a, b) => {
+    if (isNaN(a.projectedChange)) return 1;
+    if (isNaN(b.projectedChange)) return -1;
+    return b.projectedChange - a.projectedChange;
+  });
 
   const getProductsDataSource = () => {
     const sortedList = sortList(filteredProducts);
@@ -293,7 +293,7 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
     return (
       <Container className="mt-16">
         <Empty
-          description={
+          description={(
             <>
               <Text className="mb-8">Couldn&apos;t fetch products</Text>
               <br />
@@ -301,13 +301,13 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
                 Try again
               </Button>
             </>
-          }
-          image={
+          )}
+          image={(
             <ExclamationCircleTwoTone
               style={{ fontSize: '7rem' }}
               twoToneColor={COLOR.GREY_1}
             />
-          }
+          )}
         />
       </Container>
     );

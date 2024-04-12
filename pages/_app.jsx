@@ -1,13 +1,17 @@
-import { createWrapper } from 'next-redux-wrapper';
-import PropTypes from 'prop-types';
-import GlobalStyle from 'components/GlobalStyles';
 import Head from 'next/head';
+import { createWrapper } from 'next-redux-wrapper';
+import { ConfigProvider } from 'antd';
+import PropTypes from 'prop-types';
+
+/** wagmi config */
+import { WagmiConfig as WagmiConfigProvider } from 'wagmi';
+import { wagmiConfig } from 'common-util/Login/config';
 
 /** antd theme config */
 import Layout from 'components/Layout';
+import GlobalStyle from 'components/GlobalStyles';
+import { THEME_CONFIG } from '@autonolas/frontend-library';
 import { useRouter } from 'next/router';
-import { ThemeConfigProvider } from '../context/ConfigProvider';
-import Web3ModalProvider from '../context/Web3ModalProvider';
 import initStore from '../store';
 
 const MyApp = ({ Component, pageProps }) => {
@@ -16,24 +20,32 @@ const MyApp = ({ Component, pageProps }) => {
 
   return (
     <>
+      <GlobalStyle />
       <Head>
         <title>Olas Tokenomics</title>
         <meta name="title" content="Olas Tokenomics" />
       </Head>
-      <GlobalStyle />
-      <ThemeConfigProvider>
+      <ConfigProvider theme={THEME_CONFIG}>
         {isNotLegal ? (
           <Component {...pageProps} />
         ) : (
-          <Web3ModalProvider>
+          <WagmiConfigProvider config={wagmiConfig}>
             <Layout>
               <Component {...pageProps} />
             </Layout>
-          </Web3ModalProvider>
+          </WagmiConfigProvider>
         )}
-      </ThemeConfigProvider>
+      </ConfigProvider>
     </>
   );
+};
+
+MyApp.getInitialProps = async ({ Component, ctx }) => {
+  const pageProps = Component.getInitialProps
+    ? await Component.getInitialProps(ctx)
+    : {};
+
+  return { pageProps };
 };
 
 MyApp.propTypes = {

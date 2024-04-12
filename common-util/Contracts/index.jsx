@@ -16,16 +16,6 @@ import {
   ERC20_ABI,
 } from 'common-util/AbiAndAddresses';
 
-import {
-  arbitrum,
-  base,
-  gnosis,
-  goerli,
-  mainnet,
-  optimism,
-  polygon,
-} from 'wagmi/chains';
-
 const LOCAL_ADDRESSES = {
   dispenser: '0x4c5859f0F772848b2D91F1D83E2Fe57935348029',
   depository: '0x1291Be112d480055DaFd8a610b7d1e203891C274',
@@ -199,12 +189,12 @@ export const getServiceContract = () => {
 };
 
 export const RPC_URLS = {
-  1: mainnet.rpcUrls.default.http[0],
-  5: goerli.rpcUrls.default.http[0],
-  10: optimism.rpcUrls.default.http[0],
-  100: gnosis.rpcUrls.default.http[0],
-  137: polygon.rpcUrls.default.http[0],
-  8453: base.rpcUrls.default.http[0],
-  42161: arbitrum.rpcUrls.default.http[0],
+  1: process.env.NEXT_PUBLIC_MAINNET_URL,
+  5: process.env.NEXT_PUBLIC_GOERLI_URL,
+  10: process.env.NEXT_PUBLIC_OPTIMISM_URL,
+  100: process.env.NEXT_PUBLIC_GNOSIS_URL,
+  137: process.env.NEXT_PUBLIC_POLYGON_URL,
+  42161: process.env.NEXT_PUBLIC_ARBITRUM_URL,
+  8453: process.env.NEXT_PUBLIC_BASE_URL,
   [LOCAL_FORK_ID]: 'http://127.0.0.1:8545',
 };
