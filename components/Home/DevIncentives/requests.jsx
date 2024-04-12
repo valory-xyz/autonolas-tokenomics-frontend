@@ -1,19 +1,20 @@
 import { BigNumber } from 'ethers';
-import { notifyError } from '@autonolas/frontend-library';
-
-import { UNIT_TYPES } from 'util/constants';
 import {
+  notifyError,
   getBlockTimestamp,
-  parseToEth,
   sendTransaction,
-} from 'common-util/functions';
+} from '@autonolas/frontend-library';
+
 import {
+  parseToEth,
   getDispenserContract,
   getTokenomicsContract,
   getTreasuryContract,
   getAgentContract,
   getComponentContract,
-} from 'common-util/Contracts';
+} from 'common-util/functions';
+
+import { UNIT_TYPES } from 'common-util/enums';
 
 const fixTo8DecimalPlaces = (value) => {
   const numeralValue = Number(value);

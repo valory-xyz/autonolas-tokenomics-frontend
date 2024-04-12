@@ -3,9 +3,9 @@ import { notifyError } from '@autonolas/frontend-library';
 import { gql, GraphQLClient } from 'graphql-request';
 import { memoize } from 'lodash';
 
-import { DEX } from 'util/constants';
-import { ADDRESS_ZERO } from 'common-util/functions';
-import { ADDRESSES } from 'common-util/Contracts';
+import { DEX } from 'common-util/enums';
+import { ADDRESS_ZERO } from 'common-util/constants/numbers';
+import { ADDRESSES } from 'common-util/constants/addresses';
 
 const { BigNumber } = ethers;
 

@@ -7,7 +7,7 @@ import {
   TREASURY,
   TOKENOMICS,
   BOND_CALCULATOR,
-} from '../../common-util/AbiAndAddresses';
+} from '../../common-util/abiAndAddresses';
 
 const localArtifacts = [
   DEPOSITORY,

@@ -10,7 +10,7 @@ import {
   Grid,
   Table,
 } from 'antd';
-import { notifyError } from '@autonolas/frontend-library';
+import { notifyError } from 'common-util/functions/errors';
 
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { getMapUnitIncentivesRequest } from './requests';

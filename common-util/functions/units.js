@@ -1,6 +1,3 @@
-import { toLower } from 'lodash';
-import prohibitedAddresses from '../../data/prohibited-addresses.json';
-
 /**
  * - unitIds and unitTypes are arrays of same length
  * - unitIds has to be unique
@@ -11,9 +8,4 @@ export const sortUnitIdsAndTypes = (unitIds, unitTypes) => {
     (e) => unitTypes[unitIds.indexOf(e)],
   );
   return [sortedUnitIds, sortedUnitTypes];
-};
-
-export const isAddressProhibited = (address) => {
-  const addresses = prohibitedAddresses.map((e) => toLower(e));
-  return addresses.includes(toLower(address));
 };

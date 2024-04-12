@@ -1,29 +1,28 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ethers } from 'ethers';
 import { memoize, round } from 'lodash';
-import { BalancerSDK } from '@balancer-labs/sdk';
 import { areAddressesEqual } from '@autonolas/frontend-library';
 import { usePublicClient } from 'wagmi';
 
-import { DEX } from 'util/constants';
+import { DEX } from 'common-util/enums';
+import { ADDRESS_ZERO, ONE_ETH } from 'common-util/constants/numbers';
 import {
-  ADDRESS_ZERO,
-  ONE_ETH,
-  getChainId,
-  isL1Network,
-  parseToEth,
-  notifySpecificError,
-} from 'common-util/functions';
-import {
-  getDepositoryContract,
   getUniswapV2PairContract,
   getTokenomicsContract,
   getErc20Contract,
-  ADDRESSES,
-  RPC_URLS,
-} from 'common-util/Contracts';
+  getDepositoryContract,
+} from 'common-util/functions/web3';
+
+import { ADDRESSES } from 'common-util/constants/addresses';
+import { notifySpecificError } from 'common-util/functions/errors';
+import { getChainId } from 'common-util/functions/frontend-library';
+import { parseToEth } from 'common-util/functions/ethers';
+import { isL1Network } from 'common-util/functions/chains';
+
+import { DEPOSITORY } from 'common-util/abiAndAddresses';
+import { BALANCER_GRAPH_CLIENTS } from 'common-util/the-graph/clients';
+import { balancerGetPoolQuery } from 'common-util/the-graph/queries';
 import { useHelpers } from 'common-util/hooks/useHelpers';
-import { DEPOSITORY } from 'common-util/AbiAndAddresses';
 import { useWhirlPoolInformation } from '../TokenManagement/hooks/useWhirlpool';
 import { POSITION } from '../TokenManagement/constants';
 import {
@@ -167,9 +166,10 @@ const getLpTokenDetails = memoize(async (address) => {
  */
 const getCurrentPriceBalancerFn = memoize(async (tokenAddress) => {
   const { lpChainId, poolId } = await getLpTokenDetails(tokenAddress);
-  const balancerConfig = { network: lpChainId, rpcUrl: RPC_URLS[lpChainId] };
-  const balancer = new BalancerSDK(balancerConfig);
-  const pool = await balancer.pools.find(poolId);
+
+  const { pool } = await BALANCER_GRAPH_CLIENTS[lpChainId].request(
+    balancerGetPoolQuery(poolId),
+  );
 
   if (!pool) {
     throw new Error(

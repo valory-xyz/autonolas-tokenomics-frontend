@@ -18,8 +18,8 @@ import {
 } from '@ant-design/icons';
 import styled from 'styled-components';
 
-import { BONDING_PRODUCTS } from 'util/constants';
-import { parseToEth } from 'common-util/functions';
+import { BONDING_PRODUCTS } from 'common-util/enums';
+import { parseToEth } from 'common-util/functions/ethers';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { Deposit } from '../Deposit/Deposit';
 import { WsolTokenManagement } from '../TokenManagement/WsolTokenManagement';

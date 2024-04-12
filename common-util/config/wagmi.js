@@ -1,11 +1,14 @@
 import { http, createConfig } from 'wagmi';
 import { mainnet, goerli } from 'wagmi/chains';
-import { safe, walletConnect, injected } from 'wagmi/connectors';
-
-export const projectId = process.env.NEXT_PUBLIC_WALLET_PROJECT_ID;
+import {
+  safe,
+  walletConnect,
+  injected,
+  coinbaseWallet,
+} from 'wagmi/connectors';
+import { RPC_URLS } from 'common-util/constants/rpcs';
 
 export const SUPPORTED_CHAINS = [mainnet, goerli];
-export const SUPPORTED_CHAIN_IDS = SUPPORTED_CHAINS.map((chain) => chain.id);
 
 const walletConnectMetadata = {
   name: 'OLAS Tokenomics',
@@ -17,17 +20,27 @@ const walletConnectMetadata = {
 export const wagmiConfig = createConfig({
   autoConnect: true,
   chains: SUPPORTED_CHAINS,
+  options: {
+    rpc: SUPPORTED_CHAINS.reduce(
+      (acc, chain) => Object.assign(acc, { [chain.id]: RPC_URLS[chain.id] }),
+      {},
+    ),
+  },
   connectors: [
     injected(),
     walletConnect({
-      projectId,
+      projectId: process.env.NEXT_PUBLIC_WALLET_PROJECT_ID,
       metadata: walletConnectMetadata,
       showQrModal: false,
     }),
     safe(),
+    coinbaseWallet({
+      appName: 'OLAS Tokenomics',
+    }),
   ],
   transports: SUPPORTED_CHAINS.reduce(
-    (acc, chain) => Object.assign(acc, { [chain.id]: http() }),
+    (acc, chain) =>
+      Object.assign(acc, { [chain.id]: http(RPC_URLS[chain.id]) }),
     {},
   ),
 });

@@ -9,11 +9,13 @@ import {
 } from '@autonolas/frontend-library';
 
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
+
 import {
   parseToEth,
   parseToWei,
   sortUnitIdsAndTypes,
-} from 'common-util/functions';
+} from 'common-util/functions/';
+
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import {
   getEpochCounter,

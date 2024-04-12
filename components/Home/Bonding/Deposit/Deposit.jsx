@@ -10,7 +10,8 @@ import {
   getCommaSeparatedNumber,
 } from '@autonolas/frontend-library';
 
-import { parseToWei, parseToEth, ONE_ETH } from 'common-util/functions';
+import { parseToWei, parseToEth } from 'common-util/functions';
+import { ONE_ETH } from 'common-util/constants/numbers';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { useDeposit } from './useDeposit';
 
