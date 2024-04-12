@@ -11,6 +11,7 @@ import {
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
 import { useWsolDeposit } from './hooks/useWsolDeposit';
 import { DEFAULT_SLIPPAGE, slippageValidator } from './utils';
+import { DENOMINATOR } from './constants';
 
 const { Text } = Typography;
 
@@ -74,9 +75,8 @@ export const WsolDeposit = () => {
   const isDepositButtonDisabled =
     isEstimating || isDepositing || !isSvmWalletConnected;
   const estimatedOutput =
-    getCommaSeparatedNumber(
-      (estimatedQuote?.liquidity || 0) / LAMPORTS_PER_SOL,
-    ) || '--';
+    getCommaSeparatedNumber((estimatedQuote?.liquidity || 0) / DENOMINATOR) ||
+    '--';
 
   return (
     <>
