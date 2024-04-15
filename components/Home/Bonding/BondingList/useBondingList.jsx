@@ -20,8 +20,8 @@ import { parseToEth } from 'common-util/functions/ethers';
 import { isL1Network } from 'common-util/functions/chains';
 
 import { DEPOSITORY } from 'common-util/abiAndAddresses';
-import { BALANCER_GRAPH_CLIENTS } from 'common-util/the-graph/clients';
-import { balancerGetPoolQuery } from 'common-util/the-graph/queries';
+import { BALANCER_GRAPH_CLIENTS } from 'common-util/graphql/clients';
+import { balancerGetPoolQuery } from 'common-util/graphql/queries';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { useWhirlPoolInformation } from '../TokenManagement/hooks/useWhirlpool';
 import { POSITION } from '../TokenManagement/constants';
