@@ -89,7 +89,8 @@ export const Deposit = ({
 
         try {
           const hasSufficientAllowance = await hasSufficientTokenRequest({
-            token: parseToWei(values.tokenAmount),
+            token: productToken,
+            tokenAmount: parseToWei(values.tokenAmount),
           });
           // if allowance in lower than the amount to be deposited, then needs approval
           // eg. If user is depositing 10 OLAS and the allowance is 5, then open the approve modal
