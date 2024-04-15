@@ -189,7 +189,7 @@ export const useWsolWithdraw = () => {
 
       notifySuccess('Withdraw successful');
     } catch (error) {
-      notifyError('Failed to withdraw');
+      notifyError('Failed to withdraw', error);
       console.error(error);
     }
   };

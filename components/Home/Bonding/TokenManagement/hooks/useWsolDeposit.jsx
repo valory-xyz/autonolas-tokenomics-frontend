@@ -308,7 +308,7 @@ export const useWsolDeposit = () => {
 
       notifySuccess('Deposit successful');
     } catch (error) {
-      notifyError('Failed to deposit');
+      notifyError('Failed to deposit', error);
       console.error(error);
     }
 
