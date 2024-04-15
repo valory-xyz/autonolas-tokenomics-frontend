@@ -18,6 +18,7 @@ import {
 import { ONE_ETH } from 'common-util/constants/numbers';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { useDeposit } from './useDeposit';
+import { isSvmLpAddress } from '../BondingList/useBondingList';
 
 const { Text } = Typography;
 const fullWidth = { width: '100%' };
@@ -50,7 +51,7 @@ export const Deposit = ({
 
         setLpBalance(lpResponse);
       } catch (error) {
-        notifyError('Error occured on fetching LP balance');
+        notifyError('Error ocurred on fetching LP balance');
         console.error(error);
       }
     };
@@ -91,11 +92,10 @@ export const Deposit = ({
       .then(async (values) => {
         // check allowance of the product ID and open approve modal if not approved
 
-        const isSvm = false; // TODO
         try {
           const hasSufficientAllowance = await hasSufficientTokenRequest({
             token: productToken,
-            tokenAmount: isSvm
+            tokenAmount: isSvmLpAddress(productToken)
               ? parseToSolDecimals(values.tokenAmount)
               : parseToWei(values.tokenAmount),
           });

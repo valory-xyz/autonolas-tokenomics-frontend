@@ -90,7 +90,7 @@ const LP_PAIRS = {
       '0x5332584890d6e415a6dc910254d6430b8aab7e69000200000000000000000103',
   },
   // solana
-  svm: {
+  '0x3685b8cc36b8df09ed9e81c1690100306bf23e04': {
     lpChainId: 'svm',
     name: 'OLAS-WSOL',
     originAddress: POSITION.toString(),
@@ -98,6 +98,12 @@ const LP_PAIRS = {
     poolId: ADDRESSES.svm.balancerVault,
   },
 };
+
+export const isSvmLpAddress = (address) =>
+  areAddressesEqual(
+    address,
+    LP_PAIRS['0x3685b8cc36b8df09ed9e81c1690100306bf23e04'],
+  );
 
 /**
  * fetches the IDF (discount factor) for the product
@@ -116,7 +122,7 @@ const getLastIDFRequest = async () => {
 };
 
 /**
- * Fetches detials of the LP token.
+ * Fetches details of the LP token.
  * The token needs to distinguish between the one on the ETH mainnet
  * and the mirrored one from other mainnets.
  *
@@ -200,7 +206,7 @@ const useAddCurrentLpPriceToProducts = () => {
   ]);
 
   const getCurrentPriceForSvm = useCallback(async () => {
-    const priceLp = await getCurrentPriceWhirlpool(LP_PAIRS.svm.poolId);
+    const priceLp = await getCurrentPriceWhirlpool(ADDRESSES.svm.balancerVault);
     return priceLp;
   }, [getCurrentPriceWhirlpool]);
 
