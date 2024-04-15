@@ -2,12 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Form, InputNumber, Spin } from 'antd';
 import pDebounce from 'p-debounce';
 import { isNil, isNumber } from 'lodash';
-import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { notifyError } from '@autonolas/frontend-library';
 
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
 import { useWsolWithdraw } from './hooks/useWsolWithdraw';
 import { DEFAULT_SLIPPAGE, slippageValidator } from './utils';
+import { DENOMINATOR } from './constants';
 
 export const WsolWithDraw = () => {
   const [form] = Form.useForm();
@@ -28,7 +28,7 @@ export const WsolWithDraw = () => {
     const setMaxAmountFn = async () => {
       const tempAmount = await getMaxAmount();
       if (!isNil(tempAmount)) {
-        setMaxAmount(tempAmount / LAMPORTS_PER_SOL);
+        setMaxAmount(tempAmount / DENOMINATOR);
       }
     };
 
@@ -47,7 +47,7 @@ export const WsolWithDraw = () => {
     try {
       setIsEstimating(true);
 
-      const actualAmount = amount * LAMPORTS_PER_SOL;
+      const actualAmount = amount * DENOMINATOR;
       const quote = await getDecreaseLiquidityQuote({
         amount: actualAmount,
         slippage,
@@ -88,7 +88,7 @@ export const WsolWithDraw = () => {
     try {
       setIsWithdrawing(true);
 
-      const actualAmount = amount * LAMPORTS_PER_SOL;
+      const actualAmount = amount * DENOMINATOR;
       await withdraw({ amount: actualAmount, slippage });
 
       // reset form fields after successful withdraw
