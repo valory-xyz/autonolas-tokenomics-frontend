@@ -1,4 +1,4 @@
-import { sortUnitIdsAndTypes } from '../utils';
+import { sortUnitIdsAndTypes } from '../units';
 
 describe('sortUnitIdsAndTypes', () => {
   it('should sort unitIds and the same index sort should be applied to unitTypes', () => {

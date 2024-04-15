@@ -10,7 +10,7 @@ import {
 } from '@autonolas/frontend-library';
 
 import { useHelpers } from 'common-util/hooks/useHelpers';
-import { parseToEth } from 'common-util/functions';
+import { parseToEth } from 'common-util/functions/ethers';
 import { getAllBondsRequest, redeemRequest } from './requests';
 
 const { Title } = Typography;

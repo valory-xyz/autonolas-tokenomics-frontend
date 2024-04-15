@@ -15,8 +15,9 @@ import { setChainId, setUserBalance } from 'store/setup/actions';
 import {
   getChainId,
   getChainIdOrDefaultToMainnet,
-  isAddressProhibited,
-} from 'common-util/functions';
+} from 'common-util/functions/frontend-library';
+
+import { isAddressProhibited } from 'common-util/functions/addresses';
 
 const LoginContainer = styled.div`
   display: flex;

@@ -1,5 +1,5 @@
 import { Program } from '@coral-xyz/anchor';
-import idl from 'common-util/AbiAndAddresses/liquidityLockbox.json';
+import idl from 'common-util/abiAndAddresses/liquidityLockbox.json';
 import { DecimalUtil, Percentage } from '@orca-so/common-sdk';
 import Decimal from 'decimal.js';
 import { increaseLiquidityQuoteByInputTokenWithParams } from '@orca-so/whirlpools-sdk';

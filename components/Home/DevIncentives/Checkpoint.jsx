@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Alert, Button, Typography } from 'antd';
 import { notifySuccess } from '@autonolas/frontend-library';
 
-import { notifySpecificError } from 'common-util/functions';
+import { notifySpecificError } from 'common-util/functions/errors';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { canShowCheckpoint, checkpointRequest } from './requests';
 import { CheckpointContainer } from './styles';

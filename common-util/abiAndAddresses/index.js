@@ -8,3 +8,5 @@ export * from './componentRegistry';
 export * from './serviceRegistry';
 export * from './erc20';
 export * from './bondCalculator';
+export * from './liquidityLockbox.json';
+export * from './whirlpool.json';

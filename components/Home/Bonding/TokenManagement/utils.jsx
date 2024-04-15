@@ -1,4 +1,3 @@
-/* eslint-disable max-len */
 /* eslint-disable no-param-reassign */
 export const DEFAULT_SLIPPAGE = 1;
 

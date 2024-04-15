@@ -6,7 +6,7 @@ import {
   getExplorerURL,
 } from '@autonolas/frontend-library';
 
-import { ADDRESSES } from 'common-util/Contracts';
+import { ADDRESSES } from 'common-util/constants/addresses';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import Image from 'next/image';
 import Socials from './Socials';

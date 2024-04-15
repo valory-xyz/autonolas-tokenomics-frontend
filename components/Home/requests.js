@@ -1,5 +1,4 @@
-import { sendTransaction } from 'common-util/functions';
-import { getDepositoryContract } from 'common-util/Contracts';
+import { getDepositoryContract, sendTransaction } from 'common-util/functions';
 
 export const getBondInfoRequest = async (bondList) => {
   const contract = getDepositoryContract();

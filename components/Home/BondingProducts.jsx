@@ -2,7 +2,7 @@ import { useState } from 'react';
 import styled from 'styled-components';
 import { Typography, Switch, Divider, Radio, Tooltip } from 'antd';
 
-import { BONDING_PRODUCTS } from 'util/constants';
+import { BONDING_PRODUCTS } from 'common-util/enums';
 import { useScreen } from '@autonolas/frontend-library';
 import { BondingList } from './Bonding/BondingList/BondingList';
 

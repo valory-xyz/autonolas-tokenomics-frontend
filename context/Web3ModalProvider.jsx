@@ -8,7 +8,6 @@ import { COLOR } from '@autonolas/frontend-library';
 
 const queryClient = new QueryClient();
 
-// eslint-disable-next-line jest/require-hook
 createWeb3Modal({
   wagmiConfig,
   projectId: process.env.NEXT_PUBLIC_WALLET_PROJECT_ID,

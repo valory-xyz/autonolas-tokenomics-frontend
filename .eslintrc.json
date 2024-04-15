@@ -12,6 +12,11 @@
   "settings": {
     "react": {
       "version": "detect"
+    },
+    "import/resolver": {
+      "jsconfig": {
+        "config": "jsconfig.json"
+      }
     }
   },
   "parserOptions": {
@@ -36,12 +41,6 @@
     "react/no-array-index-key": "off",
     "react/jsx-props-no-spreading": "off",
     "arrow-parens": ["error"],
-    "import/no-unresolved": [
-      2,
-      {
-        "ignore": ["util", "common-util", "components", "store"]
-      }
-    ],
     "no-console": ["warn", { "allow": ["error"] }],
     "import/prefer-default-export": "off",
     "react/function-component-definition": [
@@ -54,7 +53,13 @@
     "react/jsx-no-useless-fragment": [2, { "allowExpressions": true }],
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "warn",
-    "import/no-extraneous-dependencies": "error"
+    "import/no-extraneous-dependencies": "error",
+    "import/no-unresolved": [
+      2,
+      {
+        "ignore": ["util", "common-util", "components", "store"]
+      }
+    ]
   },
   "overrides": [
     {

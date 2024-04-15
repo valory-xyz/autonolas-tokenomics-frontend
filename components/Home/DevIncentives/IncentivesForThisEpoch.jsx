@@ -3,13 +3,12 @@ import { Row, Col, Table, Typography, Alert } from 'antd';
 import { round, toLower } from 'lodash';
 import { notifyError } from '@autonolas/frontend-library';
 
-import { FORM_TYPES, UNIT_TYPES } from 'util/constants';
+import { FORM_TYPES, UNIT_TYPES } from 'common-util/enums';
 import { DynamicFieldsForm } from 'common-util/DynamicFieldsForm';
-import {
-  notifySpecificError,
-  parseToEth,
-  sortUnitIdsAndTypes,
-} from 'common-util/functions';
+
+import { notifySpecificError } from 'common-util/functions/errors';
+import { sortUnitIdsAndTypes } from 'common-util/functions/units';
+import { parseToEth } from 'common-util/functions/ethers';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { getOwnerIncentivesRequest, getOwnersForUnits } from './requests';
 import { RewardAndTopUpContainer } from './styles';

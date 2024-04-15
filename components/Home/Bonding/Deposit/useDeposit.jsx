@@ -1,12 +1,15 @@
 import { useCallback } from 'react';
 import { ethers } from 'ethers';
 
-import { getEstimatedGasLimit, sendTransaction } from 'common-util/functions';
 import {
-  ADDRESSES,
+  getEstimatedGasLimit,
+  sendTransaction,
   getDepositoryContract,
   getUniswapV2PairContract,
-} from 'common-util/Contracts';
+} from 'common-util/functions';
+
+import { ADDRESSES } from 'common-util/constants/addresses';
+
 import { useHelpers } from 'common-util/hooks/useHelpers';
 
 const { BigNumber } = ethers;
