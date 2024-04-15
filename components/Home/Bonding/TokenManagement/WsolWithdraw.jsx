@@ -140,7 +140,7 @@ export const WsolWithDraw = () => {
         ]}
         label={
           <>
-            Bridged Tokens Amount
+            WSOL-OLAS LP Amount
             <Button
               size="small"
               type="primary"

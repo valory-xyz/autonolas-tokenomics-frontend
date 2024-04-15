@@ -136,7 +136,7 @@ export const WsolDeposit = () => {
           <Spin spinning={isEstimating} size="small">
             <Flex vertical gap="small" className="mb-16">
               <Text strong>ESTIMATED OUTPUT</Text>
-              <Text>{`${estimatedOutput} Bridged Tokens`}</Text>
+              <Text>{`${estimatedOutput} WSOL-OLAS LP`}</Text>
             </Flex>
           </Spin>
 
@@ -159,7 +159,7 @@ export const WsolDeposit = () => {
               <Text strong>
                 {` ${getCommaSeparatedNumber(
                   bridgedTokenAmount,
-                )} Bridged Tokens`}
+                )} WSOL-OLAS LP`}
               </Text>
             </>
           }

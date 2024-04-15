@@ -199,7 +199,7 @@ export const useWsolDeposit = () => {
     );
     if (!bridgedTokenAccount) {
       notifyError(
-        'You do not have the bridged token account, please try again.',
+        'You do not have the WSOL-OLAS LP account, please try again.',
       );
       return null;
     }
