@@ -68,6 +68,16 @@ const getColumns = (
       render: (x) => getNetworkName(x),
     },
     {
+      title: 'Guide',
+      dataIndex: 'guide',
+      key: 'guide',
+      render: (x, data) => (
+        <a href={data.guide} target="_blank" rel="noreferrer">
+          Guide
+        </a>
+      ),
+    },
+    {
       title: getTitle('LP Token', 'LP token address enabled by the Treasury'),
       dataIndex: 'lpTokenName',
       key: 'lpTokenName',
