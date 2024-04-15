@@ -1,9 +1,3 @@
-const ManageSolanaProducts = () => {
-  return (
-    <div>
-      <h1>Manage Solana Products</h1>
-    </div>
-  );
-};
+import { WsolTokenManagement } from 'components/Home/Bonding/TokenManagement/WsolTokenManagement';
 
-export default ManageSolanaProducts;
+export default WsolTokenManagement;

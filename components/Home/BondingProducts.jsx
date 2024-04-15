@@ -1,11 +1,19 @@
 import { useState } from 'react';
 import styled from 'styled-components';
-import { Typography, Switch, Divider, Radio, Tooltip, Flex } from 'antd';
+import {
+  Typography,
+  Switch,
+  Divider,
+  Radio,
+  Tooltip,
+  Flex,
+  Button,
+} from 'antd';
 import { useScreen } from '@autonolas/frontend-library';
 
 import { BONDING_PRODUCTS } from 'common-util/enums';
+import { useRouter } from 'next/router';
 import { BondingList } from './Bonding/BondingList/BondingList';
-import { WsolTokenManagement } from './Bonding/TokenManagement/WsolTokenManagement';
 
 const { Title } = Typography;
 
@@ -36,6 +44,8 @@ const ResponsiveDivider = () => {
 };
 
 export const BondingProducts = () => {
+  const router = useRouter();
+
   // if user not connected, show all products
   const [bondingProgramType, setProductType] = useState(
     BONDING_PRODUCTS.ACTIVE,
@@ -55,7 +65,7 @@ export const BondingProducts = () => {
     <>
       <PageHeader isMobile={isMobile}>
         <Flex justify="space-between" align="center" style={{ width: '100%' }}>
-          <Flex>
+          <Flex align="center">
             <Title level={4} className="mb-0 mt-0">
               Bonding Products
             </Title>
@@ -82,9 +92,12 @@ export const BondingProducts = () => {
           </Flex>
 
           <Flex>
-            {process.env.NEXT_PUBLIC_SOLANA_LOCKBOX_TEST ? (
-              <WsolTokenManagement />
-            ) : null}
+            <Button
+              type="primary"
+              onClick={() => router.push('manage-solana-products')}
+            >
+              Manage Solana Products
+            </Button>
           </Flex>
         </Flex>
       </PageHeader>
