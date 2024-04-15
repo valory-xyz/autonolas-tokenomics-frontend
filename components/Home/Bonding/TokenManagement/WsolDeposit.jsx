@@ -61,6 +61,7 @@ export const WsolDeposit = () => {
       const slippage = form.getFieldValue('slippage');
 
       const bridgedToken = await deposit({ slippage, sol });
+      console.log('bridgedToken inside', bridgedToken);
       if (Number(bridgedToken) > 0) {
         setBridgedTokenAmount(bridgedToken / DENOMINATOR);
       }
@@ -76,6 +77,14 @@ export const WsolDeposit = () => {
   const estimatedOutput =
     getCommaSeparatedNumber((estimatedQuote?.liquidity || 0) / DENOMINATOR) ||
     '--';
+
+  console.log('estimatedOutput', estimatedOutput);
+  console.log('estimatedOutput', estimatedQuote?.liquidity);
+  console.log(
+    'estimatedOutput',
+    (estimatedQuote?.liquidity || 0) / DENOMINATOR,
+  );
+  console.log(bridgedTokenAmount);
 
   return (
     <>

@@ -64,6 +64,8 @@ const getBridgeTokenAmount = async (connection, walletPublicKey) => {
     { programId: TOKEN_PROGRAM_ID },
   );
 
+  console.log(tokenAccounts);
+
   let bridgedTokenAmount = 0n;
   tokenAccounts.value.forEach((tokenAccount) => {
     const accountData = AccountLayout.decode(tokenAccount.account.data);
