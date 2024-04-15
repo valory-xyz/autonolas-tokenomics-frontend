@@ -1,7 +1,7 @@
 import isObject from 'lodash/isObject';
-import { notifyError as notifyErrorFn } from '@autonolas/frontend-library';
+import { notifyError } from '@autonolas/frontend-library';
 // create a function to specific error message based on error code
-export const notifyError = notifyErrorFn;
+
 const getErrorMessage = (error) => {
   if (isObject(error)) {
     if ((error?.message || '').includes('OwnerOnly')) {
@@ -24,10 +24,10 @@ const getErrorMessage = (error) => {
       return 'Nothing to claim for the connected wallet';
     }
 
-    return error?.message || 'Some error occured';
+    return error?.message || 'Some error occurred';
   }
 
-  return error || 'Some error occured';
+  return error || 'Some error occurred';
 };
 
 export const getErrorDescription = (desc) => {
