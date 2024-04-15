@@ -24,7 +24,7 @@ export const WsolTokenManagement = ({ lpToken, lpTokenLink }) => {
       </Flex>
 
       <Modal
-        title="Manage OLAS-WSOL LP Tokens"
+        title="Manage WSOL-OLAS LP Tokens"
         open={isManageModalVisible}
         onCancel={() => setIsManageModalVisible(false)}
         footer={null}

@@ -65,6 +65,12 @@ export const parseToEth = (amount) =>
 export const parseToWei = (amount) =>
   ethers.utils.parseUnits(`${amount}`, 18).toString();
 
+/**
+ * multiplies the amount by 10^8
+ */
+export const parseToSolDecimals = (amount) =>
+  ethers.utils.parseUnits(`${amount}`, 8).toString();
+
 // create a function to specific error message based on error code
 const getErrorMessage = (error) => {
   if (isObject(error)) {

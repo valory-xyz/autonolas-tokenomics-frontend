@@ -64,8 +64,6 @@ const getBridgeTokenAmount = async (connection, walletPublicKey) => {
     { programId: TOKEN_PROGRAM_ID },
   );
 
-  console.log(tokenAccounts);
-
   let bridgedTokenAmount = 0n;
   tokenAccounts.value.forEach((tokenAccount) => {
     const accountData = AccountLayout.decode(tokenAccount.account.data);
@@ -201,7 +199,7 @@ export const useWsolDeposit = () => {
       svmWalletPublicKey,
     );
     if (!bridgedTokenAccount) {
-      notifyError(
+      notifySvmSpecificError(
         'You do not have the WSOL-OLAS LP account, please try again.',
       );
       return null;
@@ -237,7 +235,7 @@ export const useWsolDeposit = () => {
           signTransaction,
         );
       } catch (error) {
-        notifyError('Error creating token account for WSOL ATA');
+        notifySvmSpecificError('Error creating token account for WSOL ATA');
         console.error(error);
         return null;
       }

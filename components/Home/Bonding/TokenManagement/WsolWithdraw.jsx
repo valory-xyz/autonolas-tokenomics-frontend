@@ -180,7 +180,7 @@ export const WsolWithDraw = () => {
       <Spin spinning={isEstimating} size="small">
         <Form.Item
           name="olas"
-          label="OLAS"
+          label="Estimated OLAS"
           rules={[{ required: true, message: 'Please input a valid OLAS' }]}
         >
           <InputNumber disabled className="full-width" />
@@ -188,7 +188,7 @@ export const WsolWithDraw = () => {
 
         <Form.Item
           name="wsol"
-          label="WSOL"
+          label="Estimated WSOL"
           rules={[{ required: true, message: 'Please input a valid WSOL' }]}
         >
           <InputNumber disabled className="full-width" />

@@ -39,12 +39,12 @@ export const getLpTokenWithDiscount = (lpTokenValue, discount) => {
  * @param {Number | String} reserveOlas
  * @param {Number | String} totalSupply
  */
-export const getCalculatedPriceLp = (reserveOlas, totalSupply) => {
+export const getSvmCalculatedPriceLp = (reserveOlas, totalSupply) => {
   const reserveOlasBG = BigNumber.from(reserveOlas.toString());
   const totalSupplyBG = BigNumber.from(totalSupply.toString());
 
   const priceLp = reserveOlasBG
-    .mul(`${10 ** 18}`)
+    .mul(`${10 ** 28}`)
     .div(totalSupplyBG)
     .toString();
 
