@@ -33,6 +33,7 @@ import {
   tickUpperIndex,
   CONNECT_SVM_WALLET,
 } from '../constants';
+import { notifySvmSpecificError } from '../utils';
 
 const TOKEN_MINT_ERROR =
   'You do not have the correct token account, please try again.';
@@ -189,7 +190,7 @@ export const useWsolWithdraw = () => {
 
       notifySuccess('Withdraw successful');
     } catch (error) {
-      notifyError('Failed to withdraw', error);
+      notifySvmSpecificError('Failed to withdraw', error);
       console.error(error);
     }
   };

@@ -140,7 +140,7 @@ export const WsolWithDraw = () => {
         ]}
         label={
           <>
-            WSOL-OLAS LP Amount
+            WSOL-OLAS LP
             <Button
               size="small"
               type="primary"

@@ -30,16 +30,16 @@ export const WsolDeposit = () => {
   const getDepositQuote = pDebounce(fn, 500);
 
   const onWsolAndSlippageChange = async () => {
-    const wsol = form.getFieldValue('wsol');
+    const sol = form.getFieldValue('sol');
     const slippage = form.getFieldValue('slippage');
 
-    // estimate quote only if wsol and slippage are valid
-    if (!isNumber(wsol) || !isNumber(slippage)) return;
+    // estimate quote only if sol and slippage are valid
+    if (!isNumber(sol) || !isNumber(slippage)) return;
 
     try {
       setIsEstimating(true);
 
-      const quote = await getDepositQuote({ slippage, wsol });
+      const quote = await getDepositQuote({ slippage, sol });
       const transformedQuote = await getDepositTransformedQuote(quote);
       setEstimatedQuote(transformedQuote);
 
@@ -57,10 +57,10 @@ export const WsolDeposit = () => {
     try {
       setIsDepositing(true);
 
-      const wsol = form.getFieldValue('wsol');
+      const sol = form.getFieldValue('sol');
       const slippage = form.getFieldValue('slippage');
 
-      const bridgedToken = await deposit({ slippage, wsol });
+      const bridgedToken = await deposit({ slippage, sol });
       if (Number(bridgedToken) > 0) {
         setBridgedTokenAmount(bridgedToken / DENOMINATOR);
       }
@@ -87,10 +87,10 @@ export const WsolDeposit = () => {
         onFinish={handleDeposit}
       >
         <Form.Item
-          name="wsol"
-          label="WSOL"
+          name="sol"
+          label="SOL"
           rules={[
-            { required: true, message: 'Please input a valid amount of WSOL' },
+            { required: true, message: 'Please input a valid amount of SOL' },
           ]}
         >
           <InputNumber

@@ -1,5 +1,7 @@
 /* eslint-disable max-len */
 /* eslint-disable no-param-reassign */
+import { notifyError } from '@autonolas/frontend-library';
+
 export const DEFAULT_SLIPPAGE = 1;
 
 export const SVM_EMPTY_ADDRESS = '11111111111111111111111111111111';
@@ -42,4 +44,17 @@ export const configureAndSendCurrentTransaction = async (
     signature,
   });
   return signature;
+};
+
+export const notifySvmSpecificError = (errorMessage, errorObject) => {
+  const transactionStack = 'stack' in errorObject ? errorObject.stack : null;
+
+  if (
+    transactionStack &&
+    transactionStack.includes('TransactionExpiredTimeoutError')
+  ) {
+    notifyError(errorMessage, errorObject.message);
+  } else {
+    notifyError(errorMessage);
+  }
 };
