@@ -74,10 +74,9 @@ const getColumns = (
       key: 'guide',
       width: 100,
       render: (x) => {
-        if (!x) return NA;
         return (
           <a
-            href={`${BOND_WEBSITE_URL}paths/${x}`}
+            href={`${BOND_WEBSITE_URL}paths/${x || 'olas-eth-via-uniswap-on-ethereum'}`}
             target="_blank"
             rel="noreferrer"
           >
