@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { Program } from '@coral-xyz/anchor';
-import idl from 'common-util/AbiAndAddresses/liquidityLockbox.json';
+import idl from 'common-util/abiAndAddresses/liquidityLockbox.json';
 import { DecimalUtil, Percentage } from '@orca-so/common-sdk';
 import { decreaseLiquidityQuoteByLiquidityWithParams } from '@orca-so/whirlpools-sdk';
 import {

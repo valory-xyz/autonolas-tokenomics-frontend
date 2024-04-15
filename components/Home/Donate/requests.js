@@ -1,11 +1,11 @@
-import { notifyError } from '@autonolas/frontend-library';
-
-import { parseToEth, sendTransaction } from 'common-util/functions';
 import {
   getTokenomicsContract,
   getTreasuryContract,
   getServiceContract,
-} from 'common-util/Contracts';
+  sendTransaction,
+  parseToEth,
+} from 'common-util/functions';
+import { notifyError } from '@autonolas/frontend-library';
 
 export const getServiceDetails = async (id) => {
   const contract = getServiceContract();

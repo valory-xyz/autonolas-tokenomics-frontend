@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { Typography, Switch, Divider, Radio, Tooltip, Flex } from 'antd';
 import { useScreen } from '@autonolas/frontend-library';
 
-import { BONDING_PRODUCTS } from 'util/constants';
+import { BONDING_PRODUCTS } from 'common-util/enums';
 import { BondingList } from './Bonding/BondingList/BondingList';
 import { WsolTokenManagement } from './Bonding/TokenManagement/WsolTokenManagement';
 

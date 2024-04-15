@@ -1,7 +1,7 @@
 import { web3 } from '@coral-xyz/anchor';
 import { TickUtil } from '@orca-so/whirlpools-sdk';
 
-import { ADDRESSES } from 'common-util/Contracts';
+import { ADDRESSES } from 'common-util/constants/addresses';
 
 export const PROGRAM_ID = new web3.PublicKey(
   '1BoXeb8hobfLCHNsyCoG1jpEv41ez4w4eDrJ48N1jY3',

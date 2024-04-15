@@ -9,7 +9,7 @@ import { BN } from '@coral-xyz/anchor';
 import { gql, GraphQLClient } from 'graphql-request';
 import { areAddressesEqual } from '@autonolas/frontend-library';
 
-import { ADDRESSES } from 'common-util/Contracts';
+import { ADDRESSES } from 'common-util/constants/addresses';
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
 import { getSvmCalculatedPriceLp } from '../../BondingList/utils';
 import { WHIRLPOOL, ORCA } from '../constants';
@@ -17,7 +17,12 @@ import { WHIRLPOOL, ORCA } from '../constants';
 const whirlpoolQuery = async () => {
   const SHYFT_API_KEY = process.env.NEXT_PUBLIC_SHYFT_API_KEY;
   if (!SHYFT_API_KEY) {
-    throw new Error('SHYFT_API_KEY is not available');
+    if (process.env.NODE_ENV === 'development') {
+      console.error('SHYFT_API_KEY is not available');
+      return {};
+    }
+    if (process.env.NODE_ENV === 'production')
+      throw new Error('SHYFT_API_KEY is not available');
   }
 
   const endpoint = `https://programs.shyft.to/v0/graphql/?api_key=${SHYFT_API_KEY}`;

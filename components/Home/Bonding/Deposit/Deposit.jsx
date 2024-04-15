@@ -13,9 +13,9 @@ import {
 import {
   parseToWei,
   parseToEth,
-  ONE_ETH,
   parseToSolDecimals,
 } from 'common-util/functions';
+import { ONE_ETH } from 'common-util/constants/numbers';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { useDeposit } from './useDeposit';
 
