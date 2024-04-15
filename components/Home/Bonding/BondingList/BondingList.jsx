@@ -21,6 +21,7 @@ import styled from 'styled-components';
 import { BONDING_PRODUCTS } from 'common-util/enums';
 import { parseToEth } from 'common-util/functions/ethers';
 import { useHelpers } from 'common-util/hooks/useHelpers';
+import { BOND_WEBSITE_URL } from 'common-util/constants';
 import { Deposit } from '../Deposit/Deposit';
 import { WsolTokenManagement } from '../TokenManagement/WsolTokenManagement';
 import { LP_PAIRS, useProducts } from './useBondingList';
@@ -68,14 +69,22 @@ const getColumns = (
       render: (x) => getNetworkName(x),
     },
     {
-      title: 'Guide',
+      title: 'Guide Link',
       dataIndex: 'guide',
       key: 'guide',
-      render: (x, data) => (
-        <a href={data.guide} target="_blank" rel="noreferrer">
-          Guide
-        </a>
-      ),
+      width: 100,
+      render: (x) => {
+        if (!x) return NA;
+        return (
+          <a
+            href={`${BOND_WEBSITE_URL}paths/${x}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Guide
+          </a>
+        );
+      },
     },
     {
       title: getTitle('LP Token', 'LP token address enabled by the Treasury'),
