@@ -157,9 +157,7 @@ export const WsolDeposit = () => {
             <>
               You received
               <Text strong>
-                {` ${getCommaSeparatedNumber(
-                  bridgedTokenAmount,
-                )} WSOL-OLAS LP`}
+                {` ${getCommaSeparatedNumber(bridgedTokenAmount)} WSOL-OLAS LP`}
               </Text>
             </>
           }
