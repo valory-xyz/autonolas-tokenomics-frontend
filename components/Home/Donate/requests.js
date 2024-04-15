@@ -4,8 +4,8 @@ import {
   getServiceContract,
   sendTransaction,
   parseToEth,
-  notifyError,
 } from 'common-util/functions';
+import { notifyError } from '@autonolas/frontend-library';
 
 export const getServiceDetails = async (id) => {
   const contract = getServiceContract();

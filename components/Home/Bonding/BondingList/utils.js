@@ -1,11 +1,12 @@
 import { ethers } from 'ethers';
 import { notifyError } from '@autonolas/frontend-library';
-import { gql, GraphQLClient } from 'graphql-request';
+import { gql } from 'graphql-request';
 import { memoize } from 'lodash';
 
 import { DEX } from 'common-util/enums';
 import { ADDRESS_ZERO } from 'common-util/constants/numbers';
 import { ADDRESSES } from 'common-util/constants/addresses';
+import { AUTONOLAS_GRAPH_CLIENTS } from 'common-util/graphql/clients';
 
 const { BigNumber } = ethers;
 
@@ -127,16 +128,7 @@ export const getCurrentPriceLpLink = ({ lpDex, lpChainId }) => {
 };
 
 const getCreateProductEventsFn = async () => {
-  const graphQLClient = new GraphQLClient(
-    process.env.NEXT_PUBLIC_GRAPH_ENDPOINT_MAINNET,
-    {
-      method: 'POST',
-      jsonSerializer: {
-        parse: JSON.parse,
-        stringify: JSON.stringify,
-      },
-    },
-  );
+  const graphQLClient = AUTONOLAS_GRAPH_CLIENTS[1];
 
   const query = gql`
     query GetCreateProducts {
@@ -159,16 +151,7 @@ const getCreateProductEventsFn = async () => {
 export const getCreateProductEvents = memoize(getCreateProductEventsFn);
 
 const getCloseProductEventsFn = async () => {
-  const graphQLClient = new GraphQLClient(
-    process.env.NEXT_PUBLIC_GRAPH_ENDPOINT_MAINNET,
-    {
-      method: 'POST',
-      jsonSerializer: {
-        parse: JSON.parse,
-        stringify: JSON.stringify,
-      },
-    },
-  );
+  const graphQLClient = AUTONOLAS_GRAPH_CLIENTS[1];
 
   const query = gql`
     query GetCloseProducts {
