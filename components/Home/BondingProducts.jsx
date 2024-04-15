@@ -24,7 +24,7 @@ const PageHeader = styled.div`
 `;
 
 const StyledDivider = styled(Divider)`
-  margin: ${(props) => (props.isMobile ? '12px 0 ' : '0 12px ')};
+  margin: ${(props) => (props.isMobile ? '12px 0 ' : '0 12px')};
 `;
 
 const SwitchContainer = styled.div`

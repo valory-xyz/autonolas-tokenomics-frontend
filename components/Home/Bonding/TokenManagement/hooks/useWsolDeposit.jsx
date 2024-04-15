@@ -235,7 +235,10 @@ export const useWsolDeposit = () => {
           signTransaction,
         );
       } catch (error) {
-        notifySvmSpecificError('Error creating token account for WSOL ATA');
+        notifySvmSpecificError(
+          'Error creating token account for WSOL ATA',
+          error,
+        );
         console.error(error);
         return null;
       }

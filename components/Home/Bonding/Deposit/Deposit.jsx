@@ -10,11 +10,7 @@ import {
   getCommaSeparatedNumber,
 } from '@autonolas/frontend-library';
 
-import {
-  parseToWei,
-  parseToEth,
-  parseToSolDecimals,
-} from 'common-util/functions';
+import { parseToWei, parseToEth } from 'common-util/functions';
 import { ONE_ETH } from 'common-util/constants/numbers';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { useDeposit } from './useDeposit';
@@ -91,13 +87,9 @@ export const Deposit = ({
       .then(async (values) => {
         // check allowance of the product ID and open approve modal if not approved
 
-        const isSvm = false; // TODO
         try {
           const hasSufficientAllowance = await hasSufficientTokenRequest({
-            token: productToken,
-            tokenAmount: isSvm
-              ? parseToSolDecimals(values.tokenAmount)
-              : parseToWei(values.tokenAmount),
+            token: parseToWei(values.tokenAmount),
           });
           // if allowance in lower than the amount to be deposited, then needs approval
           // eg. If user is depositing 10 OLAS and the allowance is 5, then open the approve modal
