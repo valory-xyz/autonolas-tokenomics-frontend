@@ -54,4 +54,4 @@ export const [tickLowerIndex, tickUpperIndex] =
   TickUtil.getFullRangeTickIndex(TICK_SPACING);
 export const CONNECT_SVM_WALLET = 'Please connect your phantom wallet';
 
-export const DENOMINATOR = 100000000;
+export const SVM_AMOUNT_DIVISOR = 100000000;

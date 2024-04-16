@@ -10,7 +10,7 @@ import {
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
 import { useWsolDeposit } from './hooks/useWsolDeposit';
 import { DEFAULT_SLIPPAGE, slippageValidator } from './utils';
-import { DENOMINATOR } from './constants';
+import { SVM_AMOUNT_DIVISOR } from './constants';
 
 const { Text } = Typography;
 
@@ -62,7 +62,7 @@ export const WsolDeposit = () => {
 
       const bridgedToken = await deposit({ slippage, sol });
       if (Number(bridgedToken) > 0) {
-        setBridgedTokenAmount(bridgedToken / DENOMINATOR);
+        setBridgedTokenAmount(bridgedToken / SVM_AMOUNT_DIVISOR);
       }
     } catch (error) {
       console.error(error);
@@ -74,8 +74,9 @@ export const WsolDeposit = () => {
   const isDepositButtonDisabled =
     isEstimating || isDepositing || !isSvmWalletConnected;
   const estimatedOutput =
-    getCommaSeparatedNumber((estimatedQuote?.liquidity || 0) / DENOMINATOR) ||
-    '--';
+    getCommaSeparatedNumber(
+      (estimatedQuote?.liquidity || 0) / SVM_AMOUNT_DIVISOR,
+    ) || '--';
 
   return (
     <>

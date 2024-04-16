@@ -7,7 +7,7 @@ import { notifyError } from '@autonolas/frontend-library';
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
 import { useWsolWithdraw } from './hooks/useWsolWithdraw';
 import { DEFAULT_SLIPPAGE, slippageValidator } from './utils';
-import { DENOMINATOR } from './constants';
+import { SVM_AMOUNT_DIVISOR } from './constants';
 
 export const WsolWithDraw = () => {
   const [form] = Form.useForm();
@@ -28,7 +28,7 @@ export const WsolWithDraw = () => {
     const setMaxAmountFn = async () => {
       const tempAmount = await getMaxAmount();
       if (!isNil(tempAmount)) {
-        setMaxAmount(tempAmount / DENOMINATOR);
+        setMaxAmount(tempAmount / SVM_AMOUNT_DIVISOR);
       }
     };
 
@@ -47,7 +47,7 @@ export const WsolWithDraw = () => {
     try {
       setIsEstimating(true);
 
-      const actualAmount = amount * DENOMINATOR;
+      const actualAmount = amount * SVM_AMOUNT_DIVISOR;
       const quote = await getDecreaseLiquidityQuote({
         amount: actualAmount,
         slippage,
@@ -88,7 +88,7 @@ export const WsolWithDraw = () => {
     try {
       setIsWithdrawing(true);
 
-      const actualAmount = amount * DENOMINATOR;
+      const actualAmount = amount * SVM_AMOUNT_DIVISOR;
       await withdraw({ amount: actualAmount, slippage });
 
       // reset form fields after successful withdraw

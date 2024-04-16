@@ -55,7 +55,7 @@ export const depositServiceDonationRequest = async ({
     const response = await sendTransaction(fn, account);
     return response?.transactionHash;
   } catch (error) {
-    notifyError('Error occured on depositing service donation');
+    notifyError('Error occurred on depositing service donation');
     throw error;
   }
 };

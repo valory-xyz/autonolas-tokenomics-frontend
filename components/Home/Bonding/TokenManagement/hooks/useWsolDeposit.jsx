@@ -235,7 +235,10 @@ export const useWsolDeposit = () => {
           signTransaction,
         );
       } catch (error) {
-        notifySvmSpecificError('Error creating token account for WSOL ATA');
+        notifySvmSpecificError(
+          'Error creating token account for WSOL ATA',
+          error,
+        );
         console.error(error);
         return null;
       }
@@ -311,6 +314,7 @@ export const useWsolDeposit = () => {
     } catch (error) {
       notifySvmSpecificError('Failed to deposit', error);
       console.error(error);
+      return null;
     }
 
     const bridgedToken = await getBridgeTokenAmount(
