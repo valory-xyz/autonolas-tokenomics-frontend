@@ -457,6 +457,7 @@ const useProductDetailsFromIds = () => {
 
       const productList = response.map(({ result: product }, index) => {
         const [priceLP, vesting, token, supply] = product;
+        console.log('product', product);
 
         return {
           id: productIdList[index],
@@ -485,8 +486,8 @@ const useProductDetailsFromIds = () => {
         closedEventList,
       );
 
+      // return listWithSupplyList;
       const listWithProjectedChange = addProjectedChange(listWithSupplyList);
-
       return listWithProjectedChange;
     },
     [
@@ -506,7 +507,8 @@ const useProductListRequest = ({ isActive }) => {
 
   return useCallback(async () => {
     const contract = getDepositoryContract();
-    const productIdList = await contract.methods.getProducts(isActive).call();
+    const productIdList = ['198'];
+    // const productIdList = await contract.methods.getProducts(isActive).call();
     const response = await getProductDetailsFromIds(productIdList);
 
     const productList = response.map((product, index) => ({
