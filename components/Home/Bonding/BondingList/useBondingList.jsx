@@ -24,7 +24,7 @@ import { BALANCER_GRAPH_CLIENTS } from 'common-util/graphql/clients';
 import { balancerGetPoolQuery } from 'common-util/graphql/queries';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { useWhirlPoolInformation } from '../TokenManagement/hooks/useWhirlpool';
-import { POSITION } from '../TokenManagement/constants';
+import { POSITION, SVM_AMOUNT_DIVISOR } from '../TokenManagement/constants';
 import {
   getProductValueFromEvent,
   getLpTokenWithDiscount,
@@ -100,10 +100,7 @@ const LP_PAIRS = {
 };
 
 export const isSvmLpAddress = (address) =>
-  areAddressesEqual(
-    address,
-    LP_PAIRS['0x3685b8cc36b8df09ed9e81c1690100306bf23e04'],
-  );
+  areAddressesEqual(address, '0x3685b8cc36b8df09ed9e81c1690100306bf23e04');
 
 /**
  * fetches the IDF (discount factor) for the product
@@ -249,6 +246,7 @@ const useAddCurrentLpPriceToProducts = () => {
               otherRequests[i] = currentLpPrice;
             } else if (dex === DEX.SOLANA) {
               currentLpPrice = getCurrentPriceForSvm(productList[i].token);
+              console.log('currentLpPrice', currentLpPrice);
               otherRequests[i] = currentLpPrice;
             } else {
               throw new Error('Dex not supported');
@@ -270,6 +268,8 @@ const useAddCurrentLpPriceToProducts = () => {
       Object.keys(otherRequests).forEach((index) => {
         resolvedList[index] = otherResponses.shift();
       });
+
+      console.log('resolvedList', resolvedList);
 
       return productList.map((product, index) => ({
         ...product,
@@ -376,7 +376,11 @@ const useAddSupplyLeftToProducts = () =>
             ? product.priceLp
             : createProductEvent?.priceLp || 0;
 
-        return { ...product, supplyLeft, priceLp };
+        return {
+          ...product,
+          supplyLeft,
+          priceLp: '45206804483912013763871506430',
+        };
       }),
     [],
   );
@@ -407,7 +411,10 @@ const useAddProjectChangeToProducts = () =>
           .toString();
 
         // TODO: doubt: for Solana, is it necessary to parse to eth or something else
-        const parsedDoubledCurrentPriceLp = parseToEth(doubledCurrentPriceLp);
+        const parsedDoubledCurrentPriceLp =
+          parseToEth(doubledCurrentPriceLp) /
+          (isSvmLpAddress(record.token) ? 10 ** 10 : 1);
+
         const fullCurrentPriceLp =
           Number(round(parsedDoubledCurrentPriceLp, 2)) || '0';
 
@@ -419,7 +426,8 @@ const useAddProjectChangeToProducts = () =>
 
         // parse to eth and round to 2 decimal places
         const roundedDiscountedOlasPerLpToken = round(
-          parseToEth(discountedOlasPerLpTokenInBg),
+          parseToEth(discountedOlasPerLpTokenInBg) /
+            (isSvmLpAddress(record.token) ? 10 ** 10 : 1),
           2,
         );
 
@@ -429,6 +437,14 @@ const useAddProjectChangeToProducts = () =>
           (difference / fullCurrentPriceLp) * 100,
           2,
         );
+
+        console.log({
+          difference,
+          record,
+          fullCurrentPriceLp,
+          roundedDiscountedOlasPerLpToken,
+          projectedChange,
+        });
 
         return {
           ...record,
