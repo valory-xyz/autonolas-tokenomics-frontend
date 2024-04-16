@@ -1,4 +1,4 @@
-import { LOCAL_FORK_ID } from '@autonolas/frontend-library';
+import { LOCAL_FORK_ID, VM_TYPE } from '@autonolas/frontend-library';
 import {
   DISPENSER,
   DEPOSITORY,
@@ -87,7 +87,7 @@ export const ADDRESSES = {
   },
 
   // solana
-  svm: {
+  [VM_TYPE.SVM]: {
     olasAddress: 'Ez3nzG9ofodYCvEmw73XhQ87LWNYVRM2s7diB5tBZPyM',
     balancerVault: '5dMKUYJDsjZkAD3wiV3ViQkuq9pSmWQ5eAzcQLtDnUT3', // whirpool address
     wsolAddress: 'So11111111111111111111111111111111111111112',

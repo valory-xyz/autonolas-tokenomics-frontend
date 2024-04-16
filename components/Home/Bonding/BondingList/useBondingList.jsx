@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ethers } from 'ethers';
 import { memoize, round } from 'lodash';
-import { areAddressesEqual } from '@autonolas/frontend-library';
+import { areAddressesEqual, VM_TYPE } from '@autonolas/frontend-library';
 import { usePublicClient } from 'wagmi';
 
 import { DEX } from 'common-util/enums';
@@ -91,11 +91,11 @@ const LP_PAIRS = {
   },
   // solana
   '0x3685b8cc36b8df09ed9e81c1690100306bf23e04': {
-    lpChainId: 'svm',
+    lpChainId: VM_TYPE.SVM,
     name: 'OLAS-WSOL',
     originAddress: POSITION.toString(),
     dex: DEX.SOLANA,
-    poolId: ADDRESSES.svm.balancerVault,
+    poolId: ADDRESSES[VM_TYPE.SVM].balancerVault,
   },
 };
 
@@ -206,7 +206,9 @@ const useAddCurrentLpPriceToProducts = () => {
   ]);
 
   const getCurrentPriceForSvm = useCallback(async () => {
-    const priceLp = await getCurrentPriceWhirlpool(ADDRESSES.svm.balancerVault);
+    const priceLp = await getCurrentPriceWhirlpool(
+      ADDRESSES[VM_TYPE.SVM].balancerVault,
+    );
     return priceLp;
   }, [getCurrentPriceWhirlpool]);
 
@@ -314,6 +316,7 @@ const getLpTokenNamesForProducts = async (productList, events) => {
       lpPoolId: poolId,
       productName: component.token,
     });
+
     const currentPriceLpLink = getCurrentPriceLpLink({
       lpDex: lpTokenDetailsList[index].dex,
       lpChainId,
@@ -397,9 +400,34 @@ const useAddProjectChangeToProducts = () =>
         // current price of the LP token is multiplied by 2
         // because the price is for 1 LP token and
         // we need the price for 2 LP tokens
-        const fullCurrentPriceLp =
-          Number(round(parseToEth(record.currentPriceLp * 2), 2)) || 0;
+        console.log(
+          '🚀 ~ productList.map ~ record.currentPriceLp:',
+          record.currentPriceLp,
+        );
 
+        const doubledCurrentPriceLp = BigNumber.from(
+          record.currentPriceLp || '0',
+        )
+          .mul(2)
+          .toString();
+        console.log(
+          '🚀 ~ productList.map ~ doubledCurrentPriceLp:',
+          doubledCurrentPriceLp,
+        );
+
+        // TODO: doubt: for Solana, is it necessary to parse to eth or something else
+        const parsedDoubledCurrentPriceLp = parseToEth(doubledCurrentPriceLp);
+        console.log(
+          '🚀 ~ productList.map ~ parsedDoubledCurrentPriceLp:',
+          parsedDoubledCurrentPriceLp,
+        );
+
+        const fullCurrentPriceLp =
+          Number(round(parsedDoubledCurrentPriceLp, 2)) || '0';
+        console.log(
+          '🚀 ~ productList.map ~ fullCurrentPriceLp:',
+          fullCurrentPriceLp,
+        );
         const discountedOlasPerLpTokenInBg = getLpTokenWithDiscount(
           record.priceLp || 0,
           record.discount || 0,
@@ -464,7 +492,7 @@ const useProductDetailsFromIds = () => {
           discount,
           priceLp: priceLP,
           vesting,
-          token,
+          token: '0x3685b8cc36b8df09ed9e81c1690100306bf23e04', // remove '0x
           supply,
         };
       });
@@ -479,15 +507,18 @@ const useProductDetailsFromIds = () => {
         listWithCurrentLpPrice,
         createEventList,
       );
+      // return listWithLpTokens;
 
       const listWithSupplyList = await addSupplyLeftToProducts(
         listWithLpTokens,
         createEventList,
         closedEventList,
       );
-
+      console.log('🚀 ~ TILL SUPPLY LIST:', listWithSupplyList);
       // return listWithSupplyList;
+
       const listWithProjectedChange = addProjectedChange(listWithSupplyList);
+      console.log('🚀 ~ listWithProjectedChange:', listWithProjectedChange);
       return listWithProjectedChange;
     },
     [

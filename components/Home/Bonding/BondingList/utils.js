@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { notifyError } from '@autonolas/frontend-library';
+import { VM_TYPE, notifyError } from '@autonolas/frontend-library';
 import { gql } from 'graphql-request';
 import { memoize } from 'lodash';
 
@@ -43,23 +43,21 @@ export const getLpTokenWithDiscount = (lpTokenValue, discount) => {
 export const getSvmCalculatedPriceLp = (reserveOlas, totalSupply) => {
   const reserveOlasBG = BigNumber.from(reserveOlas.toString());
   const totalSupplyBG = BigNumber.from(totalSupply.toString());
-  console.log(
-    '🚀 ~ getSvmCalculatedPriceLp ~ reserveOlasBG:',
-    reserveOlasBG.toString(),
-  );
-  console.log(
-    '🚀 ~ getSvmCalculatedPriceLp ~ totalSupplyBG:',
-    totalSupplyBG.toString(),
-  );
+  // console.log(
+  //   '🚀 ~ getSvmCalculatedPriceLp ~ reserveOlasBG:',
+  //   reserveOlasBG.toString(),
+  // );
+  // console.log(
+  //   '🚀 ~ getSvmCalculatedPriceLp ~ totalSupplyBG:',
+  //   totalSupplyBG.toString(),
+  // );
 
   const multiplier = BigNumber.from(`1${'0'.repeat(27)}`);
-  console.log('🚀 ~ multiplier:', multiplier.toString());
-
-  console.log('🚀 ~ multiplier:', reserveOlasBG.mul(multiplier).toString());
+  // console.log('🚀 ~ multiplier:', multiplier.toString());
+  // console.log('🚀 ~ multiplier:', reserveOlasBG.mul(multiplier).toString());
 
   const priceLp = reserveOlasBG.mul(multiplier).div(totalSupplyBG).toString();
-
-  console.log('🚀 ~ priceLp:', priceLp);
+  // console.log('🚀 ~ priceLp:', priceLp);
 
   return priceLp;
 };
@@ -95,7 +93,7 @@ export const getLpTokenLink = ({ lpDex, lpChainId, lpPoolId, productName }) => {
   }
 
   if (lpDex === DEX.SOLANA) {
-    return `https://v1.orca.so/liquidity/browse?tokenMint=${ADDRESSES.svm.olasAddress}&tokenMint=${ADDRESSES.svm.wsolAddress}`;
+    return `https://v1.orca.so/liquidity/browse?tokenMint=${ADDRESSES[VM_TYPE.SVM].olasAddress}&tokenMint=${ADDRESSES[VM_TYPE.SVM].wsolAddress}`;
   }
 
   return new Error('Dex not supported');

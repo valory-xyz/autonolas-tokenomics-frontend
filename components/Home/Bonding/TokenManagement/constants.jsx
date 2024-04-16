@@ -1,3 +1,4 @@
+import { VM_TYPE } from '@autonolas/frontend-library';
 import { web3 } from '@coral-xyz/anchor';
 import { TickUtil } from '@orca-so/whirlpools-sdk';
 
@@ -9,7 +10,9 @@ export const PROGRAM_ID = new web3.PublicKey(
 export const ORCA = new web3.PublicKey(
   'whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc',
 );
-export const WHIRLPOOL = new web3.PublicKey(ADDRESSES.svm.balancerVault);
+export const WHIRLPOOL = new web3.PublicKey(
+  ADDRESSES[VM_TYPE.SVM].balancerVault,
+);
 export const SOL = new web3.PublicKey(
   'So11111111111111111111111111111111111111112',
 );

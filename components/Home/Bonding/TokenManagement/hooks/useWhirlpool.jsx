@@ -7,7 +7,7 @@ import {
 } from '@orca-so/whirlpools-sdk';
 import { BN } from '@coral-xyz/anchor';
 import { gql, GraphQLClient } from 'graphql-request';
-import { areAddressesEqual } from '@autonolas/frontend-library';
+import { VM_TYPE, areAddressesEqual } from '@autonolas/frontend-library';
 
 import { ADDRESSES } from 'common-util/constants/addresses';
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
@@ -144,7 +144,7 @@ export const useWhirlPoolInformation = () => {
     });
 
     const address1 = whirlpoolTokenA.mint.toString();
-    const address2 = ADDRESSES.svm.olasAddress;
+    const address2 = ADDRESSES[VM_TYPE.SVM].olasAddress;
 
     const reserveOlas = areAddressesEqual(address1, address2)
       ? reserveToken0

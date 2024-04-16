@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import PropTypes from 'prop-types';
 import {
   Button,
@@ -10,7 +11,12 @@ import {
   Typography,
 } from 'antd';
 import { round, isNaN, remove } from 'lodash';
-import { COLOR, NA, getNetworkName } from '@autonolas/frontend-library';
+import {
+  COLOR,
+  NA,
+  VM_TYPE,
+  getNetworkName,
+} from '@autonolas/frontend-library';
 import {
   ExclamationCircleTwoTone,
   QuestionCircleOutlined,
@@ -64,7 +70,10 @@ const getColumns = (
       title: 'Network',
       dataIndex: 'lpChainId',
       key: 'lpChainId',
-      render: (x) => getNetworkName(x),
+      render: (x) => {
+        if (x === VM_TYPE.SVM) return 'Solana';
+        return getNetworkName(x);
+      },
     },
     {
       title: getTitle('LP Token', 'LP token address enabled by the Treasury'),
@@ -234,12 +243,39 @@ const getColumns = (
   return columns;
 };
 
+const sortList = (list) =>
+  list.sort((a, b) => {
+    if (isNaN(a.projectedChange)) return 1;
+    if (isNaN(b.projectedChange)) return -1;
+    return b.projectedChange - a.projectedChange;
+  });
+
 const NoProducts = () => (
   <>
     <UnorderedListOutlined style={{ fontSize: 64 }} className="mb-8" />
     <br />
     No products
   </>
+);
+
+const ErrorMessageAndReload = () => (
+  <Container className="mt-16">
+    <Empty
+      description={
+        <>
+          <Text className="mb-8">Couldn&apos;t fetch products</Text>
+          <br />
+          <Button onClick={() => window.location.reload()}>Try again</Button>
+        </>
+      }
+      image={
+        <ExclamationCircleTwoTone
+          style={{ fontSize: '7rem' }}
+          twoToneColor={COLOR.GREY_1}
+        />
+      }
+    />
+  </Container>
 );
 
 export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
@@ -257,54 +293,29 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
     refetch,
   } = useProducts({ isActive });
 
-  const onBondClick = (row) => {
-    handleProductDetails(row);
-  };
+  const onBondClick = useCallback(
+    (row) => {
+      handleProductDetails(row);
+    },
+    [handleProductDetails],
+  );
 
-  const onModalClose = () => {
+  const handleModalClose = useCallback(() => {
     handleProductDetails(null);
-  };
+  }, [handleProductDetails]);
 
-  const sortList = (list) =>
-    list.sort((a, b) => {
-      if (isNaN(a.projectedChange)) return 1;
-      if (isNaN(b.projectedChange)) return -1;
-      return b.projectedChange - a.projectedChange;
-    });
-
-  const getProductsDataSource = () => {
+  const getProductsDataSource = useCallback(() => {
     const sortedList = sortList(filteredProducts);
-    const processedList = hideEmptyProducts
+    const processedList = !hideEmptyProducts // TODO: remove exclamation mark
       ? sortedList.filter((x) => x.supplyLeft > 0.00001)
       : sortedList;
 
+    console.log('processedList', processedList);
+
     return processedList;
-  };
+  }, [filteredProducts, hideEmptyProducts]);
 
-  if (errorState) {
-    return (
-      <Container className="mt-16">
-        <Empty
-          description={
-            <>
-              <Text className="mb-8">Couldn&apos;t fetch products</Text>
-              <br />
-              <Button onClick={() => window.location.reload()}>
-                Try again
-              </Button>
-            </>
-          }
-          image={
-            <ExclamationCircleTwoTone
-              style={{ fontSize: '7rem' }}
-              twoToneColor={COLOR.GREY_1}
-            />
-          }
-        />
-      </Container>
-    );
-  }
-
+  if (errorState) return <ErrorMessageAndReload />;
   return (
     <Container>
       <Table
@@ -344,7 +355,7 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
           )}
           productSupply={productDetails?.supply}
           getProducts={refetch}
-          closeModal={onModalClose}
+          closeModal={handleModalClose}
         />
       )}
     </Container>
