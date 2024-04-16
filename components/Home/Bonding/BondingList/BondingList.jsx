@@ -69,7 +69,7 @@ const getColumns = (
       render: (x) => getNetworkName(x),
     },
     {
-      title: 'Guide Link',
+      title: 'Guide',
       dataIndex: 'guide',
       key: 'guide',
       width: 100,
@@ -80,7 +80,7 @@ const getColumns = (
             target="_blank"
             rel="noreferrer"
           >
-            Guide
+            Guide ↗
           </a>
         );
       },
