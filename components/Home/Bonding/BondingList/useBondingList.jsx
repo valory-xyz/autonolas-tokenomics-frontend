@@ -400,34 +400,18 @@ const useAddProjectChangeToProducts = () =>
         // current price of the LP token is multiplied by 2
         // because the price is for 1 LP token and
         // we need the price for 2 LP tokens
-        console.log(
-          '🚀 ~ productList.map ~ record.currentPriceLp:',
-          record.currentPriceLp,
-        );
-
         const doubledCurrentPriceLp = BigNumber.from(
           record.currentPriceLp || '0',
         )
           .mul(2)
           .toString();
-        console.log(
-          '🚀 ~ productList.map ~ doubledCurrentPriceLp:',
-          doubledCurrentPriceLp,
-        );
 
         // TODO: doubt: for Solana, is it necessary to parse to eth or something else
         const parsedDoubledCurrentPriceLp = parseToEth(doubledCurrentPriceLp);
-        console.log(
-          '🚀 ~ productList.map ~ parsedDoubledCurrentPriceLp:',
-          parsedDoubledCurrentPriceLp,
-        );
-
         const fullCurrentPriceLp =
           Number(round(parsedDoubledCurrentPriceLp, 2)) || '0';
-        console.log(
-          '🚀 ~ productList.map ~ fullCurrentPriceLp:',
-          fullCurrentPriceLp,
-        );
+
+        // get the discounted OLAS per LP token
         const discountedOlasPerLpTokenInBg = getLpTokenWithDiscount(
           record.priceLp || 0,
           record.discount || 0,
@@ -485,14 +469,13 @@ const useProductDetailsFromIds = () => {
 
       const productList = response.map(({ result: product }, index) => {
         const [priceLP, vesting, token, supply] = product;
-        console.log('product', product);
 
         return {
           id: productIdList[index],
           discount,
           priceLp: priceLP,
           vesting,
-          token: '0x3685b8cc36b8df09ed9e81c1690100306bf23e04', // remove '0x
+          token: '0x3685b8cc36b8df09ed9e81c1690100306bf23e04' || token, // TODO: remove
           supply,
         };
       });
@@ -507,18 +490,15 @@ const useProductDetailsFromIds = () => {
         listWithCurrentLpPrice,
         createEventList,
       );
-      // return listWithLpTokens;
 
       const listWithSupplyList = await addSupplyLeftToProducts(
         listWithLpTokens,
         createEventList,
         closedEventList,
       );
-      console.log('🚀 ~ TILL SUPPLY LIST:', listWithSupplyList);
-      // return listWithSupplyList;
 
       const listWithProjectedChange = addProjectedChange(listWithSupplyList);
-      console.log('🚀 ~ listWithProjectedChange:', listWithProjectedChange);
+
       return listWithProjectedChange;
     },
     [
@@ -538,8 +518,8 @@ const useProductListRequest = ({ isActive }) => {
 
   return useCallback(async () => {
     const contract = getDepositoryContract();
-    const productIdList = ['198'];
-    // const productIdList = await contract.methods.getProducts(isActive).call();
+    const productIdList =
+      ['198'] || (await contract.methods.getProducts(isActive).call()); // TODO: remove
     const response = await getProductDetailsFromIds(productIdList);
 
     const productList = response.map((product, index) => ({

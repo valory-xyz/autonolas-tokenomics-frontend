@@ -306,11 +306,9 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
 
   const getProductsDataSource = useCallback(() => {
     const sortedList = sortList(filteredProducts);
-    const processedList = !hideEmptyProducts // TODO: remove exclamation mark
+    const processedList = hideEmptyProducts
       ? sortedList.filter((x) => x.supplyLeft > 0.00001)
       : sortedList;
-
-    console.log('processedList', processedList);
 
     return processedList;
   }, [filteredProducts, hideEmptyProducts]);

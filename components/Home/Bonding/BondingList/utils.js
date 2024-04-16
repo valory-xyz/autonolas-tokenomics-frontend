@@ -43,22 +43,8 @@ export const getLpTokenWithDiscount = (lpTokenValue, discount) => {
 export const getSvmCalculatedPriceLp = (reserveOlas, totalSupply) => {
   const reserveOlasBG = BigNumber.from(reserveOlas.toString());
   const totalSupplyBG = BigNumber.from(totalSupply.toString());
-  // console.log(
-  //   '🚀 ~ getSvmCalculatedPriceLp ~ reserveOlasBG:',
-  //   reserveOlasBG.toString(),
-  // );
-  // console.log(
-  //   '🚀 ~ getSvmCalculatedPriceLp ~ totalSupplyBG:',
-  //   totalSupplyBG.toString(),
-  // );
-
   const multiplier = BigNumber.from(`1${'0'.repeat(27)}`);
-  // console.log('🚀 ~ multiplier:', multiplier.toString());
-  // console.log('🚀 ~ multiplier:', reserveOlasBG.mul(multiplier).toString());
-
   const priceLp = reserveOlasBG.mul(multiplier).div(totalSupplyBG).toString();
-  // console.log('🚀 ~ priceLp:', priceLp);
-
   return priceLp;
 };
 
