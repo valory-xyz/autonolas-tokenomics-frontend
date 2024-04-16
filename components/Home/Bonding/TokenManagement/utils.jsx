@@ -52,7 +52,24 @@ export const notifySvmSpecificError = (errorMessage, errorObject) => {
     transactionStack &&
     transactionStack.includes('TransactionExpiredTimeoutError')
   ) {
-    notifyError(errorMessage, errorObject.message);
+    // Extract the signature using a regex in the error message
+    const signature = transactionStack.match(/Check signature (\S+)/)[1];
+    const message = (
+      <>
+        Transaction was not confirmed in 30.00 seconds. It is unknown if it
+        succeeded or failed. Check signature{' '}
+        <a
+          href={`https://solscan.io/tx/${signature}`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          {signature}
+        </a>{' '}
+        here.
+      </>
+    );
+
+    notifyError(errorMessage, message);
   } else {
     notifyError(errorMessage);
   }
