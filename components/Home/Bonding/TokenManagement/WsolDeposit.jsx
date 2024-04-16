@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Button, Form, InputNumber, Flex, Typography, Spin, Alert } from 'antd';
 import pDebounce from 'p-debounce';
 import { isNumber } from 'lodash';
-import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import {
   getCommaSeparatedNumber,
   notifyError,
@@ -11,6 +10,7 @@ import {
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
 import { useWsolDeposit } from './hooks/useWsolDeposit';
 import { DEFAULT_SLIPPAGE, slippageValidator } from './utils';
+import { SVM_AMOUNT_DIVISOR } from './constants';
 
 const { Text } = Typography;
 
@@ -30,16 +30,16 @@ export const WsolDeposit = () => {
   const getDepositQuote = pDebounce(fn, 500);
 
   const onWsolAndSlippageChange = async () => {
-    const wsol = form.getFieldValue('wsol');
+    const sol = form.getFieldValue('sol');
     const slippage = form.getFieldValue('slippage');
 
-    // estimate quote only if wsol and slippage are valid
-    if (!isNumber(wsol) || !isNumber(slippage)) return;
+    // estimate quote only if sol and slippage are valid
+    if (!isNumber(sol) || !isNumber(slippage)) return;
 
     try {
       setIsEstimating(true);
 
-      const quote = await getDepositQuote({ slippage, wsol });
+      const quote = await getDepositQuote({ slippage, sol });
       const transformedQuote = await getDepositTransformedQuote(quote);
       setEstimatedQuote(transformedQuote);
 
@@ -57,12 +57,12 @@ export const WsolDeposit = () => {
     try {
       setIsDepositing(true);
 
-      const wsol = form.getFieldValue('wsol');
+      const sol = form.getFieldValue('sol');
       const slippage = form.getFieldValue('slippage');
 
-      const bridgedToken = await deposit({ slippage, wsol });
+      const bridgedToken = await deposit({ slippage, sol });
       if (Number(bridgedToken) > 0) {
-        setBridgedTokenAmount(bridgedToken / LAMPORTS_PER_SOL);
+        setBridgedTokenAmount(bridgedToken / SVM_AMOUNT_DIVISOR);
       }
     } catch (error) {
       console.error(error);
@@ -75,7 +75,7 @@ export const WsolDeposit = () => {
     isEstimating || isDepositing || !isSvmWalletConnected;
   const estimatedOutput =
     getCommaSeparatedNumber(
-      (estimatedQuote?.liquidity || 0) / LAMPORTS_PER_SOL,
+      (estimatedQuote?.liquidity || 0) / SVM_AMOUNT_DIVISOR,
     ) || '--';
 
   return (
@@ -88,10 +88,10 @@ export const WsolDeposit = () => {
         onFinish={handleDeposit}
       >
         <Form.Item
-          name="wsol"
-          label="WSOL"
+          name="sol"
+          label="SOL (WSOL)"
           rules={[
-            { required: true, message: 'Please input a valid amount of WSOL' },
+            { required: true, message: 'Please input a valid amount of SOL' },
           ]}
         >
           <InputNumber
@@ -137,7 +137,7 @@ export const WsolDeposit = () => {
           <Spin spinning={isEstimating} size="small">
             <Flex vertical gap="small" className="mb-16">
               <Text strong>ESTIMATED OUTPUT</Text>
-              <Text>{`${estimatedOutput} Bridged Tokens`}</Text>
+              <Text>{`${estimatedOutput} WSOL-OLAS LP`}</Text>
             </Flex>
           </Spin>
 
@@ -158,9 +158,7 @@ export const WsolDeposit = () => {
             <>
               You received
               <Text strong>
-                {` ${getCommaSeparatedNumber(
-                  bridgedTokenAmount,
-                )} Bridged Tokens`}
+                {` ${getCommaSeparatedNumber(bridgedTokenAmount)} WSOL-OLAS LP`}
               </Text>
             </>
           }

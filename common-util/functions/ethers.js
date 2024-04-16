@@ -21,3 +21,9 @@ export const getBlockTimestamp = async (block = 'latest') => {
   const temp = await window?.WEB3_PROVIDER.eth.getBlock(block);
   return temp.timestamp * 1;
 };
+
+/**
+ * multiplies the amount by 10^8
+ */
+export const parseToSolDecimals = (amount) =>
+  utils.parseUnits(`${amount}`, 8).toString();

@@ -53,3 +53,5 @@ export const WHIRLPOOL_CONFIG_ID = new web3.PublicKey(
 export const [tickLowerIndex, tickUpperIndex] =
   TickUtil.getFullRangeTickIndex(TICK_SPACING);
 export const CONNECT_SVM_WALLET = 'Please connect your phantom wallet';
+
+export const SVM_AMOUNT_DIVISOR = 100000000;

@@ -43,7 +43,7 @@ const { BigNumber } = ethers;
  *   originAddress is pool address
  * }
  */
-export const LP_PAIRS = {
+const LP_PAIRS = {
   // gnosis-chain
   '0x27df632fd0dcf191C418c803801D521cd579F18e': {
     lpChainId: 100,

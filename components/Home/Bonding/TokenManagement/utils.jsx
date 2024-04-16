@@ -1,4 +1,6 @@
 /* eslint-disable no-param-reassign */
+import { notifyError } from '@autonolas/frontend-library';
+
 export const DEFAULT_SLIPPAGE = 1;
 
 export const SVM_EMPTY_ADDRESS = '11111111111111111111111111111111';
@@ -41,4 +43,34 @@ export const configureAndSendCurrentTransaction = async (
     signature,
   });
   return signature;
+};
+
+export const notifySvmSpecificError = (errorMessage, errorObject) => {
+  const transactionStack = 'stack' in errorObject ? errorObject.stack : null;
+
+  if (
+    transactionStack &&
+    transactionStack.includes('TransactionExpiredTimeoutError')
+  ) {
+    // Extract the signature using a regex in the error message
+    const signature = transactionStack.match(/Check signature (\S+)/)[1];
+    const message = (
+      <>
+        Transaction was not confirmed in 30.00 seconds. It is unknown if it
+        succeeded or failed. Check signature{' '}
+        <a
+          href={`https://solscan.io/tx/${signature}`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          {signature}
+        </a>{' '}
+        here.
+      </>
+    );
+
+    notifyError(errorMessage, message);
+  } else {
+    notifyError(errorMessage);
+  }
 };

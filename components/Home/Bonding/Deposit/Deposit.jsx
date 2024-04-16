@@ -46,7 +46,7 @@ export const Deposit = ({
 
         setLpBalance(lpResponse);
       } catch (error) {
-        notifyError('Error occured on fetching LP balance');
+        notifyError('Error occurred on fetching LP balance');
         console.error(error);
       }
     };
@@ -86,6 +86,7 @@ export const Deposit = ({
       .validateFields()
       .then(async (values) => {
         // check allowance of the product ID and open approve modal if not approved
+
         try {
           const hasSufficientAllowance = await hasSufficientTokenRequest({
             token: productToken,
@@ -100,7 +101,7 @@ export const Deposit = ({
           }
         } catch (error) {
           notifyError(
-            `Error occured on fetching allowance for the product token ${productToken}`,
+            `Error ocurred on fetching allowance for the product token ${productToken}`,
           );
         }
       })

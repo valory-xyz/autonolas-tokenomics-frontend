@@ -23,8 +23,7 @@ import { parseToEth } from 'common-util/functions/ethers';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { BOND_WEBSITE_URL } from 'common-util/constants';
 import { Deposit } from '../Deposit/Deposit';
-import { WsolTokenManagement } from '../TokenManagement/WsolTokenManagement';
-import { LP_PAIRS, useProducts } from './useBondingList';
+import { useProducts } from './useBondingList';
 import { getLpTokenWithDiscount } from './utils';
 
 const { Text } = Typography;
@@ -90,13 +89,6 @@ const getColumns = (
       dataIndex: 'lpTokenName',
       key: 'lpTokenName',
       render: (x, data) => {
-        const isValid = x === LP_PAIRS.svm.name;
-        if (isValid) {
-          return (
-            <WsolTokenManagement lpToken={x} lpTokenLink={data.lpTokenLink} />
-          );
-        }
-
         return (
           <a href={data.lpTokenLink} target="_blank" rel="noreferrer">
             {x}
