@@ -2,12 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Form, InputNumber, Spin } from 'antd';
 import pDebounce from 'p-debounce';
 import { isNil, isNumber } from 'lodash';
-import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { notifyError } from '@autonolas/frontend-library';
 
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
 import { useWsolWithdraw } from './hooks/useWsolWithdraw';
 import { DEFAULT_SLIPPAGE, slippageValidator } from './utils';
+import { SVM_AMOUNT_DIVISOR } from './constants';
 
 export const WsolWithDraw = () => {
   const [form] = Form.useForm();
@@ -24,11 +24,11 @@ export const WsolWithDraw = () => {
   } = useWsolWithdraw();
   const getDecreaseLiquidityQuote = pDebounce(fn, 500);
 
-  const updateMaxAmount = useCallback(async () => {
+  const updateMaxAmount = useCallback(() => {
     const setMaxAmountFn = async () => {
       const tempAmount = await getMaxAmount();
       if (!isNil(tempAmount)) {
-        setMaxAmount(tempAmount / LAMPORTS_PER_SOL);
+        setMaxAmount(tempAmount / SVM_AMOUNT_DIVISOR);
       }
     };
 
@@ -47,7 +47,7 @@ export const WsolWithDraw = () => {
     try {
       setIsEstimating(true);
 
-      const actualAmount = amount * LAMPORTS_PER_SOL;
+      const actualAmount = amount * SVM_AMOUNT_DIVISOR;
       const quote = await getDecreaseLiquidityQuote({
         amount: actualAmount,
         slippage,
@@ -88,7 +88,7 @@ export const WsolWithDraw = () => {
     try {
       setIsWithdrawing(true);
 
-      const actualAmount = amount * LAMPORTS_PER_SOL;
+      const actualAmount = amount * SVM_AMOUNT_DIVISOR;
       await withdraw({ amount: actualAmount, slippage });
 
       // reset form fields after successful withdraw
@@ -140,7 +140,7 @@ export const WsolWithDraw = () => {
         ]}
         label={
           <>
-            Bridged Tokens Amount
+            WSOL-OLAS LP
             <Button
               size="small"
               type="primary"
@@ -180,7 +180,7 @@ export const WsolWithDraw = () => {
       <Spin spinning={isEstimating} size="small">
         <Form.Item
           name="olas"
-          label="OLAS"
+          label="Estimated OLAS"
           rules={[{ required: true, message: 'Please input a valid OLAS' }]}
         >
           <InputNumber disabled className="full-width" />
@@ -188,7 +188,7 @@ export const WsolWithDraw = () => {
 
         <Form.Item
           name="wsol"
-          label="WSOL"
+          label="Estimated WSOL"
           rules={[{ required: true, message: 'Please input a valid WSOL' }]}
         >
           <InputNumber disabled className="full-width" />

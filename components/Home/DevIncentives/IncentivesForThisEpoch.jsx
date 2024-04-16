@@ -131,7 +131,7 @@ export const IncentivesForThisEpoch = () => {
         }
       })
       .catch((ownersForUnitsError) => {
-        notifyError('Error occured on fetching owners for units');
+        notifyError('Error occurred on fetching owners for units');
         console.error(ownersForUnitsError);
       })
       .finally(() => {

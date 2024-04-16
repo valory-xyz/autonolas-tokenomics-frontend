@@ -18,6 +18,7 @@ import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
 import {
   SVM_EMPTY_ADDRESS,
   configureAndSendCurrentTransaction,
+  notifySvmSpecificError,
 } from '../utils';
 import { useGetOrCreateAssociatedTokenAccount } from './useGetOrCreateAssociatedTokenAccount';
 import { useWhirlpool } from './useWhirlpool';
@@ -111,11 +112,11 @@ export const useWsolDeposit = () => {
     useGetOrCreateAssociatedTokenAccount();
   const program = new Program(idl, PROGRAM_ID, anchorProvider);
 
-  const getDepositIncreaseLiquidityQuote = async ({ wsol, slippage }) => {
+  const getDepositIncreaseLiquidityQuote = async ({ sol, slippage }) => {
     const { whirlpoolData, whirlpoolTokenA, whirlpoolTokenB } =
       await getWhirlpoolData();
     const slippageTolerance = Percentage.fromDecimal(new Decimal(slippage));
-    const inputTokenAmount = DecimalUtil.toBN(new Decimal(wsol), 9);
+    const inputTokenAmount = DecimalUtil.toBN(new Decimal(sol), 9);
 
     return increaseLiquidityQuoteByInputTokenWithParams({
       tokenMintA: whirlpoolTokenA.mint,
@@ -159,14 +160,14 @@ export const useWsolDeposit = () => {
     return noEnoughOlas;
   };
 
-  const deposit = async ({ wsol, slippage }) => {
+  const deposit = async ({ sol, slippage }) => {
     if (!svmWalletPublicKey) {
       notifyError(CONNECT_SVM_WALLET);
       return null;
     }
 
     const { whirlpoolTokenA, whirlpoolTokenB } = await getWhirlpoolData();
-    const quote = await getDepositIncreaseLiquidityQuote({ wsol, slippage });
+    const quote = await getDepositIncreaseLiquidityQuote({ sol, slippage });
     const { solMax, olasMax } = await getDepositTransformedQuote(quote);
 
     // OLAS associated token account MUST always exist when the person bonds
@@ -198,8 +199,8 @@ export const useWsolDeposit = () => {
       svmWalletPublicKey,
     );
     if (!bridgedTokenAccount) {
-      notifyError(
-        'You do not have the bridged token account, please try again.',
+      notifySvmSpecificError(
+        'You do not have the WSOL-OLAS LP account, please try again.',
       );
       return null;
     }
@@ -234,7 +235,10 @@ export const useWsolDeposit = () => {
           signTransaction,
         );
       } catch (error) {
-        notifyError('Error creating token account for WSOL ATA');
+        notifySvmSpecificError(
+          'Error creating token account for WSOL ATA',
+          error,
+        );
         console.error(error);
         return null;
       }
@@ -290,7 +294,7 @@ export const useWsolDeposit = () => {
         .deposit(quote.liquidityAmount, quote.tokenMaxA, quote.tokenMaxB)
         .accounts({
           position: POSITION,
-          poistionMint: POSITION_MINT,
+          positionMint: POSITION_MINT,
           pdaPositionAccount: PDA_POSITION_ACCOUNT,
           whirlpool: WHIRLPOOL,
           tokenOwnerAccountA,
@@ -308,8 +312,9 @@ export const useWsolDeposit = () => {
 
       notifySuccess('Deposit successful');
     } catch (error) {
-      notifyError('Failed to deposit');
+      notifySvmSpecificError('Failed to deposit', error);
       console.error(error);
+      return null;
     }
 
     const bridgedToken = await getBridgeTokenAmount(

@@ -11,7 +11,7 @@ import { areAddressesEqual } from '@autonolas/frontend-library';
 
 import { ADDRESSES } from 'common-util/constants/addresses';
 import { useSvmConnectivity } from 'common-util/hooks/useSvmConnectivity';
-import { getCalculatedPriceLp } from '../../BondingList/utils';
+import { getSvmCalculatedPriceLp } from '../../BondingList/utils';
 import { WHIRLPOOL, ORCA } from '../constants';
 
 const whirlpoolQuery = async () => {
@@ -150,6 +150,6 @@ export const useWhirlPoolInformation = () => {
       ? reserveToken0
       : reserveToken1;
 
-    return getCalculatedPriceLp(reserveOlas, totalSupply);
+    return getSvmCalculatedPriceLp(reserveOlas, totalSupply);
   }, [positions, getWhirlpoolData]);
 };
