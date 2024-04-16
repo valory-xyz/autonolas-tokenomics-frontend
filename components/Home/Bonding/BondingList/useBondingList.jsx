@@ -101,7 +101,7 @@ export const LP_PAIRS = {
     originAddress: POSITION.toString(),
     dex: DEX.SOLANA,
     poolId: ADDRESSES.svm.balancerVault,
-    guide: 'olas-wsol-via-orca-on-solana',
+    guide: 'wsol-olas-via-orca-on-solana',
   },
 };
 
