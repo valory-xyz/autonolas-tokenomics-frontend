@@ -46,7 +46,7 @@ export const Deposit = ({
 
         setLpBalance(lpResponse);
       } catch (error) {
-        notifyError('Error occured on fetching LP balance');
+        notifyError('Error occurred on fetching LP balance');
         console.error(error);
       }
     };

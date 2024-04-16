@@ -314,6 +314,7 @@ export const useWsolDeposit = () => {
     } catch (error) {
       notifySvmSpecificError('Failed to deposit', error);
       console.error(error);
+      return null;
     }
 
     const bridgedToken = await getBridgeTokenAmount(
