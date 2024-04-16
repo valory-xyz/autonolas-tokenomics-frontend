@@ -24,7 +24,7 @@ import { BALANCER_GRAPH_CLIENTS } from 'common-util/graphql/clients';
 import { balancerGetPoolQuery } from 'common-util/graphql/queries';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { useWhirlPoolInformation } from '../TokenManagement/hooks/useWhirlpool';
-import { POSITION, SVM_AMOUNT_DIVISOR } from '../TokenManagement/constants';
+import { POSITION } from '../TokenManagement/constants';
 import {
   getProductValueFromEvent,
   getLpTokenWithDiscount,
@@ -246,7 +246,6 @@ const useAddCurrentLpPriceToProducts = () => {
               otherRequests[i] = currentLpPrice;
             } else if (dex === DEX.SOLANA) {
               currentLpPrice = getCurrentPriceForSvm(productList[i].token);
-              console.log('currentLpPrice', currentLpPrice);
               otherRequests[i] = currentLpPrice;
             } else {
               throw new Error('Dex not supported');
@@ -268,8 +267,6 @@ const useAddCurrentLpPriceToProducts = () => {
       Object.keys(otherRequests).forEach((index) => {
         resolvedList[index] = otherResponses.shift();
       });
-
-      console.log('resolvedList', resolvedList);
 
       return productList.map((product, index) => ({
         ...product,
@@ -316,7 +313,6 @@ const getLpTokenNamesForProducts = async (productList, events) => {
       lpPoolId: poolId,
       productName: component.token,
     });
-
     const currentPriceLpLink = getCurrentPriceLpLink({
       lpDex: lpTokenDetailsList[index].dex,
       lpChainId,
@@ -379,7 +375,8 @@ const useAddSupplyLeftToProducts = () =>
         return {
           ...product,
           supplyLeft,
-          priceLp: '45206804483912013763871506430',
+          priceLp,
+          // priceLp: '45206804483912013763871506430', // TODO: test for solana, remove
         };
       }),
     [],
@@ -404,13 +401,9 @@ const useAddProjectChangeToProducts = () =>
         // current price of the LP token is multiplied by 2
         // because the price is for 1 LP token and
         // we need the price for 2 LP tokens
-        const doubledCurrentPriceLp = BigNumber.from(
-          record.currentPriceLp || '0',
-        )
-          .mul(2)
-          .toString();
+        const currentPriceLpInBg = BigNumber.from(record.currentPriceLp || '0');
+        const doubledCurrentPriceLp = currentPriceLpInBg.mul(2).toString();
 
-        // TODO: doubt: for Solana, is it necessary to parse to eth or something else
         const parsedDoubledCurrentPriceLp =
           parseToEth(doubledCurrentPriceLp) /
           (isSvmLpAddress(record.token) ? 10 ** 10 : 1);
@@ -437,14 +430,6 @@ const useAddProjectChangeToProducts = () =>
           (difference / fullCurrentPriceLp) * 100,
           2,
         );
-
-        console.log({
-          difference,
-          record,
-          fullCurrentPriceLp,
-          roundedDiscountedOlasPerLpToken,
-          projectedChange,
-        });
 
         return {
           ...record,

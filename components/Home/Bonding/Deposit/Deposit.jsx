@@ -140,40 +140,28 @@ export const Deposit = ({
   };
 
   const getOlasPayout = () => {
-    // if (
-    //   !tokenAmountInputValue ||
-    //   tokenAmountInputValue > getRemainingLpSupplyInEth()
-    // ) {
-    //   return '--';
-    // }
+    if (
+      !tokenAmountInputValue ||
+      tokenAmountInputValue > getRemainingLpSupplyInEth()
+    ) {
+      return '--';
+    }
 
     const tokenAmountValue = BigNumber.from(
       isSvmProduct ? tokenAmountInputValue : parseToWei(tokenAmountInputValue),
     );
 
-    console.log(
-      'tokenAmountValue',
-      productToken,
-      isSvmProduct,
-      tokenAmountValue.toString(),
-    );
-
     const getPayout = () => {
+      const payoutInBg =
+        BigNumber.from(productLpPriceInBg).mul(tokenAmountValue);
+
+      // TODO: decimal is missing (eg. 4.52)
       if (isSvmProduct) {
-        return BigNumber.from(productLpPriceInBg)
-          .mul(tokenAmountValue)
-          .div(BigNumber.from(`1${'0'.repeat(28)}`));
+        return Number(payoutInBg.div(BigNumber.from(`1${'0'.repeat(28)}`)));
       }
 
-      return Number(
-        BigNumber.from(productLpPriceInBg)
-          .mul(tokenAmountValue)
-          .div(ONE_ETH)
-          .div(ONE_ETH),
-      );
+      return Number(payoutInBg.div(ONE_ETH).div(ONE_ETH));
     };
-
-    console.log('olasPayout', getPayout().toString());
 
     return getCommaSeparatedNumber(getPayout(), 4);
   };
@@ -210,26 +198,30 @@ export const Deposit = ({
             className="custom-form-item-tokenAmount"
             label="LP Token Amount"
             name="tokenAmount"
-            extra="Units are denominated in ETH, not wei" // TODO: For solana 8 decimals
-            // rules={[
-            //   { required: true, message: 'Please input a valid amount' },
-            //   () => ({
-            //     validator(_, value) {
-            //       if (value === '' || isNil(value)) return Promise.resolve();
-            //       if (value <= 0) {
-            //         return Promise.reject(
-            //           new Error('Please input a valid amount'),
-            //         );
-            //       }
-            //       if (value > remainingLpSupplyInEth) {
-            //         return Promise.reject(
-            //           new Error('Amount cannot be greater than the balance'),
-            //         );
-            //       }
-            //       return Promise.resolve();
-            //     },
-            //   }),
-            // ]}
+            extra={
+              isSvmProduct
+                ? 'Units are denominated in 8 decimals'
+                : 'Units are denominated in ETH, not wei'
+            }
+            rules={[
+              { required: true, message: 'Please input a valid amount' },
+              () => ({
+                validator(_, value) {
+                  if (value === '' || isNil(value)) return Promise.resolve();
+                  if (value <= 0) {
+                    return Promise.reject(
+                      new Error('Please input a valid amount'),
+                    );
+                  }
+                  if (value > remainingLpSupplyInEth) {
+                    return Promise.reject(
+                      new Error('Amount cannot be greater than the balance'),
+                    );
+                  }
+                  return Promise.resolve();
+                },
+              }),
+            ]}
           >
             <InputNumber style={fullWidth} />
           </Form.Item>
