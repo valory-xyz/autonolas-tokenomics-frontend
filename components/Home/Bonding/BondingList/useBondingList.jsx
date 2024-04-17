@@ -372,11 +372,7 @@ const useAddSupplyLeftToProducts = () =>
             ? product.priceLp
             : createProductEvent?.priceLp || 0;
 
-        return {
-          ...product,
-          supplyLeft,
-          priceLp,
-        };
+        return { ...product, supplyLeft, priceLp };
       }),
     [],
   );

@@ -75,11 +75,10 @@ export const Deposit = ({
     try {
       setIsLoading(true);
 
-      const tokenAmount = form.getFieldValue('tokenAmount');
       // deposit if LP token is present for the product ID
       const txHash = await depositRequest({
         productId,
-        tokenAmount: getTokenValue(tokenAmount),
+        tokenAmount: getTokenValue(form.getFieldValue('tokenAmount')),
       });
       notifySuccess('Deposited successfully!', `Transaction Hash: ${txHash}`);
 
@@ -158,24 +157,20 @@ export const Deposit = ({
       ? tokenAmountInputValue
       : new BigNumber(parseToWei(tokenAmountInputValue));
 
-    const getPayout = () => {
-      const payoutInBg = new BigNumber(
-        productLpPriceInBg.toString(),
-      ).multipliedBy(tokenAmountValue);
+    const payoutInBg = new BigNumber(
+      productLpPriceInBg.toString(),
+    ).multipliedBy(tokenAmountValue);
 
-      if (isSvmProduct) {
-        return payoutInBg.dividedBy(BigNumber(`1${'0'.repeat(28)}`)).toFixed(2);
-      }
+    const payout = isSvmProduct
+      ? payoutInBg.dividedBy(BigNumber(`1${'0'.repeat(28)}`)).toFixed(4)
+      : Number(
+          payoutInBg
+            .dividedBy(ONE_ETH_IN_STRING)
+            .dividedBy(ONE_ETH_IN_STRING)
+            .toFixed(4),
+        );
 
-      return Number(
-        payoutInBg
-          .dividedBy(ONE_ETH_IN_STRING)
-          .dividedBy(ONE_ETH_IN_STRING)
-          .toFixed(4),
-      );
-    };
-
-    return getCommaSeparatedNumber(getPayout(), 4);
+    return getCommaSeparatedNumber(payout, 4);
   };
 
   const remainingLpSupplyInEth = getRemainingLpSupplyInEth();
