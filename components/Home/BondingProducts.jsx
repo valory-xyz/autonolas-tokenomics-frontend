@@ -95,7 +95,7 @@ export const BondingProducts = () => {
             <Button
               type="primary"
               ghost
-              onClick={() => router.push('manage-solana-products')}
+              onClick={() => router.push('manage-solana-liquidity')}
             >
               Manage Solana Liquidity
             </Button>
