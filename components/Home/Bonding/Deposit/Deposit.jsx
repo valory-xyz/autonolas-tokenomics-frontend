@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { BigNumber, ethers } from 'ethers';
+import { ethers, BigNumber as EthersBigNumber } from 'ethers';
+import BigNumber from 'bignumber.js';
 import PropTypes from 'prop-types';
 import { isNil } from 'lodash';
 import { Form, InputNumber, Modal, Alert, Button, Typography, Tag } from 'antd';
@@ -15,7 +16,7 @@ import {
   parseToEth,
   parseToSolDecimals,
 } from 'common-util/functions';
-import { ONE_ETH } from 'common-util/constants/numbers';
+import { ONE_ETH_IN_STRING } from 'common-util/constants/numbers';
 import { useHelpers } from 'common-util/hooks/useHelpers';
 import { useDeposit } from './useDeposit';
 import { isSvmLpAddress } from '../BondingList/useBondingList';
@@ -37,7 +38,8 @@ export const Deposit = ({
   const [isApproveModalVisible, setIsApproveModalVisible] = useState(false);
   const [lpBalance, setLpBalance] = useState(0);
 
-  const isSvmProduct = isSvmLpAddress(productToken);
+  const isSvmProduct = false;
+  // const isSvmProduct = isSvmLpAddress(productToken);
 
   const {
     getLpBalanceRequest,
@@ -128,8 +130,13 @@ export const Deposit = ({
   const tokenAmountInputValue = Form.useWatch('tokenAmount', form) || 0;
 
   const getRemainingLpSupply = () => {
-    const supplyInWei = BigNumber.from(productSupply);
-    const remainingSupply = supplyInWei.mul(ONE_ETH).div(productLpPriceInBg);
+    const supplyInWei = new BigNumber(productSupply);
+
+    console.log({ supplyInWei, productLpPriceInBg, lpBalance });
+
+    const remainingSupply = supplyInWei
+      .multipliedBy(ONE_ETH_IN_STRING)
+      .dividedBy(productLpPriceInBg);
     if (remainingSupply.lt(lpBalance)) return remainingSupply;
     return lpBalance;
   };
@@ -140,28 +147,51 @@ export const Deposit = ({
   };
 
   const getOlasPayout = () => {
-    if (
-      !tokenAmountInputValue ||
-      tokenAmountInputValue > getRemainingLpSupplyInEth()
-    ) {
-      return '--';
-    }
+    // if (
+    //   !tokenAmountInputValue ||
+    //   tokenAmountInputValue > getRemainingLpSupplyInEth()
+    // ) {
+    //   return '--';
+    // }
 
-    const tokenAmountValue = BigNumber.from(
-      isSvmProduct ? tokenAmountInputValue : parseToWei(tokenAmountInputValue),
-    );
+    // TODO decimals not working
+
+    const tokenAmountValue = isSvmProduct
+      ? tokenAmountInputValue
+      : new BigNumber(parseToWei(tokenAmountInputValue));
+
+    console.log({
+      productLpPriceInBg,
+      productLpPriceInStr: productLpPriceInBg.toString(),
+      tokenAmountValue,
+    });
 
     const getPayout = () => {
-      const payoutInBg =
-        BigNumber.from(productLpPriceInBg).mul(tokenAmountValue);
+      const payoutInBg = new BigNumber(
+        productLpPriceInBg.toString(),
+      ).multipliedBy(tokenAmountValue);
+
+      console.log({
+        payoutInBg,
+        // payoutInBg: payoutInBg.toString(),
+        // eee: payoutInBg.dividedBy(SVM_29_DIGITS),
+        evmPayout: payoutInBg.dividedBy(ONE_ETH_IN_STRING).toString(),
+      });
 
       // TODO: decimal is missing (eg. 4.52)
       if (isSvmProduct) {
-        return Number(payoutInBg.div(BigNumber.from(`1${'0'.repeat(28)}`)));
+        return payoutInBg.dividedBy(BigNumber(`1${'0'.repeat(28)}`)).toFixed(2);
       }
 
-      return Number(payoutInBg.div(ONE_ETH).div(ONE_ETH));
+      return Number(
+        payoutInBg
+          .dividedBy(ONE_ETH_IN_STRING)
+          .dividedBy(ONE_ETH_IN_STRING)
+          .toFixed(4),
+      );
     };
+
+    console.log({ getPayout: getPayout() });
 
     return getCommaSeparatedNumber(getPayout(), 4);
   };
@@ -175,7 +205,7 @@ export const Deposit = ({
         title="Bond LP tokens for OLAS"
         okText="Bond"
         okButtonProps={{
-          disabled: !account || lpBalance === BigNumber.from(0),
+          disabled: !account || lpBalance === new BigNumber(0),
         }}
         cancelText="Cancel"
         onCancel={closeModal}
@@ -203,25 +233,25 @@ export const Deposit = ({
                 ? 'Units are denominated in 8 decimals'
                 : 'Units are denominated in ETH, not wei'
             }
-            rules={[
-              { required: true, message: 'Please input a valid amount' },
-              () => ({
-                validator(_, value) {
-                  if (value === '' || isNil(value)) return Promise.resolve();
-                  if (value <= 0) {
-                    return Promise.reject(
-                      new Error('Please input a valid amount'),
-                    );
-                  }
-                  if (value > remainingLpSupplyInEth) {
-                    return Promise.reject(
-                      new Error('Amount cannot be greater than the balance'),
-                    );
-                  }
-                  return Promise.resolve();
-                },
-              }),
-            ]}
+            // rules={[
+            //   { required: true, message: 'Please input a valid amount' },
+            //   () => ({
+            //     validator(_, value) {
+            //       if (value === '' || isNil(value)) return Promise.resolve();
+            //       if (value <= 0) {
+            //         return Promise.reject(
+            //           new Error('Please input a valid amount'),
+            //         );
+            //       }
+            //       if (value > remainingLpSupplyInEth) {
+            //         return Promise.reject(
+            //           new Error('Amount cannot be greater than the balance'),
+            //         );
+            //       }
+            //       return Promise.resolve();
+            //     },
+            //   }),
+            // ]}
           >
             <InputNumber style={fullWidth} />
           </Form.Item>
