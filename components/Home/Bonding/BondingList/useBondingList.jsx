@@ -376,7 +376,6 @@ const useAddSupplyLeftToProducts = () =>
           ...product,
           supplyLeft,
           priceLp,
-          // priceLp: '45206804483912013763871506430', // TODO: test for solana, remove
         };
       }),
     [],
@@ -401,7 +400,9 @@ const useAddProjectChangeToProducts = () =>
         // current price of the LP token is multiplied by 2
         // because the price is for 1 LP token and
         // we need the price for 2 LP tokens
-        const currentPriceLpInBg = BigNumber.from(record.currentPriceLp || '0');
+        const currentPriceLpInBg = BigNumber.from(
+          `${record.currentPriceLp || 0}`,
+        );
         const doubledCurrentPriceLp = currentPriceLpInBg.mul(2).toString();
 
         const parsedDoubledCurrentPriceLp =
@@ -476,7 +477,7 @@ const useProductDetailsFromIds = () => {
           discount,
           priceLp: priceLP,
           vesting,
-          token: '0x3685b8cc36b8df09ed9e81c1690100306bf23e04' || token, // TODO: remove
+          token,
           supply,
         };
       });
@@ -519,8 +520,7 @@ const useProductListRequest = ({ isActive }) => {
 
   return useCallback(async () => {
     const contract = getDepositoryContract();
-    const productIdList =
-      ['198'] || (await contract.methods.getProducts(isActive).call()); // TODO: remove
+    const productIdList = await contract.methods.getProducts(isActive).call();
     const response = await getProductDetailsFromIds(productIdList);
 
     const productList = response.map((product, index) => ({

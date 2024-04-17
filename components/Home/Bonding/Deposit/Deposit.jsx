@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ethers, BigNumber as EthersBigNumber } from 'ethers';
+import { ethers } from 'ethers';
 import BigNumber from 'bignumber.js';
 import PropTypes from 'prop-types';
 import { isNil } from 'lodash';
@@ -38,8 +38,7 @@ export const Deposit = ({
   const [isApproveModalVisible, setIsApproveModalVisible] = useState(false);
   const [lpBalance, setLpBalance] = useState(0);
 
-  const isSvmProduct = false;
-  // const isSvmProduct = isSvmLpAddress(productToken);
+  const isSvmProduct = isSvmLpAddress(productToken);
 
   const {
     getLpBalanceRequest,
@@ -133,15 +132,13 @@ export const Deposit = ({
   const tokenAmountInputValue = Form.useWatch('tokenAmount', form) || 0;
 
   const getRemainingLpSupply = () => {
-    const supplyInWei = new BigNumber(productSupply);
-
-    console.log({ productSupply, supplyInWei, productLpPriceInBg, lpBalance });
+    const supplyInWei = new BigNumber(productSupply || '0');
 
     const remainingSupply = supplyInWei
       .multipliedBy(ONE_ETH_IN_STRING)
       .dividedBy(productLpPriceInBg);
-    if (remainingSupply.lt(lpBalance)) return remainingSupply;
-    return lpBalance;
+
+    return remainingSupply.lt(lpBalance) ? remainingSupply : lpBalance;
   };
 
   const getRemainingLpSupplyInEth = () => {
@@ -150,38 +147,22 @@ export const Deposit = ({
   };
 
   const getOlasPayout = () => {
-    // if (
-    //   !tokenAmountInputValue ||
-    //   tokenAmountInputValue > getRemainingLpSupplyInEth()
-    // ) {
-    //   return '--';
-    // }
-
-    // TODO decimals not working
+    if (
+      !tokenAmountInputValue ||
+      tokenAmountInputValue > getRemainingLpSupplyInEth()
+    ) {
+      return '--';
+    }
 
     const tokenAmountValue = isSvmProduct
       ? tokenAmountInputValue
       : new BigNumber(parseToWei(tokenAmountInputValue));
-
-    console.log({
-      productLpPriceInBg,
-      productLpPriceInStr: productLpPriceInBg.toString(),
-      tokenAmountValue,
-    });
 
     const getPayout = () => {
       const payoutInBg = new BigNumber(
         productLpPriceInBg.toString(),
       ).multipliedBy(tokenAmountValue);
 
-      console.log({
-        payoutInBg,
-        // payoutInBg: payoutInBg.toString(),
-        // eee: payoutInBg.dividedBy(SVM_29_DIGITS),
-        evmPayout: payoutInBg.dividedBy(ONE_ETH_IN_STRING).toString(),
-      });
-
-      // TODO: decimal is missing (eg. 4.52)
       if (isSvmProduct) {
         return payoutInBg.dividedBy(BigNumber(`1${'0'.repeat(28)}`)).toFixed(2);
       }
@@ -193,8 +174,6 @@ export const Deposit = ({
           .toFixed(4),
       );
     };
-
-    console.log({ getPayout: getPayout() });
 
     return getCommaSeparatedNumber(getPayout(), 4);
   };
@@ -236,25 +215,25 @@ export const Deposit = ({
                 ? 'Units are denominated in 8 decimals'
                 : 'Units are denominated in ETH, not wei'
             }
-            // rules={[
-            //   { required: true, message: 'Please input a valid amount' },
-            //   () => ({
-            //     validator(_, value) {
-            //       if (value === '' || isNil(value)) return Promise.resolve();
-            //       if (value <= 0) {
-            //         return Promise.reject(
-            //           new Error('Please input a valid amount'),
-            //         );
-            //       }
-            //       if (value > remainingLpSupplyInEth) {
-            //         return Promise.reject(
-            //           new Error('Amount cannot be greater than the balance'),
-            //         );
-            //       }
-            //       return Promise.resolve();
-            //     },
-            //   }),
-            // ]}
+            rules={[
+              { required: true, message: 'Please input a valid amount' },
+              () => ({
+                validator(_, value) {
+                  if (value === '' || isNil(value)) return Promise.resolve();
+                  if (value <= 0) {
+                    return Promise.reject(
+                      new Error('Please input a valid amount'),
+                    );
+                  }
+                  if (value > remainingLpSupplyInEth) {
+                    return Promise.reject(
+                      new Error('Amount cannot be greater than the balance'),
+                    );
+                  }
+                  return Promise.resolve();
+                },
+              }),
+            ]}
           >
             <InputNumber style={fullWidth} />
           </Form.Item>
