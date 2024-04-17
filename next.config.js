@@ -21,6 +21,11 @@ const NextConfig = {
         destination: '/donate',
         permanent: false,
       },
+      {
+        source: '/manage-solana-products',
+        destination: '/manage-solana-liquidity',
+        permanent: true,
+      },
     ];
   },
   async headers() {
