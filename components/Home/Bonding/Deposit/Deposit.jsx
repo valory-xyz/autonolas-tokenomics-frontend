@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ethers, BigNumber as EthersBigNumber } from 'ethers';
 import BigNumber from 'bignumber.js';
 import PropTypes from 'prop-types';
@@ -18,8 +18,8 @@ import {
 } from 'common-util/functions';
 import { ONE_ETH_IN_STRING } from 'common-util/constants/numbers';
 import { useHelpers } from 'common-util/hooks/useHelpers';
-import { useDeposit } from './useDeposit';
 import { isSvmLpAddress } from '../BondingList/useBondingList';
+import { useDeposit } from './useDeposit';
 
 const { Text } = Typography;
 const fullWidth = { width: '100%' };
@@ -65,6 +65,13 @@ export const Deposit = ({
     }
   }, [account, productToken, getLpBalanceRequest]);
 
+  const getTokenValue = useCallback(
+    (value) => {
+      return isSvmProduct ? parseToSolDecimals(value) : parseToWei(value);
+    },
+    [isSvmProduct],
+  );
+
   const depositHelper = async () => {
     try {
       setIsLoading(true);
@@ -73,9 +80,7 @@ export const Deposit = ({
       // deposit if LP token is present for the product ID
       const txHash = await depositRequest({
         productId,
-        tokenAmount: isSvmProduct
-          ? parseToSolDecimals(tokenAmount)
-          : parseToWei(tokenAmount),
+        tokenAmount: getTokenValue(tokenAmount),
       });
       notifySuccess('Deposited successfully!', `Transaction Hash: ${txHash}`);
 
@@ -102,9 +107,7 @@ export const Deposit = ({
         try {
           const hasSufficientAllowance = await hasSufficientTokenRequest({
             token: productToken,
-            tokenAmount: isSvmProduct
-              ? parseToSolDecimals(values.tokenAmount)
-              : parseToWei(values.tokenAmount),
+            tokenAmount: getTokenValue(values.tokenAmount),
           });
           // if allowance in lower than the amount to be deposited, then needs approval
           // eg. If user is depositing 10 OLAS and the allowance is 5, then open the approve modal
@@ -132,7 +135,7 @@ export const Deposit = ({
   const getRemainingLpSupply = () => {
     const supplyInWei = new BigNumber(productSupply);
 
-    console.log({ supplyInWei, productLpPriceInBg, lpBalance });
+    console.log({ productSupply, supplyInWei, productLpPriceInBg, lpBalance });
 
     const remainingSupply = supplyInWei
       .multipliedBy(ONE_ETH_IN_STRING)
