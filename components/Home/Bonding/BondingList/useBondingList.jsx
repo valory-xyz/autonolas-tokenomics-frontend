@@ -400,7 +400,7 @@ const useAddProjectChangeToProducts = () =>
   useCallback(
     (productList) =>
       productList.map((record) => {
-        // To calculate the price of LP we need to multiply the price by 2
+        // To calculate the price of LP we need to multiply (olasReserve / TotalSupply) by 2
         const currentPriceLpInBg = BigNumber.from(
           `${record.currentPriceLp || 0}`,
         );
