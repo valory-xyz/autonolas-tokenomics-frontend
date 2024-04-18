@@ -27,6 +27,7 @@ import styled from 'styled-components';
 import { BONDING_PRODUCTS } from 'common-util/enums';
 import { parseToEth } from 'common-util/functions/ethers';
 import { useHelpers } from 'common-util/hooks/useHelpers';
+import { BOND_WEBSITE_URL } from 'common-util/constants';
 import { Deposit } from '../Deposit/Deposit';
 import { useProducts } from './useBondingList';
 import { getLpTokenWithDiscount } from './utils';
@@ -73,6 +74,23 @@ const getColumns = (
       render: (x) => {
         if (x === VM_TYPE.SVM) return 'Solana';
         return getNetworkName(x);
+      },
+    },
+    {
+      title: 'Guide',
+      dataIndex: 'guide',
+      key: 'guide',
+      width: 100,
+      render: (x) => {
+        return (
+          <a
+            href={`${BOND_WEBSITE_URL}paths/${x || 'olas-eth-via-uniswap-on-ethereum'}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Guide ↗
+          </a>
+        );
       },
     },
     {

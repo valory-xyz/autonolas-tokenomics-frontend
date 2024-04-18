@@ -52,6 +52,7 @@ const LP_PAIRS = {
     dex: DEX.BALANCER,
     poolId:
       '0x79c872ed3acb3fc5770dd8a0cd9cd5db3b3ac985000200000000000000000067',
+    guide: 'olas-wxdai-via-balancer-on-gnosis-chain',
   },
   // polygon
   '0xf9825A563222f9eFC81e369311DAdb13D68e60a4': {
@@ -61,6 +62,7 @@ const LP_PAIRS = {
     dex: DEX.BALANCER,
     poolId:
       '0x62309056c759c36879cde93693e7903bf415e4bc000200000000000000000d5f',
+    guide: 'olas-wmatic-via-balancer-on-polygon-pos',
   },
   // arbitrum
   '0x36B203Cb3086269f005a4b987772452243c0767f': {
@@ -70,6 +72,7 @@ const LP_PAIRS = {
     dex: DEX.BALANCER,
     poolId:
       '0xaf8912a3c4f55a8584b67df30ee0ddf0e60e01f80002000000000000000004fc',
+    guide: 'olas-weth-via-balancer-on-arbitrum',
   },
   // optimism
   '0x2FD007a534eB7527b535a1DF35aba6bD2a8b660F': {
@@ -79,6 +82,7 @@ const LP_PAIRS = {
     dex: DEX.BALANCER,
     poolId:
       '0x5bb3e58887264b667f915130fd04bbb56116c27800020000000000000000012a',
+    guide: 'weth-olas-via-balancer-on-optimism',
   },
   // base
   '0x9946d6FD1210D85EC613Ca956F142D911C97a074': {
@@ -88,6 +92,7 @@ const LP_PAIRS = {
     dex: DEX.BALANCER,
     poolId:
       '0x5332584890d6e415a6dc910254d6430b8aab7e69000200000000000000000103',
+    guide: 'olas-usdc-via-balancer-on-base',
   },
   // solana
   '0x3685b8cc36b8df09ed9e81c1690100306bf23e04': {
@@ -96,6 +101,7 @@ const LP_PAIRS = {
     originAddress: POSITION.toString(),
     dex: DEX.SOLANA,
     poolId: ADDRESSES[VM_TYPE.SVM].balancerVault, // whirpool address
+    guide: 'wsol-olas-via-orca-on-solana',
   },
 };
 
@@ -306,7 +312,7 @@ const getLpTokenNamesForProducts = async (productList, events) => {
   const lpTokenDetailsList = await Promise.all(lpTokenNamePromiseList);
 
   return productList.map((component, index) => {
-    const { name, poolId, lpChainId } = lpTokenDetailsList[index];
+    const { name, poolId, lpChainId, guide } = lpTokenDetailsList[index];
     const lpTokenLink = getLpTokenLink({
       lpDex: lpTokenDetailsList[index].dex,
       lpChainId,
@@ -324,6 +330,7 @@ const getLpTokenNamesForProducts = async (productList, events) => {
       lpTokenName: name,
       lpTokenLink,
       currentPriceLpLink,
+      guide,
     };
   });
 };
