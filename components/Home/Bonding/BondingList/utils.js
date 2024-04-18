@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { notifyError } from '@autonolas/frontend-library';
+import { VM_TYPE, notifyError } from '@autonolas/frontend-library';
 import { gql } from 'graphql-request';
 import { memoize } from 'lodash';
 
@@ -43,12 +43,8 @@ export const getLpTokenWithDiscount = (lpTokenValue, discount) => {
 export const getSvmCalculatedPriceLp = (reserveOlas, totalSupply) => {
   const reserveOlasBG = BigNumber.from(reserveOlas.toString());
   const totalSupplyBG = BigNumber.from(totalSupply.toString());
-
-  const priceLp = reserveOlasBG
-    .mul(`${10 ** 28}`)
-    .div(totalSupplyBG)
-    .toString();
-
+  const multiplier = BigNumber.from(`1${'0'.repeat(28)}`);
+  const priceLp = reserveOlasBG.mul(multiplier).div(totalSupplyBG).toString();
   return priceLp;
 };
 
@@ -83,7 +79,7 @@ export const getLpTokenLink = ({ lpDex, lpChainId, lpPoolId, productName }) => {
   }
 
   if (lpDex === DEX.SOLANA) {
-    return `https://v1.orca.so/liquidity/browse?tokenMint=${ADDRESSES.svm.olasAddress}&tokenMint=${ADDRESSES.svm.wsolAddress}`;
+    return `https://v1.orca.so/liquidity/browse?tokenMint=${ADDRESSES[VM_TYPE.SVM].olasAddress}&tokenMint=${ADDRESSES[VM_TYPE.SVM].wsolAddress}`;
   }
 
   return new Error('Dex not supported');

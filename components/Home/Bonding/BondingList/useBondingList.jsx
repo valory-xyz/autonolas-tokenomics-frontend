@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ethers } from 'ethers';
 import { memoize, round } from 'lodash';
-import { areAddressesEqual } from '@autonolas/frontend-library';
+import { areAddressesEqual, VM_TYPE } from '@autonolas/frontend-library';
 import { usePublicClient } from 'wagmi';
 
 import { DEX } from 'common-util/enums';
@@ -95,15 +95,18 @@ const LP_PAIRS = {
     guide: 'olas-usdc-via-balancer-on-base',
   },
   // solana
-  svm: {
-    lpChainId: 'svm',
+  '0x3685b8cc36b8df09ed9e81c1690100306bf23e04': {
+    lpChainId: VM_TYPE.SVM,
     name: 'OLAS-WSOL',
     originAddress: POSITION.toString(),
     dex: DEX.SOLANA,
-    poolId: ADDRESSES.svm.balancerVault,
+    poolId: ADDRESSES[VM_TYPE.SVM].balancerVault, // whirpool address
     guide: 'wsol-olas-via-orca-on-solana',
   },
 };
+
+export const isSvmLpAddress = (address) =>
+  areAddressesEqual(address, '0x3685b8cc36b8df09ed9e81c1690100306bf23e04');
 
 /**
  * fetches the IDF (discount factor) for the product
@@ -122,7 +125,7 @@ const getLastIDFRequest = async () => {
 };
 
 /**
- * Fetches detials of the LP token.
+ * Fetches details of the LP token.
  * The token needs to distinguish between the one on the ETH mainnet
  * and the mirrored one from other mainnets.
  *
@@ -206,7 +209,9 @@ const useAddCurrentLpPriceToProducts = () => {
   ]);
 
   const getCurrentPriceForSvm = useCallback(async () => {
-    const priceLp = await getCurrentPriceWhirlpool(LP_PAIRS.svm.poolId);
+    const priceLp = await getCurrentPriceWhirlpool(
+      ADDRESSES[VM_TYPE.SVM].balancerVault, // whirpool address
+    );
     return priceLp;
   }, [getCurrentPriceWhirlpool]);
 
@@ -395,12 +400,20 @@ const useAddProjectChangeToProducts = () =>
   useCallback(
     (productList) =>
       productList.map((record) => {
-        // current price of the LP token is multiplied by 2
-        // because the price is for 1 LP token and
-        // we need the price for 2 LP tokens
-        const fullCurrentPriceLp =
-          Number(round(parseToEth(record.currentPriceLp * 2), 2)) || 0;
+        // To calculate the price of LP we need to multiply (olasReserve / TotalSupply) by 2
+        const currentPriceLpInBg = BigNumber.from(
+          `${record.currentPriceLp || 0}`,
+        );
+        const doubledCurrentPriceLp = currentPriceLpInBg.mul(2).toString();
 
+        const parsedDoubledCurrentPriceLp =
+          parseToEth(doubledCurrentPriceLp) /
+          (isSvmLpAddress(record.token) ? 10 ** 10 : 1);
+
+        const fullCurrentPriceLp =
+          Number(round(parsedDoubledCurrentPriceLp, 2)) || '0';
+
+        // get the discounted OLAS per LP token
         const discountedOlasPerLpTokenInBg = getLpTokenWithDiscount(
           record.priceLp || 0,
           record.discount || 0,
@@ -408,7 +421,8 @@ const useAddProjectChangeToProducts = () =>
 
         // parse to eth and round to 2 decimal places
         const roundedDiscountedOlasPerLpToken = round(
-          parseToEth(discountedOlasPerLpTokenInBg),
+          parseToEth(discountedOlasPerLpTokenInBg) /
+            (isSvmLpAddress(record.token) ? 10 ** 10 : 1),
           2,
         );
 

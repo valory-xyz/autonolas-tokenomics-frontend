@@ -28,6 +28,7 @@
     "@wagmi/core": "^2.6.16",
     "@web3modal/wagmi": "^4.1.6",
     "antd": "^5.9.0",
+    "bignumber.js": "^9.1.2",
     "decimal.js": "^10.4.3",
     "ethers": "^5.7.2",
     "graphql": "^16.8.1",

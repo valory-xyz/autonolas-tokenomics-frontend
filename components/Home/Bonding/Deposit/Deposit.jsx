@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
-import { BigNumber, ethers } from 'ethers';
+import { useCallback, useEffect, useState } from 'react';
+import { ethers } from 'ethers';
+import BigNumber from 'bignumber.js';
 import PropTypes from 'prop-types';
 import { isNil } from 'lodash';
 import { Form, InputNumber, Modal, Alert, Button, Typography, Tag } from 'antd';
@@ -10,9 +11,14 @@ import {
   getCommaSeparatedNumber,
 } from '@autonolas/frontend-library';
 
-import { parseToWei, parseToEth } from 'common-util/functions';
-import { ONE_ETH } from 'common-util/constants/numbers';
+import {
+  parseToWei,
+  parseToEth,
+  parseToSolDecimals,
+} from 'common-util/functions';
+import { ONE_ETH_IN_STRING } from 'common-util/constants/numbers';
 import { useHelpers } from 'common-util/hooks/useHelpers';
+import { isSvmLpAddress } from '../BondingList/useBondingList';
 import { useDeposit } from './useDeposit';
 
 const { Text } = Typography;
@@ -31,6 +37,8 @@ export const Deposit = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isApproveModalVisible, setIsApproveModalVisible] = useState(false);
   const [lpBalance, setLpBalance] = useState(0);
+
+  const isSvmProduct = isSvmLpAddress(productToken);
 
   const {
     getLpBalanceRequest,
@@ -56,6 +64,13 @@ export const Deposit = ({
     }
   }, [account, productToken, getLpBalanceRequest]);
 
+  const getTokenValue = useCallback(
+    (value) => {
+      return isSvmProduct ? parseToSolDecimals(value) : parseToWei(value);
+    },
+    [isSvmProduct],
+  );
+
   const depositHelper = async () => {
     try {
       setIsLoading(true);
@@ -63,7 +78,7 @@ export const Deposit = ({
       // deposit if LP token is present for the product ID
       const txHash = await depositRequest({
         productId,
-        tokenAmount: parseToWei(form.getFieldValue('tokenAmount')),
+        tokenAmount: getTokenValue(form.getFieldValue('tokenAmount')),
       });
       notifySuccess('Deposited successfully!', `Transaction Hash: ${txHash}`);
 
@@ -90,7 +105,7 @@ export const Deposit = ({
         try {
           const hasSufficientAllowance = await hasSufficientTokenRequest({
             token: productToken,
-            tokenAmount: parseToWei(values.tokenAmount),
+            tokenAmount: getTokenValue(values.tokenAmount),
           });
           // if allowance in lower than the amount to be deposited, then needs approval
           // eg. If user is depositing 10 OLAS and the allowance is 5, then open the approve modal
@@ -113,13 +128,16 @@ export const Deposit = ({
       });
   };
 
-  const tokenAmountInputValue = Form.useWatch('tokenAmount', form);
+  const tokenAmountInputValue = Form.useWatch('tokenAmount', form) || 0;
 
   const getRemainingLpSupply = () => {
-    const supplyInWei = BigNumber.from(productSupply);
-    const remainingSupply = supplyInWei.mul(ONE_ETH).div(productLpPriceInBg);
-    if (remainingSupply.lt(lpBalance)) return remainingSupply;
-    return lpBalance;
+    const supplyInWei = new BigNumber(productSupply || '0');
+
+    const remainingSupply = supplyInWei
+      .multipliedBy(ONE_ETH_IN_STRING)
+      .dividedBy(productLpPriceInBg);
+
+    return remainingSupply.lt(lpBalance) ? remainingSupply : lpBalance;
   };
 
   const getRemainingLpSupplyInEth = () => {
@@ -135,16 +153,24 @@ export const Deposit = ({
       return '--';
     }
 
-    const tokenAmountWei = BigNumber.from(parseToWei(tokenAmountInputValue));
-    const olasPayout = tokenAmountInputValue
-      ? Number(
-          BigNumber.from(productLpPriceInBg)
-            .mul(tokenAmountWei)
-            .div(ONE_ETH)
-            .div(ONE_ETH),
-        )
-      : 0;
-    return getCommaSeparatedNumber(olasPayout, 4);
+    const tokenAmountValue = isSvmProduct
+      ? tokenAmountInputValue
+      : new BigNumber(parseToWei(tokenAmountInputValue));
+
+    const payoutInBg = new BigNumber(
+      productLpPriceInBg.toString(),
+    ).multipliedBy(tokenAmountValue);
+
+    const payout = isSvmProduct
+      ? payoutInBg.dividedBy(BigNumber(`1${'0'.repeat(28)}`)).toFixed(2)
+      : Number(
+          payoutInBg
+            .dividedBy(ONE_ETH_IN_STRING)
+            .dividedBy(ONE_ETH_IN_STRING)
+            .toFixed(2),
+        );
+
+    return getCommaSeparatedNumber(payout, 4);
   };
 
   const remainingLpSupplyInEth = getRemainingLpSupplyInEth();
@@ -156,7 +182,7 @@ export const Deposit = ({
         title="Bond LP tokens for OLAS"
         okText="Bond"
         okButtonProps={{
-          disabled: !account || lpBalance === BigNumber.from(0),
+          disabled: !account || lpBalance === new BigNumber(0),
         }}
         cancelText="Cancel"
         onCancel={closeModal}
@@ -179,7 +205,11 @@ export const Deposit = ({
             className="custom-form-item-tokenAmount"
             label="LP Token Amount"
             name="tokenAmount"
-            extra="Units are denominated in ETH, not wei"
+            extra={
+              isSvmProduct
+                ? 'Units are denominated in 8 decimals'
+                : 'Units are denominated in ETH, not wei'
+            }
             rules={[
               { required: true, message: 'Please input a valid amount' },
               () => ({
