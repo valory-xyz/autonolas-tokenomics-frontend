@@ -162,12 +162,12 @@ export const Deposit = ({
     ).multipliedBy(tokenAmountValue);
 
     const payout = isSvmProduct
-      ? payoutInBg.dividedBy(BigNumber(`1${'0'.repeat(28)}`)).toFixed(4)
+      ? payoutInBg.dividedBy(BigNumber(`1${'0'.repeat(28)}`)).toFixed(2)
       : Number(
           payoutInBg
             .dividedBy(ONE_ETH_IN_STRING)
             .dividedBy(ONE_ETH_IN_STRING)
-            .toFixed(4),
+            .toFixed(2),
         );
 
     return getCommaSeparatedNumber(payout, 4);

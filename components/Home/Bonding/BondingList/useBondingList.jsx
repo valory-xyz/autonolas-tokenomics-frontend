@@ -95,7 +95,7 @@ const LP_PAIRS = {
     name: 'OLAS-WSOL',
     originAddress: POSITION.toString(),
     dex: DEX.SOLANA,
-    poolId: ADDRESSES[VM_TYPE.SVM].balancerVault,
+    poolId: ADDRESSES[VM_TYPE.SVM].balancerVault, // whirpool address
   },
 };
 
@@ -204,7 +204,7 @@ const useAddCurrentLpPriceToProducts = () => {
 
   const getCurrentPriceForSvm = useCallback(async () => {
     const priceLp = await getCurrentPriceWhirlpool(
-      ADDRESSES[VM_TYPE.SVM].balancerVault,
+      ADDRESSES[VM_TYPE.SVM].balancerVault, // whirpool address
     );
     return priceLp;
   }, [getCurrentPriceWhirlpool]);
@@ -393,9 +393,7 @@ const useAddProjectChangeToProducts = () =>
   useCallback(
     (productList) =>
       productList.map((record) => {
-        // current price of the LP token is multiplied by 2
-        // because the price is for 1 LP token and
-        // we need the price for 2 LP tokens
+        // To calculate the price of LP we need to multiply the price by 2
         const currentPriceLpInBg = BigNumber.from(
           `${record.currentPriceLp || 0}`,
         );
