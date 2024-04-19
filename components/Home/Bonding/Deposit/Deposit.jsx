@@ -15,6 +15,7 @@ import {
   parseToWei,
   parseToEth,
   parseToSolDecimals,
+  notifyCustomErrors,
 } from 'common-util/functions';
 import { ONE_ETH_IN_STRING } from 'common-util/constants/numbers';
 import { useHelpers } from 'common-util/hooks/useHelpers';
@@ -89,7 +90,7 @@ export const Deposit = ({
       closeModal();
       form.resetFields();
     } catch (error) {
-      notifyError('Error while depositing');
+      notifyCustomErrors(error, 'Error while depositing');
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -128,27 +129,25 @@ export const Deposit = ({
       });
   };
 
-  const tokenAmountInputValue = Form.useWatch('tokenAmount', form) || 0;
-
-  const getRemainingLpSupply = () => {
+  const getRemainingLpSupplyInEth = () => {
     const supplyInWei = new BigNumber(productSupply || '0');
 
     const remainingSupply = supplyInWei
       .multipliedBy(ONE_ETH_IN_STRING)
       .dividedBy(productLpPriceInBg);
 
-    return remainingSupply.lt(lpBalance) ? remainingSupply : lpBalance;
+    const remainingSupplyInWei = remainingSupply.lt(lpBalance)
+      ? remainingSupply
+      : lpBalance;
+    return parseToEth(remainingSupplyInWei);
   };
 
-  const getRemainingLpSupplyInEth = () => {
-    const remainingSupply = getRemainingLpSupply();
-    return parseToEth(remainingSupply);
-  };
-
+  const remainingLpSupplyInEth = getRemainingLpSupplyInEth();
+  const tokenAmountInputValue = Form.useWatch('tokenAmount', form) || 0;
   const getOlasPayout = () => {
     if (
       !tokenAmountInputValue ||
-      tokenAmountInputValue > getRemainingLpSupplyInEth()
+      tokenAmountInputValue > remainingLpSupplyInEth
     ) {
       return '--';
     }
@@ -172,8 +171,6 @@ export const Deposit = ({
 
     return getCommaSeparatedNumber(payout, 4);
   };
-
-  const remainingLpSupplyInEth = getRemainingLpSupplyInEth();
 
   return (
     <>
@@ -297,7 +294,7 @@ export const Deposit = ({
                 } catch (error) {
                   window.console.error(error);
                   setIsApproveModalVisible(false);
-                  notifyError('Error while approving OLAS');
+                  notifyCustomErrors(error, 'Error while approving OLAS');
                 } finally {
                   setIsLoading(false);
                 }

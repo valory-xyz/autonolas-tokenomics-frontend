@@ -1,6 +1,26 @@
 import isObject from 'lodash/isObject';
 import { notifyError } from '@autonolas/frontend-library';
-// create a function to specific error message based on error code
+import { Alert, Typography } from 'antd';
+import styled from 'styled-components';
+
+const CustomPre = styled.pre`
+  white-space: pre-wrap;
+  background-color: none;
+  border: none;
+  padding: 0;
+  margin: 0 !important;
+  font-size: 75%;
+  .ant-typography {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+    .ant-typography-copy {
+      position: absolute;
+      top: 0px;
+      right: 0px;
+    }
+  }
+`;
 
 const getErrorMessage = (error) => {
   if (isObject(error)) {
@@ -47,9 +67,10 @@ export const notifySpecificError = (error, desc) => {
 
 const CONTRACT_ERRORS = [
   {
-    message: 'User denied transaction signature.',
-    toDisplay: 'Transaction rejected by user',
+    message: 'User denied transaction signature',
+    toDisplay: 'Transaction rejected by user.',
   },
+  {},
 ];
 
 const errorTypes = {
@@ -66,9 +87,25 @@ export const notifyCustomErrors = (
   // get all the errors based on the types passed
   const errorList = types.map((type) => errorTypes[type]).flat();
 
-  const message =
-    errorList.find((cError) => error?.message?.includes(cError.message))
-      ?.toDisplay || defaultMessage;
+  const message = errorList.find((cError) =>
+    error?.message?.includes(cError.message),
+  )?.toDisplay;
 
-  notifyError(message);
+  if (message) {
+    const errorInString = JSON.stringify(error, null, 2);
+    notifyError(
+      message,
+      <Alert
+        message={
+          <CustomPre>
+            <Typography.Text copyable>{errorInString}</Typography.Text>
+          </CustomPre>
+        }
+        type="error"
+      />,
+    );
+    return;
+  }
+
+  notifyError(defaultMessage);
 };
