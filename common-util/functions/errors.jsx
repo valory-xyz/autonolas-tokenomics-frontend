@@ -23,31 +23,26 @@ const CustomPre = styled.pre`
 `;
 
 const getErrorMessage = (error) => {
-  if (isObject(error)) {
-    if ((error?.message || '').includes('OwnerOnly')) {
-      return 'You are not the owner of the component/agent';
-    }
-
-    if ((error?.message || '').includes('WrongUnitId')) {
-      return 'Unit ID is not valid';
-    }
-
-    if ((error?.message || '').includes('ClaimIncentivesFailed')) {
-      return 'You do not have any rewards to claim';
-    }
-
-    if ((error?.message || '').includes('TransferFailed')) {
-      return 'Transfer failed';
-    }
-
-    if ((error?.message || '').includes('execution reverted')) {
-      return 'Nothing to claim for the connected wallet';
-    }
-
-    return error?.message || 'Some error occurred';
+  if (!isObject(error)) {
+    return error || 'Some error occurred';
   }
 
-  return error || 'Some error occurred';
+  if ((error?.message || '').includes('OwnerOnly')) {
+    return 'You are not the owner of the component/agent';
+  }
+  if ((error?.message || '').includes('WrongUnitId')) {
+    return 'Unit ID is not valid';
+  }
+  if ((error?.message || '').includes('ClaimIncentivesFailed')) {
+    return 'You do not have any rewards to claim';
+  }
+  if ((error?.message || '').includes('TransferFailed')) {
+    return 'Transfer failed';
+  }
+  if ((error?.message || '').includes('execution reverted')) {
+    return 'Nothing to claim for the connected wallet';
+  }
+  return error?.message || 'Some error occurred';
 };
 
 export const getErrorDescription = (desc) => {
@@ -65,6 +60,7 @@ export const notifySpecificError = (error, desc) => {
   notifyError(message, description);
 };
 
+// List of errors that can be shown to the user based on the type of error
 const CONTRACT_ERRORS = [
   {
     message: 'User denied transaction signature',
@@ -73,10 +69,18 @@ const CONTRACT_ERRORS = [
   {},
 ];
 
+// List of error types
 const errorTypes = {
   contract_types: CONTRACT_ERRORS,
 };
 
+/**
+ *
+ * @param {Object} error The error object
+ * @param {String} defaultErrorMessageToBeShown  The default error message to be shown
+ * @param {Array<string>} types  The types of errors to be included eg. contract_types
+ * @returns {void}
+ */
 export const notifyCustomErrors = (
   error,
   defaultErrorMessageToBeShown,
@@ -84,12 +88,17 @@ export const notifyCustomErrors = (
 ) => {
   const defaultMessage = defaultErrorMessageToBeShown || 'Some error occurred';
 
+  if (!error || !isObject(error)) {
+    notifyError(defaultMessage);
+    return;
+  }
+
   // get all the errors based on the types passed
   const errorList = types.map((type) => errorTypes[type]).flat();
 
-  const message = errorList.find((cError) =>
-    error?.message?.includes(cError.message),
-  )?.toDisplay;
+  const message =
+    errorList.find((cError) => error?.message?.includes(cError.message))
+      ?.toDisplay || defaultMessage;
 
   if (message) {
     const errorInString = JSON.stringify(error, null, 2);
@@ -104,8 +113,5 @@ export const notifyCustomErrors = (
         type="error"
       />,
     );
-    return;
   }
-
-  notifyError(defaultMessage);
 };
