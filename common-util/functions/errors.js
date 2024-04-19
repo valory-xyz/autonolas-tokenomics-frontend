@@ -44,3 +44,31 @@ export const notifySpecificError = (error, desc) => {
   const description = getErrorDescription(desc);
   notifyError(message, description);
 };
+
+const CONTRACT_ERRORS = [
+  {
+    message: 'User denied transaction signature.',
+    toDisplay: 'Transaction rejected by user',
+  },
+];
+
+const errorTypes = {
+  contract_types: CONTRACT_ERRORS,
+};
+
+export const notifyCustomErrors = (
+  error,
+  defaultErrorMessageToBeShown,
+  types = ['contract_types'],
+) => {
+  const defaultMessage = defaultErrorMessageToBeShown || 'Some error occurred';
+
+  // get all the errors based on the types passed
+  const errorList = types.map((type) => errorTypes[type]).flat();
+
+  const message =
+    errorList.find((cError) => error?.message?.includes(cError.message))
+      ?.toDisplay || defaultMessage;
+
+  notifyError(message);
+};
