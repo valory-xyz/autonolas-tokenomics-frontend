@@ -23,7 +23,7 @@ import {
  */
 const getWeb3Details = () => {
   const chainId = getChainId();
-  const web3 = new Web3(getProvider()); // TODO: refactor to use viem/wagmi with coinbaseWallet connector, this is root cause of coinbase wallet breaking
+  const web3 = new Web3(getProvider());
   return { web3, chainId };
 };
 
