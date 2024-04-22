@@ -4,6 +4,7 @@ import {
   getChainIdOrDefaultToMainnet as getChainIdOrDefaultToMainnetFn,
   sendTransaction as sendTransactionFn,
   LOCAL_FORK_ID,
+  notifyError,
 } from '@autonolas/frontend-library';
 
 import { RPC_URLS } from 'common-util/constants/rpcs';
@@ -14,7 +15,18 @@ const supportedChains =
     ? [...SUPPORTED_CHAINS, { id: LOCAL_FORK_ID }]
     : SUPPORTED_CHAINS;
 
-export const getProvider = () => getProviderFn(supportedChains, RPC_URLS);
+export const getProvider = () => {
+  const provider = getProviderFn(supportedChains, RPC_URLS);
+  // not connected, return fallback URL
+  if (typeof provider === 'string') return provider;
+  // coinbase injected multiwallet provider
+  if (provider?.selectedProvider) return provider.selectedProvider;
+  if (provider?.providerMap?.get('CoinbaseWallet'))
+    return provider.providerMap.get('CoinbaseWallet');
+  // standard provider
+  if (provider) return provider;
+  return notifyError('Provider not found');
+};
 
 export const getChainIdOrDefaultToMainnet = (chainId) =>
   getChainIdOrDefaultToMainnetFn(supportedChains, chainId);
