@@ -18,7 +18,7 @@ const supportedChains =
 
 export const getProvider = () => {
   const provider = getProviderFn(supportedChains, RPC_URLS);
-  // not connected, return mainnet URL
+  // not connected, return fallback RPC URL
   if (isString(provider)) return provider;
   // coinbase injected multiwallet provider
   if (provider?.selectedProvider) return provider.selectedProvider;
