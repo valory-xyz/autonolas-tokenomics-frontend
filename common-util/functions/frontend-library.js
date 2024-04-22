@@ -23,7 +23,7 @@ export const getProvider = () => {
   // coinbase injected multiwallet provider
   if (provider?.selectedProvider) return provider.selectedProvider;
   if (provider?.providerMap?.get('CoinbaseWallet'))
-    return provider?.providerMap?.get('CoinbaseWallet');
+    return provider.providerMap.get('CoinbaseWallet');
   // standard provider
   if (provider) return provider;
   return notifyError('Provider not found');
