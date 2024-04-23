@@ -95,7 +95,7 @@ const LP_PAIRS = {
     guide: 'olas-usdc-via-balancer-on-base',
   },
   // solana
-  '0x3685b8cc36b8df09ed9e81c1690100306bf23e04': {
+  '0x3685B8cC36B8df09ED9E81C1690100306bF23E04': {
     lpChainId: VM_TYPE.SVM,
     name: 'OLAS-WSOL',
     originAddress: POSITION.toString(),
@@ -106,7 +106,7 @@ const LP_PAIRS = {
 };
 
 export const isSvmLpAddress = (address) =>
-  areAddressesEqual(address, '0x3685b8cc36b8df09ed9e81c1690100306bf23e04');
+  areAddressesEqual(address, '0x3685B8cC36B8df09ED9E81C1690100306bF23E04');
 
 /**
  * fetches the IDF (discount factor) for the product
@@ -135,12 +135,6 @@ const getLpTokenDetails = memoize(async (address) => {
   const currentLpPairDetails = Object.keys(LP_PAIRS).find((key) =>
     areAddressesEqual(key, address),
   );
-
-  console.log('currentLpPairDetails', {
-    currentLpPairDetails,
-    address,
-    LP_PAIRS,
-  });
 
   // if the address is in the LP_PAIRS list
   if (currentLpPairDetails) {
@@ -527,8 +521,7 @@ const useProductListRequest = ({ isActive }) => {
 
   return useCallback(async () => {
     const contract = getDepositoryContract();
-    const productIdList = ['212'];
-    // const productIdList = await contract.methods.getProducts(isActive).call();
+    const productIdList = await contract.methods.getProducts(isActive).call();
     const response = await getProductDetailsFromIds(productIdList);
 
     const productList = response.map((product, index) => ({
