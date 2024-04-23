@@ -132,9 +132,15 @@ const getLastIDFRequest = async () => {
  * @returns {Object} { lpChainId, originAddress, dex, name, poolId }
  */
 const getLpTokenDetails = memoize(async (address) => {
-  const currentLpPairDetails = Object.keys(LP_PAIRS).find(
-    (key) => key === address,
+  const currentLpPairDetails = Object.keys(LP_PAIRS).find((key) =>
+    areAddressesEqual(key, address),
   );
+
+  console.log('currentLpPairDetails', {
+    currentLpPairDetails,
+    address,
+    LP_PAIRS,
+  });
 
   // if the address is in the LP_PAIRS list
   if (currentLpPairDetails) {
@@ -521,7 +527,8 @@ const useProductListRequest = ({ isActive }) => {
 
   return useCallback(async () => {
     const contract = getDepositoryContract();
-    const productIdList = await contract.methods.getProducts(isActive).call();
+    const productIdList = ['212'];
+    // const productIdList = await contract.methods.getProducts(isActive).call();
     const response = await getProductDetailsFromIds(productIdList);
 
     const productList = response.map((product, index) => ({
