@@ -251,7 +251,10 @@ const useAddCurrentLpPriceToProducts = () => {
               currentLpPrice = getCurrentPriceBalancer(productList[i].token);
               otherRequests[i] = currentLpPrice;
             } else if (dex === DEX.SOLANA) {
-              currentLpPrice = getCurrentPriceForSvm(productList[i].token);
+              /* eslint-disable-next-line no-await-in-loop */
+              currentLpPrice = await getCurrentPriceForSvm(
+                productList[i].token,
+              );
               otherRequests[i] = currentLpPrice;
             } else {
               throw new Error('Dex not supported');
