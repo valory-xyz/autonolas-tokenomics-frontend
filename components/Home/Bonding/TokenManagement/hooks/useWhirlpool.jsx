@@ -124,7 +124,32 @@ export const useWhirlPoolInformation = () => {
   return useCallback(async () => {
     if (!positions) return null;
 
-    const { whirlpoolData, whirlpoolTokenA } = await getWhirlpoolData();
+    let whirlpoolData;
+    let whirlpoolTokenA;
+
+    const fetchWhirlpoolDataWithRetry = async () => {
+      try {
+        const data = await getWhirlpoolData();
+
+        if (data) {
+          whirlpoolData = data.whirlpoolData;
+          whirlpoolTokenA = data.whirlpoolTokenA;
+        }
+
+        if (!whirlpoolData || !whirlpoolTokenA) {
+          /* eslint-disable-next-line no-console */
+          console.log('Invalid whirlpool data, retrying in 2 seconds');
+          setTimeout(fetchWhirlpoolDataWithRetry, 2000);
+        }
+      } catch (error) {
+        /* eslint-disable-next-line no-console */
+        console.warn('Error fetching whirlpool data, retrying in 2 seconds');
+        setTimeout(fetchWhirlpoolDataWithRetry, 2000);
+      }
+    };
+
+    await fetchWhirlpoolDataWithRetry();
+
     let reserveToken0 = new BN(0);
     let reserveToken1 = new BN(0);
     let totalSupply = new BN(0);
@@ -150,6 +175,7 @@ export const useWhirlPoolInformation = () => {
       ? reserveToken0
       : reserveToken1;
 
-    return getSvmCalculatedPriceLp(reserveOlas, totalSupply);
+    const svmPriceLp = getSvmCalculatedPriceLp(reserveOlas, totalSupply);
+    return svmPriceLp;
   }, [positions, getWhirlpoolData]);
 };
