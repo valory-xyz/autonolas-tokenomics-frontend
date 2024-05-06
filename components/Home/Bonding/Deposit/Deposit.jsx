@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ethers } from 'ethers';
 import BigNumber from 'bignumber.js';
-import PropTypes, { string } from 'prop-types';
+import PropTypes from 'prop-types';
 import { isNil } from 'lodash';
 import { Form, InputNumber, Modal, Alert, Button, Typography, Tag } from 'antd';
 import {
@@ -146,37 +146,18 @@ export const Deposit = ({
       ? remainingSupply
       : lpBalance;
 
-    // if (productId === '179') {
-    //   console.log('productSupply', {
-    //     productSupply,
-    //     productSupplyInWei,
-    //     lpBalance,
-    //     productLpPriceAfterDiscount,
-    //     remainingSupply: productSupplyInWei
-    //       // .dividedBy(productLpPriceAfterDiscount)
-    //       .multipliedBy(ONE_ETH_IN_STRING)
-    //       .toString(),
-
-    //     isBg1: BigNumber.isBigNumber(productSupplyInWei),
-    //     isBg2: BigNumber.isBigNumber(productLpPriceAfterDiscountInBg),
-
-    //     divvvv: productSupplyInWei
-    //       .div(productLpPriceAfterDiscountInBg)
-    //       .toString(),
-    //   });
-    // }
     return parseToEth(remainingSupplyInWei);
   };
 
   const remainingLpSupplyInEth = getRemainingLpSupplyInEth();
   const tokenAmountInputValue = Form.useWatch('tokenAmount', form) || 0;
   const getOlasPayout = () => {
-    // if (
-    //   !tokenAmountInputValue ||
-    //   tokenAmountInputValue > remainingLpSupplyInEth
-    // ) {
-    //   return '--';
-    // }
+    if (
+      !tokenAmountInputValue ||
+      tokenAmountInputValue > remainingLpSupplyInEth
+    ) {
+      return '--';
+    }
 
     const tokenAmountValue = isSvmProduct
       ? tokenAmountInputValue
@@ -339,7 +320,7 @@ Deposit.propTypes = {
   productId: PropTypes.string,
   productToken: PropTypes.string,
   productSupply: PropTypes.oneOfType([
-    PropTypes.instanceOf(string),
+    PropTypes.instanceOf(PropTypes.string),
     PropTypes.instanceOf(BigNumber),
   ]),
   productLpPriceAfterDiscount: PropTypes.shape({}),
