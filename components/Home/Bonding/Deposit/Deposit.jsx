@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ethers } from 'ethers';
 import BigNumber from 'bignumber.js';
-import PropTypes from 'prop-types';
+import PropTypes, { string } from 'prop-types';
 import { isNil } from 'lodash';
 import { Form, InputNumber, Modal, Alert, Button, Typography, Tag } from 'antd';
 import {
@@ -28,7 +28,7 @@ const fullWidth = { width: '100%' };
 export const Deposit = ({
   productId,
   productToken,
-  productLpPriceInBg,
+  productLpPriceAfterDiscount,
   productSupply,
   getProducts,
   closeModal,
@@ -40,6 +40,11 @@ export const Deposit = ({
   const [lpBalance, setLpBalance] = useState(0);
 
   const isSvmProduct = isSvmLpAddress(productToken);
+
+  // convert to BigNumber of bignumber.js and not ethers
+  const productLpPriceAfterDiscountInBg = new BigNumber(
+    productLpPriceAfterDiscount,
+  );
 
   const {
     getLpBalanceRequest,
@@ -130,34 +135,55 @@ export const Deposit = ({
   };
 
   const getRemainingLpSupplyInEth = () => {
-    const supplyInWei = new BigNumber(productSupply || '0');
+    const productSupplyInWei = new BigNumber(productSupply || '0');
+    const lpBalanceInBg = new BigNumber(lpBalance);
 
-    const remainingSupply = supplyInWei
-      .multipliedBy(ONE_ETH_IN_STRING)
-      .dividedBy(productLpPriceInBg);
+    const remainingSupply = productSupplyInWei
+      .dividedBy(productLpPriceAfterDiscountInBg)
+      .multipliedBy(ONE_ETH_IN_STRING);
 
-    const remainingSupplyInWei = remainingSupply.lt(lpBalance)
+    const remainingSupplyInWei = remainingSupply.lt(lpBalanceInBg)
       ? remainingSupply
       : lpBalance;
+
+    // if (productId === '179') {
+    //   console.log('productSupply', {
+    //     productSupply,
+    //     productSupplyInWei,
+    //     lpBalance,
+    //     productLpPriceAfterDiscount,
+    //     remainingSupply: productSupplyInWei
+    //       // .dividedBy(productLpPriceAfterDiscount)
+    //       .multipliedBy(ONE_ETH_IN_STRING)
+    //       .toString(),
+
+    //     isBg1: BigNumber.isBigNumber(productSupplyInWei),
+    //     isBg2: BigNumber.isBigNumber(productLpPriceAfterDiscountInBg),
+
+    //     divvvv: productSupplyInWei
+    //       .div(productLpPriceAfterDiscountInBg)
+    //       .toString(),
+    //   });
+    // }
     return parseToEth(remainingSupplyInWei);
   };
 
   const remainingLpSupplyInEth = getRemainingLpSupplyInEth();
   const tokenAmountInputValue = Form.useWatch('tokenAmount', form) || 0;
   const getOlasPayout = () => {
-    if (
-      !tokenAmountInputValue ||
-      tokenAmountInputValue > remainingLpSupplyInEth
-    ) {
-      return '--';
-    }
+    // if (
+    //   !tokenAmountInputValue ||
+    //   tokenAmountInputValue > remainingLpSupplyInEth
+    // ) {
+    //   return '--';
+    // }
 
     const tokenAmountValue = isSvmProduct
       ? tokenAmountInputValue
       : new BigNumber(parseToWei(tokenAmountInputValue));
 
     const payoutInBg = new BigNumber(
-      productLpPriceInBg.toString(),
+      productLpPriceAfterDiscountInBg.toString(),
     ).multipliedBy(tokenAmountValue);
 
     const payout = isSvmProduct
@@ -312,8 +338,11 @@ export const Deposit = ({
 Deposit.propTypes = {
   productId: PropTypes.string,
   productToken: PropTypes.string,
-  productSupply: PropTypes.string,
-  productLpPriceInBg: PropTypes.shape({}),
+  productSupply: PropTypes.oneOfType([
+    PropTypes.instanceOf(string),
+    PropTypes.instanceOf(BigNumber),
+  ]),
+  productLpPriceAfterDiscount: PropTypes.shape({}),
   closeModal: PropTypes.func,
   getProducts: PropTypes.func,
 };
@@ -321,7 +350,7 @@ Deposit.propTypes = {
 Deposit.defaultProps = {
   productId: undefined,
   productToken: null,
-  productLpPriceInBg: null,
+  productLpPriceAfterDiscount: null,
   productSupply: null,
   closeModal: () => {},
   getProducts: () => {},

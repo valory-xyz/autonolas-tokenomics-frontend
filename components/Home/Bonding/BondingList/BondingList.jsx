@@ -226,7 +226,7 @@ const getColumns = (
               okText="Proceed"
               cancelText="Cancel"
               placement="left"
-              disabled={isBondButtonDisabled}
+              // disabled={isBondButtonDisabled}
               onConfirm={() => onClick(row)}
             >
               <Button type="primary" disabled={isBondButtonDisabled}>
@@ -239,7 +239,7 @@ const getColumns = (
         return (
           <Button
             type="primary"
-            disabled={isBondButtonDisabled}
+            // disabled={isBondButtonDisabled}
             onClick={() => onClick(row)}
           >
             Bond
@@ -324,11 +324,12 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
 
   const getProductsDataSource = useCallback(() => {
     const sortedList = sortList(filteredProducts);
-    const processedList = hideEmptyProducts
-      ? sortedList.filter((x) => x.supplyLeft > 0.00001)
-      : sortedList;
+    return sortedList;
+    // const processedList = hideEmptyProducts
+    //   ? sortedList.filter((x) => x.supplyLeft > 0.00001)
+    //   : sortedList;
 
-    return processedList;
+    // return processedList;
   }, [filteredProducts, hideEmptyProducts]);
 
   if (errorState) return <ErrorMessageAndReload />;
@@ -365,10 +366,10 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
         <Deposit
           productId={productDetails?.id}
           productToken={productDetails?.token}
-          productLpPriceInBg={getLpTokenWithDiscount(
+          productLpPriceAfterDiscount={getLpTokenWithDiscount(
             productDetails?.priceLp,
             productDetails?.discount,
-          )}
+          ).toString()}
           productSupply={productDetails?.supply}
           getProducts={refetch}
           closeModal={handleModalClose}
