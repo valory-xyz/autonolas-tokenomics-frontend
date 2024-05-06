@@ -4,6 +4,7 @@ import {
   Button,
   Empty,
   Popconfirm,
+  Skeleton,
   Spin,
   Table,
   Tag,
@@ -42,6 +43,10 @@ const Container = styled.div`
     padding: 16px 10px;
   }
 `;
+
+const Loader = () => (
+  <Skeleton.Button size="small" style={{ width: '100%' }} active block />
+);
 
 const getTitle = (title, tooltipDesc) => (
   <Tooltip title={tooltipDesc}>
@@ -110,15 +115,21 @@ const getColumns = (
       dataIndex: 'fullCurrentPriceLp',
       key: 'fullCurrentPriceLp',
       width: 140,
-      render: (x, details) => (
-        <a
-          href={details.currentPriceLpLink}
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          {x}
-        </a>
-      ),
+      render: (x, details) => {
+        if (x === '0') {
+          return <Loader />;
+        }
+
+        return (
+          <a
+            href={details.currentPriceLpLink}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            {x}
+          </a>
+        );
+      },
     },
     {
       title: getTitle(
@@ -145,6 +156,10 @@ const getColumns = (
       ),
       width: 180,
       render: (record) => {
+        if (record.fullCurrentPriceLp === '0') {
+          return <Loader />;
+        }
+
         const { projectedChange } = record;
 
         if (isNaN(projectedChange)) {
