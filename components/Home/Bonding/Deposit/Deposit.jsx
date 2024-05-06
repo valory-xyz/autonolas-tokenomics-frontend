@@ -139,13 +139,12 @@ export const Deposit = ({
     const lpBalanceInBg = new BigNumber(lpBalance);
 
     const remainingSupply = productSupplyInWei
-      .dividedBy(productLpPriceAfterDiscountInBg)
-      .multipliedBy(ONE_ETH_IN_STRING);
+      .multipliedBy(ONE_ETH_IN_STRING)
+      .dividedBy(productLpPriceAfterDiscountInBg);
 
     const remainingSupplyInWei = remainingSupply.lt(lpBalanceInBg)
       ? remainingSupply
       : lpBalance;
-
     return parseToEth(remainingSupplyInWei);
   };
 
@@ -163,9 +162,8 @@ export const Deposit = ({
       ? tokenAmountInputValue
       : new BigNumber(parseToWei(tokenAmountInputValue));
 
-    const payoutInBg = new BigNumber(
-      productLpPriceAfterDiscountInBg.toString(),
-    ).multipliedBy(tokenAmountValue);
+    const payoutInBg =
+      productLpPriceAfterDiscountInBg.multipliedBy(tokenAmountValue);
 
     const payout = isSvmProduct
       ? payoutInBg.dividedBy(BigNumber(`1${'0'.repeat(28)}`)).toFixed(2)
