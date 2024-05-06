@@ -246,6 +246,7 @@ const useAddCurrentLpPriceToProducts = () => {
               otherRequests[i] = currentLpPrice;
             } else if (dex === DEX.SOLANA) {
               otherRequests[i] = svmPriceLp;
+              console.log('svmPriceLp', svmPriceLp);
             } else {
               throw new Error('Dex not supported');
             }
