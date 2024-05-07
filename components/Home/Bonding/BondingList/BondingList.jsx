@@ -278,7 +278,7 @@ const getColumns = (
   return columns;
 };
 
-const sortList = (list) =>
+const sortProducts = (list) =>
   list.sort((a, b) => {
     // if the current price of the LP token is zero, then move it to the end of the list
     // NOTE: It can be zero because
@@ -348,32 +348,12 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
   }, [handleProductDetails]);
 
   const getProductsDataSource = useCallback(() => {
-    const sortedList = sortList(filteredProducts);
+    const sortedList = sortProducts(filteredProducts);
     const processedList = hideEmptyProducts
       ? sortedList.filter((x) => x.supplyLeft > 0.00001)
       : sortedList;
+
     return processedList;
-    // console.log('processedList', processedList);
-
-    // If solana products are loading, move them to the end of the list
-    // const sortedProducts = processedList.sort((a, b) => {
-    // if (
-    //   (a.lpChainId === VM_TYPE.SVM || b.lpChainId === VM_TYPE.SVM) &&
-    //   isCurrentPriceLpZero(a.fullCurrentPriceLp)
-    // ) {
-    //   return -1;
-    // }
-    // if (
-    //   b.lpChainId === VM_TYPE.SVM &&
-    //   isCurrentPriceLpZero(b.fullCurrentPriceLp)
-    // ) {
-    //   return -1;
-    // }
-
-    // return 0;
-    // });
-
-    // return sortedProducts;
   }, [filteredProducts, hideEmptyProducts]);
 
   if (errorState) return <ErrorMessageAndReload />;
