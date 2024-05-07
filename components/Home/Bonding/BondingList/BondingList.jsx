@@ -48,6 +48,8 @@ const Loader = () => (
   <Skeleton.Button size="small" style={{ width: '100%' }} active block />
 );
 
+const isCurrentPriceLpZero = (currentPrice) => Number(currentPrice) === 0;
+
 const getTitle = (title, tooltipDesc) => (
   <Tooltip title={tooltipDesc}>
     <span>
@@ -116,7 +118,7 @@ const getColumns = (
       key: 'fullCurrentPriceLp',
       width: 140,
       render: (x, details) => {
-        if (x === '0') {
+        if (isCurrentPriceLpZero(x)) {
           return <Loader />;
         }
 
@@ -156,7 +158,7 @@ const getColumns = (
       ),
       width: 180,
       render: (record) => {
-        if (record.fullCurrentPriceLp === '0') {
+        if (isCurrentPriceLpZero(record.fullCurrentPriceLp)) {
           return <Loader />;
         }
 
@@ -278,6 +280,14 @@ const getColumns = (
 
 const sortList = (list) =>
   list.sort((a, b) => {
+    // if the current price of the LP token is zero, then move it to the end of the list
+    // NOTE: It can be zero because
+    // - the API returns zero (shouldn't happen) OR
+    // - has error OR
+    // - not fetched yet
+    const isSvm = a.lpChainId === VM_TYPE.SVM || b.lpChainId === VM_TYPE.SVM;
+    if (isSvm && isCurrentPriceLpZero(a.fullCurrentPriceLp)) return 1;
+
     if (isNaN(a.projectedChange)) return 1;
     if (isNaN(b.projectedChange)) return -1;
     return b.projectedChange - a.projectedChange;
@@ -342,8 +352,28 @@ export const BondingList = ({ bondingProgramType, hideEmptyProducts }) => {
     const processedList = hideEmptyProducts
       ? sortedList.filter((x) => x.supplyLeft > 0.00001)
       : sortedList;
-
     return processedList;
+    // console.log('processedList', processedList);
+
+    // If solana products are loading, move them to the end of the list
+    // const sortedProducts = processedList.sort((a, b) => {
+    // if (
+    //   (a.lpChainId === VM_TYPE.SVM || b.lpChainId === VM_TYPE.SVM) &&
+    //   isCurrentPriceLpZero(a.fullCurrentPriceLp)
+    // ) {
+    //   return -1;
+    // }
+    // if (
+    //   b.lpChainId === VM_TYPE.SVM &&
+    //   isCurrentPriceLpZero(b.fullCurrentPriceLp)
+    // ) {
+    //   return -1;
+    // }
+
+    // return 0;
+    // });
+
+    // return sortedProducts;
   }, [filteredProducts, hideEmptyProducts]);
 
   if (errorState) return <ErrorMessageAndReload />;
