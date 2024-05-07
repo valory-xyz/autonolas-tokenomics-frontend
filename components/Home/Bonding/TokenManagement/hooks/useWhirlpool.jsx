@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 import {
   WhirlpoolContext,
   buildWhirlpoolClient,
@@ -83,17 +83,10 @@ const whirlpoolQuery = async () => {
 };
 
 const useWhirlpoolQuery = () => {
-  const [queryResult, setQueryResult] = useState(null);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const result = await whirlpoolQuery();
-      setQueryResult(result);
-    };
-    fetchData();
+  return useCallback(async () => {
+    const result = await whirlpoolQuery();
+    return result;
   }, []);
-
-  return queryResult;
 };
 
 /**
@@ -118,10 +111,12 @@ export const useWhirlpool = () => {
 };
 
 export const useWhirlPoolInformation = () => {
-  const positions = useWhirlpoolQuery();
+  const getPositions = useWhirlpoolQuery();
   const { getWhirlpoolData } = useWhirlpool();
 
   return useCallback(async () => {
+    const positions = await getPositions();
+
     if (!positions) return null;
 
     let whirlpoolData;
@@ -177,5 +172,5 @@ export const useWhirlPoolInformation = () => {
 
     const svmPriceLp = getSvmCalculatedPriceLp(reserveOlas, totalSupply);
     return svmPriceLp;
-  }, [positions, getWhirlpoolData]);
+  }, [getPositions, getWhirlpoolData]);
 };
