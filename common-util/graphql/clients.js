@@ -17,7 +17,7 @@ export const AUTONOLAS_GRAPH_CLIENTS = {
 // https://docs.balancer.fi/reference/subgraph/ for future subgraph endpoints
 export const BALANCER_GRAPH_CLIENTS = {
   1: new GraphQLClient(
-    'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2',
+    'https://api.studio.thegraph.com/query/75376/balancer-v2/version/latest',
     requestConfig,
   ),
   5: new GraphQLClient(
@@ -25,15 +25,15 @@ export const BALANCER_GRAPH_CLIENTS = {
     requestConfig,
   ),
   10: new GraphQLClient(
-    'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-optimism-v2',
+    'https://api.studio.thegraph.com/query/75376/balancer-optimism-v2/version/latest',
     requestConfig,
   ),
   100: new GraphQLClient(
-    'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gnosis-chain-v2',
+    'https://api.studio.thegraph.com/query/75376/balancer-gnosis-chain-v2/version/latest',
     requestConfig,
   ),
   137: new GraphQLClient(
-    'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-polygon-v2',
+    'https://api.studio.thegraph.com/query/75376/balancer-polygon-v2/version/latest',
     requestConfig,
   ),
   8453: new GraphQLClient(
@@ -41,7 +41,7 @@ export const BALANCER_GRAPH_CLIENTS = {
     requestConfig,
   ),
   42161: new GraphQLClient(
-    'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-arbitrum-v2',
+    'https://api.studio.thegraph.com/query/75376/balancer-arbitrum-v2/version/latest',
     requestConfig,
   ),
 };
