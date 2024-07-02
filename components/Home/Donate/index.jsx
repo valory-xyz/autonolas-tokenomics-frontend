@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { Alert, Button, Typography } from 'antd';
+import {
+  Alert,
+  // Button,
+  Skeleton,
+  Typography,
+} from 'antd';
 import { isNumber } from 'lodash';
 import {
   getFullFormattedDate,
@@ -23,12 +28,16 @@ import {
 } from '../DevIncentives/requests';
 import {
   checkServicesNotTerminatedOrNotDeployed,
-  checkpointRequest,
+  // checkpointRequest,
   depositServiceDonationRequest,
   getVeOlasThresholdRequest,
   minAcceptedEthRequest,
 } from './requests';
-import { DonateContainer, EpochStatus, EpochCheckpointRow } from './styles';
+import {
+  DonateContainer,
+  EpochStatus,
+  // EpochCheckpointRow
+} from './styles';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -41,12 +50,8 @@ export const DepositServiceDonation = () => {
   const [minAcceptedEth, setMinAcceptedEth] = useState(0);
   const [epochCounter, setEpochCounter] = useState(null);
   const [epochDetails, setEpochDetails] = useState(null);
-
-  // donation
   const [isDonationLoading, setIsDonationLoading] = useState(false);
-
-  // checkpoint
-  const [isCheckpointLoading, setIsCheckpointLoading] = useState(false);
+  // const [isCheckpointLoading, setIsCheckpointLoading] = useState(false);
 
   const getThresholdData = async () => {
     try {
@@ -140,23 +145,23 @@ export const DepositServiceDonation = () => {
     },
   ];
 
-  const onCheckpoint = async () => {
-    try {
-      setIsCheckpointLoading(true);
-      await checkpointRequest(account);
+  // const onCheckpoint = async () => {
+  //   try {
+  //     setIsCheckpointLoading(true);
+  //     await checkpointRequest(account);
 
-      await getThresholdData(); // update epoch details after checkpoint
-      notifySuccess('Started new epoch');
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsCheckpointLoading(false);
-    }
-  };
+  //     await getThresholdData(); // update epoch details after checkpoint
+  //     notifySuccess('Started new epoch');
+  //   } catch (error) {
+  //     console.error(error);
+  //   } finally {
+  //     setIsCheckpointLoading(false);
+  //   }
+  // };
 
   // disable checkpoint button if expected end time is in the future
-  const isExpectedEndTimeInFuture =
-    (epochDetails?.nextEpochEndTime || 0) * 1000 > Date.now();
+  // const isExpectedEndTimeInFuture =
+  //   (epochDetails?.nextEpochEndTime || 0) * 1000 > Date.now();
 
   return (
     <DonateContainer>
@@ -209,11 +214,15 @@ export const DepositServiceDonation = () => {
         {epochStatusList.map((e, index) => (
           <EpochStatus key={`epoch-section-${index}`}>
             <Title level={5}>{`${e.text}:`}</Title>
-            <Paragraph>{e.value}</Paragraph>
+            {isEpochDetailsLoading ? (
+              <Skeleton.Input size="small" active />
+            ) : (
+              <Paragraph>{e.value}</Paragraph>
+            )}
           </EpochStatus>
         ))}
 
-        <EpochCheckpointRow>
+        {/* <EpochCheckpointRow>
           <Button
             type="primary"
             loading={isCheckpointLoading}
@@ -225,7 +234,7 @@ export const DepositServiceDonation = () => {
           <Text type="secondary">
             New epochs must be manually triggered by community members
           </Text>
-        </EpochCheckpointRow>
+        </EpochCheckpointRow> */}
       </div>
     </DonateContainer>
   );
