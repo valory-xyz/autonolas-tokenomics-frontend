@@ -121,12 +121,12 @@ export const DepositServiceDonation = () => {
   };
 
   const epochStatusList = [
-    {
-      text: 'Earliest possible expected end time',
-      value: epochDetails?.nextEpochEndTime
-        ? getFullFormattedDate(epochDetails.nextEpochEndTime * 1000)
-        : NA,
-    },
+    // {
+    //   text: 'Earliest possible expected end time',
+    //   value: epochDetails?.nextEpochEndTime
+    //     ? getFullFormattedDate(epochDetails.nextEpochEndTime * 1000)
+    //     : NA,
+    // },
     {
       text: 'Epoch length',
       value: isNumber(epochDetails?.epochLen)
