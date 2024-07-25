@@ -1,10 +1,9 @@
 export const TOKENOMICS = {
-  contractName: 'Tokenomics',
+  contractName: 'TokenomicsProxy',
   addresses: {
     1: '0xc096362fa6f4A4B1a9ea68b1043416f3381ce300',
     5: '0x10100e74b7F706222F8A7C0be9FC7Ae1717Ad8B2',
   },
-  sourceName: 'contracts/Tokenomics.sol',
   abi: [
     {
       inputs: [],
