@@ -1092,8 +1092,4 @@ export const DISPENSER = {
       type: 'function',
     },
   ],
-  bytecode: '',
-  deployedBytecode: '',
-  linkReferences: {},
-  deployedLinkReferences: {},
 };
